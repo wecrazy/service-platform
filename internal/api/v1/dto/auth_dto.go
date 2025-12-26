@@ -33,3 +33,9 @@ type ResetPasswordRequest struct {
 	// Confirm Password
 	ConfirmPassword string `form:"confirm-password" binding:"required" example:"newpassword123"`
 }
+
+// CaptchaRequest represents the captcha verification request
+type CaptchaRequest struct {
+	Captcha   string `form:"captcha" binding:"required"`
+	CaptchaID string `form:"captcha_id" binding:"required"`
+}

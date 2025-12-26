@@ -1,4 +1,4 @@
-.PHONY: run-api run-wa run-scheduler run-grpc build build-api build-wa build-scheduler build-grpc docs-install docs-grpc docs-serve swagger clean-dashboard
+.PHONY: run-api run-wa run-scheduler run-grpc build build-api build-wa build-scheduler build-grpc docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod
 
 run-api:
 	go run cmd/api/main.go
@@ -63,3 +63,10 @@ docs-serve:
 
 clean-dashboard:
 	./scripts/remove_table_for_renew_dashboard.sh
+
+# Configuration
+config-dev:
+	@./scripts/switch_config.sh dev
+
+config-prod:
+	@./scripts/switch_config.sh prod
