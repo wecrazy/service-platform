@@ -1,0 +1,103 @@
+/* 
+ * Additional CSS fixes for chat sidebar functionality
+ */
+
+/* Ensure app-overlay works within the chat component */
+.app-chat .app-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(67, 89, 113, 0.5);
+  visibility: hidden;
+  z-index: 6; /* Higher than sidebars */
+  transition: all 0.25s ease;
+}
+
+.app-chat .app-overlay.show {
+  visibility: visible;
+}
+
+/* Ensure sidebars appear above other content */
+.app-chat .app-chat-sidebar-left,
+.app-chat .app-chat-sidebar-right {
+  z-index: 7; /* Higher than overlay */
+}
+
+/* Fix for mobile responsiveness */
+@media (max-width: 991px) {
+  .app-chat .app-chat-sidebar-left,
+  .app-chat .app-chat-sidebar-right {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+  }
+  
+  .app-chat .app-chat-sidebar-left {
+    left: -21rem;
+  }
+  
+  .app-chat .app-chat-sidebar-right {
+    right: -21rem;
+  }
+  
+  .app-chat .app-chat-sidebar-left.show {
+    left: 0;
+  }
+  
+  .app-chat .app-chat-sidebar-right.show {
+    right: 0;
+  }
+}
+
+/* Enhanced message input styling with synchronized background */
+.chat-history-footer {
+  background: rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(5px); /* Safari and Chrome */
+  backdrop-filter: blur(8px); /* Slightly stronger blur for more effect */
+  box-shadow: 0 -2px 16px 0 rgba(67, 89, 113, 0.08); /* Soft shadow for separation */
+  padding: 1rem 1.25rem;
+  border-top: none; /* Remove border since we want seamless background */
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+}
+
+.form-send-message {
+  gap: 0.5rem;
+}
+
+.message-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 1.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e3e6ea !important;
+  transition: all 0.15s ease;
+}
+
+.message-input:focus {
+  background: #fff;
+  border-color: #696cff !important;
+  box-shadow: 0 0 0 0.125rem rgba(105, 108, 255, 0.25) !important;
+}
+
+.send-msg-btn {
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-actions i {
+  color: #6c757d;
+  transition: color 0.15s ease;
+}
+
+.message-actions i:hover {
+  color: #696cff;
+}

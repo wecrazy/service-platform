@@ -1,0 +1,263 @@
+app:
+  host: "localhost"
+  gin_mode: "debug"   # debug | release | test
+  name: "Service Platform"
+  logo: "/assets/self/img/logo.png"
+  logo_jpg: "/assets/self/img/logo.jpg"
+  port: 6221
+  log_level: "DEBUG"   # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
+  log_format: "CSV"      # TEXT | JSON | => default CSV
+  web_public_url: "http://localhost:6221"
+  version: "Beta"
+  version_no: 1
+  version_code: "0.0.0.1.2025.12.26"
+  version_name: "rm_dev"
+  static_dir: "/home/user/server/service-platform/web"
+  published_dir: "assets" #|dist|fonts|js|libs|scss|tasks|uploads #|page|log
+  log_dir: "./log"
+  upload_dir: "./uploads"
+  login_time_m: 360 # minutes
+  cookie_login_domain: ""
+  cookie_login_secure: false
+  max_disconnection_time: 12 # seconds
+  aes_key: "w4GwYyADnBa91vph1vCLRghvfkTmaWRF"
+  aes_key_iv: "xu1HErEpSpaf87D7"
+  max_retry_login: 5 # attempts
+  login_lock_until: 10 # minutes
+  app_log_filename: "app.log"
+  app_log_maxsize: 20 # MB
+  app_log_maxage: 7 # days
+  app_log_maxbackups: 10
+  app_log_compress: true
+  system_log_filename: "sys.log"
+  memory_profile_path: "mem.prof"
+  debug: true
+default:
+  log_max_size: 10 # MB
+  log_max_age: 1 # days
+  log_max_backups: 5
+  log_compress: false
+  csv_timestamp_format: "2006-01-02 15:04:05.000 MST"
+  nssm_fullpath: "tools/bin/nssm-2.24/win64/nssm.exe"
+  super_user_email: "wegirandol@smartwebindonesia.com"
+  super_user_password: "Ro224171222#"
+  super_user_phone: "6285173207755"
+  min_length_phone_number: 9
+  dialing_code_default: "62"
+  cpu_capture_interval: 30 # seconds
+  max_bad_word_strikes: 3
+  data_separator: "|"
+  purge_old_backup_log_files_older_than: "3Days" # 1Day | 1Week | 1Month
+  remove_old_needs_dir_older_than: "3Days" # 1Day | 1Week | 1Month
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+  db: 10
+  max_retry: 5 # attempts
+  retry_delay: 5 # seconds
+  pool_size: 20 # connections
+database:
+  type: "PostgreSQL" # MySQL || PostgreSQL
+  host: "127.0.0.1"
+  port: 5432
+  username: "swi"
+  password: "Takasitau"
+  name: "db_service_platform_dev_rm"
+  max_retry_connect: 3
+  retry_delay: 5 # seconds
+  max_idle_connection: 10
+  max_open_connection: 10
+  conn_max_lifetime: 30 # minutes
+  conn_max_idle_time: 10 # minutes
+  ssl_mode: "disable" # disable | require | verify-ca | verify-full
+  db_config_path: "database/dbconfig.yaml"
+  db_backup_destination_dir: "database"
+  purge_older_than: "2Days"
+  dumped_indonesia_region_sql: "database/db_region_indonesia.sql"
+  # Tables
+  tb_user: "users"
+  tb_user_status: "user_statuses"
+  tb_user_password_change_log: "user_password_change_logs"
+  tb_role: "user_roles"
+  tb_role_privilege: "user_role_privileges"
+  tb_feature: "web_features"
+  tb_log_activity: "log_activities"
+  tb_language: "languages"
+  tb_bad_word: "bad_words"
+  tb_web_app_config: "web_app_configs"
+  tb_indonesia_region: "indonesia_region"
+  tb_whatsapp_user: "whatsapp_users"
+  tb_whatsapp_message: "whatsapp_messages"
+  tb_whatsapp_message_auto_reply: "whatsapp_message_auto_replies"
+folder_file_needs:
+  - "wa_reply"
+  - "wa_qr"
+schedules:
+  host: "localhost"
+  port: 50043
+  timezone: "Asia/Jakarta"
+  list:
+    # ======================================= IMPORTANT =======================================
+    - name: "purge-old-log-backup-files"
+      description: "Purge old log backup files (.gz) older than configured duration"
+      at: ["01:00"]
+    - name: "purge-old-db-log"
+      description: "Purge old database log binaries older than configured duration"
+      at: ["02:00"]
+    - name: "purge-old-whatsnyan-messages"
+      description: "Purge old WhatsApp messages older than configured duration"
+      at: ["03:00"]
+    - name: "remove-old-files-in-needs-dir"
+      description: "Remove old files in needs directory older than configured duration"
+      at: ["04:00"]
+    # =========================================================================================
+api:
+  analytics_dev_api_key: "c4004d75-3d23-4fb7-beca-33218961a8ed"
+email:
+  host: "smtp.gmail.com"
+  port: 587 # 463
+  username: "service4@csna4u.com"
+  password: "ejdw ezvf hemy rwhj"
+  sender: "Service Report"
+  max_retry: 10
+  retry_delay: 3
+  max_attachment_size: 24 # MB
+grpc:
+  host: "localhost"
+  port: 50041
+whatsnyan:
+  db_log: "whatsnyan_db.log"
+  db_log_level: "DEBUG"                 # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
+  client_log: "whatsnyan_client.log"
+  client_log_level: "DEBUG"             # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
+  log_max_size: 10 # MB
+  log_max_age: 7 # days
+  log_max_backups: 5
+  log_compress: true
+  grpc_host: "localhost"
+  grpc_port: 50042
+  wa_technical_support: "6287883507445"
+  max_message_length: 4000 # characters
+  tables:
+    tb_whatsnyan_message: "whatsnyan_messages"
+    tb_whatsnyan_incoming_message: "whatsnyan_incoming_messages"
+    tb_whatsnyan_group: "whatsnyan_groups"
+    tb_whatsnyan_group_participant: "whatsnyan_group_participants"
+    tb_app_state_mutation_macs: "whatsmeow_app_state_mutation_macs"
+    tb_app_state_sync_keys: "whatsmeow_app_state_sync_keys"
+    tb_app_state_versions: "whatsmeow_app_state_version"
+    tb_chat_settings: "whatsmeow_chat_settings"
+    tb_contacts: "whatsmeow_contacts"
+    tb_device: "whatsmeow_device"
+    tb_event_buffer: "whatsmeow_event_buffer"
+    tb_identity_keys: "whatsmeow_identity_keys"
+    tb_lid_map: "whatsmeow_lid_map"
+    tb_message_secrets: "whatsmeow_message_secrets"
+    tb_pre_keys: "whatsmeow_pre_keys"
+    tb_privacy_tokens: "whatsmeow_privacy_tokens"
+    tb_sender_keys: "whatsmeow_sender_keys"
+    tb_sessions: "whatsmeow_sessions"
+  wa_reply_public_url: "http://localhost:6221/wa_reply"
+  need_verify_account: true
+  language_expiry: 604800 # seconds (7 days)
+  language_prompt_shown_expiry: 604800 # seconds (7 days)
+  not_registered_phone_expiry: 86400 # seconds (1 day)
+  quota_limit_expiry: 86400 # seconds (1 day)
+  language_prompt: |
+    Silakan pilih bahasa Anda:
+      🇮🇩 Bahasa Indonesia (id)
+      🇬🇧 English (en)
+      🇪🇸 Español (es)
+      🇫🇷 Français (fr)
+      🇩🇪 Deutsch (de)
+      🇵🇹 Português (pt)
+      🇷🇺 Русский (ru)
+      🇯🇵 日本語 (jp)
+      🇨🇳 中文 (cn)
+      🇸🇦 العربية (ar)
+
+    Balas dengan *id* untuk beralih ke Bahasa Indonesia
+    Balas dengan *en* untuk beralih ke Bahasa Inggris
+    Balas dengan *es* untuk beralih ke Bahasa Spanyol
+    Balas dengan *fr* untuk beralih ke Bahasa Prancis
+    Balas dengan *de* untuk beralih ke Bahasa Jerman
+    Balas dengan *pt* untuk beralih ke Bahasa Portugis
+    Balas dengan *ru* untuk beralih ke Bahasa Rusia
+    Balas dengan *jp* untuk beralih ke Bahasa Jepang
+    Balas dengan *cn* untuk beralih ke Bahasa Mandarin / Tionghoa
+    Balas dengan *ar* untuk beralih ke Bahasa Arab
+
+    _(Bahasa bawaan: *Indonesia*)_
+  wag_allowed_to_interact:
+    # Use Whatsapp group JID
+    - "120363201154381780" # Tes API      => Production
+    - "120363414108461722" # Tes API 2    => Development
+  files:
+    image:
+      max_daily_quota: 50 # files
+      cooldown_seconds: 5 # seconds
+      max_size: 20 # MB
+      allowed_mime_types:
+        - "image/jpeg"
+        - "image/png"
+        - "image/gif"
+        - "image/webp"
+      allowed_extensions:
+        - ".jpg"
+        - ".jpeg"
+        - ".png"
+        - ".gif"
+        - ".webp"
+    video:
+      max_daily_quota: 10 # files
+      cooldown_seconds: 120 # seconds
+      max_size: 50 # MB
+      allowed_mime_types:
+        - "video/mp4"
+        - "video/x-msvideo"
+        - "video/quicktime"
+        - "video/3gpp"
+      allowed_extensions:
+        - ".mp4"
+        - ".avi"
+        - ".mov"
+        - ".3gp"
+    document:
+      max_daily_quota: 50 # files
+      cooldown_seconds: 10 # seconds
+      max_size: 20 # MB
+      allowed_mime_types:
+        - "application/pdf"
+        - "application/msword"
+        - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        - "text/plain"
+        - "application/zip"
+        - "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        - "application/vnd.ms-excel"
+      allowed_extensions:
+        - ".pdf"
+        - ".doc"
+        - ".docx"
+        - ".xls"
+        - ".xlsx"
+        - ".txt"
+        - ".zip"
+    audio:
+      max_daily_quota: 100 # files
+      cooldown_seconds: 3 # seconds
+      max_size: 10 # MB
+      allowed_mime_types:
+        - "audio/mpeg"
+        - "audio/wav"
+        - "audio/ogg"
+        - "audio/mp4"
+        - "audio/aac"
+      allowed_extensions:
+        - ".mp3"
+        - ".wav"
+        - ".ogg"
+        - ".m4a"
+        - ".aac"
+  message_processed_tolerance_hours: 24 # hours
+  purge_message_older_than: "1Week"

@@ -1,0 +1,9 @@
+{
+  "pages": [
+    {
+      "name": "Dashboard",
+      "icon": "fal fa-tachometer-fast",
+      "url": "#tab-dashboard"
+    }
+  ]
+}

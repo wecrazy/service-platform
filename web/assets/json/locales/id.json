@@ -1,0 +1,113 @@
+{
+  "common": {
+    "ok": "OK",
+    "loading": "Memuat",
+    "error": "Kesalahan",
+    "networkError": "Kesalahan Jaringan",
+    "pageNotFoundTitle": "Halaman Tidak Ditemukan :(",
+    "pageNotFoundMessage": "Ups! 😖 Halaman yang diminta tidak ditemukan di server ini.",
+    "backToHome": "Kembali ke Beranda",
+    "hello": "Halo",
+    "profile": "Profil",
+    "logout": "Keluar"
+  },
+  "login": {
+    "welcomeTo": "Selamat Datang di",
+    "pleaseSignIn": "Silahkan masuk ke akun Anda",
+    "email": "Surel",
+    "password": "Kata Sandi",
+    "signIn": "Masuk",
+    "forgotPassword": "Lupa Kata Sandi",
+    "captcha": "Captcha",
+    "captchaPlaceholder": "Masukkan CAPTCHA",
+    "refresh": "Segarkan",
+    "captchaCorrect": "Captcha Benar",
+    "captchaIncorrect": "Captcha Salah",
+    "loginSuccessful": "Login Berhasil",
+    "loginFailed": "Login Gagal",
+    "invalidCredentials": "Kredensial Tidak Valid",
+    "pleaseFillAllFields": "Silakan isi semua kolom"
+  },
+  "dashboard": {
+    "heroTitle": "Selamat Datang di Dasbor",
+    "heroSubtitle": "Dasbor umum untuk mengelola aplikasi Anda",
+    "serverTimeLabel": "Waktu Server",
+    "utcLabel": "UTC",
+    "jakartaLabel": "Asia/Jakarta",
+    "weatherTitle": "Cuaca Jakarta",
+    "weather": {
+      "label1": "JAKARTA",
+      "label2": "(Server)",
+      "text": "JAKARTA (Server)"
+    },
+    "greetings": {
+      "earlyMorning": "🌄 Selamat Dini Hari,",
+      "morning": "🌅 Selamat Pagi,",
+      "afternoon": "☀️ Selamat Siang,",
+      "lateAfternoon": "🌇 Selamat Sore,",
+      "evening": "🌙 Selamat Malam,",
+      "welcome": "🎉 Selamat Datang,"
+    },
+    "quickActions": "Akses Cepat",
+    "heroParagraph": "Selamat datang di dasbor umum aplikasi Anda. Gunakan kartu di bawah untuk mengakses cepat peran, konfigurasi aplikasi, alat WhatsApp, dan log sistem.",
+    "serverClockNote": "Lokasi server: Jakarta (Asia/Jakarta)",
+    "quick": {
+      "roles": {
+        "title": "Peran",
+        "subtitle": "Kelola peran & akses"
+      },
+      "appConfig": {
+        "title": "Konfigurasi Aplikasi",
+        "subtitle": "Pengaturan aplikasi"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "subtitle": "Kirim pesan / bot"
+      },
+      "systemLog": {
+        "title": "System Log",
+        "subtitle": "Audit & log"
+      }
+    }
+  },
+  "language":{
+    "title": "Bahasa",
+    "indonesia": "Indonesia",
+    "english": "Inggris"
+  },
+  "theme":{
+    "title": "Tema",
+    "light": "Terang",
+    "dark": "Gelap",
+    "system": "Sistem"
+  },
+  "menu": {
+    "tab-dashboard": "Dasbor",
+    "tab-roles": "Peran",
+    "tab-app-config": "Konfigurasi Aplikasi",
+    "whatsapp": "WhatsApp",
+    "tab-whatsapp": "WhatsApp",
+    "tab-whatsapp-user-management": "Manajemen Pengguna WhatsApp",
+    "tab-system-log": "Log Sistem",
+    "tab-activity-log": "Log Aktivitas",
+    "tab-user-profile": "Profil Pengguna"
+  },
+  "app-config": {
+    "apps": "Aplikasi"
+  },
+  "table": {
+    "confirmSaveTitle": "Apakah Anda ingin menyimpan perubahan?",
+    "saveButton": "Simpan",
+    "cancelButton": "Batal",
+    "successTitle": "Berhasil",
+    "errorTitle": "Kesalahan",
+    "unexpectedError": "Terjadi kesalahan yang tidak terduga",
+    "usernamePlaceholder": "Nama Pengguna",
+    "passwordPlaceholder": "Kata Sandi",
+    "confirmDeleteTitle": "Apakah Anda yakin menghapus INI?",
+    "confirmDeleteText": "Setelah dihapus, Anda tidak akan dapat memulihkan data ini!",
+    "deleteButton": "Ya, hapus!",
+    "updateSuccess": "Data berhasil diperbarui!",
+    "deleteSuccess": "Data berhasil DIHAPUS!"
+  }
+}
