@@ -403,12 +403,19 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 	}
 }
 
+// VerifyCaptcha godoc
+// @Summary      Verify CAPTCHA
+// @Description  Verifies the CAPTCHA input
+// @Tags         Web
+// @Accept       x-www-form-urlencoded
+// @Produce      json
+// @Param        request formData dto.CaptchaRequest true "Captcha Request"
+// @Success      200  {object}   map[string]bool
+// @Failure      400  {object}   map[string]string
+// @Router       /verify-captcha [post]
 func VerifyCaptcha(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var captchaForm struct {
-			Captcha   string `form:"captcha" binding:"required"`
-			CaptchaID string `form:"captcha_id" binding:"required"`
-		}
+		var captchaForm dto.CaptchaRequest
 
 		if err := c.ShouldBind(&captchaForm); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"valid": false, "error": err.Error()})
@@ -1089,6 +1096,7 @@ func GetWebLogout(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+// htmlEscape escapes special HTML characters in a string.
 func htmlEscape(s string) string {
 	s = strings.ReplaceAll(s, `"`, "&quot;")
 	s = strings.ReplaceAll(s, `<`, "&lt;")
