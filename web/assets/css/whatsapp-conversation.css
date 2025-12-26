@@ -1,0 +1,533 @@
+/* WhatsApp Conversation Interface Styles */
+
+/* Optimized Layout Widths */
+.app-chat .app-chat-sidebar-left {
+  width: 16rem !important;
+  left: calc(-16rem - 1rem) !important;
+  z-index: 6 !important;
+}
+
+.app-chat .app-chat-contacts {
+  width: 15rem !important;
+  flex-basis: 15rem !important;
+  left: calc(-15rem - 1rem) !important;
+}
+
+@media (min-width: 992px) {
+  .app-chat .app-chat-contacts {
+    position: absolute !important;
+    left: -15rem !important;
+  }
+}
+
+/* Main WhatsApp Container */
+#whatsapp-connected-container {
+  height: calc(100vh - 200px);
+  min-height: 600px;
+  max-height: 800px;
+}
+
+/* Sidebar Left Styles */
+#app-chat-sidebar-left {
+  width: 16rem;
+  min-width: 16rem;
+  border-right: 1px solid #e3e6ea;
+}
+
+/* Left sidebar should be hidden by default, just like right sidebar */
+/* Only show when explicitly opened via user click */
+
+/* On mobile, hide by default */
+@media (max-width: 991.98px) {
+  #app-chat-sidebar-left {
+    position: absolute !important;
+    top: 0;
+    left: -80vw;
+    bottom: 0;
+    z-index: 1045;
+    background: white;
+    width: 80vw !important;
+    max-width: 320px !important;
+    transition: left 0.3s ease;
+    display: block !important;
+  }
+  
+  #app-chat-sidebar-left.show {
+    left: 0 !important;
+  }
+  
+  #app-chat-contacts {
+    width: 90vw !important;
+    max-width: 380px !important;
+    position: absolute !important;
+    top: 0;
+    left: -90vw;
+    bottom: 0;
+    z-index: 1040;
+    background: white;
+    transition: left 0.3s ease;
+  }
+  
+  #app-chat-contacts.show {
+    left: 0 !important;
+  }
+}
+
+/* Desktop behavior - left sidebar hidden by default, shows on click like right sidebar */
+@media (min-width: 992px) {
+  #app-chat-sidebar-left {
+    position: absolute !important;
+    top: 0;
+    left: -16rem;
+    bottom: 0;
+    z-index: 1045;
+    background: white;
+    width: 16rem;
+    opacity: 1;
+    transform: translateX(0);
+    transition: left 0.3s ease;
+    display: block !important;
+  }
+  
+  #app-chat-sidebar-left.show {
+    left: 0 !important;
+  }
+  
+  #app-chat-contacts {
+    position: absolute !important;
+    top: 0;
+    left: -15rem;
+    bottom: 0;
+    z-index: 1040;
+    background: white;
+    width: 15rem;
+    transition: left 0.3s ease;
+    display: block !important;
+  }
+  
+  #app-chat-contacts.show {
+    left: 0 !important;
+  }
+}
+
+#app-chat-sidebar-left .sidebar-body {
+  height: calc(100% - 140px);
+  overflow-y: auto;
+}
+
+/* Chat Contacts Styles */
+#app-chat-contacts {
+  width: 15rem;
+  min-width: 15rem;
+  border-right: 1px solid #e3e6ea;
+}
+
+/* Fix menu button clickability and z-index issues */
+.chat-history-header {
+  position: relative;
+  z-index: 100 !important;
+}
+
+.chat-history-header .bx-menu {
+  z-index: 200 !important;
+  position: relative;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  display: inline-block !important;
+  padding: 8px !important;
+  margin: -8px !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Ensure menu button stays clickable at all zoom levels */
+.chat-history-header .bx-menu:hover {
+  background-color: rgba(0,0,0,0.1) !important;
+  border-radius: 50% !important;
+}
+
+/* Make sure the entire header area is above other elements */
+.app-chat-history .chat-history-header {
+  z-index: 50 !important;
+  position: relative !important;
+}
+
+/* Ensure sidebar triggers are always clickable */
+[data-bs-toggle="sidebar"] {
+  z-index: 150 !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure sidebar overlays work properly */
+.app-chat .app-sidebar.show {
+  z-index: 1050 !important;
+}
+
+/* Fix scroll issues in contact list */
+.sidebar-body {
+  overflow-y: auto !important;
+  height: calc(100% - 80px) !important;
+}
+
+.sidebar-body.ps.ps--active-y {
+  padding-right: 0 !important;
+}
+
+#app-chat-contacts .sidebar-body {
+  height: calc(100% - 80px);
+  overflow-y: auto;
+}
+
+/* Refresh Button Styles */
+#refresh-contact-list-btn {
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+#refresh-contact-list-btn:hover {
+  transform: rotate(180deg);
+  background-color: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+#refresh-contact-list-btn i {
+  font-size: 16px;
+}
+
+/* Chat Contact List Items */
+.chat-contact-list-item {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+}
+
+.chat-contact-list-item:hover {
+  background-color: #f8f9fa;
+}
+
+.chat-contact-list-item.active {
+  background-color: #e3f2fd;
+  border-left: 3px solid #2196f3;
+}
+
+.chat-contact-list-item a {
+  text-decoration: none;
+  color: inherit;
+  padding: 12px 16px;
+  display: block;
+}
+
+.chat-contact-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.chat-contact-status {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+/* Chat History Styles */
+#app-chat-history {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-history-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-history-header {
+  padding: 16px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e3e6ea;
+  flex-shrink: 0;
+}
+
+.chat-history-body {
+  flex: 1;
+  padding: 16px 20px;
+  overflow-y: auto;
+  background: #f8f9fa;
+  min-height: 400px;
+}
+
+.chat-history-footer {
+  padding: 16px 20px;
+  background: #fff;
+  border-top: 1px solid #e3e6ea;
+  flex-shrink: 0;
+}
+
+/* Chat Messages */
+.chat-message {
+  margin-bottom: 16px;
+}
+
+.chat-message-right {
+  justify-content: flex-end;
+}
+
+.chat-message-right .chat-message-wrapper {
+  background: #dcf8c6;
+  border-radius: 18px 18px 6px 18px;
+  padding: 8px 12px;
+  max-width: 70%;
+  margin-left: auto;
+}
+
+.chat-message:not(.chat-message-right) .chat-message-wrapper {
+  background: #fff;
+  border-radius: 18px 18px 18px 6px;
+  padding: 8px 12px;
+  max-width: 70%;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.chat-message-text p {
+  margin: 0;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+/* Message Input */
+.message-input {
+  border-radius: 24px !important;
+  padding: 12px 20px !important;
+  background: #f8f9fa !important;
+}
+
+.message-input:focus {
+  background: #fff !important;
+  box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25) !important;
+}
+
+.send-msg-btn {
+  border-radius: 50% !important;
+  width: 42px;
+  height: 42px;
+  padding: 0 !important;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Sidebar Right */
+#app-chat-sidebar-right {
+  width: 300px;
+  min-width: 300px;
+  border-left: 1px solid #e3e6ea;
+}
+
+/* Search Input */
+.chat-search-input {
+  border-radius: 20px !important;
+  background: #f8f9fa !important;
+  border: none !important;
+  padding: 8px 16px !important;
+}
+
+.chat-search-input:focus {
+  background: #fff !important;
+  box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25) !important;
+}
+
+/* Avatar Styles */
+.avatar-online::before {
+  background: #28a745;
+}
+
+.avatar-offline::before {
+  background: #6c757d;
+}
+
+/* Unread Count Badge */
+.chat-contact-list-item .badge {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  #app-chat-sidebar-left,
+  #app-chat-contacts,
+  #app-chat-sidebar-right {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 1050;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  #app-chat-sidebar-left.show,
+  #app-chat-contacts.show,
+  #app-chat-sidebar-right.show {
+    transform: translateX(0);
+  }
+  
+  #app-chat-history {
+    width: 100%;
+  }
+}
+
+/* Perfect Scrollbar Customization */
+.ps__rail-y {
+  width: 4px !important;
+  right: 2px !important;
+}
+
+.ps__thumb-y {
+  background-color: #c1c1c1 !important;
+  border-radius: 4px !important;
+  width: 4px !important;
+}
+
+.ps__thumb-y:hover {
+  background-color: #a8a8a8 !important;
+}
+
+/* Animation for message sending */
+@keyframes messageSending {
+  0% { opacity: 0.5; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.message-sending {
+  animation: messageSending 0.3s ease-out;
+}
+
+/* Status indicators */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.status-indicator i {
+  font-size: 8px;
+  margin-right: 4px;
+}
+
+/* File upload area */
+.file-upload-area {
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  margin: 10px 0;
+  transition: border-color 0.3s;
+}
+
+.file-upload-area:hover {
+  border-color: #2196f3;
+}
+
+.file-upload-area.dragover {
+  border-color: #2196f3;
+  background-color: #f8f9fa;
+}
+
+/* Sidebar Toggle Functionality */
+.app-sidebar {
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+/* Mobile sidebar behavior */
+@media (max-width: 991.98px) {
+  .app-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 1045;
+    transform: translateX(-100%);
+  }
+  
+  .app-sidebar.show {
+    transform: translateX(0);
+  }
+  
+  #app-chat-sidebar-left.show {
+    left: 0;
+  }
+  
+  #app-chat-sidebar-right.show {
+    right: 0;
+  }
+  
+  #app-chat-contacts.show {
+    left: 0;
+  }
+}
+
+/* Desktop sidebar behavior */
+@media (min-width: 992px) {
+  .app-sidebar {
+    position: relative;
+    transform: none;
+  }
+  
+  .app-sidebar.show {
+    display: block;
+  }
+}
+
+/* Overlay */
+.app-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.app-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Body modifications when sidebar is open */
+body.app-sidebar-open {
+  overflow: hidden;
+}
+
+/* Sidebar close button positioning */
+.close-sidebar {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Avatar click cursor */
+.user-avatar {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+}

@@ -1,32 +1,65 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Test binary, built with `go test -c`
-*.test
-
-# Code coverage profiles and other test artifacts
-*.out
-coverage.*
-*.coverprofile
-profile.cov
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
-go.work
-go.work.sum
-
-# env file
+# === Config Files ===
 .env
+.ini
+database/dbconfig.yaml
+.hintrc
+.prettierrc
 
-# Editor/IDE
-# .idea/
-# .vscode/
+# === IDE & Editor Files ===
+.vscode/
+.idea/
+
+# === Application Binaries ===
+service-platform
+*.exe
+
+# === Certificates ===
+cert/
+
+# === Logs ===
+*.log
+log/
+
+# === Tests ===
+# tests/
+
+# === WhatsMeow Data ===
+whatsmeow/whatsmeow.db
+whatsmeow/wa_group.json
+whatsmeow/
+
+# === Docker Files ===
+Dockerfile
+docker-compose.yml
+
+# === Golang Mod & Pkg (uncomment if needed) ===
+# go.mod
+# go.sum
+
+# === Office & Document Files ===
+*.xlsx
+*.xls
+*.pdf
+*.docx
+*.doc
+*.txt
+
+# === Images & Archives ===
+*.jfif
+*.gz
+
+# === Whatsapp Assets ===
+web/assets/whatsapp_media/
+
+# === Miscellaneous ===
+*.mp3
+*.mp4
+*.mkv
+*.avi
+*.wav
+*.bin
+*.tar
+*.sql
+tools/
+web/file/
+bin/

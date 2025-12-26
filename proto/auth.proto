@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "service-platform/proto";
+
+// AuthService handles user authentication and session management.
+service AuthService {
+  // Login authenticates a user and returns a JWT token.
+  rpc Login(LoginRequest) returns (LoginResponse);
+  // Logout invalidates the user's session.
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+}
+
+// LoginRequest contains credentials for user login.
+message LoginRequest {
+  // Email or username of the user.
+  string email_username = 1;
+  // Password of the user.
+  string password = 2;
+  // Captcha code provided by the user.
+  string captcha = 3;
+  // ID of the captcha challenge.
+  string captcha_id = 4;
+}
+
+// LoginResponse contains the result of the login attempt.
+message LoginResponse {
+  // Indicates if the login was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+  // JWT token if login was successful.
+  string token = 3;
+}
+
+// LogoutRequest contains the token to be invalidated.
+message LogoutRequest {
+  // JWT token to invalidate.
+  string token = 1;
+}
+
+// LogoutResponse contains the result of the logout operation.
+message LogoutResponse {
+  // Indicates if the logout was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+}

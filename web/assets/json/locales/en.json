@@ -1,0 +1,113 @@
+{
+	"common": {
+		"ok": "OK",
+		"loading": "Loading",
+		"error": "Error",
+		"networkError": "Network Error",
+		"pageNotFoundTitle": "Page Not Found :(",
+		"pageNotFoundMessage": "Oops! 😖 The requested page was not found on this server.",
+		"backToHome": "Back to Home",
+		"hello": "Hello",
+		"profile": "Profile",
+		"logout": "Logout"
+	},
+	"login": {
+		"welcomeTo": "Welcome to",
+		"pleaseSignIn": "Please sign in to your account",
+		"email": "Email",
+		"password": "Password",
+		"signIn": "Sign In",
+		"forgotPassword": "Forgot Password",
+		"captcha": "Captcha",
+		"captchaPlaceholder": "Enter CAPTCHA",
+		"refresh": "Refresh",
+		"captchaCorrect": "Captcha Correct",
+		"captchaIncorrect": "Captcha Incorrect",
+		"loginSuccessful": "Login Successful",
+		"loginFailed": "Login Failed",
+		"invalidCredentials": "Invalid Credentials",
+		"pleaseFillAllFields": "Please fill all fields"
+	},
+	"dashboard": {
+		"heroTitle": "Welcome to Dashboard",
+		"heroSubtitle": "General dashboard for managing your application",
+		"serverTimeLabel": "Server Time",
+		"utcLabel": "UTC",
+		"jakartaLabel": "Asia/Jakarta",
+		"weatherTitle": "Jakarta Weather",
+		"weather": {
+			"label1": "JAKARTA",
+			"label2": "(Server)",
+			"text": "JAKARTA (Server)"
+		},
+		"greetings": {
+			"earlyMorning": "🌄 Good Early Morning,",
+			"morning": "🌅 Good Morning,",
+			"afternoon": "☀️ Good Afternoon,",
+			"lateAfternoon": "🌇 Good Late Afternoon,",
+			"evening": "🌙 Good Evening,",
+			"welcome": "🎉 Welcome,"
+		},
+		"quickActions": "Quick Actions",
+		"heroParagraph": "Welcome to your general application dashboard. Use the cards below for quick access to roles, app configuration, WhatsApp tools, and system logs.",
+		"serverClockNote": "Server location: Jakarta (Asia/Jakarta)",
+		"quick": {
+			"roles": {
+				"title": "Roles",
+				"subtitle": "Manage roles & access"
+			},
+			"appConfig": {
+				"title": "App Configuration",
+				"subtitle": "Application settings"
+			},
+			"whatsapp": {
+				"title": "WhatsApp",
+				"subtitle": "Send messages / bot"
+			},
+			"systemLog": {
+				"title": "System Log",
+				"subtitle": "Audit & logs"
+			}
+		}
+	},
+	"language": {
+		"title": "Language",
+		"indonesia": "Indonesia",
+		"english": "English"
+	},
+	"theme": {
+		"title": "Theme",
+		"light": "Light",
+		"dark": "Dark",
+		"system": "System"
+	},
+	"menu": {
+		"tab-dashboard": "Dashboard",
+		"tab-roles": "Roles",
+		"tab-app-config": "App Configuration",
+		"whatsapp": "WhatsApp",
+		"tab-whatsapp": "WhatsApp",
+		"tab-whatsapp-user-management": "WhatsApp User Management",
+		"tab-system-log": "System Log",
+		"tab-activity-log": "Activity Log",
+		"tab-user-profile": "User Profile"
+	},
+	"app-config": {
+		"apps": "Applications"
+	},
+	"table": {
+		"confirmSaveTitle": "Do you want to save the changes?",
+		"saveButton": "Save",
+		"cancelButton": "Cancel",
+		"successTitle": "Success",
+		"errorTitle": "Error",
+		"unexpectedError": "An unexpected error occurred",
+		"usernamePlaceholder": "Username",
+		"passwordPlaceholder": "Password",
+		"confirmDeleteTitle": "Are you sure to delete THIS?",
+		"confirmDeleteText": "Once deleted, you will not be able to recover this data!",
+		"deleteButton": "Yes, delete it!",
+		"updateSuccess": "The data was updated successfully!",
+		"deleteSuccess": "The data was DELETED successfully!"
+	}
+}

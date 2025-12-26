@@ -1,0 +1,191 @@
+syntax = "proto3";
+
+package scheduler;
+
+option go_package = "service-platform/proto";
+
+// SchedulerService provides gRPC endpoints for managing scheduled jobs.
+// This service allows remote management of scheduled tasks including
+// registration, triggering, status checking, and configuration reloading.
+//
+// The scheduler service runs independently from the API service, providing
+// better isolation and scalability for scheduled job execution.
+service SchedulerService {
+  // RegisterJob registers a new job function in the scheduler.
+  // This makes the job available for scheduling and execution.
+  // The job function must already exist in the codebase.
+  //
+  // Example request:
+  //   {
+  //     "name": "cleanup-logs",
+  //     "description": "Cleans up old log files"
+  //   }
+  rpc RegisterJob(RegisterJobRequest) returns (RegisterJobResponse);
+  
+  // UnregisterJob removes a job from the scheduler.
+  // This prevents the job from being executed in future scheduled runs.
+  // The job schedule in config.yaml will remain but won't execute.
+  //
+  // Example request:
+  //   {
+  //     "name": "cleanup-logs"
+  //   }
+  rpc UnregisterJob(UnregisterJobRequest) returns (UnregisterJobResponse);
+  
+  // ListJobs returns a list of all registered jobs with their details.
+  // This includes job names, descriptions, schedules, and execution status.
+  //
+  // Example request:
+  //   {}
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  
+  // TriggerJob manually executes a job immediately.
+  // The job runs asynchronously in the background.
+  // Useful for testing or running jobs on-demand.
+  //
+  // Example request:
+  //   {
+  //     "name": "cleanup-logs"
+  //   }
+  rpc TriggerJob(TriggerJobRequest) returns (TriggerJobResponse);
+  
+  // GetJobStatus retrieves the current status and details of a specific job.
+  // Returns information about whether the job exists and its configuration.
+  //
+  // Example request:
+  //   {
+  //     "name": "cleanup-logs"
+  //   }
+  rpc GetJobStatus(GetJobStatusRequest) returns (GetJobStatusResponse);
+  
+  // ReloadScheduler reloads the scheduler configuration from the YAML file.
+  // This allows updating job schedules without restarting the service.
+  // All existing scheduled jobs are stopped and restarted with new configuration.
+  //
+  // Example request:
+  //   {}
+  rpc ReloadScheduler(ReloadSchedulerRequest) returns (ReloadSchedulerResponse);
+}
+
+// RegisterJobRequest contains information needed to register a new job.
+message RegisterJobRequest {
+  // name is the unique identifier for the job.
+  // Must match the job name in config.yaml and the registered job function.
+  string name = 1;
+  
+  // description provides human-readable information about the job's purpose.
+  // Optional field for documentation purposes.
+  string description = 2;
+}
+
+// RegisterJobResponse indicates the result of job registration.
+message RegisterJobResponse {
+  // success indicates whether the job was registered successfully.
+  bool success = 1;
+  
+  // message provides additional information about the registration result.
+  // Contains error details if success is false.
+  string message = 2;
+}
+
+// UnregisterJobRequest specifies which job to remove from the scheduler.
+message UnregisterJobRequest {
+  // name is the unique identifier of the job to unregister.
+  string name = 1;
+}
+
+// UnregisterJobResponse indicates the result of job unregistration.
+message UnregisterJobResponse {
+  // success indicates whether the job was unregistered successfully.
+  bool success = 1;
+  
+  // message provides additional information about the unregistration result.
+  string message = 2;
+}
+
+// ListJobsRequest is an empty message for listing all jobs.
+// No parameters are required to list all registered jobs.
+message ListJobsRequest {
+}
+
+// JobInfo contains detailed information about a scheduled job.
+message JobInfo {
+  // name is the unique identifier of the job.
+  string name = 1;
+  
+  // description provides information about the job's purpose.
+  string description = 2;
+  
+  // schedule describes when the job runs (e.g., "every 5m", "daily at 09:00").
+  string schedule = 3;
+  
+  // last_run is the timestamp of the job's most recent execution.
+  // Format: RFC3339 (e.g., "2025-12-22T10:30:00Z")
+  // Empty if the job has never run.
+  string last_run = 4;
+  
+  // next_run is the timestamp of the job's next scheduled execution.
+  // Format: RFC3339 (e.g., "2025-12-22T11:30:00Z")
+  // Empty if the job is not scheduled.
+  string next_run = 5;
+  
+  // is_running indicates whether the job is currently executing.
+  bool is_running = 6;
+}
+
+// ListJobsResponse contains a list of all registered jobs.
+message ListJobsResponse {
+  // jobs is an array of all registered job information.
+  repeated JobInfo jobs = 1;
+}
+
+// TriggerJobRequest specifies which job to execute immediately.
+message TriggerJobRequest {
+  // name is the unique identifier of the job to trigger.
+  string name = 1;
+}
+
+// TriggerJobResponse indicates the result of manually triggering a job.
+message TriggerJobResponse {
+  // success indicates whether the job was triggered successfully.
+  bool success = 1;
+  
+  // message provides additional information about the trigger result.
+  // Contains error details if the job doesn't exist or failed to start.
+  string message = 2;
+}
+
+// GetJobStatusRequest specifies which job's status to retrieve.
+message GetJobStatusRequest {
+  // name is the unique identifier of the job to check.
+  string name = 1;
+}
+
+// GetJobStatusResponse contains the status and details of a specific job.
+message GetJobStatusResponse {
+  // exists indicates whether a job with the requested name is registered.
+  bool exists = 1;
+  
+  // job_info contains detailed information about the job.
+  // Only populated if exists is true.
+  JobInfo job_info = 2;
+}
+
+// ReloadSchedulerRequest is an empty message for reloading scheduler configuration.
+// No parameters are required to reload the configuration.
+message ReloadSchedulerRequest {
+}
+
+// ReloadSchedulerResponse indicates the result of reloading the scheduler.
+message ReloadSchedulerResponse {
+  // success indicates whether the scheduler was reloaded successfully.
+  bool success = 1;
+  
+  // message provides additional information about the reload result.
+  // Contains error details if the reload failed.
+  string message = 2;
+  
+  // jobs_loaded is the number of jobs successfully loaded from configuration.
+  // Only populated if success is true.
+  int32 jobs_loaded = 3;
+}

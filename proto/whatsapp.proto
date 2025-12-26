@@ -1,0 +1,368 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "service-platform/proto";
+
+// WhatsAppService provides functionality to interact with WhatsApp via whatsmeow.
+service WhatsAppService {
+  // SendMessage sends a message to a WhatsApp user or group.
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  // GetMessages retrieves message history.
+  rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
+  // Connect establishes a connection to WhatsApp.
+  rpc Connect(ConnectRequest) returns (ConnectResponse);
+  // Disconnect closes the connection to WhatsApp.
+  rpc Disconnect(DisconnectRequest) returns (DisconnectResponse);
+  // Logout logs out the current session.
+  rpc Logout(WALogoutRequest) returns (WALogoutResponse);
+  // RefreshQR forces a new QR code generation for login.
+  rpc RefreshQR(RefreshQRRequest) returns (ConnectResponse);
+  // GetGroupInfo retrieves information about a specific group.
+  rpc GetGroupInfo(GetGroupInfoRequest) returns (GetGroupInfoResponse);
+  // GetMe retrieves information about the current user.
+  rpc GetMe(GetMeRequest) returns (GetMeResponse);
+  // IsOnWhatsApp checks if phone numbers are registered on WhatsApp.
+  rpc IsOnWhatsApp(IsOnWhatsAppRequest) returns (IsOnWhatsAppResponse);
+  // GetJoinedGroups retrieves a list of groups the user has joined.
+  rpc GetJoinedGroups(GetJoinedGroupsRequest) returns (GetJoinedGroupsResponse);
+  // CreateStatus posts a status update (story).
+  rpc CreateStatus(CreateStatusRequest) returns (CreateStatusResponse);
+  // HasContacts checks if the user has any contacts.
+  rpc HasContacts(HasContactsRequest) returns (HasContactsResponse);
+}
+
+// HasContactsRequest is the request to check for contacts.
+message HasContactsRequest {}
+
+// HasContactsResponse contains the result of the check.
+message HasContactsResponse {
+  // Indicates if the operation was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+  // Indicates if the user has at least one contact.
+  bool has_contacts = 3;
+  // The number of contacts found.
+  int32 contact_count = 4;
+}
+
+// GetJoinedGroupsRequest is the request for retrieving joined groups.
+message GetJoinedGroupsRequest {}
+
+// GetJoinedGroupsResponse contains the list of joined groups.
+message GetJoinedGroupsResponse {
+  // Indicates if the operation was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+  // List of groups the user is a participant of.
+  repeated GroupInfo groups = 3;
+}
+
+// GroupInfo contains details about a WhatsApp group.
+message GroupInfo {
+  // JID of the group.
+  string jid = 1;
+  // JID of the group owner.
+  string owner_jid = 2;
+  // Name of the group.
+  string name = 3;
+  // Topic of the group.
+  string topic = 4;
+  // Timestamp when the topic was set.
+  int64 topic_set_at = 5;
+  // JID of the user who set the topic.
+  string topic_set_by = 6;
+  // JID of the parent group (if applicable).
+  string linked_parent_jid = 7;
+  // Indicates if this is a default sub-group.
+  bool is_default_sub_group = 8;
+  // Indicates if this is a parent group (community).
+  bool is_parent = 9;
+  // List of participants in the group.
+  repeated GroupParticipant participants = 10;
+}
+
+// IsOnWhatsAppRequest is the request to check if numbers are on WhatsApp.
+message IsOnWhatsAppRequest {
+  // List of phone numbers to check.
+  repeated string phone_numbers = 1;
+}
+
+// IsOnWhatsAppResponse contains the results of the check.
+message IsOnWhatsAppResponse {
+  // Indicates if the operation was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+  // List of results for each phone number.
+  repeated OnWhatsAppResult results = 3;
+}
+
+// OnWhatsAppResult contains the registration status of a single number.
+message OnWhatsAppResult {
+  // The phone number that was queried.
+  string query = 1;
+  // The JID of the user if registered.
+  string jid = 2;
+  // Indicates if the number is registered on WhatsApp.
+  bool is_registered = 3;
+}
+
+// GetMeRequest is the request to get current user info.
+message GetMeRequest {}
+
+// GetMeResponse contains the current user's info.
+message GetMeResponse {
+  // Indicates if the operation was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+  // JID of the current user.
+  string jid = 3;
+}
+
+// GetGroupInfoRequest is the request to get info about a specific group.
+message GetGroupInfoRequest {
+  // JID of the group to retrieve info for.
+  string group_jid = 1;
+}
+
+// GetGroupInfoResponse contains the group information.
+message GetGroupInfoResponse {
+  // Indicates if the operation was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+  // Name of the group.
+  string name = 3;
+  // List of participants in the group.
+  repeated GroupParticipant participants = 4;
+}
+
+// GroupParticipant contains details about a group member.
+message GroupParticipant {
+  // JID of the participant.
+  string jid = 1;
+  // Indicates if the participant is an admin.
+  bool is_admin = 2;
+  // Indicates if the participant is a super admin.
+  bool is_super_admin = 3;
+  // LID (Linked Device ID) of the participant.
+  string lid = 4;
+  // Display name of the participant.
+  string display_name = 5;
+  // URL of the participant's profile picture.
+  string profile_picture_url = 6;
+  // Phone number of the participant.
+  string phone_number = 7;
+}
+
+// RefreshQRRequest is the request to refresh the QR code.
+message RefreshQRRequest {
+  // Phone number associated with the request (optional).
+  string phone_number = 1;
+}
+
+// WALogoutRequest is the request to logout from WhatsApp.
+message WALogoutRequest {
+  // Phone number to logout (optional).
+  string phone_number = 1;
+}
+
+// WALogoutResponse contains the result of the logout operation.
+message WALogoutResponse {
+  // Indicates if the logout was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+}
+
+// CreateStatusRequest is the request to create a status.
+message CreateStatusRequest {
+  // Content of the status.
+  MessageContent content = 1;
+  // Optional background color for text status (hex code).
+  string background_color = 2;
+  // Optional font for text status.
+  int32 font = 3;
+  // Optional target JIDs (if you want to restrict who sees it).
+  repeated string target_jids = 4;
+}
+
+// CreateStatusResponse contains the result of creating a status.
+message CreateStatusResponse {
+  // Indicates if the operation was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+  // ID of the created status message.
+  string status_id = 3;
+}
+
+// SendMessageRequest is the request to send a message.
+message SendMessageRequest {
+  // JID of the recipient (user or group).
+  string to = 1;
+  // Content of the message.
+  MessageContent content = 2;
+}
+
+// MessageContent defines the types of content a message can have.
+message MessageContent {
+  oneof content_type {
+    // Text content.
+    string text = 1;
+    // Media content (image, video, audio, document, sticker).
+    MediaContent media = 2;
+    // Location content.
+    LocationContent location = 3;
+    // Live location content.
+    LiveLocationContent live_location = 4;
+    // Poll content.
+    PollContent poll = 5;
+    // Contact content.
+    ContactContent contact = 6;
+  }
+}
+
+// LocationContent contains location details.
+message LocationContent {
+  // Latitude of the location.
+  double latitude = 1;
+  // Longitude of the location.
+  double longitude = 2;
+  // Name of the location.
+  string name = 3;
+  // Address of the location.
+  string address = 4;
+}
+
+// LiveLocationContent contains live location details.
+message LiveLocationContent {
+  // Latitude of the location.
+  double latitude = 1;
+  // Longitude of the location.
+  double longitude = 2;
+  // Accuracy of the location in meters.
+  uint32 accuracy_in_meters = 3;
+  // Speed in meters per second.
+  uint32 speed_in_mps = 4;
+  // Direction in degrees clockwise from magnetic north.
+  uint32 degrees_clockwise_from_magnetic_north = 5;
+  // Caption for the live location.
+  string caption = 6;
+  // Sequence number for location updates.
+  int64 sequence_number = 7;
+  // Time offset in seconds.
+  uint32 time_offset = 8;
+}
+
+// PollContent contains poll details.
+message PollContent {
+  // Name/Question of the poll.
+  string name = 1;
+  // List of options for the poll.
+  repeated string options = 2;
+  // Number of options that can be selected.
+  uint32 selectable_options_count = 3;
+}
+
+// ContactContent contains contact details.
+message ContactContent {
+    // Display name of the contact.
+    string display_name = 1;
+    // vCard data of the contact.
+    string vcard = 2;
+}
+
+// MediaContent contains media details.
+message MediaContent {
+  // Type of media ("image", "document", "video", "audio", "sticker").
+  string media_type = 1; 
+  // Binary data of the media.
+  bytes data = 2;
+  // Filename of the media.
+  string filename = 3;
+  // Caption for the media.
+  string caption = 4;
+  // MIME type of the media.
+  string mimetype = 5;
+  // Indicates if the media should be view once (only for image and video).
+  bool view_once = 6;
+}
+
+// SendMessageResponse contains the result of sending a message.
+message SendMessageResponse {
+  // Indicates if the message was sent successfully.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+  // ID of the sent message.
+  string id = 3;
+  // Timestamp when the message was sent.
+  string timestamp = 4;
+}
+
+// GetMessagesRequest is the request to retrieve messages.
+message GetMessagesRequest {
+  // JID of the chat to retrieve messages from.
+  string from = 1;
+  // Maximum number of messages to retrieve.
+  int32 limit = 2;
+}
+
+// GetMessagesResponse contains the retrieved messages.
+message GetMessagesResponse {
+  // List of messages.
+  repeated Message messages = 1;
+}
+
+// Message represents a WhatsApp message.
+message Message {
+  // JID of the sender.
+  string from = 1;
+  // JID of the recipient.
+  string to = 2;
+  // Content of the message.
+  string content = 3;
+  // Timestamp of the message.
+  string timestamp = 4;
+  // Type of the message ("text", "image", "document", etc.).
+  string message_type = 5; 
+  // Caption of the message (if applicable).
+  string caption = 6;
+  // Filename of the message (if applicable).
+  string filename = 7;
+}
+
+// ConnectRequest is the request to connect to WhatsApp.
+message ConnectRequest {
+  // Phone number to connect (optional).
+  string phone_number = 1;
+}
+
+// ConnectResponse contains the result of the connection attempt.
+message ConnectResponse {
+  // Indicates if the connection was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+  // QR code data if authentication is required.
+  string qr_code = 3;
+}
+
+// DisconnectRequest is the request to disconnect from WhatsApp.
+message DisconnectRequest {
+  // Phone number to disconnect (optional).
+  string phone_number = 1;
+}
+
+// DisconnectResponse contains the result of the disconnection.
+message DisconnectResponse {
+  // Indicates if the disconnection was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+}

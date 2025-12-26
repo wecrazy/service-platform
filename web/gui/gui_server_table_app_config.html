@@ -1,0 +1,842 @@
+<!-- Advanced Search -->
+<div class="card">
+  <h3 class="card-header">{{ .title }}</h3>
+  <div class="card-datatable table-responsive">
+    <table class="{{.table_name}} table border-top">
+      <thead>
+        <tr>
+          {{range .table_columns}}
+          <th>{{.Header}}</th>
+          {{end}}
+        </tr>
+      </thead>
+      <!-- <tfoot>
+        <tr>
+          {{range .table_columns}}
+              <th>{{.Header}}</th>
+          {{end}}
+        </tr>
+      </tfoot> -->
+    </table>
+  </div>
+</div>
+<!--/ Advanced Search -->
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="edit_data_{{.table_name}}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-simple modal-edit-user">
+    <div class="modal-content p-3 p-md-5">
+      <div class="modal-body">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="text-center mb-4">
+          <h3>Edit {{ .title }}</h3>
+          <p>Updating {{ .title }} will receive a privacy audit.</p>
+        </div>
+        <form id="edit_data_form_{{.table_name}}" class="row g-3">
+          <input id="{{.table_name}}_edit_id" type="hidden" name="id" />
+          {{range .table_columns}}
+          {{if .Filterable }}
+          {{if .Editable }}
+          <div class="col-12 col-md-6">{{.EditForm}}</div>
+          {{end}}
+          {{end}}
+          {{end}}
+
+          {{if .passwordable}}
+          <label for="username_edit">Username</label>
+          <input type="text" id="username_edit" class="form-control" placeholder="Username">
+          <label for="password_edit">Password</label>
+          <input type="password_edit" id="password_edit" class="form-control" placeholder="Password">
+          {{end}}
+          <!-- <div class="col-12 col-md-6">
+          <label class="switch">
+            <input type="checkbox" class="switch-input" />
+            <span class="switch-toggle-slider">
+              <span class="switch-on"></span>
+              <span class="switch-off"></span>
+            </span>
+            <span class="switch-label">Use as a billing address?</span>
+          </label>
+        </div> -->
+          <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary me-sm-3 me-1">Submit</button>
+            <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="modal" aria-label="Close">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!--/ Edit User Modal -->
+<!-- Edit User Modal -->
+<div class="modal fade" id="batch_upload_{{.table_name}}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-simple modal-edit-user">
+    <div class="modal-content p-3 p-md-5">
+      <div class="modal-body">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="text-center mb-4">
+          <h3>Batch Upload {{ .title }}</h3>
+          <a class="btn btn-outline-info" href="{{.endpoint}}/batch/template">Template</a>
+        </div>
+        <form id="batch_upload_form_{{.table_name}}" class="row g-3">
+          <label for="formFile" class="form-label">Upload File template</label>
+          <input class="form-control" type="file" name="file" id="formFile" 
+       accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+          <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary me-sm-3 me-1">Submit</button>
+            <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="modal" aria-label="Close">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!--/ Edit User Modal -->
+<script>
+  'use strict';
+
+  $(function () {
+    $('#edit_data_form_{{.table_name}}').on('submit', function (e) {
+      e.preventDefault(); // Prevent the default form submission
+
+      // Show the SweetAlert confirmation dialog
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, submit it!',
+        cancelButtonText: 'No, cancel!',
+        reverseButtons: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Gather form data
+          const formData = new FormData(this);
+          const jsonData = {};
+          formData.forEach((value, key) => {
+            jsonData[key] = value;
+          });
+
+          // Send the PUT request using fetch
+          fetch("{{.endpoint}}", {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(jsonData),
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.error) {
+                // Show error message if response contains an error
+                Swal.fire('Error', data.error, 'error');
+              } else {
+                // Show success message if submission is successful
+                Swal.fire('Success', 'Your data has been updated.', 'success');
+                $('#edit_data_{{.table_name}}').modal('hide');
+                $('.{{.table_name}}').DataTable().ajax.reload();
+              }
+            })
+            .catch(error => {
+              // Show error message if fetch fails
+              Swal.fire({
+                  title: 'Error',
+                  text: `There was a problem submitting your data: ${error.message || error}`,
+                  icon: 'error'
+              });
+            });
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          Swal.fire('Cancelled', 'Your form submission has been cancelled.', 'error');
+        }
+      });
+    });
+    $('#batch_upload_form_{{.table_name}}').on('submit', function (e) {
+      e.preventDefault(); // Prevent the default form submission
+
+      // Show the SweetAlert confirmation dialog
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, submit it!',
+        cancelButtonText: 'No, cancel!',
+        reverseButtons: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Gather form data
+          const formData = new FormData(this);
+          // const jsonData = {};
+          // formData.forEach((value, key) => {
+          //   jsonData[key] = value;
+          // });
+
+          fetch("{{.endpoint}}/batch/create", {
+            method: 'POST',
+            body: formData,
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.error) {
+                // Show error message if response contains an error
+                Swal.fire('Error', data.error, 'error');
+              } else {
+                // Show success message if submission is successful
+                Swal.fire('Submitted!', 'Your data has been submitted.', 'success');
+              }
+
+              // Check if there are warnings and display them
+              if (Array.isArray(data.warning) && data.warning.length > 0) {
+                // Combine all warnings into a single string with line breaks
+                const warningMessages = data.warning.join('<br/>');
+                Swal.fire({
+                  title: 'Warning!',
+                  html: warningMessages,
+                  icon: 'warning'
+                });
+              }
+
+              $('#batch_upload_{{.table_name}}').modal('hide');
+              $('.{{.table_name}}').DataTable().ajax.reload();
+            })
+            .catch(error => {
+              // Show error message if fetch fails
+              Swal.fire({
+                  title: 'Error',
+                  text: `There was a problem submitting your data: ${error.message || error}`,
+                  icon: 'error'
+              });
+            });
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          Swal.fire('Cancelled', 'Your form submission has been cancelled.', 'error');
+        }
+      });
+    });
+
+
+
+    function initDataTableCurrent(isScrollableStr, isScrollableXStr) {
+      var isScrollable = isScrollableStr == "true";
+      var isScrollableX = isScrollableXStr == "true";
+
+
+      var dt_current = $('.{{.table_name}}');
+      if (dt_current.length) {
+        var dt_adv_filter = dt_current.DataTable({
+          dom: `<"row" {{ if .insertable }}<"dt_create_{{.table_name}} mx-0">{{end}}    
+      <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end flex-wrap mb-1"fB><"dt_adv_search_{{.table_name}}">>t<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>`,
+          lengthMenu: [
+            // {{range .length_menu}} 
+            "{{.}}", // {{end}}
+          ],
+          pageLength: "{{.page_length}}",
+          processing: true, // Enable processing indicator
+          serverSide: true, // Enable server-side processing
+          searching: true,
+          ajax: {
+            url: '{{.endpoint}}', // Change to POST
+            type: 'POST',
+            data: function (d) {
+              // Append form data to the request
+              const filters = $.extend({}, d, {
+                //{{- range .table_columns }}
+                //{{if .Filterable }}
+                "{{.Data}}": $('#ft_{{$.table_name}}_{{.Data}}').val(),
+                //{{ end }}
+                //{{- end }}
+              });
+              // console.log("=======Start=========");
+              // console.log(filters);
+              // console.log("========End========");
+
+              localStorage.setItem('datatableFilters', JSON.stringify(filters));
+
+              return $.extend({}, d, {
+                //{{- range .table_columns }}
+                //{{if .Filterable }}
+                "{{.Data}}": $('#ft_{{$.table_name}}_{{.Data}}').val(),
+                //{{ end }}
+                //{{- end }}
+              });
+            }
+          },
+          columns: [
+            //{{- range .table_columns }}
+            { data: '{{ .Data }}' },
+            //{{- end }}
+          ],
+          order: [
+            // {{range .order}}
+            ["{{index . 0}}", "{{index . 1}}"],
+            // {{end}}
+          ],
+          scrollY: isScrollable ? '500px' : '',
+          scrollX: isScrollableX,
+          columnDefs: [
+            {
+              className: 'control',
+              orderable: false,
+              visible: !isScrollableX,
+              targets: 0,
+              render: function (data, type, full, meta) {
+                return '';
+              }
+            },
+            //{{- range .table_columns }}
+            {{ .ColumnConfig }}
+            //{{- end }}
+            {
+            // Actions
+            targets: -1,
+            "{{.actionable}}": false,
+            render: function (data, type, full, meta) {
+              // Get the column index from the meta object
+              var columnIndex = meta.col;
+
+              // Retrieve the header text using the column index
+              var headerText = meta.settings.aoColumns[columnIndex].sTitle;
+              if (headerText !== `<i class="bx bx-run"></i>`) {
+                return data;
+              }
+              const tableId = meta.settings.sTableId;
+              return (
+                `<div class="d-inline-block">` +
+                `<a href="javascript:;" class="btn btn-sm btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded"></i></a>` +
+                `<div class="dropdown-menu dropdown-menu-end m-0">` +
+                // `<a href="javascript:;" class="dropdown-item">Details</a>` +
+                // `<a href="javascript:;" class="dropdown-item">Archive</a>` +
+                // `<div class="dropdown-divider"></div>` +
+                `<button class="dropdown-item text-danger deleteable" tab="${tableId}" delete="{{.endpoint}}/${full["id"]}" {{.passtrue}}>Delete</button>` +
+                `</div>` +
+                `</div>` +
+                `<a href="javascript:;" class="btn btn-sm btn-icon item-edit" data-bs-toggle="modal" data-bs-target="#edit_data_{{.table_name}}" 
+              onclick="updateEditableModalValue(this);$('#{{.table_name}}_edit_id').val(${full['id']})"
+              {{range .table_columns}}{{if .Editable }}{{.EditId}}="${extractTxt_HTML(full['{{.Data}}'])}"  {{end}}{{end}}><i class="bx bxs-edit"></i></a>`
+              );
+            }
+          }
+          ],
+        orderCellsTop: true,
+          responsive: !isScrollableX ? {
+            details: {
+              display: $.fn.dataTable.Responsive.display.modal({
+                header: function (row) {
+                  var data = row.data();
+                  return ``;
+                }
+              }),
+              type: 'column',
+              renderer: function (api, rowIdx, columns) {
+                var data = $.map(columns, function (col, i) {
+                  return col.title !== '' // ? Do not show row in modal popup if title is blank (for check box)
+                    ? '<tr data-dt-row="' +
+                    col.rowIndex +
+                    '" data-dt-column="' +
+                    col.columnIndex +
+                    '">' +
+                    '<td>' +
+                    col.title +
+                    ':' +
+                    '</td> ' +
+                    '<td>' +
+                    col.data +
+                    '</td>' +
+                    '</tr>'
+                    : '';
+                }).join('');
+                setTimeout(() => {
+                  enableEditableCells();
+                }, 300)
+
+                return data ? $('<table class="table"/><tbody />').append(data) : false;
+              }
+            }
+          } : false,
+            language: {
+          sLengthMenu: '_MENU_',
+            search: '',
+              searchPlaceholder: 'Search ...'
+        },
+        buttons: [
+          {
+            text: `<i class='bx bx-filter-alt' ></i> `,
+            className: 'btn btn-label-info mx-1 p-2',
+            attr: {
+              'data-bs-toggle': 'collapse',
+              'href': '#filterField_{{.table_name}}',
+              'role': 'button',
+              'aria-expanded': 'false',
+              'aria-controls': 'filterField_{{.table_name}}'
+            }
+          },
+          {
+            extend: 'collection',
+            className: 'btn btn-label-primary dropdown-toggle',
+            text: '<i class="bx bx-export me-sm-1"></i> <span class="d-none d-sm-inline-block">Export</span>',
+            buttons: [
+              //{{ if .export_copy }}
+              {
+                extend: 'copy',
+                text: '<i class="bx bx-copy me-1" ></i>Copy',
+                className: 'dropdown-item',
+                exportOptions: {
+                  columns: [
+                    //{{range .column_array}}
+                    "{{.}}",
+                    //{{end}}
+                  ],
+                  // prevent avatar to be display
+                  format: {
+                    body: function (inner, coldex, rowdex) {
+                      if (inner.length <= 0) return inner;
+                      var el = $.parseHTML(inner);
+                      var result = '';
+                      $.each(el, function (index, item) {
+                        if (item.classList !== undefined && item.classList.contains('user-name')) {
+                          result = result + item.lastChild.firstChild.textContent;
+                        } else if (item.innerText === undefined) {
+                          result = result + item.textContent;
+                        } else result = result + item.innerText;
+                      });
+                      return result;
+                    }
+                  }
+                }
+              }, //{{end}} {{ if .export_print }}
+              {
+                extend: 'print',
+                text: '<i class="bx bx-printer me-1" ></i>Print',
+                className: 'dropdown-item',
+                exportOptions: {
+                  columns: [
+                    //{{range .column_array}}
+                    "{{.}}",
+                    //{{end}}
+                  ],
+                  // prevent avatar to be display
+                  format: {
+                    body: function (inner, coldex, rowdex) {
+                      if (inner.length <= 0) return inner;
+                      var el = $.parseHTML(inner);
+                      var result = '';
+                      $.each(el, function (index, item) {
+                        if (item.classList !== undefined && item.classList.contains('user-name')) {
+                          result = result + item.lastChild.firstChild.textContent;
+                        } else if (item.innerText === undefined) {
+                          result = result + item.textContent;
+                        } else result = result + item.innerText;
+                      });
+                      return result;
+                    }
+                  }
+                },
+                customize: function (win) {
+                  //customize print view for dark
+                  $(win.document.body)
+                    .css('color', config.colors.headingColor)
+                    .css('border-color', config.colors.borderColor)
+                    .css('background-color', config.colors.bodyBg);
+                  $(win.document.body)
+                    .find('table')
+                    .addClass('compact')
+                    .css('color', 'inherit')
+                    .css('border-color', 'inherit')
+                    .css('background-color', 'inherit');
+                }
+              },//{{end}} {{ if .export_csv }}
+              {
+                extend: 'csv',
+                text: '<i class="bx bx-file me-1" ></i>Csv',
+                className: 'dropdown-item',
+                exportOptions: {
+                  columns: [
+                    //{{range .column_array}}
+                    "{{.}}",
+                    //{{end}}
+                  ],
+                  // prevent avatar to be display
+                  format: {
+                    body: function (inner, coldex, rowdex) {
+                      if (inner.length <= 0) return inner;
+                      var el = $.parseHTML(inner);
+                      var result = '';
+                      $.each(el, function (index, item) {
+                        if (item.classList !== undefined && item.classList.contains('user-name')) {
+                          result = result + item.lastChild.firstChild.textContent;
+                        } else if (item.innerText === undefined) {
+                          result = result + item.textContent;
+                        } else result = result + item.innerText;
+                      });
+                      return result;
+                    }
+                  }
+                }
+              }, //{{end}} {{ if .export_all_csv }}
+              {
+                text: '<i class="bx bx-data"></i> All (CSV)',
+                className: 'dropdown-item',
+                action: function (e, dt, button, config) {
+                  fetch('{{.endpoint}}.csv', {
+                    method: 'GET',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                  })
+                    .then(response => {
+                      if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                      }
+                      return response.blob();
+                    })
+                    .then(blob => {
+                      // Combine them into the desired filename format
+                      var title = "{{ .title }}";
+                      var cleanTitle = title.replace(/<\/?[^>]+(>|$)/g, "");
+                      const filename = `${cleanTitle}_${timestampnow}.csv`;
+
+                      // Create a link element to trigger the download
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.style.display = 'none';
+                      a.href = url;
+                      a.download = filename;
+                      document.body.appendChild(a);
+                      a.click();
+
+                      // Clean up the URL object
+                      window.URL.revokeObjectURL(url);
+                    })
+                    .catch(error => {
+                      console.error('There was a problem with the fetch operation:', error);
+                      Swal.fire({
+                          title: 'Error',
+                          text: `An error occurred while downloading data: ${error.message || error}`,
+                          icon: 'error'
+                      });
+                    });
+                }
+              }, //{{end}} {{ if .export_pdf }}
+              {
+                extend: 'pdf',
+                text: '<i class="bx bxs-file-pdf me-1"></i>Pdf',
+                className: 'dropdown-item',
+                exportOptions: {
+                  columns: [
+                    //{{range .column_array}}
+                    "{{.}}",
+                    //{{end}}
+                  ],
+                  // prevent avatar to be display
+                  format: {
+                    body: function (inner, coldex, rowdex) {
+                      if (inner.length <= 0) return inner;
+                      var el = $.parseHTML(inner);
+                      var result = '';
+                      $.each(el, function (index, item) {
+                        if (item.classList !== undefined && item.classList.contains('user-name')) {
+                          result = result + item.lastChild.firstChild.textContent;
+                        } else if (item.innerText === undefined) {
+                          result = result + item.textContent;
+                        } else result = result + item.innerText;
+                      });
+                      return result;
+                    }
+                  }
+                }
+              }, //{{end}} 
+              {
+                extend: 'excel',
+                text: '<i class="bx bxs-file-export me-1"></i>Excel',
+                className: 'dropdown-item',
+                exportOptions: {
+                  columns: [
+                    //{{range .column_array}}
+                    "{{.}}",
+                    //{{end}}
+                  ],
+                  // prevent avatar to be display
+                  format: {
+                    body: function (inner, coldex, rowdex) {
+                      if (inner.length <= 0) return inner;
+                      var el = $.parseHTML(inner);
+                      var result = '';
+                      $.each(el, function (index, item) {
+                        if (item.classList !== undefined && item.classList.contains('user-name')) {
+                          result = result + item.lastChild.firstChild.textContent;
+                        } else if (item.innerText === undefined) {
+                          result = result + item.textContent;
+                        } else result = result + item.innerText;
+                      });
+                      return result;
+                    }
+                  }
+                }
+              },
+            ]
+          },
+          {
+            text: isScrollable ? `<i class='bx bx-expand-vertical'></i>` : `<i class='bx bx-collapse-vertical' ></i>`,
+            // className: 'btn btn-label-dark mx-1 p-2',
+            className: `btn mx-1 p-2 ${!isScrollable ? 'btn-dark' : 'btn-label-dark'}`,
+            action: function (e, dt, node, config) {
+              // Toggle the scrollEnabled variable
+              isScrollable = !isScrollable;
+
+              // Destroy the current DataTable instance
+              dt.destroy();
+
+              // Reinitialize the DataTable with the new scrollY setting
+              initDataTableCurrent(String(isScrollable), isScrollableXStr);
+            }
+          },
+          {
+            text: isScrollableX ? `<i class='bx bx-expand-horizontal'></i>` : `<i class='bx bx-collapse-horizontal' ></i>`,
+            // className: 'btn btn-dark mx-1 p-2',
+            className: `btn mx-1 p-2 ${!isScrollableX ? 'btn-dark' : 'btn-label-dark'}`,
+            action: function (e, dt, node, config) {
+              // Toggle the scrollEnabled variable
+              isScrollableX = !isScrollableX;
+
+              // Destroy the current DataTable instance
+              dt.destroy();
+
+              // Reinitialize the DataTable with the new scrollY setting
+              initDataTableCurrent(isScrollableStr, String(isScrollableX));
+            }
+          },
+          // {{ if .insertable }}
+          {
+            text: '<i class="bx bx-add-to-queue" ></i>',
+            className: 'add-new btn btn-outline-info py-1 px-2',
+            attr: {
+              'data-bs-toggle': 'collapse',
+              'href': '#create_new_{{.table_name}}',
+              'role': 'button',
+              'aria-expanded': 'false',
+              'aria-controls': 'create_new_{{.table_name}}'
+            },
+          },
+          //{{end}}
+        ],
+          initComplete: function () {
+            enableEditableCells();
+            // Add your class here after DataTable is fully initialized
+            $('.dt-buttons').addClass('my-3');
+            $('.dataTables_filter').addClass('my-3');
+            $('.dt_adv_search_{{.table_name}}').html(
+              `<div class="collapse mb-2" id="filterField_{{.table_name}}">
+            <div class="row">
+              <div class="col-12">
+                <div class="row g-3">
+                  {{range .table_columns}}
+                    {{if .Filterable}}
+                    <div class="col-12 col-sm-6 col-lg-4">{{.Filter}}</div>
+                    {{end}}
+                  {{end}}
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+        `);
+
+            // {{ if .insertable }}
+            $('.dt_create_{{.table_name}}').html(
+              `<div class="collapse mt-2 mb-2 mx-2" id="create_new_{{.table_name}}">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <h5 class="m-0">Create New Data</h5>
+                
+                <!--
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#batch_upload_{{.table_name}}" >batch</button>
+                  -->
+
+              </div>
+            <form id="insert_data_form_{{.table_name}}" method="POST" action="{{.endpoint}}/create">
+              <div class="row">
+                <div class="col-12">
+                  <div class="row g-3">
+                    {{range .table_columns}}
+                      {{if .Insertable}}
+                      <div class="col-12 col-sm-6 col-lg-4">{{.InsertField}}</div>
+                      {{end}}
+                    {{end}}
+                    
+                  </div>
+                </div>
+                <div class="col-12 text-center mt-3">
+                  <button type="submit" class="btn btn-primary me-sm-3 me-1">Submit</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        `);
+            $('#insert_data_form_{{.table_name}}').on('submit', function (e) {
+              e.preventDefault(); // Prevent the default form submission
+
+              // Show the SweetAlert confirmation dialog
+              Swal.fire({
+                title: 'Are you sure to Insert New {{.title}} data ?',
+                text: "New Data will be Inserted",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, submit it!',
+                cancelButtonText: 'No, cancel!',
+                reverseButtons: true
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  // Gather form data
+                  const formData = new FormData(this);
+
+                  // Send the POST request using fetch
+                  fetch('{{.endpoint}}/create', {
+                    method: 'POST',
+                    body: formData, // FormData is sent as multipart/form-data
+                  })
+                    .then(response => response.json())
+                    .then(data => {
+                      if (data.error) {
+                        // Show error message if response contains an error
+                        Swal.fire('Error', data.error, 'error');
+                      } else {
+                        // Reset the form fields to empty
+                        $('#insert_data_form_{{.table_name}}')[0].reset();
+                        $('#create_new_{{.table_name}}').collapse('hide');
+                        $('.{{.table_name}}').DataTable().ajax.reload();
+
+                        // Show success message if submission is successful
+                        Swal.fire('Submitted!', data.msg, 'success');
+                      }
+
+                    })
+                    .catch(error => {
+                      // Show error message if fetch fails
+                      Swal.fire({
+                          title: 'Error',
+                          text: `There was a problem submitting your data: ${error.message || error}`,
+                          icon: 'error'
+                      });
+                    });
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                  Swal.fire('Cancelled', 'Your form submission has been cancelled.', 'error');
+                }
+              });
+            });
+            // {{ end}}
+
+            var startDateEle = $('.start_date_{{.table_name}}'),
+              endDateEle = $('.end_date_{{.table_name}}');
+
+            // Advanced Search Functions Starts
+            // --------------------------------------------------------------------
+            var datePicker = $('.flatpickr-datetime');
+            if (datePicker.length) {
+              datePicker.flatpickr({
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                time_24hr: true,
+                minuteIncrement: 1,
+                defaultDate: new Date().toISOString().split('T')[0] + " 00:00", // Set to today's date with time 00:00
+              });
+            }
+            // Datepicker for advanced filter
+            var rangePickr = $('.flatpickr-range'),
+              dateFormat = 'DD/MM/YYYY';
+
+            if (rangePickr.length) {
+              rangePickr.flatpickr({
+                mode: 'range',
+                dateFormat: 'd/m/Y',
+                orientation: isRtl ? 'auto right' : 'auto left',
+                locale: {
+                  format: dateFormat
+                },
+                onClose: function (selectedDates, dateStr, instance) {
+                  var startDate = '',
+                    endDate = new Date();
+                  if (selectedDates[0] != undefined) {
+                    startDate = moment(selectedDates[0]).format('DD/MM/YYYY');
+                    startDateEle.val(startDate);
+                  }
+                  if (selectedDates[1] != undefined) {
+                    endDate = moment(selectedDates[1]).format('DD/MM/YYYY');
+                    endDateEle.val(endDate);
+                  }
+                  $(rangePickr).trigger('change').trigger('keyup');
+                }
+              });
+            }
+
+            // Filter column wise function
+            function filterColumn(i, val) {
+              if (i == 5) {
+                var startDate = startDateEle.val(),
+                  endDate = endDateEle.val();
+                if (startDate !== '' && endDate !== '') {
+                  $.fn.dataTableExt.afnFiltering.length = 0; // Reset datatable filter
+                  dt_current.dataTable().fnDraw(); // Draw table after filter
+                  filterByDate(i, startDate, endDate); // We call our filter function
+                }
+                dt_current.dataTable().fnDraw();
+              } else {
+                dt_current.DataTable().column(i).search(val, false, true).draw();
+              }
+            }
+
+            // Advance filter function
+            // We pass the column location, the start date, and the end date
+            $.fn.dataTableExt.afnFiltering.length = 0;
+            var filterByDate = function (column, startDate, endDate) {
+              // Custom filter syntax requires pushing the new filter to the global filter array
+              $.fn.dataTableExt.afnFiltering.push(function (oSettings, aData, iDataIndex) {
+                var rowDate = normalizeDate(aData[column]),
+                  start = normalizeDate(startDate),
+                  end = normalizeDate(endDate);
+
+                // If our date from the row is between the start and end
+                if (start <= rowDate && rowDate <= end) {
+                  return true;
+                } else if (rowDate >= start && end === '' && start !== '') {
+                  return true;
+                } else if (rowDate <= end && start === '' && end !== '') {
+                  return true;
+                } else {
+                  return false;
+                }
+              });
+            };
+
+            // converts date strings to a Date object, then normalized into a YYYYMMMDD format (ex: 20131220). Makes comparing dates easier. ex: 20131220 > 20121220
+            var normalizeDate = function (dateString) {
+              var date = new Date(dateString);
+              var normalized =
+                date.getFullYear() + '' + ('0' + (date.getMonth() + 1)).slice(-2) + '' + ('0' + date.getDate()).slice(-2);
+              return normalized;
+            };
+            // Advanced Search Functions Ends
+
+
+            // on key up from input field
+            $('input.dt-input').on('keyup', function () {
+              filterColumn($(this).attr('data-column'), $(this).val());
+            });
+
+
+            // Filter form control to default size
+            // ? setTimeout used for multilingual table initialization
+            setTimeout(() => {
+              $('.dataTables_filter .form-control').removeClass('form-control-sm');
+              $('.dataTables_length .form-select').removeClass('form-select-sm');
+            }, 200);
+          }
+      }).on('draw.dt', function () {
+        enableEditableCells();
+      });
+      }
+    }
+  initDataTableCurrent("{{.scrollUpDown}}", "{{.scrollLeftRight}}")
+  });
+</script>
