@@ -772,7 +772,7 @@ const file_proto_scheduler_proto_rawDesc = "" +
 	"\n" +
 	"TriggerJob\x12\x1c.scheduler.TriggerJobRequest\x1a\x1d.scheduler.TriggerJobResponse\x12O\n" +
 	"\fGetJobStatus\x12\x1e.scheduler.GetJobStatusRequest\x1a\x1f.scheduler.GetJobStatusResponse\x12X\n" +
-	"\x0fReloadScheduler\x12!.scheduler.ReloadSchedulerRequest\x1a\".scheduler.ReloadSchedulerResponseB\x17Z\x15service-platform/protob\x06proto3"
+	"\x0fReloadScheduler\x12!.scheduler.ReloadSchedulerRequest\x1a\".scheduler.ReloadSchedulerResponseB\x18Z\x16service-platform/protob\x06proto3"
 
 var (
 	file_proto_scheduler_proto_rawDescOnce sync.Once
