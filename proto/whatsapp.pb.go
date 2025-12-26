@@ -2383,7 +2383,7 @@ const file_proto_whatsapp_proto_rawDesc = "" +
 	"\fIsOnWhatsApp\x12\x1a.proto.IsOnWhatsAppRequest\x1a\x1b.proto.IsOnWhatsAppResponse\x12P\n" +
 	"\x0fGetJoinedGroups\x12\x1d.proto.GetJoinedGroupsRequest\x1a\x1e.proto.GetJoinedGroupsResponse\x12G\n" +
 	"\fCreateStatus\x12\x1a.proto.CreateStatusRequest\x1a\x1b.proto.CreateStatusResponse\x12D\n" +
-	"\vHasContacts\x12\x19.proto.HasContactsRequest\x1a\x1a.proto.HasContactsResponseB\x17Z\x15service-platform/protob\x06proto3"
+	"\vHasContacts\x12\x19.proto.HasContactsRequest\x1a\x1a.proto.HasContactsResponseB\x18Z\x16service-platform/protob\x06proto3"
 
 var (
 	file_proto_whatsapp_proto_rawDescOnce sync.Once

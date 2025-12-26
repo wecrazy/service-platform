@@ -18,21 +18,23 @@ var (
 )
 
 var yamlFilePaths = []string{
-	"/config/config.%s.yaml",
-	"config/config.%s.yaml",
-	"../config/config.%s.yaml",
-	"/../config/config.%s.yaml",
-	"../../config/config.%s.yaml",
-	"/../../config/config.%s.yaml",
+	"internal/config/config.%s.yaml",
+	"/internal/config/config.%s.yaml",
+	"internal/config/config.%s.yaml",
+	"../internal/config/config.%s.yaml",
+	"/../internal/config/config.%s.yaml",
+	"../../internal/config/config.%s.yaml",
+	"/../../internal/config/config.%s.yaml",
 }
 
 var mainConfigPaths = []string{
-	"/config/conf.yaml",
-	"config/conf.yaml",
-	"../config/conf.yaml",
-	"/../config/conf.yaml",
-	"../../config/conf.yaml",
-	"/../../config/conf.yaml",
+	"internal/config/conf.yaml",
+	"/internal/config/conf.yaml",
+	"internal/config/conf.yaml",
+	"../internal/config/conf.yaml",
+	"/../internal/config/conf.yaml",
+	"../../internal/config/conf.yaml",
+	"/../../internal/config/conf.yaml",
 }
 
 // MainConfig represents the main configuration structure for determining mode
