@@ -315,20 +315,8 @@ func HandleCLIArgs(yamlCfg *config.YamlConfig) bool {
 		switch arg {
 		case "--install":
 			fmt.Println("🔧 Running install process...")
-
 			installer.EnsureAdminPrivileges()
-
-			switch runtime.GOOS {
-			case "windows":
-				installer.WindowsService(yamlCfg)
-			case "linux":
-				installer.LinuxService(yamlCfg)
-			case "darwin":
-				fmt.Println("🍎 macOS detected — but we are sorry, we don't have macOS installer yet")
-			default:
-				fmt.Printf("⚠️ Unsupported OS: %s\n", runtime.GOOS)
-			}
-
+			installer.Install(yamlCfg)
 			return true
 		default:
 			fmt.Printf("⚠️ Unknown argument: %s\n", arg)
@@ -505,7 +493,7 @@ func main() {
 		return
 	}
 
-	// Increase resource limitations for LINUX
+	// Increase resource limitations (handled by OS-specific implementations)
 	fun.IncreaseFileDescriptorLimit()
 
 	// Redis
