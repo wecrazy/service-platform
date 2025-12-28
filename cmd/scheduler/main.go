@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"service-platform/internal/config"
 	"service-platform/internal/database"
 	"service-platform/internal/pkg/logger"
@@ -12,6 +13,7 @@ import (
 	"service-platform/proto"
 
 	"github.com/go-co-op/gocron"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -210,6 +212,14 @@ func main() {
 		cfg:       &cfg,
 	})
 	reflection.Register(grpcServer)
+
+	// Start metrics server
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		metricsPort := cfg.Metrics.SchedulerPort
+		logrus.Printf("📊 Metrics server listening on :%d", metricsPort)
+		logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", metricsPort), nil))
+	}()
 
 	fmt.Printf("🚀 Scheduler gRPC service listening on :%d\n", port)
 	fmt.Println("📋 All scheduled jobs are now running independently")

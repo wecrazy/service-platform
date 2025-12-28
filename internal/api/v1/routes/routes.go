@@ -15,6 +15,7 @@ import (
 	"github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	analytics "github.com/tom-draper/api-analytics/analytics/go/gin"
 	"gorm.io/gorm"
@@ -144,6 +145,9 @@ func HtmlRoutes(
 
 	// Health check endpoint for monitoring
 	router.GET(globalURL+"health", controllers.GetHealthCheck(db, systemMonitor))
+
+	// Prometheus metrics endpoint
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// Note: net/http/pprof uses DefaultServeMux, so we mount it using gin's Handle method
 	// if you want in charts view mode try using go tool pprof -http=:2222 http://localhost:2221/debug/pprof/profile

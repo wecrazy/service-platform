@@ -1,0 +1,71 @@
+version: '3.8'
+
+# Compatible with both Docker Compose and Podman Compose
+# Podman automatically handles user namespaces and SELinux labels
+
+services:
+  prometheus:
+    image: docker.io/prom/prometheus:latest
+    container_name: service-platform-prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=72h'  # Reduced from 200h to 72h
+      - '--web.enable-lifecycle'
+      - '--storage.tsdb.min-block-duration=2h'  # Faster block creation
+      - '--storage.tsdb.max-block-duration=2h'  # Smaller blocks
+    environment:
+      - PROMETHEUS_CONFIG_FILE=/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M    # Limit memory usage
+        reservations:
+          memory: 128M
+
+  grafana:
+    image: docker.io/grafana/grafana:latest
+    container_name: service-platform-grafana
+    ports:
+      - "${GRAFANA_PORT:-3030}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_LOG_LEVEL=warn                    # Reduce logging verbosity
+      - GF_LOG_MODE=console                  # Console logging only
+      - GF_ANALYTICS_REPORTING_ENABLED=false # Disable analytics
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false # Disable update checks
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=false # Security
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M    # Limit Grafana memory usage
+        reservations:
+          memory: 64M
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  monitoring:
+    driver: bridge

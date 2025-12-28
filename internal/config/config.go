@@ -371,6 +371,13 @@ type YamlConfig struct {
 		Host string `yaml:"host"`
 		Port int    `yaml:"port"`
 	} `yaml:"grpc"`
+
+	Metrics struct {
+		APIPort       int `yaml:"api_port"`
+		GRPCPort      int `yaml:"grpc_port"`
+		SchedulerPort int `yaml:"scheduler_port"`
+		WhatsAppPort  int `yaml:"whatsapp_port"`
+	} `yaml:"metrics"`
 }
 
 type Scheduler struct {
