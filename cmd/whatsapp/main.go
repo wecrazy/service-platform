@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/yeqown/go-qrcode/v2"
 	"github.com/yeqown/go-qrcode/writer/standard"
@@ -1678,6 +1680,14 @@ func main() {
 	pb.RegisterWhatsAppServiceServer(s, srv)
 
 	reflection.Register(s)
+
+	// Start metrics server
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		metricsPort := config.GetConfig().Metrics.WhatsAppPort
+		logrus.Printf("📊 Metrics server listening on :%d", metricsPort)
+		logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", metricsPort), nil))
+	}()
 
 	fmt.Printf("📞 Whatsapp gRPC server listening on port %s\n", port)
 	// Notify superuser that server is up

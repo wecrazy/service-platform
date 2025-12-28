@@ -1,4 +1,4 @@
-.PHONY: run-api run-wa run-scheduler run-grpc build build-api build-wa build-scheduler build-grpc docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod
+.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-status monitoring-cleanup help
 
 run-api:
 	go run cmd/api/main.go
@@ -29,6 +29,8 @@ build-grpc:
 	go build -o bin/grpc cmd/grpc/main.go
 
 build: build-api build-wa build-grpc
+
+run-all: run-api run-grpc run-scheduler run-wa
 
 # clean:
 # 	rm -rf bin
@@ -70,3 +72,57 @@ config-dev:
 
 config-prod:
 	@./scripts/switch_config.sh prod
+
+# Monitoring
+monitoring-start:
+	@echo "🚀 Starting Service Platform Monitoring..."
+	@./scripts/start-monitoring.sh
+
+monitoring-stop:
+	@echo "🛑 Stopping Service Platform Monitoring..."
+	@./scripts/stop-monitoring.sh
+
+monitoring-restart: monitoring-stop
+	@echo "🔄 Restarting Service Platform Monitoring..."
+	@sleep 2
+	@./scripts/start-monitoring.sh
+
+monitoring-status:
+	@echo "📊 Checking monitoring services status..."
+	@podman ps --filter "label=io.podman.compose.project=service-platform" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || docker ps --filter "label=com.docker.compose.project=service-platform" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "No monitoring services running or container runtime not available"
+
+monitoring-cleanup:
+	@echo "🧹 Cleaning up monitoring data and logs..."
+	@./scripts/cleanup-monitoring.sh
+
+help:
+	@echo "🚀 Service Platform - Available Commands:"
+	@echo ""
+	@echo "📦 Build Commands:"
+	@echo "  make build-api          - Build API service"
+	@echo "  make build-grpc         - Build gRPC service"
+	@echo "  make build-scheduler    - Build scheduler service"
+	@echo "  make build-wa           - Build WhatsApp service"
+	@echo "  make build              - Build all services"
+	@echo ""
+	@echo "🏃 Run Commands:"
+	@echo "  make run-api            - Run API service"
+	@echo "  make run-grpc           - Run gRPC service"
+	@echo "  make run-scheduler      - Run scheduler service"
+	@echo "  make run-wa             - Run WhatsApp service"
+	@echo "  make run-all            - Run all services"
+	@echo ""
+	@echo "📊 Monitoring Commands:"
+	@echo "  make monitoring-start   - Start Prometheus + Grafana"
+	@echo "  make monitoring-stop    - Stop monitoring services"
+	@echo "  make monitoring-restart - Restart monitoring services"
+	@echo "  make monitoring-status  - Check monitoring status"
+	@echo "  make monitoring-cleanup - Clean old monitoring data"
+	@echo ""
+	@echo "🛠️  Development Commands:"
+	@echo "  make config-dev         - Setup dev configuration"
+	@echo "  make config-prod        - Setup prod configuration"
+	@echo "  make docs-install       - Install API documentation tools"
+	@echo "  make docs-serve         - Serve API documentation"
+	@echo "  make swagger            - Generate Swagger docs"
+	@echo "  make clean-dashboard    - Clean dashboard files"

@@ -1,0 +1,118 @@
+{
+  "id": null,
+  "title": "WhatsApp Service Dashboard",
+  "tags": ["service-platform", "whatsapp"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "WhatsApp Service Status",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "up{job=\"whatsapp-service\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              },
+              "type": "value"
+            }
+          ]
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Metrics Endpoint Requests",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(promhttp_metric_handler_requests_total{job=\"whatsapp-service\",code=\"200\"}[5m])",
+          "refId": "A",
+          "legendFormat": "Successful Requests"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "title": "Goroutines",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "go_goroutines{job=\"whatsapp-service\"}",
+          "refId": "A",
+          "legendFormat": "Goroutines"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 4,
+      "title": "Memory Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "go_memstats_alloc_bytes{job=\"whatsapp-service\"}",
+          "refId": "A",
+          "legendFormat": "Heap Allocated"
+        },
+        {
+          "expr": "process_resident_memory_bytes{job=\"whatsapp-service\"}",
+          "refId": "B",
+          "legendFormat": "Resident Memory"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      }
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "refresh": "5s",
+  "schemaVersion": 27,
+  "version": 0,
+  "links": []
+}
