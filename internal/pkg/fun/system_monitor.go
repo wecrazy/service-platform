@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 // SystemResourceMonitor provides system resource monitoring utilities
@@ -16,6 +19,54 @@ type SystemResourceMonitor struct {
 }
 
 var GlobalSystemMonitor *SystemResourceMonitor
+
+// Prometheus metrics
+var (
+	cpuLoad1 = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_cpu_load1",
+		Help: "System CPU load average over 1 minute",
+	})
+	cpuLoad5 = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_cpu_load5",
+		Help: "System CPU load average over 5 minutes",
+	})
+	cpuLoad15 = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_cpu_load15",
+		Help: "System CPU load average over 15 minutes",
+	})
+	memoryUsedPercent = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_memory_used_percent",
+		Help: "System memory used percentage",
+	})
+	memoryTotal = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_memory_total_bytes",
+		Help: "Total system memory in bytes",
+	})
+	memoryUsed = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_memory_used_bytes",
+		Help: "Used system memory in bytes",
+	})
+	diskUsedPercent = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_disk_used_percent",
+		Help: "System disk used percentage",
+	})
+	diskTotal = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_disk_total_bytes",
+		Help: "Total system disk space in bytes",
+	})
+	diskUsed = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_disk_used_bytes",
+		Help: "Used system disk space in bytes",
+	})
+	networkBytesSent = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_network_bytes_sent",
+		Help: "Total network bytes sent",
+	})
+	networkBytesReceived = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "system_network_bytes_received",
+		Help: "Total network bytes received",
+	})
+)
 
 func init() {
 	GlobalSystemMonitor = NewSystemResourceMonitor()
@@ -246,13 +297,36 @@ func (s *SystemResourceMonitor) StartResourceMonitoring() {
 
 // checkSystemResources performs periodic system resource checks and logging
 func (s *SystemResourceMonitor) checkSystemResources() {
-	// This would contain the monitoring logic from main.go
-	// For now, it's a placeholder that can be expanded
+	// Update CPU load metrics
+	load1, load5, load15 := s.GetCPULoad()
+	cpuLoad1.Set(load1)
+	cpuLoad5.Set(load5)
+	cpuLoad15.Set(load15)
+
+	// Update memory metrics
+	sysTotalMB, sysUsedMB, sysUsagePercent := s.GetSystemMemoryStats()
+	memoryTotal.Set(sysTotalMB * 1024 * 1024) // Convert MB to bytes
+	memoryUsed.Set(sysUsedMB * 1024 * 1024)
+	memoryUsedPercent.Set(sysUsagePercent)
+
+	// Update disk metrics
+	diskTotalBytes, diskUsedBytes := s.GetDiskUsage()
+	diskTotal.Set(float64(diskTotalBytes))
+	diskUsed.Set(float64(diskUsedBytes))
+	if diskTotalBytes > 0 {
+		diskUsedPercent.Set(float64(diskUsedBytes) / float64(diskTotalBytes) * 100)
+	}
+
+	// Update network metrics
+	bytesSent, bytesReceived := s.GetNetworkStats()
+	networkBytesSent.Set(float64(bytesSent))
+	networkBytesReceived.Set(float64(bytesReceived))
+
+	// Keep existing logging logic
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
 	memoryUsageMB := float64(m.Alloc) / 1024 / 1024
-	sysTotalMB, sysUsedMB, _ := s.GetSystemMemoryStats()
 
 	if sysTotalMB > 0 {
 		systemUsagePercent := (sysUsedMB / sysTotalMB) * 100

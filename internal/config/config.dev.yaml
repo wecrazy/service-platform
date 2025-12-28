@@ -261,3 +261,8 @@ whatsnyan:
         - ".aac"
   message_processed_tolerance_hours: 24 # hours
   purge_message_older_than: "1Week"
+metrics:
+  api_port: 9094
+  grpc_port: 9092
+  scheduler_port: 9091
+  whatsapp_port: 9093

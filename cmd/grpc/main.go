@@ -5,16 +5,20 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
 	"service-platform/internal/database"
 	"service-platform/internal/pkg/fun"
+	"service-platform/internal/pkg/logger"
 	"service-platform/proto"
 	"strings"
 	"time"
 
 	"github.com/dchest/captcha"
 	"github.com/go-redis/redis/v8"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"gorm.io/gorm"
@@ -43,7 +47,7 @@ func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto
 	}
 
 	if err := s.db.WithContext(ctx).Where(whereQuery, req.EmailUsername).First(&user).Error; err != nil {
-		log.Printf("❌ User query error: %v\n", err)
+		logrus.Errorf("❌ User query error: %v\n", err)
 		return &proto.LoginResponse{Success: false, Message: "Invalid credentials"}, nil
 	}
 
@@ -90,40 +94,52 @@ func main() {
 	}
 
 	go config.WatchConfig()
+	yamlCfg := config.GetConfig()
+
+	// Init log
+	logger.InitLogrus()
 
 	db, err := database.InitAndCheckDB(
-		config.GetConfig().Database.Type,
-		config.GetConfig().Database.Username,
-		config.GetConfig().Database.Password,
-		config.GetConfig().Database.Host,
-		config.GetConfig().Database.Port,
-		config.GetConfig().Database.Name,
-		config.GetConfig().Database.SSLMode,
+		yamlCfg.Database.Type,
+		yamlCfg.Database.Username,
+		yamlCfg.Database.Password,
+		yamlCfg.Database.Host,
+		yamlCfg.Database.Port,
+		yamlCfg.Database.Name,
+		yamlCfg.Database.SSLMode,
 	)
 
 	if err != nil {
-		log.Fatalf("Failed to init DB: %v", err)
+		logrus.Fatalf("Failed to init DB: %v", err)
 	}
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", config.GetConfig().Redis.Host, config.GetConfig().Redis.Port),
-		Password: config.GetConfig().Redis.Password,
-		DB:       config.GetConfig().Redis.Db,
+		Addr:     fmt.Sprintf("%s:%d", config.GetConfig().Redis.Host, yamlCfg.Redis.Port),
+		Password: yamlCfg.Redis.Password,
+		DB:       yamlCfg.Redis.Db,
 	})
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.GetConfig().GRPC.Port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", yamlCfg.GRPC.Port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logrus.Fatalf("failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
 	proto.RegisterAuthServiceServer(s, &authServer{db: db, redis: redisClient})
 	reflection.Register(s)
 
-	log.Println("🚀 Auth gRPC server listening on " + fmt.Sprintf(":%d", config.GetConfig().GRPC.Port))
-	log.Println("📝 Note: Scheduler is now a separate service (run cmd/scheduler/main.go)")
+	// Start metrics server
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		metricsPort := config.GetConfig().Metrics.GRPCPort
+		logrus.Printf("📊 Metrics server listening on :%d", metricsPort)
+		logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", metricsPort), nil))
+	}()
+
+	logrus.Println("🚀 Auth gRPC server listening on " + fmt.Sprintf(":%d", config.GetConfig().GRPC.Port))
+	logrus.Println("📝 Note: Scheduler is now a separate service (run cmd/scheduler/main.go)")
 
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		logrus.Fatalf("failed to serve: %v", err)
 	}
 }

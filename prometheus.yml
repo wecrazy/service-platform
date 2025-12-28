@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 30s     # Increased from 15s to reduce resource usage
+  evaluation_interval: 30s # Match scrape interval
+
+scrape_configs:
+  - job_name: 'api-service'
+    static_configs:
+      - targets: ['localhost:6221', 'host.containers.internal:6221']  # API service with /metrics (main API port)
+    metrics_path: '/metrics'
+
+  - job_name: 'grpc-service'
+    static_configs:
+      - targets: ['localhost:9092', 'host.containers.internal:9092']  # Auth gRPC service metrics (matches config.dev.yaml metrics.grpc_port)
+    metrics_path: '/metrics'
+
+  - job_name: 'scheduler-service'
+    static_configs:
+      - targets: ['localhost:9091', 'host.containers.internal:9091']  # Scheduler service metrics (matches config.dev.yaml metrics.scheduler_port)
+    metrics_path: '/metrics'
+
+  - job_name: 'whatsapp-service'
+    static_configs:
+      - targets: ['localhost:9093', 'host.containers.internal:9093']  # WhatsApp service metrics (matches config.dev.yaml metrics.whatsapp_port)
+    metrics_path: '/metrics'

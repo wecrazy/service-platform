@@ -1,0 +1,149 @@
+{
+  "id": null,
+  "title": "Service Platform Overview",
+  "tags": ["service-platform", "overview"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Service Health Overview",
+      "type": "table",
+      "targets": [
+        {
+          "expr": "up",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              },
+              "type": "value"
+            }
+          ]
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "API Service - Metrics Requests",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(promhttp_metric_handler_requests_total{job=\"api-service\",code=\"200\"}[5m])",
+          "refId": "A",
+          "legendFormat": "API Metrics Requests"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 3,
+      "title": "gRPC Service - Metrics Requests",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(promhttp_metric_handler_requests_total{job=\"grpc-service\",code=\"200\"}[5m])",
+          "refId": "A",
+          "legendFormat": "gRPC Metrics Requests"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      }
+    },
+    {
+      "id": 4,
+      "title": "Scheduler - Metrics Requests",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(promhttp_metric_handler_requests_total{job=\"scheduler-service\",code=\"200\"}[5m])",
+          "refId": "A",
+          "legendFormat": "Scheduler Metrics Requests"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      }
+    },
+    {
+      "id": 5,
+      "title": "WhatsApp - Metrics Requests",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(promhttp_metric_handler_requests_total{job=\"whatsapp-service\",code=\"200\"}[5m])",
+          "refId": "A",
+          "legendFormat": "WhatsApp Metrics Requests"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      }
+    },
+    {
+      "id": 6,
+      "title": "Memory Usage Across Services",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      }
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "refresh": "5s",
+  "schemaVersion": 27,
+  "version": 0,
+  "links": []
+}
