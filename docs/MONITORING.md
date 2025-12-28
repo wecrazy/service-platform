@@ -8,9 +8,9 @@ This monitoring setup uses **Podman Compose** as the primary container runtime, 
 
 **Prometheus:**
 - ✅ **DOES store data** on disk (time-series database)
-- **Retention:** 24 hours (optimized for low usage)
+- **Retention:** 72 hours (optimized for low usage)
 - **Memory:** Limited to 256MB max
-- **Disk:** ~50-200MB for 24 hours of metrics
+- **Disk:** ~50-200MB for 72 hours of metrics
 - **Scrape Interval:** 30 seconds (reduced from 15s)
 
 **Grafana:**
@@ -24,7 +24,7 @@ This monitoring setup uses **Podman Compose** as the primary container runtime, 
 ```yaml
 # Prometheus optimizations:
 - scrape_interval: 30s (not 15s)
-- retention.time: 24h (not 200h)
+- retention.time: 72h (not 200h)
 - memory limit: 256MB
 - smaller block durations for efficient storage
 
@@ -63,7 +63,7 @@ make monitoring-cleanup
 - **Time-series database** for historical metrics
 - **Compression:** Efficiently stores data points
 - **Querying:** Enables historical analysis and alerting
-- **Retention:** Configurable cleanup (we set 24h)
+- **Retention:** Configurable cleanup (we set 72h)
 
 ### Configurable Settings
 
