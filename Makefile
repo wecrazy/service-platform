@@ -1,4 +1,4 @@
-.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-status monitoring-cleanup help
+.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-status monitoring-cleanup monitoring-ensure-running help
 
 run-api:
 	go run cmd/api/main.go
@@ -30,7 +30,7 @@ build-grpc:
 
 build: build-api build-wa build-grpc
 
-run-all: run-api run-grpc run-scheduler run-wa
+run-all: monitoring-ensure-running run-api run-grpc run-scheduler run-wa
 
 # clean:
 # 	rm -rf bin
@@ -95,6 +95,17 @@ monitoring-cleanup:
 	@echo "🧹 Cleaning up monitoring data and logs..."
 	@./scripts/cleanup-monitoring.sh
 
+monitoring-ensure-running:
+	@echo "🔍 Checking monitoring status..."
+	@if ! podman ps --filter "label=io.podman.compose.project=service-platform" --format "{{.Names}}" | grep -q . 2>/dev/null && ! docker ps --filter "label=com.docker.compose.project=service-platform" --format "{{.Names}}" | grep -q . 2>/dev/null; then \
+		echo "📴 Monitoring stopped, cleaning up and starting..."; \
+		./scripts/cleanup-monitoring.sh; \
+		echo "✅ Cleanup finished, starting monitoring..."; \
+		./scripts/start-monitoring.sh; \
+	else \
+		echo "✅ Monitoring already running."; \
+	fi
+
 help:
 	@echo "🚀 Service Platform - Available Commands:"
 	@echo ""
@@ -118,6 +129,7 @@ help:
 	@echo "  make monitoring-restart - Restart monitoring services"
 	@echo "  make monitoring-status  - Check monitoring status"
 	@echo "  make monitoring-cleanup - Clean old monitoring data"
+	@echo "  make monitoring-ensure-running - Ensure monitoring is running (cleanup if stopped)"
 	@echo ""
 	@echo "🛠️  Development Commands:"
 	@echo "  make config-dev         - Setup dev configuration"
