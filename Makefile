@@ -105,7 +105,8 @@ docs-grpc:
 	@echo "gRPC HTML docs generated in docs/grpc/html/"
 
 docs-serve:
-	@echo "Starting Go documentation server at http://localhost:6006/pkg/service_platform/?m=all"
+	go mod tidy
+	@echo "Starting Go documentation server at http://localhost:6006/pkg/service-platform/?m=all"
 	$(shell go env GOPATH)/bin/godoc -http=:6006
 
 clean-dashboard:
