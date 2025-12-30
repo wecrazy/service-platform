@@ -65,6 +65,14 @@ func Install(yamlCfg *config.YamlConfig) {
 		log.Fatalf("Failed to install service via NSSM: %v", err)
 	}
 
+	// Set service description
+	setDescCmd := exec.Command(nssmPath, "set", serviceName, "Description", yamlCfg.App.Description)
+	setDescCmd.Stdout = os.Stdout
+	setDescCmd.Stderr = os.Stderr
+	if err := setDescCmd.Run(); err != nil {
+		log.Printf("⚠️ Failed to set service description: %v", err)
+	}
+
 	// If running from "bin", set AppDirectory to project root
 	workingDir := filepath.Dir(execPath)
 	if filepath.Base(workingDir) == "bin" {

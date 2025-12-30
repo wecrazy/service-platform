@@ -479,8 +479,8 @@ func SendLangWhatsAppTextMsg(jid, stanzaID string, v *events.Message, lang Langu
 // @Produce      json
 // @Param        request query dto.CheckWARegisteredRequest true "Query Params"
 // @Success      200    {object}  map[string]interface{}
-// @Failure      400    {object}  map[string]string
-// @Failure      500    {object}  map[string]string
+// @Failure      400    {object}  dto.APIErrorResponse
+// @Failure      500    {object}  dto.APIErrorResponse
 // @Router       /check_wa [get]
 func CheckWAPhoneNumberIsRegistered() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -488,24 +488,24 @@ func CheckWAPhoneNumberIsRegistered() gin.HandlerFunc {
 
 		var req dto.CheckWARegisteredRequest
 		if err := c.ShouldBindQuery(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		phoneNumber := req.Phone
 		if phoneNumber == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Phone number is required"})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Phone number is required")
 			return
 		}
 
 		if len(phoneNumber) < digitNoTelp {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Phone number too short"})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Phone number too short")
 			return
 		}
 
 		sanitizedPhoneNumber, err := fun.SanitizeIndonesiaPhoneNumber(phoneNumber)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		} else {
 			sanitizedPhoneNumber = config.GetConfig().Default.DialingCodeDefault + sanitizedPhoneNumber

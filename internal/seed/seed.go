@@ -1,4 +1,30 @@
-package database
+// Package seed provides database seeding functionality for initial application data.
+//
+// This package contains functions to populate the database with essential initial data
+// including roles, features, users, permissions, and reference data. The seeding
+// functions are designed to be idempotent - they check for existing data before
+// inserting to avoid duplicates.
+//
+// The package is used by the migration system to ensure consistent initial data
+// across different environments and deployments.
+//
+// Key seeding functions:
+//   - SeedRoles: Creates default user roles (Super User, Client Company roles)
+//   - SeedFeature: Creates application features and menu structure
+//   - SeedRolePrivilege: Assigns permissions to roles for features
+//   - SeedUser: Creates default system users
+//   - SeedUserStatus: Creates user status definitions
+//   - SeedUserPasswordChangeLog: Initializes password change tracking
+//   - SeedWhatsappUser: Creates default WhatsApp bot users
+//   - SeedWhatsappLanguage: Populates supported languages for WhatsApp
+//   - SeedBadWords: Creates bad word filters by language
+//   - SeedWhatsAppMsgAutoReply: Sets up automated message responses
+//   - SeedAppConfig: Creates default application configuration
+//   - SeedIndonesiaRegion: Imports Indonesian regional data
+//
+// All seeding functions use configuration values for table names and data,
+// ensuring consistency with the application's database schema configuration.
+package seed
 
 import (
 	"encoding/json"
@@ -17,6 +43,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// RolePermission defines CRUD permissions for a role on a specific feature.
+// This struct is used internally by the permission seeding logic to determine
+// what operations a role can perform on application features.
+//
+// Fields represent permission levels:
+//   - CanCreate: 1 if role can create new records, 0 otherwise
+//   - CanRead: 1 if role can read/view records, 0 otherwise
+//   - CanUpdate: 1 if role can modify existing records, 0 otherwise
+//   - CanDelete: 1 if role can delete records, 0 otherwise
 type RolePermission struct {
 	CanCreate int8
 	CanRead   int8
@@ -24,7 +59,21 @@ type RolePermission struct {
 	CanDelete int8
 }
 
-func seedRoles(db *gorm.DB) {
+// SeedRoles creates the default user roles in the system.
+//
+// This function populates the roles table with three default roles:
+//   - Super User: Full system access with administrative privileges
+//   - Client Company - User: Standard client company user with limited access
+//   - Client Company - Admin: Client company administrator with elevated permissions
+//
+// The function is idempotent - it only creates roles if none exist in the database.
+// Each role includes display properties like icons and CSS classes for the UI.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function performs a batch insert of all roles and logs their creation.
+func SeedRoles(db *gorm.DB) {
 	var roleCount int64
 	db.Model(&model.Role{}).Count(&roleCount)
 	if roleCount == 0 {
@@ -59,7 +108,30 @@ func seedRoles(db *gorm.DB) {
 	}
 }
 
-func seedFeature(db *gorm.DB) {
+// SeedFeature creates the application feature definitions and menu structure.
+//
+// This function populates the features table with all available application features,
+// including their hierarchical relationships, menu ordering, and access paths.
+// Features are organized into a menu structure with parent-child relationships.
+//
+// The function creates features for:
+//   - Dashboard: Main application dashboard
+//   - WhatsApp: WhatsApp bot management and configuration
+//   - Scheduler: Scheduled job management
+//   - App Configuration: System configuration settings
+//   - User Management: Roles, users, and permissions
+//   - System Logs: Activity and system logging
+//   - User Profile: User profile management
+//
+// Features are assigned menu order numbers automatically, and parent-child
+// relationships are established for hierarchical menu structures.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function performs batch inserts and establishes parent-child relationships
+// based on feature path prefixes.
+func SeedFeature(db *gorm.DB) {
 	var featureCount int64
 	db.Model(&model.Feature{}).Count(&featureCount)
 	if featureCount == 0 {
@@ -252,7 +324,24 @@ func seedFeature(db *gorm.DB) {
 	}
 }
 
-func seedRolePrivilege(db *gorm.DB) {
+// SeedRolePrivilege assigns permissions to roles for each application feature.
+//
+// This function creates role-privilege mappings that determine what operations
+// each role can perform on different features. It uses the getRolePermissions
+// helper function to determine appropriate permissions based on role names
+// and feature paths.
+//
+// Permission logic:
+//   - Super User: Full CRUD access to all features
+//   - Client Company roles: Access to their specific features and general features
+//   - Default roles: Read-only access to basic features
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function queries existing roles and features, then creates privilege
+// records for all valid role-feature combinations.
+func SeedRolePrivilege(db *gorm.DB) {
 	var countData int64
 	db.Model(&model.RolePrivilege{}).Count(&countData)
 	if countData == 0 {
@@ -290,6 +379,23 @@ func seedRolePrivilege(db *gorm.DB) {
 	}
 }
 
+// getRolePermissions determines the appropriate CRUD permissions for a role on a feature.
+//
+// This helper function implements the business logic for role-based access control,
+// determining what operations a specific role can perform on a given feature.
+//
+// Parameters:
+//   - roleName: Name of the user role
+//   - featurePath: Path/identifier of the application feature
+//
+// Returns:
+//   - RolePermission: Struct containing CRUD permission flags
+//   - bool: true if the role has access to the feature, false otherwise
+//
+// Permission rules:
+//   - Super User: Full access to everything
+//   - Client Company roles: Access to company-specific and general features
+//   - Other roles: Limited access to basic features only
 func getRolePermissions(roleName, featurePath string) (RolePermission, bool) {
 	roleNameLower := strings.ToLower(roleName)
 	featurePathLower := strings.ToLower(featurePath)
@@ -331,7 +437,28 @@ func getRolePermissions(roleName, featurePath string) (RolePermission, bool) {
 	return RolePermission{}, false
 }
 
-func seedUser(db *gorm.DB) {
+// SeedUser creates default system users with appropriate roles and credentials.
+//
+// This function creates initial users required for system operation:
+//   - RM Developer (Super User): Full system access for development/administration
+//   - Admin Client Company: Administrative access for client companies
+//   - Client Company User: Standard user access for client companies
+//
+// User credentials are sourced from configuration:
+//   - Super user details from config.Default.SuperUser*
+//   - Client company users have predefined credentials
+//
+// All users are created with:
+//   - Encrypted passwords using the application's password hashing
+//   - Appropriate role assignments
+//   - Default profile images
+//   - Active status
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function ensures users are only created if they don't already exist.
+func SeedUser(db *gorm.DB) {
 	var superUserRole model.Role
 	if err := db.Where("role_name = ?", "Super User").First(&superUserRole).Error; err != nil {
 		logrus.Fatalf("Error while trying to find 'Super User' role: %v", err)
@@ -417,7 +544,20 @@ func seedUser(db *gorm.DB) {
 	}
 }
 
-func seedUserStatus(db *gorm.DB) {
+// SeedUserStatus creates the standard user status definitions.
+//
+// This function populates the user status table with three standard statuses:
+//   - PENDING (ID: 1): User account awaiting activation
+//   - ACTIVE (ID: 2): User account is active and can use the system
+//   - INACTIVE (ID: 3): User account is deactivated
+//
+// Each status includes display properties (title and CSS class) for UI rendering.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function performs a batch insert of status definitions.
+func SeedUserStatus(db *gorm.DB) {
 	var count int64
 	db.Model(&model.UserStatus{}).Count(&count)
 	if count == 0 {
@@ -449,7 +589,17 @@ func seedUserStatus(db *gorm.DB) {
 	}
 }
 
-func seedUserPasswordChangeLog(db *gorm.DB) {
+// SeedUserPasswordChangeLog initializes the user password change log table.
+//
+// This function populates the user_password_changelog table with existing
+// users' current passwords to establish a baseline for password change tracking.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function retrieves all existing users and creates corresponding
+// password change log entries with their current passwords.
+func SeedUserPasswordChangeLog(db *gorm.DB) {
 	var count int64
 	db.Model(&model.UserPasswordChangeLog{}).Count(&count)
 	if count == 0 {
@@ -471,11 +621,33 @@ func seedUserPasswordChangeLog(db *gorm.DB) {
 	}
 }
 
-func seedIndonesiaRegion(db *gorm.DB) {
+// SeedIndonesiaRegion imports Indonesian regional data from SQL dump files.
+//
+// This function populates the indonesia_region table with comprehensive
+// regional data including provinces, cities, districts, and villages.
+// The data is imported from a SQL dump file specified in configuration.
+//
+// The function performs the following steps:
+// 1. Checks if the target table exists, creates it if necessary using GORM AutoMigrate
+// 2. Verifies the SQL dump file exists at the configured path
+// 3. Parses and executes INSERT statements from the SQL file
+// 4. Handles MySQL-to-PostgreSQL syntax differences
+// 5. Skips non-INSERT statements and comments
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function uses configuration values for:
+//   - Table name (config.Database.TbIndonesiaRegion)
+//   - SQL dump file path (config.Database.DumpedIndonesiaRegionSQL)
+//
+// Errors in SQL file import are logged but don't prevent the seeding process
+// from continuing, allowing the application to start even with missing regional data.
+func SeedIndonesiaRegion(db *gorm.DB) {
 	tableName := config.GetConfig().Database.TbIndonesiaRegion
 
 	// Check if table exists
-	if !tableExists(db, tableName) {
+	if !fun.TableExists(db, tableName) {
 		logrus.Infof("Table '%s' does not exist. Creating table structure first...", tableName)
 
 		// Step 1: Create the table structure using GORM AutoMigrate
@@ -497,11 +669,23 @@ func seedIndonesiaRegion(db *gorm.DB) {
 		logrus.Infof("Importing data from SQL file into table '%s'...", tableName)
 
 		sqlDumpedFile := config.GetConfig().Database.DumpedIndonesiaRegionSQL
-		if _, err := os.Stat(sqlDumpedFile); os.IsNotExist(err) {
-			sqlDumpedFile += "internal/" + sqlDumpedFile
+
+		internalDir, err := fun.FindValidDirectory([]string{
+			"internal",
+			"../internal",
+			"../../internal",
+			"../../../internal",
+		})
+		if err != nil {
+			logrus.Errorf("Failed to locate 'internal' directory: %v", err)
+			return
 		}
 
-		err := importIndonesiaRegionData(db, sqlDumpedFile)
+		if _, err := os.Stat(sqlDumpedFile); os.IsNotExist(err) {
+			sqlDumpedFile = filepath.Join(internalDir, sqlDumpedFile)
+		}
+
+		err = importIndonesiaRegionData(db, sqlDumpedFile)
 		if err != nil {
 			logrus.Errorf("Failed to import data for indonesia region: %v", err)
 		} else {
@@ -512,6 +696,22 @@ func seedIndonesiaRegion(db *gorm.DB) {
 	}
 }
 
+// createIndonesiaRegionTable creates the Indonesia region table structure using GORM AutoMigrate.
+//
+// This helper function ensures the indonesia_region table exists with the correct schema
+// before attempting to import data. It uses GORM's AutoMigrate functionality to create
+// or update the table structure based on the IndonesiaRegion model.
+//
+// The function uses the configured table name from config.Database.TbIndonesiaRegion
+// to maintain consistency with the application's database naming conventions.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// Returns:
+//   - error: Any error encountered during table creation
+//
+// This function is called automatically by SeedIndonesiaRegion if the table doesn't exist.
 func createIndonesiaRegionTable(db *gorm.DB) error {
 	// Create the table with custom table name from config
 	tableName := config.GetConfig().Database.TbIndonesiaRegion
@@ -525,7 +725,24 @@ func createIndonesiaRegionTable(db *gorm.DB) error {
 	return nil
 }
 
-func seedWhatsappUser(db *gorm.DB) {
+// SeedWhatsappUser creates default WhatsApp bot users for system operation.
+//
+// This function creates WhatsApp user accounts that the system uses for
+// automated messaging and bot operations. Currently creates a super user
+// WhatsApp account with full permissions and high daily quota.
+//
+// The function configures:
+//   - Full message type permissions (text, image, document, etc.)
+//   - Both personal and group chat capabilities
+//   - Calling permissions
+//   - Daily message quota limits
+//   - User type and organizational assignments
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// WhatsApp user credentials are sourced from configuration settings.
+func SeedWhatsappUser(db *gorm.DB) {
 	var count int64
 	db.Model(&model.WAUsers{}).Count(&count)
 
@@ -565,7 +782,17 @@ func seedWhatsappUser(db *gorm.DB) {
 	}
 }
 
-func seedWhatsappLanguage(db *gorm.DB) {
+// SeedWhatsappLanguage populates the supported languages for WhatsApp bot.
+//
+// This function inserts language definitions into the languages table
+// using a predefined mapping of language codes to names from the fun package.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function checks if any languages already exist to avoid duplicates,
+// ensuring idempotent behavior.
+func SeedWhatsappLanguage(db *gorm.DB) {
 	// WhatsApp Bot Language
 	var languageCount int64
 	db.Model(&model.Language{}).Count(&languageCount)
@@ -587,7 +814,18 @@ func seedWhatsappLanguage(db *gorm.DB) {
 	}
 }
 
-func seedBadWords(db *gorm.DB) {
+// SeedBadWords creates bad word filters for multiple languages.
+//
+// This function populates the bad_words table with offensive words
+// categorized by type (e.g., sexual, racist, general insults) for
+// various languages supported by the application.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function checks if any bad words already exist to avoid duplicates,
+// ensuring idempotent behavior.
+func SeedBadWords(db *gorm.DB) {
 	var count int64
 	db.Model(&model.BadWord{}).Count(&count)
 
@@ -730,7 +968,18 @@ func seedBadWords(db *gorm.DB) {
 	}
 }
 
-func seedWhatsAppMsgAutoReply(db *gorm.DB) {
+// SeedWhatsAppMsgAutoReply creates default auto-reply messages for WhatsApp bot.
+//
+// This function populates the whatsapp_message_auto_replies table with
+// predefined auto-reply messages for various languages. Each auto-reply
+// is associated with specific keywords that trigger the response.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function checks if any auto-replies already exist to avoid duplicates,
+// ensuring idempotent behavior.
+func SeedWhatsAppMsgAutoReply(db *gorm.DB) {
 	var count int64
 	db.Model(&model.WhatsappMessageAutoReply{}).Count(&count)
 
@@ -826,7 +1075,19 @@ func seedWhatsAppMsgAutoReply(db *gorm.DB) {
 	}
 }
 
-func seedAppConfig(db *gorm.DB) {
+// SeedAppConfig creates default application configurations for different user roles.
+//
+// This function populates the app_configs table with predefined configurations
+// for various user roles, including Super User, Client Company - User, and
+// Client Company - Admin. Each configuration includes app name, logo, version,
+// and description tailored to the role.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function checks if any app configurations already exist to avoid duplicates,
+// ensuring idempotent behavior.
+func SeedAppConfig(db *gorm.DB) {
 	var count int64
 	db.Model(&model.AppConfig{}).Count(&count)
 
@@ -893,6 +1154,27 @@ func seedAppConfig(db *gorm.DB) {
 	}
 }
 
+// importIndonesiaRegionData imports regional data from a SQL dump file into the database.
+//
+// This function reads a SQL file containing INSERT statements for Indonesian regional data
+// (provinces, cities, districts, villages) and executes them against the PostgreSQL database.
+// The function handles MySQL-to-PostgreSQL syntax differences and filters out non-INSERT statements.
+//
+// Parameters:
+//   - db: GORM database instance
+//   - filePath: Path to the SQL dump file containing regional data
+//
+// Returns:
+//   - error: Any error encountered during the import process
+//
+// The function performs the following operations:
+// 1. Validates the SQL file exists and is readable
+// 2. Parses the SQL content into individual statements
+// 3. Filters and executes only INSERT statements
+// 4. Handles syntax differences between MySQL and PostgreSQL
+// 5. Skips comments, CREATE TABLE statements, and other non-INSERT commands
+//
+// This allows importing large datasets of regional information without manual SQL execution.
 func importIndonesiaRegionData(db *gorm.DB, filePath string) error {
 	// Get the absolute path
 	absPath, err := filepath.Abs(filePath)

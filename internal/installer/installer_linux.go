@@ -48,7 +48,7 @@ After=network.target
 WorkingDirectory=%s
 ExecStart=%s
 Restart=always
-`, yamlCfg.App.Name, workingDir, execPath)
+`, yamlCfg.App.Description, workingDir, execPath)
 
 	isRoot := os.Geteuid() == 0
 	var servicePath string

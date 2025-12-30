@@ -15,12 +15,16 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// SchedulerTestSuite provides a test suite for scheduler service gRPC testing.
+// It includes setup for gRPC client connections to test scheduler endpoints.
 type SchedulerTestSuite struct {
 	suite.Suite
-	conn   *grpc.ClientConn
-	client proto.SchedulerServiceClient
+	conn   *grpc.ClientConn             // gRPC client connection
+	client proto.SchedulerServiceClient // Scheduler service gRPC client
 }
 
+// SetupTest initializes the scheduler test suite by establishing a connection to the scheduler service.
+// It loads configuration and creates a gRPC client connection to the scheduler service.
 func (suite *SchedulerTestSuite) SetupTest() {
 	// Load config
 	err := config.LoadConfig()
@@ -40,12 +44,15 @@ func (suite *SchedulerTestSuite) SetupTest() {
 	suite.client = proto.NewSchedulerServiceClient(suite.conn)
 }
 
+// TearDownTest cleans up the scheduler test suite by closing the client connection.
 func (suite *SchedulerTestSuite) TearDownTest() {
 	if suite.conn != nil {
 		suite.conn.Close()
 	}
 }
 
+// TestRegisterJob tests the gRPC job registration functionality with scheduler service.
+// It sends a register job request and verifies the response, skipping if server is not running.
 func (suite *SchedulerTestSuite) TestRegisterJob() {
 	if suite.client == nil {
 		suite.T().Skip("Scheduler gRPC server not running")
@@ -64,6 +71,7 @@ func (suite *SchedulerTestSuite) TestRegisterJob() {
 	assert.True(suite.T(), resp.Success)
 }
 
+// TestSchedulerTestSuite runs the scheduler test suite.
 func TestSchedulerTestSuite(t *testing.T) {
 	suite.Run(t, new(SchedulerTestSuite))
 }

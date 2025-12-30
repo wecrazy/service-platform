@@ -8,6 +8,7 @@ import (
 	"service-platform/internal/api/v1/routes"
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
+	"service-platform/internal/middleware"
 	"service-platform/internal/pkg/fun"
 
 	"github.com/alicebob/miniredis/v2"
@@ -19,15 +20,19 @@ import (
 	"gorm.io/gorm"
 )
 
+// APITestSuite provides a test suite for API endpoints testing.
+// It includes setup for database, Redis, and Gin router for comprehensive API testing.
 type APITestSuite struct {
 	suite.Suite
-	router        *gin.Engine
-	db            *gorm.DB
-	redisClient   *redis.Client
-	systemMonitor *fun.SystemResourceMonitor
-	miniRedis     *miniredis.Miniredis
+	router        *gin.Engine                // Gin router for handling HTTP requests
+	db            *gorm.DB                   // Database connection for testing
+	redisClient   *redis.Client              // Redis client for caching and rate limiting tests
+	systemMonitor *fun.SystemResourceMonitor // System monitor for resource tracking
+	miniRedis     *miniredis.Miniredis       // Mini Redis instance for testing
 }
 
+// SetupTest initializes the test suite with database, Redis, and router setup.
+// It creates an in-memory SQLite database, mini Redis instance, and configures the Gin router.
 func (suite *APITestSuite) SetupTest() {
 	gin.SetMode(gin.TestMode)
 
@@ -69,6 +74,9 @@ func (suite *APITestSuite) SetupTest() {
 		Addr: suite.miniRedis.Addr(),
 	})
 
+	// Initialize rate limiter
+	middleware.InitRateLimiter(suite.redisClient)
+
 	// Setup system monitor
 	suite.systemMonitor = &fun.SystemResourceMonitor{}
 
@@ -78,6 +86,7 @@ func (suite *APITestSuite) SetupTest() {
 	routes.HtmlRoutes(suite.db, suite.router, suite.redisClient, suite.systemMonitor)
 }
 
+// TearDownTest cleans up test resources including database connections and Redis instances.
 func (suite *APITestSuite) TearDownTest() {
 	if suite.db != nil {
 		sqlDB, _ := suite.db.DB()
@@ -88,6 +97,7 @@ func (suite *APITestSuite) TearDownTest() {
 	}
 }
 
+// TestGetHello tests the /hello endpoint to ensure it returns a proper greeting message.
 func (suite *APITestSuite) TestGetHello() {
 	req, _ := http.NewRequest("GET", "/hello", nil)
 	w := httptest.NewRecorder()
@@ -97,6 +107,7 @@ func (suite *APITestSuite) TestGetHello() {
 	assert.Contains(suite.T(), w.Body.String(), `"message":"Hello, World!"`)
 }
 
+// TestHealthCheck tests the /health endpoint to ensure the service is running properly.
 func (suite *APITestSuite) TestHealthCheck() {
 	req, _ := http.NewRequest("GET", "/health", nil)
 	w := httptest.NewRecorder()
@@ -106,6 +117,45 @@ func (suite *APITestSuite) TestHealthCheck() {
 	assert.Contains(suite.T(), w.Body.String(), `"status"`)
 }
 
+// TestRateLimitBelowLimit tests that requests within the rate limit are processed normally.
+// It verifies that rate limit headers are present and requests succeed.
+func (suite *APITestSuite) TestRateLimitBelowLimit() {
+	// Make requests up to the limit (100 per minute)
+	for i := 0; i < 10; i++ { // Test with fewer to keep test fast
+		req, _ := http.NewRequest("GET", "/health", nil)
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+
+		assert.Equal(suite.T(), http.StatusOK, w.Code)
+		assert.Contains(suite.T(), w.Body.String(), `"status"`)
+		// Check rate limit headers
+		assert.NotEmpty(suite.T(), w.Header().Get("X-RateLimit-Remaining"))
+		assert.NotEmpty(suite.T(), w.Header().Get("X-RateLimit-Reset"))
+	}
+}
+
+// TestRateLimitOverLimit tests that requests exceeding the rate limit are properly rejected.
+// It verifies that rate limiting returns 429 status with appropriate error messages and headers.
+func (suite *APITestSuite) TestRateLimitOverLimit() {
+	// First, exhaust the rate limit by making many requests quickly
+	for i := 0; i < 110; i++ { // Exceed the 100 limit
+		req, _ := http.NewRequest("GET", "/health", nil)
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+	}
+
+	// Now test that the next request is rate limited
+	req, _ := http.NewRequest("GET", "/health", nil)
+	w := httptest.NewRecorder()
+	suite.router.ServeHTTP(w, req)
+
+	assert.Equal(suite.T(), http.StatusTooManyRequests, w.Code)
+	assert.Contains(suite.T(), w.Body.String(), `"error":"Rate limit exceeded"`)
+	assert.Equal(suite.T(), "0", w.Header().Get("X-RateLimit-Remaining"))
+	assert.NotEmpty(suite.T(), w.Header().Get("Retry-After"))
+}
+
+// TestAPISuite runs the API test suite.
 func TestAPISuite(t *testing.T) {
 	suite.Run(t, new(APITestSuite))
 }

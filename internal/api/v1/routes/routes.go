@@ -140,14 +140,22 @@ func HtmlRoutes(
 		logrus.Fatal("no global URL set in config")
 	}
 
+	apiURL := config.API_URL
+	if apiURL == "" {
+		logrus.Fatal("no API URL set in config")
+	}
+
 	// To view the dashboard API analytics go to: https://www.apianalytics.dev/dashboard and enter your API key
 	router.Use(analytics.Analytics(config.GetConfig().API.AnalyticsDevAPIKey))
+
+	// Rate limiting middleware
+	router.Use(middleware.RateLimitMiddleware())
 
 	// Health check endpoint for monitoring
 	router.GET(globalURL+"health", controllers.GetHealthCheck(db, systemMonitor))
 
 	// Prometheus metrics endpoint
-	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	router.GET("/api-metrics", gin.WrapH(promhttp.Handler()))
 
 	// Note: net/http/pprof uses DefaultServeMux, so we mount it using gin's Handle method
 	// if you want in charts view mode try using go tool pprof -http=:2222 http://localhost:2221/debug/pprof/profile
@@ -190,7 +198,7 @@ func HtmlRoutes(
 	router.GET(globalURL+"check_wa", controllers.CheckWAPhoneNumberIsRegistered()) // Check phone number if registered in WhatsApp
 
 	// Authenticated API v1 routes
-	api := router.Group(globalURL+"web/:access", middleware.AuthMiddleware(db, redisDB))
+	api := router.Group(fmt.Sprintf("%s%s:access", globalURL, apiURL), middleware.AuthMiddleware(db, redisDB))
 	{
 		// GUI Page
 		api.GET("/components/:component", controllers.ComponentPage(db, redisDB))
@@ -235,68 +243,5 @@ func HtmlRoutes(
 			tabScheduler.DELETE("/jobs/:name", controllers.UnregisterScheduledJob()) // Unregister job
 			tabScheduler.POST("/reload", controllers.ReloadScheduler())              // Reload scheduler config
 		}
-		// 	tabWhatsapp.GET("/last_update_table_language", controllers.LastUpdateTableWhatsappBotLanguage())
-		// 	// Message Reply
-		// 	tabWhatsapp.POST("/table_message_reply", controllers.TableWhatsappBotMessageReply())
-		// 	tabWhatsapp.PUT("/table_message_reply", controllers.PutDataWhatsappBotMessageReply())
-		// 	tabWhatsapp.DELETE("/table_message_reply/:id", controllers.DeleteDataWhatsappBotMessageReply())
-		// 	tabWhatsapp.GET("/table_message_reply.csv", controllers.ExportTable[model.WAMessageReply](db, "File di unggah"))
-		// 	tabWhatsapp.POST("/table_message_reply/create", controllers.PostNewWhatsappBotMessageReply())
-		// 	tabWhatsapp.GET("/table_message_reply/batch/template", controllers.GetBatchTemplateWhatsappBotMessageReply[model.WAMessageReply]())
-		// 	tabWhatsapp.POST("/table_message_reply/batch/create", controllers.PostBatchUploadDataWhatsappBotMessageReply[model.WAMessageReply]())
-		// 	tabWhatsapp.GET("/last_update_table_message_reply", controllers.LastUpdateTableWhatsappBotMessageReply())
-		// }
-
-		// /*
-		// 	Tab Whatsapp User Management
-		// */
-		// tabWaUserManagement := api.Group("/tab-whatsapp-user-management")
-		// {
-		// 	tabWaUserManagement.POST("/table", controllers.TableWhatsappUserManagement())
-		// 	tabWaUserManagement.PUT("/table", controllers.PutUpdatedWhatsappUserManagement())
-		// 	tabWaUserManagement.DELETE("/table/:id", controllers.DeleteDataFromTableWhatsappUserManagement())
-		// 	tabWaUserManagement.POST("/table/create", controllers.CreateNewDataTableWhatsappUserManagement())
-		// 	tabWaUserManagement.GET("/table/batch/template", controllers.GetBatchTemplateWhatsappUserManagement[model.WAPhoneUser]())
-		// 	tabWaUserManagement.POST("/table/batch/create", controllers.PostBatchUploadDataWhatsappUserManagement[model.WAPhoneUser]())
-		// 	tabWaUserManagement.POST("/reset_quota_prompt", controllers.ResetQuotaWhatsappPrompt())
-		// 	tabWaUserManagement.POST("/unban_user", controllers.UnbanUser())
-		// }
-
-		// tabRoles := api.Group("/tab-roles")
-		// {
-		// 	// /web/tab-roles/admin/status
-		// 	tabRoles.GET("/roles/gui", controllers.GetRolesGui(db))
-
-		// 	tabRoles.GET("/roles/modal", controllers.ModalTabRoles(db))
-
-		// 	tabRoles.POST("/roles/create", controllers.PostRole(db))
-		// 	tabRoles.PATCH("/roles", controllers.PatchRole(db))
-		// 	tabRoles.DELETE("/roles", controllers.DeleteRoles(db))
-
-		// 	tabRoles.GET("/roles/list", controllers.GetRolesList(db))
-
-		// 	tabRoles.GET("/admins/table", controllers.GetAdminTable(db))
-		// 	tabRoles.POST("/admins/create", controllers.PostNewAdminUser(db))
-		// 	tabRoles.PATCH("/admins", controllers.PatchAdminData(db))
-		// 	tabRoles.DELETE("/admins/:id", controllers.DeleteUserAdmin(db))
-		// }
-
-		// tabSystemLog := api.Group("/tab-system-log")
-		// {
-		// 	tabSystemLog.GET("/system/log/file", controllers.GetSystemLogFiles(db))
-		// 	tabSystemLog.GET("/table", controllers.GetSystemLog(db))
-		// 	tabSystemLog.GET("/table.csv", controllers.GetSystemLogFileDump(db))
-		// }
-
-		// tabActivityLog := api.Group("/tab-activity-log")
-		// { // /web/tab-activity-log/activity/log
-		// 	tabActivityLog.GET("/table", controllers.GetActivityLog(db))
-		// 	tabActivityLog.GET("/table.csv", controllers.DumpActivityLog(db))
-		// }
-		// tabUserProfile := api.Group("/tab-user-profile")
-		// {
-		// 	tabUserProfile.GET("/activity/table", controllers.TableUserActivities(db))
-		// 	tabUserProfile.PATCH("/profile-image", controllers.UpdateAdminProfileImage(db))
-		// }
 	}
 }
