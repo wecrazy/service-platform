@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"service-platform/internal/pkg/fun"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,8 +20,8 @@ import (
 // @Param        day      path      string  true  "Day"
 // @Param        filename path      string  true  "Filename"
 // @Success      200  {file}     file
-// @Failure      403  {object}   map[string]string "Invalid file path"
-// @Router       /web/{access}/uploads/{year}/{month}/{day}/{filename} [get]
+// @Failure      403  {object}   dto.APIErrorResponse "Invalid file path"
+// @Router       /api/v1/{access}/uploads/{year}/{month}/{day}/{filename} [get]
 func GetUploadedFile(c *gin.Context) {
 	// Extract parameters from the route
 	year := c.Param("year")
@@ -39,7 +41,7 @@ func GetUploadedFile(c *gin.Context) {
 	// Ensure safePath is within uploadsDir
 	rel, err := filepath.Rel(uploadsDir, safePath)
 	if err != nil || strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "invalid file path"})
+		fun.HandleAPIErrorSimple(c, http.StatusForbidden, "invalid file path")
 		return
 	}
 

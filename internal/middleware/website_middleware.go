@@ -398,7 +398,7 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		if userAgent == "" {
 			logrus.Warn("Blocked Because No User-Agent")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 
@@ -464,7 +464,7 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			result := db.Model(&model.Users{}).Where("email = ?", emailToken).Updates(sessEmpty)
 
 			if result.Error != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error")
 				return
 			}
 
@@ -474,7 +474,7 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		}
 		errSet := redisDB.Set(context.Background(), "last_activity_time:"+emailToken, time.Now().UnixMilli(), 30*time.Minute).Err()
 		if errSet != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error")
 			return
 		}
 
@@ -489,9 +489,7 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		var user model.Users
 		if err := db.Where("id = ? AND session = ?", claims["id"], claims["session"]).First(&user).Error; err != nil {
 			fun.ClearCookiesAndRedirect(c, cookies)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Error querying database" + err.Error(),
-			})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error querying database: "+err.Error())
 			return
 
 			// Handle other errors
@@ -508,7 +506,7 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		// Get the credentials from cookies
 		credentials, err := c.Cookie("credentials")
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing credentials cookie"})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Missing credentials cookie")
 			c.Abort()
 			return
 		}

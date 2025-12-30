@@ -87,7 +87,11 @@ func GetWebLogin(db *gorm.DB) gin.HandlerFunc {
 // @Produce      json
 // @Param        request formData dto.LoginRequest true "Login Request"
 // @Success      200  {object}   map[string]interface{}
-// @Failure      400  {object}   map[string]string
+// @Failure      400  {object}   dto.APIErrorResponse
+// @Failure      401  {object}   dto.APIErrorResponse
+// @Failure      429  {object}   dto.APIErrorResponse
+// @Failure      500  {object}   dto.APIErrorResponse
+// @Failure      503  {object}   dto.APIErrorResponse
 // @Router       /login [post]
 func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -96,7 +100,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		if userAgent == "" || accept == "" {
 			logrus.Errorf("Blocked Because No this aspect %s | %s |", userAgent, accept)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong Username or Password"})
+			fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, "Wrong Username or Password")
 			return
 		}
 
@@ -104,7 +108,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		// Bind form data to the LoginForm struct
 		if err := c.ShouldBind(&loginForm); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -113,7 +117,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		clientCaptcha := c.PostForm("client_captcha_valid")
 		if clientCaptcha != "1" {
 			if !captcha.VerifyString(loginForm.CaptchaID, loginForm.Captcha) {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid captcha"})
+				fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, "Invalid captcha")
 				return
 			}
 		}
@@ -129,7 +133,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		}
 		if err := db.Where(whereQuery, loginForm.EmailUsername).First(&user).Error; err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong Username or Password."})
+			fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, "Wrong Username or Password")
 			return
 		}
 
@@ -142,9 +146,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		// Check if account is currently locked
 		if user.LockUntil != nil && user.LockUntil.After(time.Now()) {
-			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error": "Account locked. Try again at " + user.LockUntil.Format("2006-01-02 15:04:05"),
-			})
+			fun.HandleAPIErrorSimple(c, http.StatusTooManyRequests, "Account locked. Try again at "+user.LockUntil.Format("2006-01-02 15:04:05"))
 			return
 		}
 
@@ -171,9 +173,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 				user.LoginAttempts, user.MaxRetry, locked,
 			)
 
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": errorMessage,
-			})
+			fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, errorMessage)
 			return
 		}
 
@@ -185,7 +185,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		errSet := redisDB.Set(context.Background(), "last_activity_time:"+user.Email, time.Now().UnixMilli(), 30*time.Minute).Err()
 		if errSet != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Internal Server Error, Error Saving to Memory : " + errSet.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error, Error Saving to Memory : "+errSet.Error())
 			return
 		}
 
@@ -195,8 +195,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		for _, userStatus := range userStatuses {
 			if userStatus.ID == uint(user.Status) {
 				if userStatus.Title != "ACTIVE" {
-					c.JSON(http.StatusUnauthorized, gin.H{
-						"error": fmt.Sprintf("Please Contact Our Technical Support To Activate your Account @+%s", config.GetConfig().Whatsnyan.WATechnicalSupport)})
+					fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, fmt.Sprintf("Please Contact Our Technical Support To Activate your Account @+%s", config.GetConfig().Whatsnyan.WATechnicalSupport))
 					return
 				}
 			}
@@ -211,7 +210,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		// SAVE LOGIN SESSION
 		if err := db.Save(&user).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Failed to update user: "+err.Error())
 			return
 		}
 		// ws.CloseWebsocketConnection(user.Email)
@@ -230,9 +229,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			// Offset(0).
 			// Limit(1).
 			Find(&user_roles).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Error querying database: " + err.Error(),
-			})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error querying database: "+err.Error())
 			return
 		}
 
@@ -247,7 +244,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		var roles model.Role
 		if err := db.Where("id = ?", user.Role).First(&roles).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error, Saving To DB : " + err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error querying database: "+err.Error())
 			return
 		}
 		authToken := fun.GenerateRandomString(40 + rand.Intn(25) + 1)
@@ -263,7 +260,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		}
 		pathString, err := fun.GetAESEcryptedURLfromJSON(imageMaps)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not encripting image " + err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Could not encripting image "+err.Error())
 			return
 		}
 
@@ -301,12 +298,12 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		jsonText, err := json.Marshal(claims)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not string token " + err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Could not string token "+err.Error())
 			return
 		}
 		tokenString, err := fun.GetAESEncrypted(string(jsonText))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not encripting token " + err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Could not encripting token "+err.Error())
 			return
 		}
 
@@ -479,12 +476,13 @@ func GetWebForgotPassword(db *gorm.DB) gin.HandlerFunc {
 // @Produce      html
 // @Param        request formData dto.ForgotPasswordRequest true "Forgot Password Request"
 // @Success      200  {string}   string "HTML Content"
+// @Failure      400  {object}   dto.APIErrorResponse
 // @Router       /forgot-password [post]
 func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req dto.ForgotPasswordRequest
 		if err := c.ShouldBind(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -582,7 +580,7 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		} else {
 			errSet := redisDB.Set(context.Background(), "reset_pwd:"+user.Email, randomAccessToken, 60*time.Minute).Err()
 			if errSet != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error Created Random Token Cache"})
+				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error, Error Created Random Token Cache : "+errSet.Error())
 				return
 			}
 			c.HTML(http.StatusOK, "verify-email.html", parameters)
@@ -651,13 +649,14 @@ func GetWebResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 // @Param        email             path      string  true  "Email"
 // @Param        request formData dto.ResetPasswordRequest true "Reset Password Request"
 // @Success      200  {object}   map[string]string
-// @Failure      400  {object}   map[string]string
+// @Failure      400  {object}   dto.APIErrorResponse
+// @Failure      500  {object}   dto.APIErrorResponse
 // @Router       /reset-password/{email}/{token_data} [post]
 func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req dto.ResetPasswordRequest
 		if err := c.ShouldBind(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -669,12 +668,12 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		// Validate passwords
 		if password != confirmPwd {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Passwords do not match"})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Passwords do not match")
 			return
 		}
 		// Validate the password
 		if err := fun.ValidatePassword(password); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -683,7 +682,7 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		db.Where("email = ?", email).Order("created_at desc").Find(&check_user_password_changelogs)
 		for _, data := range check_user_password_changelogs {
 			if fun.IsPasswordMatched(password, data.Password) {
-				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("You cannot reuse one of your last %d passwords. Please choose a different password", numberOfPreviousPasswordsToCheck)})
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, fmt.Sprintf("You cannot reuse one of your last %d passwords. Please choose a different password", numberOfPreviousPasswordsToCheck))
 				return
 			}
 		}
@@ -694,22 +693,22 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		// Fetch the token from Redis
 		val, err := redisDB.Get(context.Background(), redisKey).Result()
 		if err == redis.Nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Link expired or invalid : " + err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Link expired or invalid : "+err.Error())
 			return
 		} else if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error accessing Redis"})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error accessing Redis")
 			return
 		}
 
 		// Check if the token matches
 		if val != tokenData {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid reset link"})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Invalid reset link")
 			return
 		}
 		// Update the password in the database
 		var user model.Users
 		if err := db.Where("email = ?", email).First(&user).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Email not found : " + err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Email not found : "+err.Error())
 			return
 		}
 
@@ -720,7 +719,7 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		user.Password = fun.GenerateSaltedPassword(password)
 		user.LastLogin = lastLoginTime
 		if err := db.Save(&user).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating password " + err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error updating password "+err.Error())
 			return
 		}
 
@@ -728,7 +727,7 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		user_password_changelog.Email = user.Email
 		user_password_changelog.Password = user.Password
 		if err := db.Create(&user_password_changelog).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating password changelog" + err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error updating password changelog"+err.Error())
 			return
 		}
 		var user_password_changelogs []model.UserPasswordChangeLog
@@ -737,7 +736,7 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		if err := db.Where("email = ?", user.Email).
 			Order("created_at asc").
 			Find(&user_password_changelogs).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Email not found"})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Email not found")
 			return
 		}
 
@@ -749,7 +748,7 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		}
 		// Remove the token from Redis
 		if err := redisDB.Del(context.Background(), redisKey).Err(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error removing Redis key"})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error removing Redis key: "+err.Error())
 			return
 		}
 
@@ -764,6 +763,8 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 // @Tags         Web
 // @Produce      html
 // @Success      200  {string}   string "HTML Content"
+// @Failure      302  {string}   string "Redirect to Login Page"
+// @Failure      500  {object}   dto.APIErrorResponse
 // @Router       /page [get]
 func MainPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -849,9 +850,7 @@ func MainPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			}
 
 			// Handle other errors
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Error querying database: " + err.Error(),
-			})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error querying database: "+err.Error())
 			fun.RemoveEmailSession(db, emailToken)
 			fun.ClearCookiesAndRedirect(c, cookies)
 			return
@@ -982,7 +981,7 @@ func MainPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		}
 		pathString, err := fun.GetAESEcryptedURLfromJSON(imageMaps)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not encripting image " + err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Could not encripting image "+err.Error())
 			return
 		}
 		profile_image := config.GLOBAL_URL + "profile/default.jpg?f=" + pathString
@@ -1018,7 +1017,7 @@ func MainPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			"APP_VERSION_NO":   appVersionNo,
 			"APP_VERSION_CODE": appVersionCode,
 			"APP_VERSION_NAME": appVersionName,
-			"ACCESS":           "web/" + randomAccessToken,
+			"ACCESS":           config.API_URL + randomAccessToken,
 			"username":         claims["username"],
 			"role":             claims["role_name"],
 			"fullname":         claims["fullname"],
@@ -1112,7 +1111,7 @@ func htmlEscape(s string) string {
 // @Param        access     path      string  true  "Access Token"
 // @Param        component  path      string  true  "Component Name"
 // @Success      200  {string}   string "HTML Content"
-// @Router       /web/{access}/components/{component} [get]
+// @Router       /api/v1/{access}/components/{component} [get]
 func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		globalURL := config.GLOBAL_URL
@@ -1232,26 +1231,6 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 			/* App Config */
 			"TABLE_APP_CONFIGURATION": webguibuilder.TABLE_APP_CONFIGURATION(user.Session, redisDB),
-
-			// /* Whatsmeow */
-			// "REFRESH_WHATSAPP_QRCODE":                      fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp/refresh-qrcode",
-			// "QR_CODE":                                      "log-data/qrcode.txt",
-			// "PING_BOT":                                     fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp/ping",
-			// "SEND_TEXT_BOT":                                fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp/send_text",
-			// "SEND_IMAGE_BOT":                               fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp/send_image",
-			// "SEND_DOCUMENT_BOT":                            fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp/send_document",
-			// "SEND_LOCATION_BOT":                            fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp/send_location",
-			// "SEND_POLLING_BOT":                             fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp/send_polling",
-			// "WAG_JSON":                                     fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp/groups",
-			// "TABLE_WHATSAPP_BOT_LANGUAGE":                  webguibuilder.TABLE_WHATSAPP_BOT_LANGUAGE(user.Session, redisDB, db),
-			// "TABLE_WHATSAPP_BOT_MESSAGE_REPLY":             webguibuilder.TABLE_WHATSAPP_BOT_MESSAGE_REPLY(user.Session, redisDB, db),
-			// "TABLE_WHATSAPP_USER_MANAGEMENT":               webguibuilder.TABLE_WHATSAPP_USER_MANAGEMENT(user.Session, redisDB, db),
-			// "END_SESSION_WHATSAPP":                         fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp/end-session",
-			// "TABLE_WHATSAPP_BOT_LOG_MSG_RECEIVED":          webguibuilder.TABLE_WHATSAPP_BOT_LOG_MSG_RECEIVED(user.Session, redisDB, db),
-			// "ENDPOINT_TABLE_WHATSAPP_BOT_LOG_MSG_RECEIVED": fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp/wa_log_msg_received",
-			// "RESET_QUOTA_PROMPT":                           fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp-user-management/reset_quota_prompt",
-			// "UNBAN_USER_ENDPOINT":                          fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+user.Session, redisDB) + "/tab-whatsapp-user-management/unban_user",
-
 		}
 		c.HTML(http.StatusOK, componentID+".html", replacements)
 	}

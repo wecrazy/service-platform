@@ -90,7 +90,8 @@
     "tab-whatsapp-user-management": "Manajemen Pengguna WhatsApp",
     "tab-system-log": "Log Sistem",
     "tab-activity-log": "Log Aktivitas",
-    "tab-user-profile": "Profil Pengguna"
+    "tab-user-profile": "Profil Pengguna",
+    "tab-scheduler": "Penjadwalan"
   },
   "app-config": {
     "apps": "Aplikasi"

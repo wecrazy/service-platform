@@ -52,7 +52,7 @@ func TABLE_APP_CONFIGURATION(session string, redisDB *redis.Client) template.HTM
 	templates := webgui.RenderDataTableServerSideAppConfig(
 		"Configuration",
 		"dt_app_config",
-		config.GLOBAL_URL+"web/"+fun.GetRedis("web:"+session, redisDB)+"/tab-app-config/table",
+		config.GLOBAL_URL+"api/v1/"+fun.GetRedis("web:"+session, redisDB)+"/tab-app-config/table",
 		5,
 		[]int{5, 10, 25, 50, 100, 250},
 		[]any{[]any{1, "asc"}},

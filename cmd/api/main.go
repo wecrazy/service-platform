@@ -499,6 +499,9 @@ func main() {
 	// Redis
 	setupRedis(yamlCfg)
 
+	// Initialize rate limiter
+	middleware.InitRateLimiter(getRedisClient())
+
 	GlobalDB = mustInitDB(
 		yamlCfg.Database.Type,
 		yamlCfg.Database.Username,

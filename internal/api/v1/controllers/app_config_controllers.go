@@ -7,6 +7,7 @@ import (
 	"service-platform/internal/api/v1/dto"
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
+	"service-platform/internal/pkg/fun"
 	"strings"
 	"time"
 
@@ -22,15 +23,15 @@ import (
 // @Produce      json
 // @Param        request formData dto.AppConfigTableRequest true "Table Request"
 // @Success      200  {object}   map[string]interface{}
-// @Failure      400  {object}   map[string]string
-// @Router       /web/tab-app-config/table [post]
+// @Failure      400  {object}   dto.APIErrorResponse
+// @Router       /api/v1/{access}/tab-app-config/table [post]
 func TableAppConfig(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request dto.AppConfigTableRequest
 
 		// Bind form data to request struct
 		if err := c.Bind(&request); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -140,13 +141,7 @@ func TableAppConfig(db *gorm.DB) gin.HandlerFunc {
 		query = query.Preload("Role").Offset(request.Start).Limit(request.Length).Find(&Dbdata)
 
 		if query.Error != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"draw":            request.Draw,
-				"recordsTotal":    totalRecords,
-				"recordsFiltered": 0,
-				"data":            []gin.H{},
-				"error":           query.Error.Error(),
-			})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, query.Error.Error())
 			return
 		}
 

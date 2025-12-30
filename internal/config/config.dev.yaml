@@ -2,6 +2,7 @@ app:
   host: "localhost"
   gin_mode: "debug"   # debug | release | test
   name: "Service Platform"
+  description: "Service Platform (Development) - Contains various services including API, gRPC, Scheduler, and WhatsNyan for WhatsApp integration."
   logo: "/assets/self/img/logo.png"
   logo_jpg: "/assets/self/img/logo.jpg"
   port: 6221
@@ -74,7 +75,7 @@ database:
   db_config_path: "database/dbconfig.yaml"
   db_backup_destination_dir: "database"
   purge_older_than: "2Days"
-  dumped_indonesia_region_sql: "database/db_region_indonesia.sql"
+  dumped_indonesia_region_sql: "seed/db_region_indonesia.sql"
   # Tables
   tb_user: "users"
   tb_user_status: "user_statuses"
@@ -266,3 +267,9 @@ metrics:
   grpc_port: 9092
   scheduler_port: 9091
   whatsapp_port: 9093
+rate_limit:
+  enabled: true
+  requests: 100  # requests per period
+  period: 60     # period in seconds (1 minute)
+  burst: 20      # burst allowance
+  cleanup_time: 3600  # cleanup time in seconds (1 hour)
