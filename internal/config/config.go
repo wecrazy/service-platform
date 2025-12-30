@@ -43,7 +43,7 @@ type MainConfig struct {
 }
 
 // getEnvironment returns the current environment (dev or prod)
-// Priority: 1. CONFIG_MODE from conf.yaml, 2. ENV environment variable, 3. GO_ENV, 4. default to "dev"
+// Priority: 1. config_mode from conf.yaml, 2. ENV environment variable, 3. GO_ENV, 4. default to "dev"
 func getEnvironment() string {
 	// First try to read from main config file
 	if mode := getConfigModeFromFile(); mode != "" {
