@@ -16,12 +16,16 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// WhatsAppTestSuite provides a test suite for WhatsApp service gRPC testing.
+// It includes setup for gRPC client connections to test WhatsApp endpoints.
 type WhatsAppTestSuite struct {
 	suite.Suite
-	conn   *grpc.ClientConn
-	client pb.WhatsAppServiceClient
+	conn   *grpc.ClientConn         // gRPC client connection
+	client pb.WhatsAppServiceClient // WhatsApp service gRPC client
 }
 
+// SetupTest initializes the WhatsApp test suite by establishing a connection to the WhatsApp service.
+// It loads configuration and creates a gRPC client connection to the WhatsApp service.
 func (suite *WhatsAppTestSuite) SetupTest() {
 	// Load config
 	err := config.LoadConfig()
@@ -41,12 +45,15 @@ func (suite *WhatsAppTestSuite) SetupTest() {
 	suite.client = pb.NewWhatsAppServiceClient(suite.conn)
 }
 
+// TearDownTest cleans up the WhatsApp test suite by closing the client connection.
 func (suite *WhatsAppTestSuite) TearDownTest() {
 	if suite.conn != nil {
 		suite.conn.Close()
 	}
 }
 
+// TestSendMessage tests the gRPC message sending functionality with WhatsApp service.
+// It sends a test message and verifies the response, skipping if server is not running.
 func (suite *WhatsAppTestSuite) TestSendMessage() {
 	if suite.client == nil {
 		suite.T().Skip("WhatsApp gRPC server not running")
@@ -69,6 +76,7 @@ func (suite *WhatsAppTestSuite) TestSendMessage() {
 	assert.NotNil(suite.T(), resp)
 }
 
+// TestWhatsAppTestSuite runs the WhatsApp test suite.
 func TestWhatsAppTestSuite(t *testing.T) {
 	suite.Run(t, new(WhatsAppTestSuite))
 }

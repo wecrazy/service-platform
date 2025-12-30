@@ -90,7 +90,8 @@
 		"tab-whatsapp-user-management": "WhatsApp User Management",
 		"tab-system-log": "System Log",
 		"tab-activity-log": "Activity Log",
-		"tab-user-profile": "User Profile"
+		"tab-user-profile": "User Profile",
+		"tab-scheduler": "Scheduler"
 	},
 	"app-config": {
 		"apps": "Applications"

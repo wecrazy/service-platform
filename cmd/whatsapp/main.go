@@ -1683,7 +1683,7 @@ func main() {
 
 	// Start metrics server
 	go func() {
-		http.Handle("/metrics", promhttp.Handler())
+		http.Handle("/whatsapp-metrics", promhttp.Handler())
 		metricsPort := config.GetConfig().Metrics.WhatsAppPort
 		logrus.Printf("📊 Metrics server listening on :%d", metricsPort)
 		logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", metricsPort), nil))

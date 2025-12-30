@@ -256,10 +256,10 @@ go run cmd/whatsapp/main.go
 - Prometheus UI: http://localhost:9090
 - Grafana: http://localhost:3030
 - Individual service metrics:
-  - API: http://localhost:9094/metrics
-  - Auth gRPC: http://localhost:9092/metrics
-  - Scheduler: http://localhost:9091/metrics
-  - WhatsApp: http://localhost:9093/metrics
+  - API: http://localhost:9094/api-metrics
+  - Auth gRPC: http://localhost:9092/grpc-metrics
+  - Scheduler: http://localhost:9091/scheduler-metrics
+  - WhatsApp: http://localhost:9093/whatsapp-metrics
 
 ## Troubleshooting
 

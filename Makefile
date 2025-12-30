@@ -1,4 +1,4 @@
-.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-status monitoring-cleanup monitoring-ensure-running help
+.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-status monitoring-cleanup monitoring-ensure-running build-migrate migrate-up migrate-down migrate-status migrate-reset help
 
 run-api:
 	go run cmd/api/main.go
@@ -31,9 +31,51 @@ build-grpc:
 build: build-api build-wa build-grpc
 
 test:
-	go test -v -cover ./tests/...
+	go test -v -cover ./tests/... ./internal/migrations/...
 
 run-all: monitoring-ensure-running run-api run-grpc run-scheduler run-wa
+
+# Database migrations
+build-migrate:
+	mkdir -p bin
+	go build -o bin/migrate cmd/migrate/main.go
+
+# Check if migrate binary exists, if not use go run
+migrate-up:
+	@echo "🚀 Running database migrations..."
+	@if [ -f "./bin/migrate" ]; then \
+		./bin/migrate -action up; \
+	else \
+		echo "📦 Binary not found, using go run..."; \
+		go run cmd/migrate/main.go -action up; \
+	fi
+
+migrate-down:
+	@echo "⬇️ Rolling back database migration..."
+	@if [ -f "./bin/migrate" ]; then \
+		./bin/migrate -action down -steps 1; \
+	else \
+		echo "📦 Binary not found, using go run..."; \
+		go run cmd/migrate/main.go -action down -steps 1; \
+	fi
+
+migrate-status:
+	@echo "📊 Checking migration status..."
+	@if [ -f "./bin/migrate" ]; then \
+		./bin/migrate -action status; \
+	else \
+		echo "📦 Binary not found, using go run..."; \
+		go run cmd/migrate/main.go -action status; \
+	fi
+
+migrate-reset:
+	@echo "⚠️ Resetting all migrations..."
+	@if [ -f "./bin/migrate" ]; then \
+		./bin/migrate -action reset; \
+	else \
+		echo "📦 Binary not found, using go run..."; \
+		go run cmd/migrate/main.go -action reset; \
+	fi
 
 # clean:
 # 	rm -rf bin
@@ -125,6 +167,13 @@ help:
 	@echo "  make run-scheduler      - Run scheduler service"
 	@echo "  make run-wa             - Run WhatsApp service"
 	@echo "  make run-all            - Run all services"
+	@echo ""
+	@echo "🗃️  Database/Migration Commands:"
+	@echo "  make migrate-up         - Run all pending database migrations (auto-detects binary)"
+	@echo "  make migrate-down       - Rollback last database migration (auto-detects binary)"
+	@echo "  make migrate-status     - Check migration status (auto-detects binary)"
+	@echo "  make migrate-reset      - Reset all migrations (⚠️  destructive, auto-detects binary)"
+	@echo "  make build-migrate      - Build migration CLI tool"
 	@echo ""
 	@echo "📊 Monitoring Commands:"
 	@echo "  make monitoring-start   - Start Prometheus + Grafana"

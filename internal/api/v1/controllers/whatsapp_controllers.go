@@ -28,19 +28,19 @@ import (
 // @Produce      json
 // @Param        request body dto.SendWhatsAppMessageRequest true "Message Request"
 // @Success      200  {object}   map[string]string
-// @Failure      503  {object}   map[string]string "Service Unavailable"
-// @Router       /web/tab-whatsapp/send_message [post]
+// @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
+// @Router       /api/v1/{access}/tab-whatsapp/send_message [post]
 func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if whatsapp.Client == nil {
-			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "WhatsApp service not available"})
+			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "WhatsApp service not available")
 			return
 		}
 
 		var req dto.SendWhatsAppMessageRequest
 
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -53,7 +53,7 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 		if req.IsGroup {
 			j, err := ValidateGroupJID(req.Recipient)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group JID: " + err.Error()})
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Invalid group JID: "+err.Error())
 				return
 			}
 			recipientJID = j
@@ -61,7 +61,7 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 			// Sanitize the phone number
 			sanitizedPhone, err := fun.SanitizeIndonesiaPhoneNumber(req.Recipient)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid phone number: " + err.Error()})
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Invalid phone number: "+err.Error())
 				return
 			}
 			jid := config.GetConfig().Default.DialingCodeDefault + sanitizedPhone + "@" + types.DefaultUserServer
@@ -71,15 +71,15 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 				PhoneNumbers: []string{jid},
 			})
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check WhatsApp status: " + err.Error()})
+				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Failed to check WhatsApp status: "+err.Error())
 				return
 			}
 			if !resp.Success {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to check WhatsApp status: " + resp.Message})
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Failed to check WhatsApp status: "+resp.Message)
 				return
 			}
 			if len(resp.Results) == 0 || !resp.Results[0].IsRegistered {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Phone number is not registered on WhatsApp"})
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Phone number is not registered on WhatsApp")
 				return
 			}
 
@@ -91,11 +91,11 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 		switch req.Type {
 		case "text":
 			if req.Message == "" {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Message content cannot be empty for text type"})
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Message content cannot be empty for text type")
 				return
 			}
 			if len(req.Message) > config.GetConfig().Whatsnyan.MaxMessageLength {
-				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Message content exceeds maximum length of %d characters", config.GetConfig().Whatsnyan.MaxMessageLength)})
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, fmt.Sprintf("Message content exceeds maximum length of %d characters", config.GetConfig().Whatsnyan.MaxMessageLength))
 				return
 			}
 			content = &pb.MessageContent{
@@ -103,12 +103,12 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 			}
 		case "image", "video", "audio", "document":
 			if req.MediaData == "" {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Media data is required"})
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Media data is required")
 				return
 			}
 			data, err := base64.StdEncoding.DecodeString(req.MediaData)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid base64 media data"})
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Invalid base64 media data")
 				return
 			}
 			content = &pb.MessageContent{
@@ -169,7 +169,7 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 				},
 			}
 		default:
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message type"})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Invalid message type")
 			return
 		}
 
@@ -180,10 +180,10 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 
 		if err != nil {
 			if grpcErr, ok := status.FromError(err); ok {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": grpcErr.Message()})
+				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, grpcErr.Message())
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -250,10 +250,12 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   map[string]string
-// @Router       /web/tab-whatsapp/connect [post]
+// @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
+// @Failure      500  {object}   dto.APIErrorResponse "Internal Server Error"
+// @Router       /api/v1/{access}/tab-whatsapp/connect [post]
 func ConnectWhatsApp(c *gin.Context) {
 	if whatsapp.Client == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "WhatsApp service not available"})
+		fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "WhatsApp service not available")
 		return
 	}
 
@@ -264,10 +266,10 @@ func ConnectWhatsApp(c *gin.Context) {
 
 	if err != nil {
 		if grpcErr, ok := status.FromError(err); ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": grpcErr.Message()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, grpcErr.Message())
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -287,17 +289,20 @@ func ConnectWhatsApp(c *gin.Context) {
 // @Produce      json
 // @Param        request body dto.DisconnectWhatsAppRequest true "Disconnect Request"
 // @Success      200  {object}   map[string]string
-// @Router       /web/tab-whatsapp/disconnect [post]
+// @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
+// @Failure      400  {object}   dto.APIErrorResponse "Bad Request"
+// @Failure      500  {object}   dto.APIErrorResponse "Internal Server Error"
+// @Router       /api/v1/{access}/tab-whatsapp/disconnect [post]
 func DisconnectWhatsApp(c *gin.Context) {
 	if whatsapp.Client == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "WhatsApp service not available"})
+		fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "WhatsApp service not available")
 		return
 	}
 
 	var req dto.DisconnectWhatsAppRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -307,10 +312,10 @@ func DisconnectWhatsApp(c *gin.Context) {
 
 	if err != nil {
 		if grpcErr, ok := status.FromError(err); ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": grpcErr.Message()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, grpcErr.Message())
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -327,10 +332,12 @@ func DisconnectWhatsApp(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   map[string]string
-// @Router       /web/tab-whatsapp/logout [post]
+// @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
+// @Failure      500  {object}   dto.APIErrorResponse "Internal Server Error"
+// @Router       /api/v1/{access}/tab-whatsapp/logout [post]
 func LogoutWhatsApp(c *gin.Context) {
 	if whatsapp.Client == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "WhatsApp service not available"})
+		fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "WhatsApp service not available")
 		return
 	}
 
@@ -338,10 +345,10 @@ func LogoutWhatsApp(c *gin.Context) {
 
 	if err != nil {
 		if grpcErr, ok := status.FromError(err); ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": grpcErr.Message()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, grpcErr.Message())
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -358,10 +365,12 @@ func LogoutWhatsApp(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   map[string]string
-// @Router       /web/tab-whatsapp/refresh_qr [post]
+// @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
+// @Failure      500  {object}   dto.APIErrorResponse "Internal Server Error"
+// @Router       /api/v1/{access}/tab-whatsapp/refresh_qr [post]
 func RefreshWhatsAppQR(c *gin.Context) {
 	if whatsapp.Client == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "WhatsApp service not available"})
+		fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "WhatsApp service not available")
 		return
 	}
 
@@ -369,10 +378,10 @@ func RefreshWhatsAppQR(c *gin.Context) {
 
 	if err != nil {
 		if grpcErr, ok := status.FromError(err); ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": grpcErr.Message()})
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, grpcErr.Message())
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -391,11 +400,14 @@ func RefreshWhatsAppQR(c *gin.Context) {
 // @Produce      json
 // @Param        request body dto.CreateWhatsAppStatusRequest true "Status Request"
 // @Success      200  {object}   map[string]string
-// @Router       /web/tab-whatsapp/create_status [post]
+// @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
+// @Failure      400  {object}   dto.APIErrorResponse "Bad Request"
+// @Failure      500  {object}   dto.APIErrorResponse "Internal Server Error"
+// @Router       /api/v1/{access}/tab-whatsapp/create_status [post]
 func CreateStatus(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if whatsapp.Client == nil {
-			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "WhatsApp service not available"})
+			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "WhatsApp service not available")
 			return
 		}
 
@@ -404,22 +416,22 @@ func CreateStatus(db *gorm.DB) gin.HandlerFunc {
 		if err != nil {
 			st, ok := status.FromError(err)
 			if ok {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check contacts: " + st.Message()})
+				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Failed to check contacts: "+st.Message())
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check contacts: " + err.Error()})
+				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Failed to check contacts: "+err.Error())
 			}
 			return
 		}
 
 		if !contactsResp.HasContacts {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot create status: No contacts found. You need at least one contact to post a status."})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Cannot create status: No contacts found. You need at least one contact to post a status.")
 			return
 		}
 
 		var req dto.CreateWhatsAppStatusRequest
 
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -435,7 +447,7 @@ func CreateStatus(db *gorm.DB) gin.HandlerFunc {
 		case "image", "video", "audio":
 			data, err := base64.StdEncoding.DecodeString(req.MediaData)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid base64 media data"})
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Invalid base64 media data")
 				return
 			}
 			content = &pb.MessageContent{
@@ -450,7 +462,7 @@ func CreateStatus(db *gorm.DB) gin.HandlerFunc {
 				},
 			}
 		default:
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported status type"})
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Unsupported status type")
 			return
 		}
 
@@ -463,9 +475,9 @@ func CreateStatus(db *gorm.DB) gin.HandlerFunc {
 		if err != nil {
 			st, ok := status.FromError(err)
 			if ok {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": st.Message()})
+				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, st.Message())
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
 			}
 			return
 		}
