@@ -43,7 +43,7 @@ services:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=Ro224171222#
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_LOG_LEVEL=warn                    # Reduce logging verbosity
       - GF_LOG_MODE=console                  # Console logging only
