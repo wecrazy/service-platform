@@ -144,7 +144,7 @@ monitoring/grafana/
 │   ├── dashboards/
 │   │   └── dashboards.yml          # Dashboard provider configuration
 │   └── datasources/
-│       └── prometheus.yml          # Prometheus datasource configuration
+│       └── grafana-datasource.yml  # Grafana datasource configuration
 └── dashboards/
     ├── overview-dashboard.json     # Main overview dashboard
     ├── api-service-dashboard.json

@@ -30,6 +30,9 @@ build-grpc:
 
 build: build-api build-wa build-grpc
 
+test:
+	go test -v -cover ./tests/...
+
 run-all: monitoring-ensure-running run-api run-grpc run-scheduler run-wa
 
 # clean:
