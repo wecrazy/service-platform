@@ -12,6 +12,19 @@ import (
 	"gorm.io/gorm"
 )
 
+// HelloFromBot sends a greeting message based on the time of day and language preferences
+// Parameters:
+// - v: The WhatsApp message event
+// - phoneNumber: The recipient's phone number
+// - senderName: The name of the sender
+// - stanzaID: The stanza ID of the message
+// - originalSenderJID: The original sender's JID
+// - client: The WhatsApp client instance
+// - rdb: The Redis client instance
+// - db: The GORM database instance
+// This function checks for required parameters and sends a localized greeting message based on the current time.
+// It supports multiple languages and time-based greetings.
+// If any required parameter is missing, it logs a warning and exits without sending a message.
 func HelloFromBot(v *events.Message, phoneNumber, senderName, stanzaID, originalSenderJID string, client *whatsmeow.Client, rdb *redis.Client, db *gorm.DB) {
 	if phoneNumber == "" || senderName == "" || stanzaID == "" || originalSenderJID == "" {
 		logrus.Warn("Missing required parameters in HelloFromBot")

@@ -219,6 +219,7 @@ type YamlConfig struct {
 		Host                 string `yaml:"host"`
 		GinMode              string `yaml:"gin_mode"`
 		Name                 string `yaml:"name"`
+		Description          string `yaml:"description"`
 		Logo                 string `yaml:"logo"`
 		LogoJPG              string `yaml:"logo_jpg"`
 		Port                 int    `yaml:"port"`
@@ -378,6 +379,14 @@ type YamlConfig struct {
 		SchedulerPort int `yaml:"scheduler_port"`
 		WhatsAppPort  int `yaml:"whatsapp_port"`
 	} `yaml:"metrics"`
+
+	RateLimit struct {
+		Enabled     bool `yaml:"enabled"`
+		Requests    int  `yaml:"requests"`     // requests per period
+		Period      int  `yaml:"period"`       // period in seconds
+		Burst       int  `yaml:"burst"`        // burst allowance
+		CleanupTime int  `yaml:"cleanup_time"` // cleanup time in seconds
+	} `yaml:"rate_limit"`
 }
 
 type Scheduler struct {

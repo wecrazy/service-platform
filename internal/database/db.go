@@ -1,3 +1,14 @@
+// Package database provides database connection management and schema migration functionality.
+//
+// This package handles:
+// - PostgreSQL database connection initialization with retry logic
+// - Database creation and timezone configuration
+// - Connection pooling and logging setup
+// - Version-controlled database migrations using GORM AutoMigrate
+// - Database health checks and connection validation
+//
+// The package uses GORM as the ORM and supports PostgreSQL databases.
+// Database configuration is read from the config package.
 package database
 
 import (
@@ -7,8 +18,8 @@ import (
 	"os"
 	"path/filepath"
 	"service-platform/internal/config"
-	"service-platform/internal/core/model"
-	whatsnyanmodel "service-platform/internal/core/model/whatsnyan_model"
+	_ "service-platform/internal/database/migrations" // Import migrations to register them
+	"service-platform/internal/migrations"
 	"service-platform/internal/pkg/fun"
 	"strings"
 	"time"
@@ -20,13 +31,41 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+// DBUsed holds references to different database connections used by the application.
+// Currently supports a main database connection, with potential for future expansion
+// to include read replicas, analytics databases, or other specialized connections.
 type DBUsed struct {
-	Main *gorm.DB
+	Main *gorm.DB // Main database connection for all application operations
 }
 
-// Global databases
+// DBList is the global instance holding all database connections.
+// This is initialized during application startup and used throughout the application.
 var DBList *DBUsed
 
+// InitAndCheckDB initializes and validates a PostgreSQL database connection.
+//
+// This function performs the following operations:
+// 1. Connects to the default 'postgres' database to check/create the target database
+// 2. Creates the target database if it doesn't exist
+// 3. Sets the database timezone to UTC
+// 4. Establishes connection to the target database with proper configuration
+// 5. Sets up connection pooling and logging
+//
+// Parameters:
+//   - dbType: Database type (currently only "postgres" is supported)
+//   - dbUser: Database username
+//   - dbPass: Database password
+//   - dbHost: Database host address
+//   - dbPort: Database port number
+//   - dbName: Target database name
+//   - dbSSLMode: SSL mode for database connection
+//
+// Returns:
+//   - *gorm.DB: Configured GORM database instance
+//   - error: Any error encountered during initialization
+//
+// The function implements retry logic for initial connection attempts and
+// configures GORM with appropriate logging and connection pooling settings.
 func InitAndCheckDB(
 	dbType,
 	dbUser,
@@ -183,59 +222,38 @@ func InitAndCheckDB(
 	}
 }
 
+// AutoMigrateDB performs version-controlled database schema migrations.
+//
+// This function replaces the traditional GORM AutoMigrate approach with a
+// version-controlled migration system that provides:
+//
+// - Schema change tracking and versioning
+// - Reversible migrations (up/down operations)
+// - Migration status monitoring
+// - Safe rollback capabilities
+// - Integration with existing GORM AutoMigrate logic
+//
+// The function runs all pending migrations in order, ensuring that:
+// 1. Database schema is created/updated using GORM AutoMigrate within migrations
+// 2. Initial data seeding is performed through migration-based seeding
+// 3. All changes are tracked in the schema_migrations table
+//
+// Parameters:
+//   - db: GORM database instance to migrate
+//
+// The function will terminate the application with a fatal error if migrations fail,
+// ensuring that the application only runs with a properly migrated database.
+//
+// Note: This replaces the old direct AutoMigrate + seeding approach with
+// a more robust, version-controlled system.
 func AutoMigrateDB(db *gorm.DB) {
-	// Run migrations
-	if err := db.AutoMigrate(
-		&model.Users{},
-		&model.UserStatus{},
-		&model.UserPasswordChangeLog{},
-		&model.Role{},
-		&model.RolePrivilege{},
-		&model.Feature{},
-		&model.LogActivity{},
-		&model.Language{},
-		&model.BadWord{},
-		&model.AppConfig{},
-
-		// Whatsapp Models
-		&model.WAUsers{},
-		&model.WhatsappMessageAutoReply{},
-		&whatsnyanmodel.WhatsAppGroup{},
-		&whatsnyanmodel.WhatsAppGroupParticipant{},
-		&whatsnyanmodel.WhatsAppMsg{},
-		&whatsnyanmodel.WhatsAppIncomingMsg{},
-	); err != nil {
-		logrus.Fatalf("error while trying to automigrate db %v", err)
+	// Run version-controlled migrations instead of AutoMigrate
+	// This ensures schema changes are tracked and reversible
+	if err := migrations.RunMigrations(db); err != nil {
+		logrus.Fatalf("error while running database migrations: %v", err)
 	}
 
-	seedRoles(db)
-	seedFeature(db)
-	seedRolePrivilege(db)
-	seedUser(db)
-	seedUserStatus(db)
-	seedUserPasswordChangeLog(db)
-	seedWhatsappLanguage(db)
-	seedWhatsappUser(db)
-	seedBadWords(db)
-	seedAppConfig(db)
-	seedWhatsAppMsgAutoReply(db)
-	seedIndonesiaRegion(db)
-}
-
-func tableExists(db *gorm.DB, tableName string) bool {
-	dbType := config.GetConfig().Database.Type
-	switch strings.ToLower(dbType) {
-	case "postgres", "postgresql":
-		var exists bool
-		query := fmt.Sprintf("SELECT to_regclass('%s') IS NOT NULL", tableName)
-		err := db.Raw(query).Scan(&exists).Error
-		if err != nil {
-			logrus.Errorf("tableExists: failed to check if table %s exists: %v", tableName, err)
-			return false
-		}
-		return exists
-	default:
-		logrus.Warnf("tableExists: unsupported database type %s", dbType)
-		return false
-	}
+	// Note: Seeding is now handled by migrations
+	// The old seeding functions are kept for backward compatibility
+	// but should be removed once migration-based seeding is confirmed working
 }

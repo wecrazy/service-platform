@@ -10,6 +10,7 @@ import (
 	pb "service-platform/proto"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 // ListScheduledJobs godoc
@@ -19,11 +20,13 @@ import (
 // @Produce      json
 // @Success      200  {object}  dto.ListJobsResponse
 // @Failure      503  {object}  dto.SchedulerErrorResponse "Service Unavailable"
-// @Router       /api/v1/scheduler/jobs [get]
+// @Failure      500  {object}  dto.SchedulerErrorResponse "Internal Server Error"
+// @Router       /api/v1/{access}/scheduler/jobs [get]
 // @Security     ApiKeyAuth
 func ListScheduledJobs() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if schedulerclient.Client == nil {
+			logrus.Error("Scheduler service not available")
 			c.JSON(http.StatusServiceUnavailable, dto.SchedulerErrorResponse{
 				Error: "Scheduler service not available",
 			})
@@ -35,6 +38,7 @@ func ListScheduledJobs() gin.HandlerFunc {
 
 		resp, err := schedulerclient.Client.ListJobs(ctx, &pb.ListJobsRequest{})
 		if err != nil {
+			logrus.Errorf("Failed to list jobs: %v", err)
 			c.JSON(http.StatusInternalServerError, dto.SchedulerErrorResponse{
 				Error:   "Failed to list jobs",
 				Details: err.Error(),
@@ -73,7 +77,7 @@ func ListScheduledJobs() gin.HandlerFunc {
 // @Success      200  {object}  dto.TriggerJobResponse
 // @Failure      400  {object}  dto.SchedulerErrorResponse "Bad Request"
 // @Failure      503  {object}  dto.SchedulerErrorResponse "Service Unavailable"
-// @Router       /api/v1/scheduler/jobs/trigger [post]
+// @Router       /api/v1/{access}/scheduler/jobs/trigger [post]
 // @Security     ApiKeyAuth
 func TriggerScheduledJob() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -124,7 +128,7 @@ func TriggerScheduledJob() gin.HandlerFunc {
 // @Success      200  {object}  dto.GetJobStatusResponse
 // @Failure      404  {object}  dto.JobNotFoundResponse "Not Found"
 // @Failure      503  {object}  dto.SchedulerErrorResponse "Service Unavailable"
-// @Router       /api/v1/scheduler/jobs/{name} [get]
+// @Router       /api/v1/{access}/scheduler/jobs/{name} [get]
 // @Security     ApiKeyAuth
 func GetJobStatus() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -190,7 +194,7 @@ func GetJobStatus() gin.HandlerFunc {
 // @Produce      json
 // @Success      200  {object}  dto.ReloadSchedulerResponse
 // @Failure      503  {object}  dto.SchedulerErrorResponse "Service Unavailable"
-// @Router       /api/v1/scheduler/reload [post]
+// @Router       /api/v1/{access}/scheduler/reload [post]
 // @Security     ApiKeyAuth
 func ReloadScheduler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -231,7 +235,7 @@ func ReloadScheduler() gin.HandlerFunc {
 // @Success      200  {object}  dto.RegisterJobResponse
 // @Failure      400  {object}  dto.SchedulerErrorResponse "Bad Request"
 // @Failure      503  {object}  dto.SchedulerErrorResponse "Service Unavailable"
-// @Router       /api/v1/scheduler/jobs [post]
+// @Router       /api/v1/{access}/scheduler/jobs [post]
 // @Security     ApiKeyAuth
 func RegisterScheduledJob() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -282,7 +286,7 @@ func RegisterScheduledJob() gin.HandlerFunc {
 // @Param        name   path     string  true  "Job Name"
 // @Success      200  {object}  dto.UnregisterJobResponse
 // @Failure      503  {object}  dto.SchedulerErrorResponse "Service Unavailable"
-// @Router       /api/v1/scheduler/jobs/{name} [delete]
+// @Router       /api/v1/{access}/scheduler/jobs/{name} [delete]
 // @Security     ApiKeyAuth
 func UnregisterScheduledJob() gin.HandlerFunc {
 	return func(c *gin.Context) {
