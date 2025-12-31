@@ -24,11 +24,12 @@ import (
 	"service-platform/internal/config"
 	"service-platform/internal/whatsapp"
 
+	"service-platform/docs"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
-	"github.com/swaggo/swag/example/basic/docs"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/gorm"
 )
@@ -545,5 +546,6 @@ func main() {
 
 	// NOTE: Scheduler is now running as a separate gRPC service (cmd/grpc/main.go)
 	// ADD: email client & listener if exists and needed !
+
 	startWebServer(&yamlCfg, systemMonitor)
 }
