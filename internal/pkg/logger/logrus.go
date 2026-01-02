@@ -263,7 +263,7 @@ func GetLoggerForFile(logFileName string) *logrus.Logger {
 		logger.SetFormatter(&logrus.JSONFormatter{})
 	default:
 		logger.SetFormatter(&CSVFormatter{
-			TimestampFormat: "2006-01-02 15:04:05.000 MST",
+			TimestampFormat: config.DATE_YYYY_MM_DD_HH_MM_SS_MS_TZ,
 		})
 	}
 

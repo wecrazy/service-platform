@@ -526,7 +526,7 @@ func (s *server) Connect(ctx context.Context, req *pb.ConnectRequest) (*pb.Conne
 
 			// Create directory: web/file/wa_qr/YYYY-MM-DD/
 			now := time.Now()
-			dateStr := now.Format("2006-01-02")
+			dateStr := now.Format(config.DATE_YYYY_MM_DD)
 
 			dirQR, err := fun.FindValidDirectory([]string{
 				"web/file/wa_qr",
@@ -563,7 +563,7 @@ func (s *server) Connect(ctx context.Context, req *pb.ConnectRequest) (*pb.Conne
 			if err != nil {
 				return &pb.ConnectResponse{Success: false, Message: fmt.Sprintf("Failed to find web directory: %v", err)}, nil
 			}
-			logoPath := config.GetConfig().App.Logo
+			logoPath := config.GetConfig().App.LogoJPG
 			if logoPath == "" {
 				return &pb.ConnectResponse{Success: false, Message: "Logo path is not configured"}, nil
 			}
@@ -574,13 +574,10 @@ func (s *server) Connect(ctx context.Context, req *pb.ConnectRequest) (*pb.Conne
 			}
 			defer file.Close()
 
-			options := []standard.ImageOption{
-				standard.WithHalftone(logoFullPath),
-				standard.WithQRWidth(21),
+			options, err := fun.QRWithLogo(logoFullPath)
+			if err != nil {
+				return &pb.ConnectResponse{Success: false, Message: fmt.Sprintf("Failed to get QR options with logo: %v", err)}, nil
 			}
-
-			// REMOVE: soon !!
-			options = []standard.ImageOption{}
 
 			w, err := standard.New(filePath, options...)
 			if err != nil {
@@ -912,7 +909,7 @@ func (s *server) eventHandler(evt interface{}) {
 		}
 	}
 
-	uploadDir := filepath.Join(baseDir, "wa_reply", time.Now().Format("2006-01-02"))
+	uploadDir := filepath.Join(baseDir, "wa_reply", time.Now().Format(config.DATE_YYYY_MM_DD))
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		logrus.Errorf("Failed to create upload directory: %v", err)
 		return
@@ -1046,7 +1043,7 @@ func (s *server) eventHandler(evt interface{}) {
 		// 💬 Handle replies
 		if ctxInfo != nil && ctxInfo.QuotedMessage != nil && ctxInfo.StanzaID != nil && *ctxInfo.StanzaID != "" {
 			var replyText string
-			waReplyPublicURL := config.GetConfig().Whatsnyan.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
+			waReplyPublicURL := config.GetConfig().Whatsnyan.WAReplyPublicURL + "/" + time.Now().Format(config.DATE_YYYY_MM_DD)
 
 			switch {
 
@@ -1307,6 +1304,11 @@ func (s *server) processIncomingWhatsappMessage(v *events.Message) {
 
 	if err := s.db.Create(&incomingMsg).Error; err != nil {
 		logrus.Errorf("Failed to save incoming message: %v", err)
+	}
+
+	if v.Info.MessageSource.IsFromMe {
+		// Ignore messages sent by ourselves
+		return
 	}
 
 	originalSenderJID := controllers.NormalizeSenderJID(v.Info.Sender.String())

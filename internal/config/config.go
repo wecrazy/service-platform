@@ -387,6 +387,11 @@ type YamlConfig struct {
 		Burst       int  `yaml:"burst"`        // burst allowance
 		CleanupTime int  `yaml:"cleanup_time"` // cleanup time in seconds
 	} `yaml:"rate_limit"`
+
+	Monitoring struct {
+		ServiceName string `yaml:"service_name"`
+		Description string `yaml:"description"`
+	} `yaml:"monitoring"`
 }
 
 type Scheduler struct {
