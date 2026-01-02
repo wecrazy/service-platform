@@ -146,7 +146,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		// Check if account is currently locked
 		if user.LockUntil != nil && user.LockUntil.After(time.Now()) {
-			fun.HandleAPIErrorSimple(c, http.StatusTooManyRequests, "Account locked. Try again at "+user.LockUntil.Format("2006-01-02 15:04:05"))
+			fun.HandleAPIErrorSimple(c, http.StatusTooManyRequests, "Account locked. Try again at "+user.LockUntil.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
 			return
 		}
 
@@ -165,7 +165,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 			locked := ""
 			if user.LockUntil != nil && user.LockUntil.After(time.Now()) {
-				locked = fmt.Sprintf(" Account locked until %s.", user.LockUntil.Format("2006-01-02 15:04:05"))
+				locked = fmt.Sprintf(" Account locked until %s.", user.LockUntil.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
 			}
 
 			errorMessage := fmt.Sprintf(

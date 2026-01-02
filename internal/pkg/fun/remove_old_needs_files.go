@@ -26,7 +26,7 @@ func RemoveOldFilesInNeedsDir(olderThan string) {
 		return
 	}
 
-	logrus.Infof("Removing directories older than %s (cutoff: %s) from needs directories", olderThan, cutoffTime.Format("2006-01-02"))
+	logrus.Infof("Removing directories older than %s (cutoff: %s) from needs directories", olderThan, cutoffTime.Format(config.DATE_YYYY_MM_DD))
 
 	totalFolders := 0
 	totalDirsDeleted := 0
@@ -102,10 +102,9 @@ func RemoveOldFilesInNeedsDir(olderThan string) {
 	}
 }
 
-// removeOldDateDirectories removes subdirectories with date format "2006-01-02" older than cutoff time
+// removeOldDateDirectories removes subdirectories with date format older than cutoff time
 // Returns: (dirsDeleted, filesDeleted, sizeFreed, error)
 func removeOldDateDirectories(dir string, cutoffTime time.Time) (int, int, int64, error) {
-	const dateDirFormat = "2006-01-02"
 	var dirsDeleted int
 	var filesDeleted int
 	var sizeFreed int64
@@ -123,7 +122,7 @@ func removeOldDateDirectories(dir string, cutoffTime time.Time) (int, int, int64
 		}
 
 		// Try to parse directory name as date
-		dirDate, err := time.Parse(dateDirFormat, entry.Name())
+		dirDate, err := time.Parse(config.DATE_YYYY_MM_DD, entry.Name())
 		if err != nil {
 			// Not a date-formatted directory, skip
 			logrus.Debugf("Skipping non-date directory: %s", entry.Name())
@@ -143,14 +142,14 @@ func removeOldDateDirectories(dir string, cutoffTime time.Time) (int, int, int64
 				logrus.Errorf("Failed to delete directory %s: %v", dirPath, err)
 			} else {
 				logrus.Infof("Deleted directory: %s (date: %s, files: %d, size: %s)",
-					entry.Name(), dirDate.Format("2006-01-02"), fileCount, formatBytes(dirSize))
+					entry.Name(), dirDate.Format(config.DATE_YYYY_MM_DD), fileCount, formatBytes(dirSize))
 				dirsDeleted++
 				filesDeleted += fileCount
 				sizeFreed += dirSize
 			}
 		} else {
 			logrus.Debugf("Keeping directory: %s (date: %s, newer than cutoff)",
-				entry.Name(), dirDate.Format("2006-01-02"))
+				entry.Name(), dirDate.Format(config.DATE_YYYY_MM_DD))
 		}
 	}
 
@@ -176,8 +175,6 @@ func calculateDirSize(dir string) (int, int64) {
 
 // checkForDateDirectories checks if a directory contains any date-formatted subdirectories
 func checkForDateDirectories(dir string) bool {
-	const dateDirFormat = "2006-01-02"
-
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return false
@@ -189,7 +186,7 @@ func checkForDateDirectories(dir string) bool {
 		}
 
 		// Try to parse directory name as date
-		_, err := time.Parse(dateDirFormat, entry.Name())
+		_, err := time.Parse(config.DATE_YYYY_MM_DD, entry.Name())
 		if err == nil {
 			// Found at least one date-formatted directory
 			return true
@@ -232,7 +229,7 @@ func removeOldFiles(dir string, cutoffTime time.Time) (int, int64, error) {
 				logrus.Errorf("Failed to delete %s: %v", filePath, err)
 			} else {
 				logrus.Debugf("Deleted file: %s (size: %s, modified: %s)",
-					entry.Name(), formatBytes(fileSize), info.ModTime().Format("2006-01-02 15:04:05"))
+					entry.Name(), formatBytes(fileSize), info.ModTime().Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
 				filesDeleted++
 				sizeFreed += fileSize
 			}

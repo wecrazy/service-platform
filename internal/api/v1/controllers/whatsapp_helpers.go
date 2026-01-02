@@ -420,6 +420,18 @@ func SendLangWhatsAppTextMsg(jid, stanzaID string, v *events.Message, lang Langu
 
 	var resp whatsmeow.SendResponse
 	var waErr error
+	isBotNumber := false
+
+	// Try find the jid that will send to and the store ID
+	jidNormalized := NormalizeSenderJID(jid)
+	jidNormalized = strings.ReplaceAll(jidNormalized, fmt.Sprintf("@%s", types.DefaultUserServer), "")
+	storeIDNormalized := client.Store.ID.String()
+	storeIDNormalized = strings.ReplaceAll(storeIDNormalized, fmt.Sprintf("@%s", types.DefaultUserServer), "")
+	parts := strings.SplitN(storeIDNormalized, ":", 2)
+	storeIDNormalized = parts[0]
+	if jidNormalized == storeIDNormalized {
+		isBotNumber = true
+	}
 
 	if stanzaID != "" && v != nil {
 		quotedMsg := &waE2E.ContextInfo{
@@ -427,16 +439,21 @@ func SendLangWhatsAppTextMsg(jid, stanzaID string, v *events.Message, lang Langu
 			Participant:   &jid,
 			QuotedMessage: v.Message,
 		}
-		resp, waErr = client.SendMessage(context.Background(), v.Info.Chat, &waE2E.Message{
-			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-				Text:        &text,
-				ContextInfo: quotedMsg,
-			},
-		})
+
+		if !isBotNumber {
+			resp, waErr = client.SendMessage(context.Background(), v.Info.Chat, &waE2E.Message{
+				ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+					Text:        &text,
+					ContextInfo: quotedMsg,
+				},
+			})
+		}
 	} else {
-		resp, waErr = client.SendMessage(context.Background(), userJID, &waE2E.Message{
-			Conversation: proto.String(text),
-		})
+		if !isBotNumber {
+			resp, waErr = client.SendMessage(context.Background(), userJID, &waE2E.Message{
+				Conversation: proto.String(text),
+			})
+		}
 	}
 
 	if waErr != nil {
@@ -928,7 +945,7 @@ func ValidateUserToUseBotWhatsapp(phoneNumber, jid string, isGroup bool, msgType
 //   - error: An error if any issues occur during processing.
 func CheckAndNotifyQuotaLimit(userID uint, useBot bool, jid string, maxQuota int, client *whatsmeow.Client, rdb *redis.Client, db *gorm.DB) (bool, error) {
 	if useBot {
-		quotaMsgKey := fmt.Sprintf("wa_msg_quota:%d:%s", userID, time.Now().Format("2006-01-02"))
+		quotaMsgKey := fmt.Sprintf("wa_msg_quota:%d:%s", userID, time.Now().Format(config.DATE_YYYY_MM_DD))
 		// Increment counter
 		quotaMsgCount, err := rdb.Incr(context.Background(), quotaMsgKey).Result()
 		if err != nil {
@@ -950,7 +967,7 @@ func CheckAndNotifyQuotaLimit(userID uint, useBot bool, jid string, maxQuota int
 		// Over quota?
 		if int(quotaMsgCount) > maxQuota {
 			// Check if we've already warned today
-			warnKey := fmt.Sprintf("quota_warned:%d:%s", userID, time.Now().Format("2006-01-02"))
+			warnKey := fmt.Sprintf("quota_warned:%d:%s", userID, time.Now().Format(config.DATE_YYYY_MM_DD))
 			isWarned, err := rdb.Exists(context.Background(), warnKey).Result()
 			if err != nil {
 				logrus.Errorf("Failed to check warnKey: %v", err)
@@ -1236,7 +1253,7 @@ func getCooldownKey(prefix string, userID uint) string {
 
 // getUsageKey generates a Redis key for tracking daily usage based on prefix, userID, and current date.
 func getUsageKey(prefix string, userID uint) string {
-	return fmt.Sprintf("perm:usage:%s:%d:%s", prefix, userID, time.Now().Format("2006-01-02"))
+	return fmt.Sprintf("perm:usage:%s:%d:%s", prefix, userID, time.Now().Format(config.DATE_YYYY_MM_DD))
 }
 
 // ValidateFileProperties validates file properties like size, extension, and MIME type

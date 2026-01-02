@@ -63,3 +63,8 @@ web/assets/whatsapp_media/
 tools/
 web/file/
 bin/
+
+# === Swagger Generated Files ===
+docs/docs.go
+docs/swagger.json
+docs/swagger.yaml

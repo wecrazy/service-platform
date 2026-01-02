@@ -1,6 +1,7 @@
 package fun
 
 import (
+	"service-platform/internal/config"
 	whatsnyanmodel "service-platform/internal/core/model/whatsnyan_model"
 
 	"github.com/sirupsen/logrus"
@@ -16,7 +17,7 @@ func PurgeOldWhatsnyanMessages(db *gorm.DB, olderThan string) {
 		return
 	}
 
-	logrus.Infof("Purging Whatsnyan messages older than %s (cutoff: %s)", olderThan, cutoffTime.Format("2006-01-02 15:04:05"))
+	logrus.Infof("Purging Whatsnyan messages older than %s (cutoff: %s)", olderThan, cutoffTime.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
 
 	// Get table name
 	tableName := whatsnyanmodel.WhatsAppMsg{}.TableName()
@@ -51,7 +52,7 @@ func PurgeOldWhatsnyanMessages(db *gorm.DB, olderThan string) {
 
 	logrus.Infof("📊 Whatsnyan Messages (%s)", tableName)
 	logrus.Infof("   Total records: %d (Active: %d | Soft-deleted: %d)", totalCount, activeCount, softDeletedCount)
-	logrus.Infof("🗑️  Will permanently delete: %d messages (created before %s)", toDeleteCount, cutoffTime.Format("2006-01-02"))
+	logrus.Infof("🗑️  Will permanently delete: %d messages (created before %s)", toDeleteCount, cutoffTime.Format(config.DATE_YYYY_MM_DD))
 	logrus.Infof("💾 Will remain: %d records", remainingRecords)
 
 	// Permanently delete old records based on created_at using Unscoped()
