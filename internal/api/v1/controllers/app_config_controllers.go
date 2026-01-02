@@ -226,7 +226,7 @@ func renderTimeFieldAppConfig(fieldValue reflect.Value) interface{} {
 	if fieldValue.Type() == reflect.TypeOf(time.Time{}) {
 		t := fieldValue.Interface().(time.Time)
 		if !t.IsZero() {
-			return fmt.Sprintf(`<span class="text-muted small">%s</span>`, t.Format("2006-01-02 15:04:05"))
+			return fmt.Sprintf(`<span class="text-muted small">%s</span>`, t.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
 		} else {
 			return `<span class="text-muted">-</span>`
 		}

@@ -1,4 +1,4 @@
-.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-status monitoring-cleanup monitoring-ensure-running build-migrate migrate-up migrate-down migrate-status migrate-reset help
+.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-status monitoring-cleanup monitoring-ensure-running install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset help
 
 run-api:
 	go run cmd/api/main.go
@@ -28,7 +28,11 @@ build-grpc:
 	mkdir -p bin
 	go build -o bin/grpc cmd/grpc/main.go
 
-build: build-api build-wa build-grpc
+build-monitoring:
+	mkdir -p bin
+	go build -o bin/monitoring cmd/monitoring/main.go
+
+build: build-api build-wa build-grpc build-monitoring
 
 test:
 	go test -v -cover ./tests/... ./internal/migrations/...
@@ -152,6 +156,24 @@ monitoring-ensure-running:
 		echo "✅ Monitoring already running."; \
 	fi
 
+install-monitoring:
+	@echo "🔧 Installing monitoring service..."
+	@if [ -f "./bin/monitoring" ]; then \
+		sudo ./bin/monitoring --install; \
+	else \
+		echo "📦 Binary not found, using go run..."; \
+		sudo go run cmd/monitoring/main.go --install; \
+	fi
+
+uninstall-monitoring:
+	@echo "🗑️  Uninstalling monitoring service..."
+	@if [ -f "./bin/monitoring" ]; then \
+		sudo ./bin/monitoring --uninstall; \
+	else \
+		echo "📦 Binary not found, using go run..."; \
+		sudo go run cmd/monitoring/main.go --uninstall; \
+	fi
+
 help:
 	@echo "🚀 Service Platform - Available Commands:"
 	@echo ""
@@ -160,6 +182,7 @@ help:
 	@echo "  make build-grpc         - Build gRPC service"
 	@echo "  make build-scheduler    - Build scheduler service"
 	@echo "  make build-wa           - Build WhatsApp service"
+	@echo "  make build-monitoring   - Build monitoring service"
 	@echo "  make build              - Build all services"
 	@echo ""
 	@echo "🏃 Run Commands:"
@@ -177,12 +200,14 @@ help:
 	@echo "  make build-migrate      - Build migration CLI tool"
 	@echo ""
 	@echo "📊 Monitoring Commands:"
-	@echo "  make monitoring-start   - Start Prometheus + Grafana"
-	@echo "  make monitoring-stop    - Stop monitoring services"
-	@echo "  make monitoring-restart - Restart monitoring services"
-	@echo "  make monitoring-status  - Check monitoring status"
-	@echo "  make monitoring-cleanup - Clean old monitoring data"
-	@echo "  make monitoring-ensure-running - Ensure monitoring is running (cleanup if stopped)"
+	@echo "  make monitoring-start   			- Start Prometheus + Grafana"
+	@echo "  make monitoring-stop    			- Stop monitoring services"
+	@echo "  make monitoring-restart 			- Restart monitoring services"
+	@echo "  make monitoring-status  			- Check monitoring status"
+	@echo "  make monitoring-cleanup 			- Clean old monitoring data"
+	@echo "  make monitoring-ensure-running  		- Ensure monitoring is running (cleanup if stopped)"
+	@echo "  make install-monitoring 			- Install monitoring as a system service"
+	@echo "  make uninstall-monitoring 			- Uninstall monitoring system service"
 	@echo ""
 	@echo "🛠️  Development Commands:"
 	@echo "  make config-dev         - Setup dev configuration"

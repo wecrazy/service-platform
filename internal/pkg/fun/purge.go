@@ -53,7 +53,7 @@ func PurgeOldLogBackupFiles(olderThan string) {
 		return
 	}
 
-	logrus.Infof("Purging .gz backup files older than %s (cutoff: %s)", olderThan, cutoffTime.Format("2006-01-02 15:04:05"))
+	logrus.Infof("Purging .gz backup files older than %s (cutoff: %s)", olderThan, cutoffTime.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
 
 	// Search for .gz files in log directory
 	deletedCount := 0
@@ -78,7 +78,7 @@ func PurgeOldLogBackupFiles(olderThan string) {
 			if err != nil {
 				logrus.Errorf("Failed to delete %s: %v", path, err)
 			} else {
-				logrus.Infof("Deleted old backup file: %s (modified: %s)", path, info.ModTime().Format("2006-01-02 15:04:05"))
+				logrus.Infof("Deleted old backup file: %s (modified: %s)", path, info.ModTime().Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
 				deletedCount++
 			}
 		}

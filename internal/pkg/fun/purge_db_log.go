@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"service-platform/internal/config"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -50,7 +51,7 @@ func purgeMySQLBinaryLogs(db *gorm.DB, olderThan string, osType string) {
 		return
 	}
 
-	logrus.Infof("Purging MySQL binary logs older than %s (cutoff: %s)", olderThan, cutoffTime.Format("2006-01-02 15:04:05"))
+	logrus.Infof("Purging MySQL binary logs older than %s (cutoff: %s)", olderThan, cutoffTime.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
 
 	// Check if binary logging is enabled
 	var result struct {
@@ -141,11 +142,11 @@ func purgeMySQLBinaryLogs(db *gorm.DB, olderThan string, osType string) {
 
 	sizeRemaining := totalSizeBefore - sizeToDelete
 	logrus.Infof("📊 MySQL Binary Logs - Before deletion: %s", formatBytes(totalSizeBefore))
-	logrus.Infof("🗑️  Will delete: %s (%d logs older than %s)", formatBytes(sizeToDelete), logsToDelete, cutoffTime.Format("2006-01-02"))
+	logrus.Infof("🗑️  Will delete: %s (%d logs older than %s)", formatBytes(sizeToDelete), logsToDelete, cutoffTime.Format(config.DATE_YYYY_MM_DD))
 	logrus.Infof("💾 Will remain: %s", formatBytes(sizeRemaining))
 
 	// Use MySQL PURGE BINARY LOGS command (safer than deleting files directly)
-	purgeSQL := fmt.Sprintf("PURGE BINARY LOGS BEFORE '%s'", cutoffTime.Format("2006-01-02 15:04:05"))
+	purgeSQL := fmt.Sprintf("PURGE BINARY LOGS BEFORE '%s'", cutoffTime.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
 	err = db.Exec(purgeSQL).Error
 	if err != nil {
 		logrus.Errorf("Failed to purge MySQL binary logs: %v", err)
@@ -166,7 +167,7 @@ func purgePostgreSQLWALLogs(db *gorm.DB, olderThan string, osType string) {
 		return
 	}
 
-	logrus.Infof("Purging PostgreSQL WAL logs older than %s (cutoff: %s)", olderThan, cutoffTime.Format("2006-01-02 15:04:05"))
+	logrus.Infof("Purging PostgreSQL WAL logs older than %s (cutoff: %s)", olderThan, cutoffTime.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
 
 	// Try to get PostgreSQL data directory using multiple methods
 	dataDir := getPostgreSQLDataDir(db, osType)
@@ -257,7 +258,7 @@ func purgePostgreSQLWALLogs(db *gorm.DB, olderThan string, osType string) {
 
 	sizeRemaining := totalSizeBefore - sizeDeleted
 	logrus.Infof("📊 PostgreSQL WAL Files - Before deletion: %s", formatBytes(totalSizeBefore))
-	logrus.Infof("🗑️  Will delete: %s (%d files older than %s)", formatBytes(sizeDeleted), len(filesToDelete), cutoffTime.Format("2006-01-02"))
+	logrus.Infof("🗑️  Will delete: %s (%d files older than %s)", formatBytes(sizeDeleted), len(filesToDelete), cutoffTime.Format(config.DATE_YYYY_MM_DD))
 	logrus.Infof("💾 Will remain: %s", formatBytes(sizeRemaining))
 
 	// Second pass: delete the files
