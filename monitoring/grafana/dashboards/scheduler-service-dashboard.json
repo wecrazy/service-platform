@@ -30,7 +30,20 @@
               },
               "type": "value"
             }
-          ]
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
         }
       },
       "gridPos": {
@@ -98,6 +111,83 @@
         "x": 12,
         "y": 8
       }
+    },
+    {
+      "id": 5,
+      "title": "CPU Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(process_cpu_seconds_total{job=\"scheduler-service\"}[5m]) * 100",
+          "refId": "A",
+          "legendFormat": "CPU Usage %"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      }
+    },
+    {
+      "id": 6,
+      "title": "GC Duration",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "go_gc_duration_seconds{job=\"scheduler-service\",quantile=\"0.5\"}",
+          "refId": "A",
+          "legendFormat": "GC Duration (median)"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      }
+    },
+    {
+      "id": 7,
+      "title": "Heap Objects",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "go_memstats_heap_objects{job=\"scheduler-service\"}",
+          "refId": "A",
+          "legendFormat": "Heap Objects"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      }
+    },
+    {
+      "id": 8,
+      "title": "Network I/O",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(process_network_receive_bytes_total{job=\"scheduler-service\"}[5m])",
+          "refId": "A",
+          "legendFormat": "Bytes Received"
+        },
+        {
+          "expr": "rate(process_network_transmit_bytes_total{job=\"scheduler-service\"}[5m])",
+          "refId": "B",
+          "legendFormat": "Bytes Transmitted"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      }
     }
   ],
   "time": {
@@ -112,7 +202,7 @@
     "list": []
   },
   "refresh": "5s",
-  "schemaVersion": 27,
+  "schemaVersion": 38,
   "version": 0,
   "links": []
 }

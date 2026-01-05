@@ -263,10 +263,11 @@ whatsnyan:
   message_processed_tolerance_hours: 24 # hours
   purge_message_older_than: "1Week"
 metrics:
-  api_port: 9094
+  api_port: 9095
   grpc_port: 9092
   scheduler_port: 9091
   whatsapp_port: 9093
+  grafana_port: 3030
 rate_limit:
   enabled: true
   requests: 100  # requests per period
@@ -275,4 +276,8 @@ rate_limit:
   cleanup_time: 3600  # cleanup time in seconds (1 hour)
 monitoring:
   service_name: "monitoring-of-service-platform"
-  description: "Service Platform - Monitoring System Service, that monitors various services including API, gRPC, Scheduler, and WhatsNyan for WhatsApp integration."
+  description: "Service Platform - Monitoring System Service, that monitors various services including API, gRPC, Scheduler, WhatsNyan for WhatsApp integration and LibreTranslate for translation services."
+n8n:
+  port: 5775
+libretranslate:
+  port: 5004

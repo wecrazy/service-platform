@@ -43,12 +43,13 @@ services:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     environment:
+      - GF_USERS_DEFAULT_THEME=dark
       - GF_SECURITY_ADMIN_PASSWORD=Ro224171222#
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_LOG_LEVEL=warn                    # Reduce logging verbosity
-      - GF_LOG_MODE=console                  # Console logging only
-      - GF_ANALYTICS_REPORTING_ENABLED=false # Disable analytics
-      - GF_ANALYTICS_CHECK_FOR_UPDATES=false # Disable update checks
+      - GF_LOG_LEVEL=warn                     # warn | info | debug | error
+      - GF_LOG_MODE=console                   # Console logging only
+      - GF_ANALYTICS_REPORTING_ENABLED=false  # Disable analytics
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false  # Disable update checks
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=false # Security
     networks:
       - monitoring
@@ -58,13 +59,38 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M    # Limit Grafana memory usage
+          memory: 1G    # Limit Grafana memory usage
         reservations:
-          memory: 64M
+          memory: 512M
+
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    container_name: service-platform-libretranslate
+    ports:
+      - "${LT_PORT:-5004}:${LT_PORT:-5004}"
+    command: ["--port", "${LT_PORT:-5004}", "--metrics", "--load-only", "en,id", "--update-models"]
+    volumes:
+      - libretranslate_local:/home/libretranslate/.local
+      - libretranslate_db:/app/db
+    environment:
+      - LT_PORT=${LT_PORT:-5004}
+    networks:
+      - monitoring    
+    stdin_open: true
+    tty: true    
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 35G    # LibreTranslate can be memory intensive
+        reservations:
+          memory: 512M
 
 volumes:
   prometheus_data:
   grafana_data:
+  libretranslate_local:
+  libretranslate_db:
 
 networks:
   monitoring:
