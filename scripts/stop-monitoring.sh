@@ -26,7 +26,8 @@ fi
 
 # Extract monitoring settings
 PROMETHEUS_PORT=$(yq -r '.metrics.api_port' "$CONFIG_FILE")
-GRAFANA_PORT=3030  # Fixed port for Grafana UI
+GRAFANA_PORT=$(yq -r '.metrics.grafana_port' "$CONFIG_FILE")
+LT_PORT=$(yq -r '.libretranslate.port' "$CONFIG_FILE")
 
 COMPOSE_FILE="${PROJECT_ROOT}/docker-compose.monitoring.yml"
 
@@ -51,3 +52,7 @@ else
 fi
 
 echo "✅ Monitoring services stopped with ${RUNTIME}!"
+echo ""
+echo "🧹 Cleaning up configuration..."
+# Revert prometheus.yml to placeholder
+sed -i "s/$LT_PORT/__LT_PORT__/g" "${PROJECT_ROOT}/prometheus.yml"

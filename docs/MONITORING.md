@@ -71,20 +71,24 @@ The following metrics configuration is already added to `config.dev.yaml`:
 
 ```yaml
 metrics:
-  api_port: 9094        # Prometheus port for API metrics
+  api_port: 9095        # Prometheus port for API metrics
   grpc_port: 9092       # Metrics port for gRPC service
   scheduler_port: 9091  # Metrics port for scheduler service
   whatsapp_port: 9093   # Metrics port for WhatsApp service
+  grafana_port: 3030    # Grafana port
+  libretranslate_port: 5004  # LibreTranslate port
 ```
 
 And the corresponding struct is defined in `internal/config/config.go`:
 
 ```go
 Metrics struct {
-    APIPort       int `yaml:"api_port"`
-    GRPCPort      int `yaml:"grpc_port"`
-    SchedulerPort int `yaml:"scheduler_port"`
-    WhatsAppPort  int `yaml:"whatsapp_port"`
+    APIPort            int `yaml:"api_port"`
+    GRPCPort           int `yaml:"grpc_port"`
+    SchedulerPort      int `yaml:"scheduler_port"`
+    WhatsAppPort       int `yaml:"whatsapp_port"`
+    GrafanaPort        int `yaml:"grafana_port"`
+    LibreTranslatePort int `yaml:"libretranslate_port"`
 } `yaml:"metrics"`
 ```
 
@@ -117,6 +121,8 @@ Dashboards are automatically provisioned when Grafana starts. The following dash
 3. **gRPC Service Dashboard** - Detailed metrics for the gRPC service
 4. **Scheduler Service Dashboard** - Detailed metrics for the scheduler service
 5. **WhatsApp Service Dashboard** - Detailed metrics for the WhatsApp service
+6. **LibreTranslate Service** - Detailed metrics for the LibreTranslate service
+7. **N8N Service** - Detailed metrics for the N8N service
 
 ### Dashboard Features
 
@@ -150,17 +156,21 @@ monitoring/grafana/
     ├── api-service-dashboard.json
     ├── grpc-service-dashboard.json
     ├── scheduler-service-dashboard.json
-    └── whatsapp-service-dashboard.json
+    ├── whatsapp-service-dashboard.json
+    ├── libretranslate-dashboard.json
+    └── n8n-service-dashboard.json
 ```
 
 These files are mounted into the Grafana container and automatically loaded on startup.
 
 ## Services and Ports
 
-- **API Service**: Main web API on port 9094, metrics on same port
+- **API Service**: Main web API on port 9095, metrics on same port
 - **Auth gRPC Service**: gRPC on port 50041, metrics on port from config (default 9092)
 - **Scheduler Service**: gRPC on port 50043, metrics on port from config (default 9091)
 - **WhatsApp Service**: gRPC on port 50042, metrics on port from config (default 9093)
+- **LibreTranslate Service**: metrics running on port from config (default 5004)
+- **N8N Service**: metrics running on port from config (default 5775)
 
 ## Metrics Exposed
 
@@ -210,7 +220,7 @@ docker-compose -f docker-compose.monitoring.yml down -v
 The monitoring services will be available on ports configured in your YAML files:
 
 - **Prometheus**: `http://localhost:{metrics.api_port}`
-- **Grafana**: `http://localhost:3030` (admin/admin)
+- **Grafana**: `http://localhost:{metrics.grafana_port}`
 
 Check the script output for exact URLs after startup.
 
@@ -235,7 +245,7 @@ go run cmd/whatsapp/main.go
 ### 3. Access Grafana
 
 1. Open http://localhost:3030
-2. Login with admin/admin
+2. Login with admin user
 3. **✅ Dashboards are automatically provisioned and ready to use!**
 
 **Available Dashboards:**
@@ -244,6 +254,8 @@ go run cmd/whatsapp/main.go
 - **gRPC Service Dashboard** - Detailed metrics for the gRPC service  
 - **Scheduler Service Dashboard** - Detailed metrics for the scheduler service
 - **WhatsApp Service Dashboard** - Detailed metrics for the WhatsApp service
+- **LibreTranslate Service Dashboard** - Detailed metrics for the LibreTranslate service
+- **N8N Service Dashboard** - Detailed metrics for the N8N service
 
 **Dashboard Features:**
 - Auto-refresh every 5 seconds
@@ -256,10 +268,12 @@ go run cmd/whatsapp/main.go
 - Prometheus UI: http://localhost:9090
 - Grafana: http://localhost:3030
 - Individual service metrics:
-  - API: http://localhost:9094/api-metrics
+  - API: http://localhost:9095/api-metrics
   - Auth gRPC: http://localhost:9092/grpc-metrics
   - Scheduler: http://localhost:9091/scheduler-metrics
   - WhatsApp: http://localhost:9093/whatsapp-metrics
+  - LibreTranslate: http://localhost:5004/metrics
+  - N8N: http://localhost:5775/metrics
 
 ## Troubleshooting
 

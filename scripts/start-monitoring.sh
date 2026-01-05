@@ -26,10 +26,15 @@ fi
 
 # Extract monitoring settings
 PROMETHEUS_PORT=$(yq -r '.metrics.api_port' "$CONFIG_FILE")
-GRAFANA_PORT=3030  # Fixed port for Grafana UI, can be changed
+GRAFANA_PORT=$(yq -r '.metrics.grafana_port' "$CONFIG_FILE")
+LT_PORT=$(yq -r '.libretranslate.port' "$CONFIG_FILE")
 
 echo "📊 Prometheus will be available on port: $PROMETHEUS_PORT"
-echo "📈 Grafana will be available on port: $GRAFANA_PORT (admin/admin)"
+echo "📈 Grafana will be available on port: $GRAFANA_PORT"
+echo "🌐 LibreTranslate will be available on port: $LT_PORT"
+
+# Update prometheus.yml with actual ports
+sed -i "s/__LT_PORT__/$LT_PORT/g" "${PROJECT_ROOT}/prometheus.yml"
 
 COMPOSE_FILE="${PROJECT_ROOT}/docker-compose.monitoring.yml"
 
@@ -40,13 +45,13 @@ if command -v podman-compose &> /dev/null; then
     echo "📦 Using Podman Compose"
     RUNTIME="podman-compose"
 
-    PROMETHEUS_PORT=$PROMETHEUS_PORT GRAFANA_PORT=$GRAFANA_PORT podman-compose -f "${COMPOSE_FILE}" up -d
+    PROMETHEUS_PORT=$PROMETHEUS_PORT GRAFANA_PORT=$GRAFANA_PORT LT_PORT=$LT_PORT podman-compose -f "${COMPOSE_FILE}" up -d
 
 elif command -v docker-compose &> /dev/null && command -v docker &> /dev/null; then
     echo "🐳 Using Docker Compose"
     RUNTIME="docker-compose"
 
-    PROMETHEUS_PORT=$PROMETHEUS_PORT GRAFANA_PORT=$GRAFANA_PORT docker-compose -f "${COMPOSE_FILE}" up -d
+    PROMETHEUS_PORT=$PROMETHEUS_PORT GRAFANA_PORT=$GRAFANA_PORT LT_PORT=$LT_PORT docker-compose -f "${COMPOSE_FILE}" up -d
 
 else
     echo "❌ Neither podman-compose nor docker-compose found."
@@ -59,6 +64,7 @@ echo "✅ Monitoring services started with ${RUNTIME}!"
 echo ""
 echo "🌐 Access URLs:"
 echo "   Prometheus: http://localhost:${PROMETHEUS_PORT}"
-echo "   Grafana:    http://localhost:${GRAFANA_PORT} (admin/admin)"
+echo "   Grafana:    http://localhost:${GRAFANA_PORT}"
+echo "   LibreTranslate: http://localhost:${LT_PORT}"
 echo ""
 echo "🛑 To stop: ./scripts/stop-monitoring.sh"
