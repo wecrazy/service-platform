@@ -1,4 +1,4 @@
-.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-status monitoring-cleanup monitoring-ensure-running install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset help
+.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset help
 
 run-api:
 	go run cmd/api/main.go
@@ -32,10 +32,17 @@ build-monitoring:
 	mkdir -p bin
 	go build -o bin/monitoring cmd/monitoring/main.go
 
-build: build-api build-wa build-grpc build-monitoring
+build-n8n:
+	mkdir -p bin
+	go build -o bin/n8n cmd/n8n/main.go
+
+build: build-api build-wa build-grpc build-monitoring build-n8n
 
 test:
 	go test -v -cover ./tests/... ./internal/migrations/...
+
+run-n8n:
+	go run cmd/n8n/main.go
 
 run-all: monitoring-ensure-running run-api run-grpc run-scheduler run-wa
 
@@ -137,6 +144,10 @@ monitoring-restart: monitoring-stop
 	@sleep 2
 	@./scripts/start-monitoring.sh
 
+monitoring-deep-restart:
+	@echo "🔄 Deep restarting Service Platform Monitoring (clearing Grafana cache)..."
+	@./scripts/deep-restart-monitoring.sh
+
 monitoring-status:
 	@echo "📊 Checking monitoring services status..."
 	@podman ps --filter "label=io.podman.compose.project=service-platform" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || docker ps --filter "label=com.docker.compose.project=service-platform" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "No monitoring services running or container runtime not available"
@@ -203,6 +214,7 @@ help:
 	@echo "  make monitoring-start   			- Start Prometheus + Grafana"
 	@echo "  make monitoring-stop    			- Stop monitoring services"
 	@echo "  make monitoring-restart 			- Restart monitoring services"
+	@echo "  make monitoring-deep-restart 			- Deep restart with Grafana cache cleanup"
 	@echo "  make monitoring-status  			- Check monitoring status"
 	@echo "  make monitoring-cleanup 			- Clean old monitoring data"
 	@echo "  make monitoring-ensure-running  		- Ensure monitoring is running (cleanup if stopped)"
