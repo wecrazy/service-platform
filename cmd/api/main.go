@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"service-platform/docs"
 	"service-platform/internal/api/v1/routes"
 	"service-platform/internal/database"
 	"service-platform/internal/installer"
@@ -23,8 +24,6 @@ import (
 
 	"service-platform/internal/config"
 	"service-platform/internal/whatsapp"
-
-	"service-platform/docs"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -337,6 +336,7 @@ func createFolderNeeds(cfg *config.YamlConfig) {
 		"../../../web/file",
 	})
 	if err != nil {
+		fmt.Printf("❌ Failed to find valid directory for file: %v\n", err)
 		logrus.Fatalf("❌ Failed to find valid directory for file: %v", err)
 	}
 
