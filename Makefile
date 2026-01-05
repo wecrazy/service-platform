@@ -92,13 +92,13 @@ migrate-reset:
 # 	rm -rf bin
 
 install-swagger:
-	@echo "Ensuring swag v1.16.6 is installed"
+	@echo "Ensuring swag latest is installed"
 	@GOBIN=$$(go env GOPATH)/bin; \
-	if [ ! -x "$$GOBIN/swag" ] || [ "$$($$GOBIN/swag --version 2>/dev/null | awk '{print $$3}')" != "v1.16.6" ]; then \
-		echo "Installing/updating swag to v1.16.6..."; \
-		GOBIN="$$GOBIN" go install github.com/swaggo/swag/cmd/swag@v1.16.6; \
+	if [ ! -x "$$GOBIN/swag" ] || [ "$$($$GOBIN/swag --version 2>/dev/null | awk '{print $$3}')" != "latest" ]; then \
+		echo "Installing/updating swag to latest..."; \
+		GOBIN="$$GOBIN" go get -u github.com/swaggo/swag/cmd/swag@latest; \
 	else \
-		echo "swag v1.16.6 already installed"; \
+		echo "swag latest already installed"; \
 	fi
 
 swagger: install-swagger

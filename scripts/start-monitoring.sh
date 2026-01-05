@@ -5,6 +5,12 @@
 
 set -e
 
+# Check for required tools
+if ! command -v yq &> /dev/null; then
+    echo "❌ yq not found. Install with: sudo apt install yq"
+    exit 1
+fi
+
 SCRIPT_DIR="$(dirname "$0")"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
@@ -55,8 +61,8 @@ elif command -v docker-compose &> /dev/null && command -v docker &> /dev/null; t
 
 else
     echo "❌ Neither podman-compose nor docker-compose found."
-    echo "📦 Install with: sudo apt install podman-compose"
-    echo "🐳 Or install Docker and docker-compose"
+    echo "📦 For Podman: sudo apt install podman && sudo apt install podman-compose"
+    echo "🐳 For Docker: Install Docker and docker-compose (see https://docs.docker.com/engine/install/ubuntu/)"
     exit 1
 fi
 
