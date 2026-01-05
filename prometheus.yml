@@ -26,3 +26,13 @@ scrape_configs:
       # - targets: ['localhost:9093', 'host.containers.internal:9093']  # WhatsApp service metrics (matches config.dev.yaml metrics.whatsapp_port)
       - targets: ['host.containers.internal:9093']  # WhatsApp service metrics (matches config.dev.yaml metrics.whatsapp_port)
     metrics_path: '/whatsapp-metrics'
+
+  - job_name: 'libretranslate-service'
+    static_configs:
+      - targets: ['libretranslate:__LT_PORT__']  # LibreTranslate service (internal network)
+    metrics_path: '/metrics'
+
+  - job_name: 'n8n-service'
+    static_configs:
+      - targets: ['host.containers.internal:5775']  # N8N service metrics
+    metrics_path: '/metrics'

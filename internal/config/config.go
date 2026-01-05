@@ -378,6 +378,7 @@ type YamlConfig struct {
 		GRPCPort      int `yaml:"grpc_port"`
 		SchedulerPort int `yaml:"scheduler_port"`
 		WhatsAppPort  int `yaml:"whatsapp_port"`
+		GrafanaPort   int `yaml:"grafana_port"`
 	} `yaml:"metrics"`
 
 	RateLimit struct {
@@ -392,6 +393,14 @@ type YamlConfig struct {
 		ServiceName string `yaml:"service_name"`
 		Description string `yaml:"description"`
 	} `yaml:"monitoring"`
+
+	N8N struct {
+		Port int `yaml:"port"`
+	} `yaml:"n8n"`
+
+	LibreTranslate struct {
+		Port int `yaml:"port"`
+	} `yaml:"libretranslate"`
 }
 
 type Scheduler struct {
