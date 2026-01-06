@@ -17,6 +17,8 @@ var (
 	configPath  string
 )
 
+// yamlFilePaths defines possible locations for environment-specific config files
+// %s will be replaced with "dev" or "prod"
 var yamlFilePaths = []string{
 	"internal/config/config.%s.yaml",
 	"/internal/config/config.%s.yaml",
@@ -27,6 +29,7 @@ var yamlFilePaths = []string{
 	"/../../internal/config/config.%s.yaml",
 }
 
+// mainConfigPaths defines possible locations for the main conf.yaml file
 var mainConfigPaths = []string{
 	"internal/config/conf.yaml",
 	"/internal/config/conf.yaml",
@@ -123,6 +126,7 @@ func getConfigPaths() []string {
 	return paths
 }
 
+// LoadConfig loads the configuration from the appropriate YAML file based on the environment
 func LoadConfig() error {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -166,6 +170,7 @@ func LoadConfig() error {
 	return nil
 }
 
+// WatchConfig sets up a file watcher to monitor changes to the config file
 func WatchConfig() {
 	if configPath == "" {
 		log.Println("no valid config file found. Skipping watcher.")
@@ -208,12 +213,15 @@ func WatchConfig() {
 	}
 }
 
+// GetConfig returns the current configuration
 func GetConfig() YamlConfig {
 	configMutex.RLock()
 	defer configMutex.RUnlock()
 	return config
 }
 
+// YamlConfig represents the structure of the configuration YAML file
+// Fields are organized into sections such as App, Default, Redis, Database, etc.
 type YamlConfig struct {
 	App struct {
 		Host                 string `yaml:"host"`
@@ -403,6 +411,9 @@ type YamlConfig struct {
 	} `yaml:"libretranslate"`
 }
 
+// Scheduler represents a scheduled task configuration
+// tasks can be defined using various scheduling options
+// such as every, at, weekly, monthly, yearly
 type Scheduler struct {
 	Name        string   `yaml:"name"`
 	Description string   `yaml:"description,omitempty"`
@@ -413,6 +424,7 @@ type Scheduler struct {
 	Yearly      string   `yaml:"yearly,omitempty"`
 }
 
+// WhatsnyanTables holds the table names used in the Whatsmeow pkg
 type WhatsnyanTables struct {
 	TBWhatsnyanMessage          string `yaml:"tb_whatsnyan_message"`
 	TBWhatsnyanIncomingMessage  string `yaml:"tb_whatsnyan_incoming_message"`
@@ -436,6 +448,7 @@ type WhatsnyanTables struct {
 	TBVersion              string `yaml:"tb_version"`
 }
 
+// WhatsnyanFiles holds configuration for file handling in Whatsmeow
 type WhatsnyanFiles struct {
 	Image struct {
 		MaxDailyQuota     int      `yaml:"max_daily_quota"`

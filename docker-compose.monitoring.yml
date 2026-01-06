@@ -64,7 +64,7 @@ services:
           memory: 512M
 
   libretranslate:
-    image: libretranslate/libretranslate:latest
+    image: docker.io/libretranslate/libretranslate:latest
     container_name: service-platform-libretranslate
     ports:
       - "${LT_PORT:-5004}:${LT_PORT:-5004}"
