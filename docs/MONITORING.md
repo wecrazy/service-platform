@@ -75,7 +75,7 @@ metrics:
   grpc_port: 9092       # Metrics port for gRPC service
   scheduler_port: 9091  # Metrics port for scheduler service
   whatsapp_port: 9093   # Metrics port for WhatsApp service
-  grafana_port: 3030    # Grafana port
+  grafana_port: 3063    # Grafana port
   libretranslate_port: 5004  # LibreTranslate port
 ```
 
@@ -244,7 +244,7 @@ go run cmd/whatsapp/main.go
 
 ### 3. Access Grafana
 
-1. Open http://localhost:3030
+1. Open http://localhost:3063
 2. Login with admin user
 3. **✅ Dashboards are automatically provisioned and ready to use!**
 
@@ -266,7 +266,7 @@ go run cmd/whatsapp/main.go
 ## Accessing Metrics
 
 - Prometheus UI: http://localhost:9090
-- Grafana: http://localhost:3030
+- Grafana: http://localhost:3063
 - Individual service metrics:
   - API: http://localhost:9095/api-metrics
   - Auth gRPC: http://localhost:9092/grpc-metrics

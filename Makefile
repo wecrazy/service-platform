@@ -1,4 +1,4 @@
-.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset help
+.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results help
 
 run-api:
 	go run cmd/api/main.go
@@ -185,6 +185,52 @@ uninstall-monitoring:
 		sudo go run cmd/monitoring/main.go --uninstall; \
 	fi
 
+# k6 Load Testing
+k6-health-check:
+	@echo "🧪 Running k6 health check load test..."
+	@./scripts/run-k6-test.sh health-check.js
+
+k6-smoke-test:
+	@echo "🧪 Running k6 smoke test..."
+	@./scripts/run-k6-test.sh api-smoke-test.js
+
+k6-login-test:
+	@echo "🧪 Running k6 login flow test..."
+	@./scripts/run-k6-test.sh login-flow.js
+
+k6-stress-test:
+	@echo "🧪 Running k6 stress test..."
+	@./scripts/run-k6-test.sh stress-test.js
+
+k6-run-script:
+	@if [ -z "$(SCRIPT)" ]; then \
+		echo "❌ Error: SCRIPT variable is required"; \
+		echo "Usage: make k6-run-script SCRIPT=your-test.js"; \
+		exit 1; \
+	fi
+	@echo "🧪 Running k6 custom script: $(SCRIPT)..."
+	@./scripts/run-k6-test.sh $(SCRIPT)
+
+k6-status:
+	@echo "📊 k6 Container Status:"
+	@podman ps -a --filter "name=service-platform-k6" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || docker ps -a --filter "name=service-platform-k6" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "k6 container not found"
+	@echo ""
+	@echo "📊 k6 Web Dashboard: http://localhost:6680"
+	@echo "📊 k6 Prometheus Endpoint: http://localhost:5665/metrics"
+
+k6-stop:
+	@echo "🛑 Stopping k6 tests..."
+	@podman stop service-platform-k6 2>/dev/null || docker stop service-platform-k6 2>/dev/null || echo "k6 container not running"
+
+k6-results:
+	@echo "📊 k6 Test Results:"
+	@if [ -d "./tests/k6/results" ]; then \
+		ls -lh ./tests/k6/results; \
+	else \
+		echo "No results directory found. Results are stored in the k6 container volume."; \
+		echo "To access results, check: podman volume inspect service-platform_k6_results"; \
+	fi
+
 help:
 	@echo "🚀 Service Platform - Available Commands:"
 	@echo ""
@@ -220,6 +266,16 @@ help:
 	@echo "  make monitoring-ensure-running  		- Ensure monitoring is running (cleanup if stopped)"
 	@echo "  make install-monitoring 			- Install monitoring as a system service"
 	@echo "  make uninstall-monitoring 			- Uninstall monitoring system service"
+	@echo ""
+	@echo "🧪 k6 Load Testing Commands:"
+	@echo "  make k6-health-check    - Run health check load test"
+	@echo "  make k6-smoke-test      - Run smoke test (quick validation)"
+	@echo "  make k6-login-test      - Run login flow load test"
+	@echo "  make k6-stress-test     - Run stress test (progressive load increase)"
+	@echo "  make k6-run-script      - Run custom k6 script (usage: make k6-run-script SCRIPT=test.js)"
+	@echo "  make k6-status          - Check k6 container status and endpoints"
+	@echo "  make k6-stop            - Stop running k6 tests"
+	@echo "  make k6-results         - View k6 test results"
 	@echo ""
 	@echo "🛠️  Development Commands:"
 	@echo "  make config-dev         - Setup dev configuration"

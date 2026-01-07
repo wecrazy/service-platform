@@ -409,6 +409,34 @@ type YamlConfig struct {
 	LibreTranslate struct {
 		Port int `yaml:"port"`
 	} `yaml:"libretranslate"`
+
+	K6 struct {
+		Enabled        bool         `yaml:"enabled"`
+		Port           int          `yaml:"port"`
+		PrometheusPort int          `yaml:"prometheus_port"`
+		ScriptsDir     string       `yaml:"scripts_dir"`
+		Thresholds     K6Thresholds `yaml:"thresholds"`
+		Scenarios      []K6Scenario `yaml:"scenarios"`
+	} `yaml:"k6"`
+}
+
+// K6Thresholds represents default thresholds for k6 tests
+type K6Thresholds struct {
+	HTTPReqDuration   string `yaml:"http_req_duration"`    // p(95)<500ms
+	HTTPReqFailed     string `yaml:"http_req_failed"`      // rate<0.01
+	HTTPReqsPerSecond int    `yaml:"http_reqs_per_second"` // min value
+	IterationDuration string `yaml:"iteration_duration"`   // p(95)<2s
+	ChecksPassRate    string `yaml:"checks_pass_rate"`     // rate>0.95
+}
+
+// K6Scenario represents a load test scenario configuration
+type K6Scenario struct {
+	Name        string `yaml:"name"`
+	Description string `yaml:"description,omitempty"`
+	Executor    string `yaml:"executor"`    // constant-vus, ramping-vus, etc.
+	VUs         int    `yaml:"vus"`         // number of virtual users
+	Duration    string `yaml:"duration"`    // test duration
+	ScriptPath  string `yaml:"script_path"` // path to k6 test script
 }
 
 // Scheduler represents a scheduled task configuration
