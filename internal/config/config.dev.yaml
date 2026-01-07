@@ -267,7 +267,7 @@ metrics:
   grpc_port: 9092
   scheduler_port: 9091
   whatsapp_port: 9093
-  grafana_port: 3030
+  grafana_port: 3063
 rate_limit:
   enabled: true
   requests: 100  # requests per period
@@ -281,3 +281,33 @@ n8n:
   port: 5775
 libretranslate:
   port: 5004
+k6:
+  enabled: true
+  port: 6680                  # k6 API/UI port
+  prometheus_port: 5665       # k6 Prometheus remote write endpoint
+  scripts_dir: "tests/k6"
+  thresholds:
+    http_req_duration: "p(95)<500"      # 95% of requests should be below 500ms
+    http_req_failed: "rate<0.01"        # Error rate should be below 1%
+    http_reqs_per_second: 10            # Minimum requests per second
+    iteration_duration: "p(95)<2000"    # 95% of iterations should be below 2s
+    checks_pass_rate: "rate>0.95"       # 95% of checks should pass
+  scenarios:
+    - name: "health-check-load-test"
+      description: "Load test for health check endpoint"
+      executor: "constant-vus"
+      vus: 10
+      duration: "30s"
+      script_path: "health-check.js"
+    - name: "api-smoke-test"
+      description: "Smoke test for critical API endpoints"
+      executor: "constant-vus"
+      vus: 1
+      duration: "1m"
+      script_path: "api-smoke-test.js"
+    - name: "stress-test"
+      description: "Stress test with ramping VUs"
+      executor: "ramping-vus"
+      vus: 100
+      duration: "5m"
+      script_path: "stress-test.js"
