@@ -29,7 +29,7 @@ scrape_configs:
 
   - job_name: 'libretranslate-service'
     static_configs:
-      - targets: ['libretranslate:5004']  # LibreTranslate service (internal network)
+      - targets: ['libretranslate:__LT_PORT__']  # LibreTranslate service (internal network)
     metrics_path: '/metrics'
 
   - job_name: 'n8n-service'
