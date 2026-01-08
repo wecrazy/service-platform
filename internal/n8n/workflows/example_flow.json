@@ -1,0 +1,21 @@
+{
+  "name": "My Custom Flow",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    }
+  ],
+  "connections": {},
+  "settings": {},
+  "staticData": null,
+  "pinData": {},
+  "versionId": "3e9b7d8c-4a1f-4b2e-9c5d-6f8e7a9b0c1d"
+}

@@ -1,0 +1,124 @@
+{
+  "name": "04_Daily_Health_Report",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 8
+            }
+          ]
+        }
+      },
+      "name": "Cron 8AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "7h8i9j0k-1l2m-3n4o-5p6q-7r8s9t0u1v2w"
+    },
+    {
+      "parameters": {
+        "workflowId": "1"
+      },
+      "name": "Get Auth",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [440, 300],
+      "id": "8i9j0k1l-2m3n-4o5p-6q7r-8s9t0u1v2w3x"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.baseUrl }}health",
+        "options": {
+          "allowUnauthorizedCerts": true
+        },
+        "headerParametersUi": {
+            "parameter": [
+              {
+                "name": "Cookie",
+                "value": "={{ $json.cookie }}"
+              }
+            ]
+        }
+      },
+      "name": "Check Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [640, 300],
+      "id": "9j0k1l2m-3n4o-5p6q-7r8s-9t0u1v2w3x4y"
+    },
+    {
+      "parameters": {
+        "mode": "json",
+        "json": "={ \"recipient\": \"6285173207755\", \"message\": \"✅ *Daily Health Check*\\n\\nServer Status: {{ $json.status }}\\nTime: {{ new Date().toLocaleString() }}\" }"
+      },
+      "name": "Set Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [840, 300],
+      "id": "set-message-daily-health"
+    },
+    {
+      "parameters": {
+        "workflowId": "2"
+      },
+      "name": "Send Report",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [1040, 300],
+      "id": "0k1l2m3n-4o5p-6q7r-8s9t-0u1v2w3x4y5z"
+    }
+  ],
+  "connections": {
+    "Cron 8AM": {
+      "main": [
+        [
+          {
+            "node": "Get Auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Auth": {
+      "main": [
+        [
+          {
+            "node": "Check Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Health": {
+      "main": [
+        [
+          {
+            "node": "Set Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Message": {
+      "main": [
+        [
+          {
+            "node": "Send Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "h5i4d9e7-1g2f-7h6d-5h4i-3f2g1h0i9j8k",
+  "id": "4"
+}
