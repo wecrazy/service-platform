@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"service-platform/internal/config"
 	"service-platform/internal/pkg/fun"
 )
@@ -45,9 +46,48 @@ func startN8n() {
 		return
 	}
 
+	// Get current working directory for mounting workflows
+	workFlowDir, err := fun.FindValidDirectory([]string{
+		"internal/n8n/workflows",
+		"../internal/n8n/workflows",
+		"../../internal/n8n/workflows",
+	})
+	if err != nil {
+		log.Fatalf("Failed to find workflows directory: %v", err)
+	}
+
+	absWorkFlowDir, err := filepath.Abs(workFlowDir)
+	if err != nil {
+		log.Fatalf("Failed to get absolute path for workflows directory: %v", err)
+	}
+
+	// Create n8n network if it doesn't exist
+	exec.Command("podman", "network", "create", "n8n-net").Run()
+
+	// Start Postgres for n8n
+	startPostgres()
+
 	// Run N8N Podman container
 	n8nPort := config.GetConfig().N8N.Port
-	cmd := exec.Command("podman", "run", "-d", "--name", "n8n", "-p", fmt.Sprintf("%d:%d", n8nPort, n8nPort), "-e", fmt.Sprintf("N8N_PORT=%d", n8nPort), "-e", "N8N_METRICS=true", "-v", "n8n_data:/home/node/.n8n", "n8nio/n8n")
+	args := []string{
+		"run", "-d", "--name", "service-platform-n8n", "--replace",
+		"--network", "n8n-net",
+		"-p", fmt.Sprintf("%d:%d", n8nPort, n8nPort),
+		"-e", fmt.Sprintf("N8N_PORT=%d", n8nPort),
+		"-e", "N8N_METRICS=true",
+		"-e", "N8N_PERSONALIZATION_ENABLED=false", // Disable telemetry/data collection
+		"-e", "N8N_DIAGNOSTICS_ENABLED=false", // Disable diagnostics
+		"-e", "DB_TYPE=postgresdb",
+		"-e", "DB_POSTGRESDB_HOST=n8n-postgres",
+		"-e", "DB_POSTGRESDB_PORT=5432",
+		"-e", "DB_POSTGRESDB_DATABASE=n8n",
+		"-e", "DB_POSTGRESDB_USER=n8n",
+		"-e", "DB_POSTGRESDB_PASSWORD=n8n",
+		"-v", "n8n_data:/home/node/.n8n",
+		"-v", fmt.Sprintf("%s:/home/node/workflows", absWorkFlowDir),
+		"n8nio/n8n:latest",
+	}
+	cmd := exec.Command("podman", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -56,10 +96,37 @@ func startN8n() {
 	fmt.Printf("✅ N8N started successfully on http://localhost:%d\n", n8nPort)
 }
 
+func startPostgres() {
+	if fun.IsContainerRunning("n8n-postgres") {
+		fmt.Println("✅ N8N Postgres is already running")
+		return
+	}
+
+	fmt.Println("🚀 Starting N8N Postgres database...")
+	args := []string{
+		"run", "-d", "--name", "n8n-postgres", "--replace",
+		"--network", "n8n-net",
+		"-e", "POSTGRES_DB=n8n",
+		"-e", "POSTGRES_USER=n8n",
+		"-e", "POSTGRES_PASSWORD=n8n",
+		"-v", "n8n_postgres_data:/var/lib/postgresql/data",
+		"postgres:16-alpine",
+	}
+	cmd := exec.Command("podman", args...)
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("Failed to start N8N Postgres: %v", err)
+	}
+	// Give Postgres some time to start
+	exec.Command("sleep", "5").Run()
+}
+
 func stopN8n() {
 	fmt.Println("🛑 Stopping N8N...")
-	if err := fun.StopContainer("n8n"); err != nil {
+	if err := fun.StopContainer("service-platform-n8n"); err != nil {
 		log.Printf("Failed to stop N8N: %v", err)
+	}
+	if err := fun.StopContainer("n8n-postgres"); err != nil {
+		log.Printf("Failed to stop N8N Postgres: %v", err)
 	}
 	fmt.Println("✅ N8N stopped successfully")
 }

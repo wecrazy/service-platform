@@ -1,0 +1,65 @@
+{
+  "name": "05_LibreTranslate",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "translate",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "1l2m3n4o-5p6q-7r8s-9t0u-1v2w3x4y5z6a",
+      "webhookId": "libretranslate-webhook"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://service-platform-libretranslate:5004/translate",
+        "options": {
+          "allowUnauthorizedCerts": true
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "q",
+              "value": "={{ $json.query.q }}"
+            },
+            {
+              "name": "source",
+              "value": "en"
+            },
+            {
+              "name": "target",
+              "value": "id"
+            }
+          ]
+        }
+      },
+      "name": "Translate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "id": "2m3n4o5p-6q7r-8s9t-0u1v-2w3x4y5z6a7b"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Translate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "i6j5e0f8-2h3g-8i7e-6i5j-4g3h2i1j0k9l",
+  "id": "5"
+}

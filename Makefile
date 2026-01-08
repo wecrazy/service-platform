@@ -44,6 +44,30 @@ test:
 run-n8n:
 	go run cmd/n8n/main.go
 
+n8n-stop:
+	go run cmd/n8n/main.go --stop
+
+n8n-import:
+	@echo "📥 Importing workflows..."
+	@podman run --rm \
+		--name n8n-import-temp \
+		--network n8n-net \
+		-u node \
+		-e N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true \
+		-e DB_TYPE=postgresdb \
+		-e DB_POSTGRESDB_HOST=n8n-postgres \
+		-e DB_POSTGRESDB_PORT=5432 \
+		-e DB_POSTGRESDB_DATABASE=n8n \
+		-e DB_POSTGRESDB_USER=n8n \
+		-e DB_POSTGRESDB_PASSWORD=n8n \
+		-v n8n_data:/home/node/.n8n \
+		-v $(shell pwd)/internal/n8n/workflows:/home/node/workflows \
+		n8nio/n8n:latest import:workflow --separate --input=/home/node/workflows 2>&1 | grep -vE "Could not find workflow|ActiveWorkflowManager|processTicksAndRejections|ImportService|ImportWorkflowsCommand|CommandRegistry|remove webhooks|Active version not found|at /usr/local" | grep "\S" || true
+
+n8n-export:
+	@echo "📤 Exporting workflows to internal/n8n/workflows..."
+	podman exec -u node -it service-platform-n8n n8n export:workflow --backup --output=/home/node/workflows
+
 run-all: monitoring-ensure-running run-api run-grpc run-scheduler run-wa
 
 # Database migrations
@@ -247,6 +271,10 @@ help:
 	@echo "  make run-grpc           - Run gRPC service"
 	@echo "  make run-scheduler      - Run scheduler service"
 	@echo "  make run-wa             - Run WhatsApp service"
+	@echo "  make run-n8n            - Run n8n workflow automation service"
+	@echo "  make n8n-stop           - Stop n8n service"
+	@echo "  make n8n-import         - Import workflows from internal/n8n/workflows into n8n"
+	@echo "  make n8n-export         - Export workflows from n8n to internal/n8n/workflows"
 	@echo "  make run-all            - Run all services"
 	@echo ""
 	@echo "🗃️  Database/Migration Commands:"
