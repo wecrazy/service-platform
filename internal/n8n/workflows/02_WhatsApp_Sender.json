@@ -1,0 +1,89 @@
+{
+  "name": "02_WhatsApp_Sender",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "1b2c3d4e-5f6g-7h8i-9j0k-1l2m3n4o5p6q"
+    },
+    {
+      "parameters": {
+        "workflowId": "1" 
+      },
+      "name": "Get Auth",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "2c3d4e5f-6g7h-8i9j-0k1l-2m3n4o5p6q7r"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "={{ $json[\"baseUrl\"] }}tab-whatsapp/send_message",
+        "options": {
+          "allowUnauthorizedCerts": true
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Cookie",
+              "value": "={{ $json[\"cookie\"] }}"
+            }
+          ]
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "type",
+              "value": "text"
+            },
+            {
+              "name": "recipient",
+              "value": "={{ $node[\"Execute Workflow Trigger\"].json[\"recipient\"] }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $node[\"Execute Workflow Trigger\"].json[\"message\"] }}"
+            }
+          ]
+        }
+      },
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "id": "3d4e5f6g-7h8i-9j0k-1l2m-3n4o5p6q7r8s"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Auth": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "f3g2b7c5-9e0d-5c4b-3f2g-1d0e9f8g7h6i",
+  "id": "2"
+}

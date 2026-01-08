@@ -1,0 +1,95 @@
+{
+  "name": "03_High_Traffic_Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "alert",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "4e5f6g7h-8i9j-0k1l-2m3n-4o5p6q7r8s9t",
+      "webhookId": "high-traffic-alert-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.body.status == 'firing' && $json.body.value > 80 }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "If High Traffic",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "5f6g7h8i-9j0k-1l2m-3n4o-5p6q7r8s9t0u"
+    },
+    {
+      "parameters": {
+        "workflowId": "2"
+      },
+      "name": "Send WhatsApp Alert",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [680, 200],
+      "id": "6g7h8i9j-0k1l-2m3n-4o5p-6q7r8s9t0u1v"
+    },
+    {
+      "parameters": {
+        "mode": "json",
+        "json": "={ \"recipient\": \"6285173207755\", \"message\": \"🚨 *High Traffic Alert!* Server CPU is at {{ $node[\"Webhook\"].json.body.value }}%!\" }"
+      },
+      "name": "Prepare Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [570, 200],
+      "id": "prepare-data-node-uuid"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If High Traffic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If High Traffic": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "g4h3c8d6-0f1e-6d5c-4g3h-2e1f0g9h8i7j",
+  "id": "3"
+}

@@ -1,0 +1,111 @@
+{
+  "name": "01_Auth_Helper",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "e0c4b7b2-1a2c-4e5f-8c3d-9b8a7f6e5d4c"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://host.containers.internal:6221/login",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "responseDetails": [ "headers", "body" ]
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "username",
+              "value": "wegirandol@smartwebindonesia.com"
+            },
+            {
+              "name": "password",
+              "value": "Ro224171222#"
+            }
+          ]
+        }
+      },
+      "name": "Login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "id": "7f8e9d0a-1b2c-3d4e-5f6g-7h8i9j0k1l2m"
+    },
+    {
+      "parameters": {
+        "url": "http://host.containers.internal:6221/",
+        "responseFormat": "string",
+        "options": {
+          "allowUnauthorizedCerts": true
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Cookie",
+              "value": "={{ $node[\"Login\"].json.headers[\"set-cookie\"] }}"
+            }
+          ]
+        }
+      },
+      "name": "Get Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "id": "3a4b5c6d-7e8f-9g0h-1i2j-3k4l5m6n7o8p"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.item.json;\nconst match = html.match(/api-access-path=\"([^\"]+)\"/);\nconst apiPath = match ? match[1] : \"\";\n\nreturn {\n  baseUrl: \"http://host.containers.internal:6221\" + apiPath,\n  cookie: $node[\"Login\"].json.headers[\"set-cookie\"]\n};"
+      },
+      "name": "Extract Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "id": "1q2w3e4r-5t6y-7u8i-9o0p-1a2s3d4f5g6h"
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Login": {
+      "main": [
+        [
+          {
+            "node": "Get Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Page": {
+      "main": [
+        [
+          {
+            "node": "Extract Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "e2f1a6b4-8d9c-4b3a-2e1f-0c9d8e7f6a5b",
+  "id": "1"
+}
