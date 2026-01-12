@@ -33,24 +33,53 @@
     },
     {
       "parameters": {
-        "workflowId": "2"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "phone",
+              "type": "string",
+              "value": "={{ $json.body.phone || \"6285173207755\" }}"
+            },
+            {
+              "id": "2",
+              "name": "message",
+              "type": "string",
+              "value": "={{ ($json.body.message ? $json.body.message + ' - ' : '') + `CPU at ${$json.body.value}%` }}"
+            }
+          ]
+        }
       },
-      "name": "Send WhatsApp Alert",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [680, 200],
-      "id": "6g7h8i9j-0k1l-2m3n-4o5p-6q7r8s9t0u1v"
+      "name": "Prepare Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [620, 200],
+      "id": "prepare-alert-node"
     },
     {
       "parameters": {
-        "mode": "json",
-        "json": "={ \"recipient\": \"6285173207755\", \"message\": \"🚨 *High Traffic Alert!* Server CPU is at {{ $node[\"Webhook\"].json.body.value }}%!\" }"
+        "method": "POST",
+        "url": "http://host.containers.internal:6223/send",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $json.body.phone }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.body.message }}"
+            }
+          ]
+        }
       },
-      "name": "Prepare Data",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 1,
-      "position": [570, 200],
-      "id": "prepare-data-node-uuid"
+      "name": "Send WhatsApp Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 200],
+      "id": "6g7h8i9j-0k1l-2m3n-4o5p-6q7r8s9t0u1v"
     }
   ],
   "connections": {
@@ -69,14 +98,14 @@
       "main": [
         [
           {
-            "node": "Prepare Data",
+            "node": "Prepare Alert",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Prepare Data": {
+    "Prepare Alert": {
       "main": [
         [
           {

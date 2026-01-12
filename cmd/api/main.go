@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"service-platform/docs"
+	"service-platform/internal/api/v1/controllers"
 	"service-platform/internal/api/v1/routes"
 	"service-platform/internal/database"
 	"service-platform/internal/installer"
@@ -24,11 +25,13 @@ import (
 
 	"service-platform/internal/config"
 	"service-platform/internal/whatsapp"
+	pb "service-platform/proto"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
+	"go.mau.fi/whatsmeow/types"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/gorm"
 )
@@ -425,8 +428,21 @@ func startWebServer(
 		logrus.Errorf("❌ Server error: %v", err)
 	}
 
-	whatsapp.Close()        // Close WhatsApp gRPC connection
+	// Flush any remaining Loki logs before shutdown
+	if lokiHook := logger.GetLokiHook(); lokiHook != nil {
+		logrus.Info("📤 Flushing remaining logs to Loki...")
+		_ = lokiHook.Flush()
+	}
+
+	// Send shutdown notification to super user BEFORE closing connections
+	suPhoneNumber := config.GetConfig().Default.SuperUserPhone
+	jidStr := fmt.Sprintf("%s@%s", suPhoneNumber, types.DefaultUserServer)
+
+	// Send shutdown message and wait for completion before closing connections
+	sendShutdownNotification(jidStr)
+
 	scheduler.CloseClient() // Close Scheduler gRPC connection
+	whatsapp.Close()        // Close WhatsApp gRPC connection
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -452,6 +468,79 @@ func printHostInfo(yamlCfg *config.YamlConfig, listenAddr string) {
 		return host + listenAddr
 	}()
 	fmt.Printf("🌐 Web Hosted at http://%s/\n", url)
+}
+
+// sendShutdownNotification sends a shutdown notification to the super user via WhatsApp gRPC service.
+// This function blocks until the message is sent or timeout occurs.
+func sendShutdownNotification(jidStr string) {
+	if whatsapp.Client == nil {
+		logrus.Warn("⚠️ WhatsApp gRPC client is not available. Shutdown notification could not be sent.")
+		return
+	}
+
+	// Create multilingual shutdown message
+	langMsg := controllers.NewLanguageMsgTranslation(fun.DefaultLang)
+	langMsg.Texts = map[string]string{
+		fun.LangID: "📴 API Server telah berhasil dimatikan.",
+		fun.LangEN: "📴 API Server has been shut down successfully.",
+		fun.LangES: "📴 El servidor API se ha apagado con éxito.",
+		fun.LangFR: "📴 Le serveur API a été arrêté avec succès.",
+		fun.LangDE: "📴 Der API-Server wurde erfolgreich heruntergefahren.",
+		fun.LangPT: "📴 O servidor API foi desligado com sucesso.",
+		fun.LangAR: "📴 تم إيقاف خادم API بنجاح.",
+		fun.LangJP: "📴 APIサーバーは正常にシャットダウンされました。",
+		fun.LangCN: "📴 API服务器已成功关闭。",
+		fun.LangRU: "📴 Сервер API успешно завершил работу.",
+	}
+
+	// Send the message with timeout context
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Send via gRPC client
+	done := make(chan error, 1)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logrus.Errorf("❌ Panic while sending shutdown notification: %v", r)
+				done <- fmt.Errorf("panic: %v", r)
+			}
+		}()
+
+		// Call gRPC method to send message (send English version)
+		shutdownMsg := langMsg.Texts[langMsg.LanguageCode]
+		resp, err := whatsapp.Client.SendMessage(ctx, &pb.SendMessageRequest{
+			To: jidStr,
+			Content: &pb.MessageContent{
+				ContentType: &pb.MessageContent_Text{
+					Text: shutdownMsg,
+				},
+			},
+		})
+
+		if err != nil {
+			done <- fmt.Errorf("gRPC error: %w", err)
+			return
+		}
+
+		if !resp.Success {
+			done <- fmt.Errorf("message send failed: %s", resp.Message)
+			return
+		}
+
+		done <- nil
+	}()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			logrus.Warnf("⚠️ Failed to send shutdown notification: %v", err)
+		} else {
+			logrus.Info("✅ Shutdown notification sent successfully to super user.")
+		}
+	case <-ctx.Done():
+		logrus.Warn("⚠️ Shutdown notification send timeout. Server will proceed with shutdown.")
+	}
 }
 
 // main is the entry point of the application, initializing resources, loading config, and starting services.

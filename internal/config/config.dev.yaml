@@ -41,7 +41,7 @@ default:
   csv_timestamp_format: "2006-01-02 15:04:05.000 MST"
   nssm_fullpath: "tools/bin/nssm-2.24/win64/nssm.exe"
   super_user_email: "wegirandol@smartwebindonesia.com"
-  super_user_password: "Ro224171222#"
+  super_user_password: "Net55206011##"
   super_user_phone: "6285173207755"
   min_length_phone_number: 9
   dialing_code_default: "62"
@@ -278,7 +278,12 @@ monitoring:
   service_name: "monitoring-of-service-platform"
   description: "Service Platform - Monitoring System Service, that monitors various services including API, gRPC, Scheduler, WhatsNyan for WhatsApp integration and LibreTranslate for translation services."
 n8n:
+  host: "localhost"
   port: 5775
+  bridge_host: "localhost"
+  bridge_port: 6223
+  bridge_service_name: "whatsapp-bridge"
+  api_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YWZiZWY2OC1mZjQwLTQ2ODAtOTE1OS1kZmQzNDlkMDAzZmMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY3OTQ2MjQyLCJleHAiOjE3Njg1Mzk2MDB9.mBQRyqtwtXlhHLcuQ8wzxCSXpdwo7lMw6_RkWjHSsd0"
 libretranslate:
   port: 5004
 k6:
@@ -311,3 +316,28 @@ k6:
       vus: 100
       duration: "5m"
       script_path: "stress-test.js"
+
+# Observability Stack Configuration (Loki + Tempo + Grafana)
+observability:
+  loki:
+    enabled: true
+    url: "http://127.0.0.1:3100"  # Local Loki endpoint
+    batch_size: 20  # Reduced from 100 for quicker visibility in development
+    batch_timeout_ms: 5000
+    labels:
+      service: "service-platform"
+      environment: "development"
+      version: "0.0.0.1.2025.12.26"
+      hostname: "localhost"
+
+  tempo:
+    enabled: true
+    otlp_grpc_endpoint: "http://127.0.0.1:4317"   # Local Tempo OTLP gRPC
+    otlp_http_endpoint: "http://127.0.0.1:3200"   # Tempo HTTP endpoint
+    sample_rate: 1.0  # 100% sampling in development
+    max_export_batch_size: 512
+    export_timeout_ms: 30000
+
+  jaeger:
+    enabled: false
+    endpoint: "http://127.0.0.1:14250"

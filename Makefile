@@ -1,4 +1,4 @@
-.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results help
+.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all help
 
 run-api:
 	go run cmd/api/main.go
@@ -41,7 +41,7 @@ build: build-api build-wa build-grpc build-monitoring build-n8n
 test:
 	go test -v -cover ./tests/... ./internal/migrations/...
 
-run-n8n:
+n8n-start:
 	go run cmd/n8n/main.go
 
 n8n-stop:
@@ -67,7 +67,13 @@ n8n-import:
 n8n-export:
 	@echo "📤 Exporting workflows to internal/n8n/workflows..."
 	podman exec -u node -it service-platform-n8n n8n export:workflow --backup --output=/home/node/workflows
+n8n-clear:
+	@echo "🧹 Clearing all workflows from N8N instance..."
+	@bash scripts/n8n-clear-workflows.sh
 
+n8n-clear-force:
+	@echo "🧹 Force clearing all workflows from N8N instance (no confirmation)..."
+	@bash scripts/n8n-clear-workflows.sh --force
 run-all: monitoring-ensure-running run-api run-grpc run-scheduler run-wa
 
 # Database migrations
@@ -156,40 +162,59 @@ config-prod:
 
 # Monitoring
 monitoring-start:
-	@echo "🚀 Starting Service Platform Monitoring..."
-	@./scripts/start-monitoring.sh
+	@bash scripts/monitoring-quickstart.sh start
 
 monitoring-stop:
-	@echo "🛑 Stopping Service Platform Monitoring..."
-	@./scripts/stop-monitoring.sh
+	@bash scripts/monitoring-quickstart.sh stop
 
-monitoring-restart: monitoring-stop
-	@echo "🔄 Restarting Service Platform Monitoring..."
-	@sleep 2
-	@./scripts/start-monitoring.sh
+monitoring-restart:
+	@bash scripts/monitoring-quickstart.sh restart
 
 monitoring-deep-restart:
 	@echo "🔄 Deep restarting Service Platform Monitoring (clearing Grafana cache)..."
-	@./scripts/deep-restart-monitoring.sh
+	@bash scripts/monitoring-quickstart.sh restart
 
 monitoring-status:
 	@echo "📊 Checking monitoring services status..."
-	@podman ps --filter "label=io.podman.compose.project=service-platform" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || docker ps --filter "label=com.docker.compose.project=service-platform" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "No monitoring services running or container runtime not available"
+	@bash scripts/monitoring-quickstart.sh status
 
 monitoring-cleanup:
 	@echo "🧹 Cleaning up monitoring data and logs..."
-	@./scripts/cleanup-monitoring.sh
+	@bash scripts/monitoring-quickstart.sh clean
 
 monitoring-ensure-running:
 	@echo "🔍 Checking monitoring status..."
-	@if ! podman ps --filter "label=io.podman.compose.project=service-platform" --format "{{.Names}}" | grep -q . 2>/dev/null && ! docker ps --filter "label=com.docker.compose.project=service-platform" --format "{{.Names}}" | grep -q . 2>/dev/null; then \
-		echo "📴 Monitoring stopped, cleaning up and starting..."; \
-		./scripts/cleanup-monitoring.sh; \
-		echo "✅ Cleanup finished, starting monitoring..."; \
-		./scripts/start-monitoring.sh; \
-	else \
-		echo "✅ Monitoring already running."; \
-	fi
+	@bash scripts/monitoring-quickstart.sh start
+
+# Clean old monitoring data (Prometheus + Grafana logs)
+monitoring-cleanup-data:
+	@echo "🧹 Cleaning old monitoring data..."
+	@bash scripts/cleanup-monitoring.sh
+
+# Deep restart monitoring with cache clearing
+monitoring-deep-restart-alt:
+	@echo "🔄 Deep restarting monitoring (with cache clearing)..."
+	@bash scripts/deep-restart-monitoring.sh
+
+# Alternative monitoring start (using config-based script)
+monitoring-start-alt:
+	@echo "🚀 Starting monitoring services (alternative)..."
+	@./scripts/start-monitoring.sh
+
+# Alternative monitoring stop (using config-based script)
+monitoring-stop-alt:
+	@echo "🛑 Stopping monitoring services (alternative)..."
+	@./scripts/stop-monitoring.sh
+
+# Test Tempo tracing setup
+tempo-test:
+	@echo "🧪 Testing Tempo tracing..."
+	@./scripts/test-tempo.sh
+
+# Verify observability stack (logs, Loki, Tempo, Grafana)
+observability-verify:
+	@echo "🔍 Verifying observability stack..."
+	@./scripts/verify-logging.sh
 
 install-monitoring:
 	@echo "🔧 Installing monitoring service..."
@@ -255,34 +280,42 @@ k6-results:
 		echo "To access results, check: podman volume inspect service-platform_k6_results"; \
 	fi
 
+health-check-all:
+	@echo "🩺 Running comprehensive health check..."
+	@./scripts/health-check-all.sh
+
 help:
 	@echo "🚀 Service Platform - Available Commands:"
 	@echo ""
 	@echo "📦 Build Commands:"
-	@echo "  make build-api          - Build API service"
-	@echo "  make build-grpc         - Build gRPC service"
-	@echo "  make build-scheduler    - Build scheduler service"
-	@echo "  make build-wa           - Build WhatsApp service"
-	@echo "  make build-monitoring   - Build monitoring service"
-	@echo "  make build              - Build all services"
+	@echo "  make build-api            			- Build API service"
+	@echo "  make build-grpc         			- Build gRPC service"
+	@echo "  make build-scheduler   			- Build scheduler service"
+	@echo "  make build-wa           			- Build WhatsApp service"
+	@echo "  make build-monitoring   			- Build monitoring service"
+	@echo "  make build             			- Build all services"
 	@echo ""
 	@echo "🏃 Run Commands:"
-	@echo "  make run-api            - Run API service"
-	@echo "  make run-grpc           - Run gRPC service"
-	@echo "  make run-scheduler      - Run scheduler service"
-	@echo "  make run-wa             - Run WhatsApp service"
-	@echo "  make run-n8n            - Run n8n workflow automation service"
-	@echo "  make n8n-stop           - Stop n8n service"
-	@echo "  make n8n-import         - Import workflows from internal/n8n/workflows into n8n"
-	@echo "  make n8n-export         - Export workflows from n8n to internal/n8n/workflows"
-	@echo "  make run-all            - Run all services"
+	@echo "  make run-api            			- Run API service"
+	@echo "  make run-grpc           			- Run gRPC service"
+	@echo "  make run-scheduler      			- Run scheduler service"
+	@echo "  make run-wa             			- Run WhatsApp service"
+	@echo "  make run-all            			- Run all services"
+	@echo ""
+	@echo "🤖 n8n Workflow Automation Commands:"
+	@echo "  make n8n-start          			- Start n8n workflow automation service"
+	@echo "  make n8n-stop           			- Stop n8n service"
+	@echo "  make n8n-import         			- Import workflows from internal/n8n/workflows into n8n"
+	@echo "  make n8n-export         			- Export workflows from n8n to internal/n8n/workflows"
+	@echo "  make n8n-clear          			- Clear all workflows from N8N instance (with confirmation)"
+	@echo "  make n8n-clear-force    			- Force clear all workflows from N8N (no confirmation)"
 	@echo ""
 	@echo "🗃️  Database/Migration Commands:"
-	@echo "  make migrate-up         - Run all pending database migrations (auto-detects binary)"
-	@echo "  make migrate-down       - Rollback last database migration (auto-detects binary)"
-	@echo "  make migrate-status     - Check migration status (auto-detects binary)"
-	@echo "  make migrate-reset      - Reset all migrations (⚠️  destructive, auto-detects binary)"
-	@echo "  make build-migrate      - Build migration CLI tool"
+	@echo "  make migrate-up         			- Run all pending database migrations (auto-detects binary)"
+	@echo "  make migrate-down       			- Rollback last database migration (auto-detects binary)"
+	@echo "  make migrate-status     			- Check migration status (auto-detects binary)"
+	@echo "  make migrate-reset      			- Reset all migrations (⚠️  destructive, auto-detects binary)"
+	@echo "  make build-migrate      			- Build migration CLI tool"
 	@echo ""
 	@echo "📊 Monitoring Commands:"
 	@echo "  make monitoring-start   			- Start Prometheus + Grafana"
@@ -292,23 +325,30 @@ help:
 	@echo "  make monitoring-status  			- Check monitoring status"
 	@echo "  make monitoring-cleanup 			- Clean old monitoring data"
 	@echo "  make monitoring-ensure-running  		- Ensure monitoring is running (cleanup if stopped)"
+	@echo "  make monitoring-cleanup-data 			- Clean old Prometheus/Grafana data (detailed)"
+	@echo "  make monitoring-deep-restart-alt 		- Deep restart with volume removal (alternative)"
+	@echo "  make monitoring-start-alt 			- Start monitoring (config-based alternative)"
+	@echo "  make monitoring-stop-alt 			- Stop monitoring (config-based alternative)"
 	@echo "  make install-monitoring 			- Install monitoring as a system service"
 	@echo "  make uninstall-monitoring 			- Uninstall monitoring system service"
 	@echo ""
 	@echo "🧪 k6 Load Testing Commands:"
-	@echo "  make k6-health-check    - Run health check load test"
-	@echo "  make k6-smoke-test      - Run smoke test (quick validation)"
-	@echo "  make k6-login-test      - Run login flow load test"
-	@echo "  make k6-stress-test     - Run stress test (progressive load increase)"
-	@echo "  make k6-run-script      - Run custom k6 script (usage: make k6-run-script SCRIPT=test.js)"
-	@echo "  make k6-status          - Check k6 container status and endpoints"
-	@echo "  make k6-stop            - Stop running k6 tests"
-	@echo "  make k6-results         - View k6 test results"
+	@echo "  make k6-health-check    			- Run health check load test"
+	@echo "  make k6-smoke-test      			- Run smoke test (quick validation)"
+	@echo "  make k6-login-test      			- Run login flow load test"
+	@echo "  make k6-stress-test     			- Run stress test (progressive load increase)"
+	@echo "  make k6-run-script      			- Run custom k6 script (usage: make k6-run-script SCRIPT=test.js)"
+	@echo "  make k6-status          			- Check k6 container status and endpoints"
+	@echo "  make k6-stop            			- Stop running k6 tests"
+	@echo "  make k6-results         			- View k6 test results"
 	@echo ""
 	@echo "🛠️  Development Commands:"
-	@echo "  make config-dev         - Setup dev configuration"
-	@echo "  make config-prod        - Setup prod configuration"
-	@echo "  make docs-install       - Install API documentation tools"
-	@echo "  make docs-serve         - Serve API documentation"
-	@echo "  make swagger            - Generate Swagger docs"
-	@echo "  make clean-dashboard    - Clean dashboard files"
+	@echo "  make config-dev         			- Setup dev configuration"
+	@echo "  make config-prod        			- Setup prod configuration"
+	@echo "  make docs-install       			- Install API documentation tools"
+	@echo "  make docs-serve         			- Serve API documentation"
+	@echo "  make swagger            			- Generate Swagger docs"
+	@echo "  make clean-dashboard    			- Clean dashboard files"
+	@echo "  make tempo-test         			- Test Tempo tracing setup"
+	@echo "  make observability-verify 			- Verify observability stack (logs, tracing, metrics)"
+	@echo "  make health-check-all   			- Run comprehensive health check for all services"

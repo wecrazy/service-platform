@@ -156,6 +156,7 @@ func (f *CSVFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 // InitLogrus initializes the global Logrus logger with dynamic file routing
 // Logs from each file automatically go to their own log file
 // Example: logs from scheduler.go → scheduler.log, main.go → main.log
+// Also initializes Loki hook if enabled for centralized log aggregation
 func InitLogrus() {
 	logLevel := config.GetConfig().App.LogLevel
 	switch strings.ToLower(logLevel) {
@@ -180,8 +181,17 @@ func InitLogrus() {
 	// Set report caller to true so we can detect the calling file
 	logrus.SetReportCaller(true)
 
-	// Add the dynamic file hook
+	// Add the dynamic file hook (local file logging)
 	logrus.AddHook(&DynamicFileHook{})
+
+	// Initialize Loki hook (centralized logging) if enabled
+	lokiHook, err := InitLokiHook()
+	if err != nil {
+		log.Printf("⚠️ Loki hook initialization failed: %v", err)
+	} else if lokiHook != nil {
+		logrus.AddHook(lokiHook)
+		log.Printf("✅ Loki hook added to logger pipeline")
+	}
 
 	// Set a no-op formatter since the hook handles formatting
 	logrus.SetFormatter(&logrus.TextFormatter{
@@ -191,9 +201,9 @@ func InitLogrus() {
 	})
 
 	// Discard default output since we're writing via hooks
-	logrus.SetOutput(io.Discard) // No terminal output, only file logs
+	logrus.SetOutput(io.Discard) // No terminal output, only file logs and Loki
 
-	logrus.Info("🟢 Dynamic logger initialized successfully")
+	logrus.Info("🟢 Dynamic logger initialized successfully with Loki support")
 }
 
 // GetLoggerForFile returns a logger instance configured for a specific file
