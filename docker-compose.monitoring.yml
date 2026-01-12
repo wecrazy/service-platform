@@ -34,6 +34,70 @@ services:
         reservations:
           memory: 128M
 
+  loki:
+    image: docker.io/grafana/loki:latest
+    container_name: service-platform-loki
+    ports:
+      - "0.0.0.0:${LOKI_PORT:-3100}:3100"
+    volumes:
+      - loki_data:/loki
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yml:ro
+    command: -config.file=/etc/loki/local-config.yml
+    environment:
+      - LOKI_RETENTION_PERIOD=72h
+    networks:
+      - monitoring
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  tempo:
+    image: docker.io/grafana/tempo:latest
+    container_name: service-platform-tempo
+    ports:
+      - "0.0.0.0:${TEMPO_OTLP_GRPC_PORT:-4317}:4317"  # OTLP gRPC
+      - "0.0.0.0:${TEMPO_API_PORT:-3200}:3200"        # API
+    volumes:
+      - tempo_data:/var/tempo
+      - ./monitoring/tempo/tempo-config.yml:/etc/tempo/tempo-config.yml:ro
+    command: -config.file=/etc/tempo/tempo-config.yml
+    networks:
+      - monitoring
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Nginx reverse proxy for securing Loki, Tempo, and Grafana
+  nginx-auth:
+    image: docker.io/library/nginx:latest
+    container_name: service-platform-nginx-auth
+    ports:
+      - "0.0.0.0:${NGINX_PORT:-9180}:80"
+    volumes:
+      - ./monitoring/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./monitoring/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+    networks:
+      - monitoring
+    depends_on:
+      - grafana
+      - loki
+      - tempo
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
   grafana:
     image: docker.io/grafana/grafana:latest
     container_name: service-platform-grafana
@@ -45,7 +109,7 @@ services:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     environment:
       - GF_USERS_DEFAULT_THEME=dark
-      - GF_SECURITY_ADMIN_PASSWORD=Ro224171222#
+      - GF_SECURITY_ADMIN_PASSWORD=Net55206011##
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_LOG_LEVEL=warn                               # warn | info | debug | error
       - GF_LOG_MODE=console                             # Console logging only
@@ -56,6 +120,8 @@ services:
       - monitoring
     depends_on:
       - prometheus
+      - loki
+      - tempo
     restart: unless-stopped
     deploy:
       resources:
@@ -126,6 +192,8 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
+  loki_data:
+  tempo_data:
   libretranslate_local:
   libretranslate_db:
   k6_results:

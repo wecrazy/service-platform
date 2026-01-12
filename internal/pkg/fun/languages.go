@@ -31,6 +31,13 @@ var LanguageNameMap = map[string]string{
 	LangAR: "Arabic",
 }
 
+// LanguageAliasMap maps alternative language codes to their canonical codes
+// This allows users to use ISO 639-1 or other common codes
+var LanguageAliasMap = map[string]string{
+	"ja": LangJP, // Japanese (ISO 639-1 code "ja" maps to our "jp")
+	"zh": LangCN, // Chinese (ISO 639-1 code "zh" maps to our "cn")
+}
+
 // GetSupportedLanguages returns a list of all supported language codes
 func GetSupportedLanguages() []string {
 	return []string{
@@ -55,4 +62,14 @@ func IsSupportedLanguage(code string) bool {
 		}
 	}
 	return false
+}
+
+// NormalizeLanguageCode converts an alias or alternative language code to the canonical code
+// For example, "ja" is converted to "jp", "zh" is converted to "cn"
+// If the code is already canonical or not recognized, it returns the original code
+func NormalizeLanguageCode(code string) string {
+	if canonical, exists := LanguageAliasMap[code]; exists {
+		return canonical
+	}
+	return code
 }
