@@ -175,7 +175,7 @@ fi
 echo ""
 echo -e "${BLUE}📊 View Results:${NC}"
 echo -e "   ${YELLOW}Web Dashboard:${NC}    http://localhost:6680"
-echo -e "   ${YELLOW}Grafana:${NC}          http://localhost:3063 (admin / Ro224171222#)"
+echo -e "   ${YELLOW}Grafana:${NC}          http://localhost:3063 (admin / Net55206011##)"
 echo -e "   ${YELLOW}Prometheus:${NC}       http://localhost:9090"
 echo ""
 

@@ -135,7 +135,7 @@ Configure tests using environment variables:
 | `WHATSAPP_GRPC_URL` | `host.containers.internal:50042` | WhatsApp gRPC URL |
 | `SCHEDULER_GRPC_URL` | `host.containers.internal:50043` | Scheduler gRPC URL |
 | `TEST_EMAIL` | `wegirandol@smartwebindonesia.com` | Test account email |
-| `TEST_PASSWORD` | `Ro224171222#` | Test account password |
+| `TEST_PASSWORD` | `Net55206011##` | Test account password |
 
 Example with custom environment:
 ```bash
@@ -162,7 +162,7 @@ All k6 metrics are automatically exported to Prometheus and visualized in Grafan
 
 1. **Access Grafana**: http://localhost:3063
    - Username: `admin`
-   - Password: `Ro224171222#`
+   - Password: `Net55206011##`
 
 2. **View k6 Dashboard**: Navigate to "k6 Load Testing Dashboard"
 

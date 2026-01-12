@@ -92,7 +92,7 @@ make k6-stress-test
 
 ### 4. View Results
 - **Web Dashboard**: http://localhost:6668
-- **Grafana**: http://localhost:3063 (admin / Ro224171222#)
+- **Grafana**: http://localhost:3063 (admin / Net55206011##)
 - **Prometheus**: http://localhost:9090
 
 ## Architecture
