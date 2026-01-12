@@ -413,7 +413,7 @@ func SendLangWhatsAppTextMsg(jid, stanzaID string, v *events.Message, lang Langu
 	if !exists {
 		text, exists = lang.Texts[defaultLangCode]
 		if !exists {
-			logrus.Errorf("SendLangWhatsAppMsg: no text available for lang %s or default '%s'", langCode, defaultLangCode)
+			logrus.Errorf("SendLangWhatsAppMsg: no text available for lang %s or default '%s'. Available keys: %v", langCode, defaultLangCode, getMapKeys(lang.Texts))
 			return
 		}
 	}
@@ -429,7 +429,9 @@ func SendLangWhatsAppTextMsg(jid, stanzaID string, v *events.Message, lang Langu
 	storeIDNormalized = strings.ReplaceAll(storeIDNormalized, fmt.Sprintf("@%s", types.DefaultUserServer), "")
 	parts := strings.SplitN(storeIDNormalized, ":", 2)
 	storeIDNormalized = parts[0]
+
 	if jidNormalized == storeIDNormalized {
+		logrus.Warnf("SendLangWhatsAppMsg: jid %s is the bot's own number, skipping message send", jid)
 		isBotNumber = true
 	}
 
@@ -447,12 +449,17 @@ func SendLangWhatsAppTextMsg(jid, stanzaID string, v *events.Message, lang Langu
 					ContextInfo: quotedMsg,
 				},
 			})
+		} else {
+			logrus.Warnf("SendLangWhatsAppMsg: skipping quoted message send because jid is bot's own number")
 		}
 	} else {
 		if !isBotNumber {
 			resp, waErr = client.SendMessage(context.Background(), userJID, &waE2E.Message{
 				Conversation: proto.String(text),
 			})
+		} else {
+			logrus.Warnf("SendLangWhatsAppMsg: skipping message send because jid is bot's own number")
+			return
 		}
 	}
 
@@ -581,6 +588,7 @@ func NormalizeSenderJID(jid string) string {
 		if strings.Contains(jid, "@") {
 			return strings.Split(jid, "@")[0] + "@" + types.DefaultUserServer
 		}
+
 		return jid + "@" + types.DefaultUserServer
 	}
 
@@ -593,13 +601,79 @@ func NormalizeSenderJID(jid string) string {
 	return parsed.User + "@" + types.DefaultUserServer
 }
 
+// getMapKeys returns the keys of a string map for logging/debugging purposes
+func getMapKeys(m map[string]string) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+// ResolveJIDToUserPhone attempts to resolve a JID to an actual user phone number JID.
+// It first tries to look up the user ID part in the WhatsmeowLIDMap table to get the actual phone number,
+// regardless of whether the JID comes as @lid, @s.whatsapp.net, or @g.us format.
+// If not found in LIDMap, returns the original JID.
+//
+// Parameters:
+//   - jid: The WhatsApp JID to resolve (can be "phone@s.whatsapp.net", "lidnumber@lid", or group JID)
+//   - db: The GORM database instance for LID lookups
+//
+// Returns:
+//   - string: The resolved user JID or original JID if resolution fails
+//   - string: The JID type ("user", "group", "lid_resolved", "unknown")
+func ResolveJIDToUserPhone(jid string, db *gorm.DB) (string, string) {
+	if db == nil {
+		return jid, "unknown"
+	}
+
+	// Extract the user ID part (before the @)
+	var userID string
+	if strings.Contains(jid, "@") {
+		parts := strings.Split(jid, "@")
+		userID = parts[0]
+	} else {
+		userID = jid
+	}
+
+	// First, always try to find the user ID in the LIDMap table
+	// This works for @lid, @s.whatsapp.net, @g.us formats
+	var lidMap whatsnyanmodel.WhatsmeowLIDMap
+	if err := db.Where("lid = ?", userID).First(&lidMap).Error; err == nil {
+		// Found in LIDMap! Return the actual phone number with user server
+		phoneNumber := fmt.Sprintf("%s@%s", lidMap.PN, types.DefaultUserServer)
+		return phoneNumber, "lid_resolved"
+	}
+
+	// Not found in LIDMap, check the JID format to determine type
+
+	// Check if it's a group JID (ends with @g.us)
+	if strings.Contains(jid, "@g.us") || strings.Contains(jid, types.GroupServer) {
+		return jid, "group"
+	}
+
+	// Check if it's already a user JID (phone@s.whatsapp.net)
+	if strings.Contains(jid, "@s.whatsapp.net") || strings.Contains(jid, types.DefaultUserServer) {
+		return jid, "user"
+	}
+
+	// Check if it looks like a LID format but not found in database
+	if strings.Contains(jid, "@lid") {
+		logrus.Warnf("ResolveJIDToUserPhone: LID %s not found in database", userID)
+		return jid, "lid"
+	}
+
+	// Unknown format
+	return jid, "unknown"
+}
+
 // HandleLanguageChange handles the language change request for a user.
 // It sets the user's preferred language in Redis and sends a confirmation message
 // in the selected language if supported, otherwise skips sending the message.
 //
 // Parameters:
 //   - jid: The WhatsApp JID of the user.
-//   - langCode: The language code to set (e.g., "en", "id").
+//   - langCode: The language code to set (e.g., "en", "id", "ja", "trj").
 //   - client: The WhatsApp client instance.
 //   - rdb: The Redis client for storing language preferences.
 //   - db: The database client for logging.
@@ -619,30 +693,52 @@ func HandleLanguageChange(jid string, langCode string, client *whatsmeow.Client,
 		return
 	}
 
-	langMsg := make(map[string]string)
+	// Resolve JID to actual user phone number if it's a LID
+	resolvedJID, jidType := ResolveJIDToUserPhone(jid, db)
 
+	// ADD: skip jidType == 'group' if you don't want to allow language change in groups
+
+	if jidType == "unknown" {
+		logrus.Warnf("HandleLanguageChange: JID %s is unknown format, skipping language change", jid)
+		return
+	}
+
+	// Sanitize input: trim whitespace, convert to lowercase
+	langCode = strings.TrimSpace(strings.ToLower(langCode))
+	if langCode == "" {
+		return
+	}
+
+	// Check if it's a supported language using the official list
 	if !fun.IsSupportedLanguage(langCode) {
+		// logrus.Warnf("Unsupported language code '%s' for JID: %s", langCode, jid)
 		return
 	}
 
-	if err := SetUserLang(jid, langCode, rdb); err != nil {
-		langMsg[fun.LangID] = fmt.Sprintf("Gagal mengatur bahasa = %s, terjadi kesalahan: %v", langCode, err)
-		langMsg[fun.LangEN] = fmt.Sprintf("Failed to set language = %s, got error: %v", langCode, err)
-		langMsg[fun.LangES] = fmt.Sprintf("No se pudo establecer el idioma = %s, ocurrió un error: %v", langCode, err)
-		langMsg[fun.LangFR] = fmt.Sprintf("Impossible de définir la langue = %s, erreur : %v", langCode, err)
-		langMsg[fun.LangDE] = fmt.Sprintf("Sprache konnte nicht gesetzt werden = %s, Fehler: %v", langCode, err)
-		langMsg[fun.LangPT] = fmt.Sprintf("Não foi possível definir o idioma = %s, ocorreu um erro: %v", langCode, err)
-		langMsg[fun.LangRU] = fmt.Sprintf("Не удалось установить язык = %s, ошибка: %v", langCode, err)
-		langMsg[fun.LangJP] = fmt.Sprintf("言語を設定できませんでした = %s、エラー: %v", langCode, err)
-		langMsg[fun.LangCN] = fmt.Sprintf("无法设置语言 = %s，发生错误：%v", langCode, err)
-		langMsg[fun.LangAR] = fmt.Sprintf("فشل في تعيين اللغة = %s، حدث خطأ: %v", langCode, err)
+	// Normalize the language code (e.g., "ja" -> "jp", "zh" -> "cn")
+	normalizedLangCode := fun.NormalizeLanguageCode(langCode)
 
-		lang := NewLanguageMsgTranslation(langCode)
+	if err := SetUserLang(resolvedJID, normalizedLangCode, rdb); err != nil {
+		langMsg := make(map[string]string)
+		langMsg[fun.LangID] = fmt.Sprintf("Gagal mengatur bahasa = %s, terjadi kesalahan: %v", normalizedLangCode, err)
+		langMsg[fun.LangEN] = fmt.Sprintf("Failed to set language = %s, got error: %v", normalizedLangCode, err)
+		langMsg[fun.LangES] = fmt.Sprintf("No se pudo establecer el idioma = %s, ocurrió un error: %v", normalizedLangCode, err)
+		langMsg[fun.LangFR] = fmt.Sprintf("Impossible de définir la langue = %s, erreur : %v", normalizedLangCode, err)
+		langMsg[fun.LangDE] = fmt.Sprintf("Sprache konnte nicht gesetzt werden = %s, Fehler: %v", normalizedLangCode, err)
+		langMsg[fun.LangPT] = fmt.Sprintf("Não foi possível definir o idioma = %s, ocorreu um erro: %v", normalizedLangCode, err)
+		langMsg[fun.LangRU] = fmt.Sprintf("Не удалось установить язык = %s, ошибка: %v", normalizedLangCode, err)
+		langMsg[fun.LangJP] = fmt.Sprintf("言語を設定できませんでした = %s、エラー: %v", normalizedLangCode, err)
+		langMsg[fun.LangCN] = fmt.Sprintf("无法设置语言 = %s，发生错误：%v", normalizedLangCode, err)
+		langMsg[fun.LangAR] = fmt.Sprintf("فشل في تعيين اللغة = %s، حدث خطأ: %v", normalizedLangCode, err)
+
+		lang := NewLanguageMsgTranslation(normalizedLangCode)
 		lang.Texts = langMsg
-		SendLangWhatsAppTextMsg(jid, "", nil, lang, lang.LanguageCode, client, rdb, db)
+		SendLangWhatsAppTextMsg(resolvedJID, "", nil, lang, normalizedLangCode, client, rdb, db)
 		return
 	}
 
+	// Success: send confirmation message in all languages
+	langMsg := make(map[string]string)
 	langMsg[fun.LangID] = "🇮🇩 Bahasa telah diatur ke *BAHASA INDONESIA*"
 	langMsg[fun.LangEN] = "🇺🇸 Language has been set to *ENGLISH*"
 	langMsg[fun.LangES] = "🇪🇸 El idioma se ha configurado en *ESPAÑOL*"
@@ -654,16 +750,12 @@ func HandleLanguageChange(jid string, langCode string, client *whatsmeow.Client,
 	langMsg[fun.LangCN] = "🇨🇳 语言已设置为 *中文*"
 	langMsg[fun.LangAR] = "🇸🇦 تم تعيين اللغة إلى *العربية*"
 
-	lang := NewLanguageMsgTranslation(langCode)
+	lang := NewLanguageMsgTranslation(normalizedLangCode)
 	lang.Texts = langMsg
 
-	// Check if langCode exists as a key in langMsg
-	if _, exists := langMsg[langCode]; exists {
-		SendLangWhatsAppTextMsg(jid, "", nil, lang, lang.LanguageCode, client, rdb, db)
-	} else {
-		// Skip
-		// logrus.Warnf("Language code '%s' not found in langMsg map, skipping message send", langCode)
-	}
+	// Send confirmation message using the normalized language code
+	SendLangWhatsAppTextMsg(resolvedJID, "", nil, lang, normalizedLangCode, client, rdb, db)
+	logrus.Infof("✅ Language changed to '%s' for JID: %s (resolved from %s)", normalizedLangCode, resolvedJID, jid)
 }
 
 // ContainsJID checks whether a given JID exists in a list of group JID strings.

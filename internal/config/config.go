@@ -403,7 +403,11 @@ type YamlConfig struct {
 	} `yaml:"monitoring"`
 
 	N8N struct {
-		Port int `yaml:"port"`
+		Host              string `yaml:"host"`
+		Port              int    `yaml:"port"`
+		BridgeHost        string `yaml:"bridge_host"`
+		BridgePort        int    `yaml:"bridge_port"`
+		BridgeServiceName string `yaml:"bridge_service_name"`
 	} `yaml:"n8n"`
 
 	LibreTranslate struct {
@@ -418,6 +422,30 @@ type YamlConfig struct {
 		Thresholds     K6Thresholds `yaml:"thresholds"`
 		Scenarios      []K6Scenario `yaml:"scenarios"`
 	} `yaml:"k6"`
+
+	Observability struct {
+		Loki struct {
+			Enabled        bool              `yaml:"enabled"`
+			URL            string            `yaml:"url"`
+			BatchSize      int               `yaml:"batch_size"`
+			BatchTimeoutMs int               `yaml:"batch_timeout_ms"`
+			Labels         map[string]string `yaml:"labels"`
+		} `yaml:"loki"`
+
+		Tempo struct {
+			Enabled            bool    `yaml:"enabled"`
+			OTLPGRPCEndpoint   string  `yaml:"otlp_grpc_endpoint"`
+			OTLPHTTPEndpoint   string  `yaml:"otlp_http_endpoint"`
+			SampleRate         float64 `yaml:"sample_rate"`
+			MaxExportBatchSize int     `yaml:"max_export_batch_size"`
+			ExportTimeoutMs    int     `yaml:"export_timeout_ms"`
+		} `yaml:"tempo"`
+
+		Jaeger struct {
+			Enabled  bool   `yaml:"enabled"`
+			Endpoint string `yaml:"endpoint"`
+		} `yaml:"jaeger"`
+	} `yaml:"observability"`
 }
 
 // K6Thresholds represents default thresholds for k6 tests
