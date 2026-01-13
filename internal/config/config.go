@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v3"
 )
 
@@ -42,7 +43,7 @@ var mainConfigPaths = []string{
 
 // MainConfig represents the main configuration structure for determining mode
 type MainConfig struct {
-	ConfigMode string `yaml:"config_mode"`
+	ConfigMode string `yaml:"config_mode" validate:"required"`
 }
 
 // getEnvironment returns the current environment (dev or prod)
@@ -163,6 +164,11 @@ func LoadConfig() error {
 		return fmt.Errorf("failed to parse YAML: %w", err)
 	}
 
+	validate := validator.New()
+	if err := validate.Struct(&newConfig); err != nil {
+		log.Fatalf("config validation failed: %v", err)
+	}
+
 	configMutex.Lock()
 	config = newConfig
 	configMutex.Unlock()
@@ -224,255 +230,256 @@ func GetConfig() YamlConfig {
 // Fields are organized into sections such as App, Default, Redis, Database, etc.
 type YamlConfig struct {
 	App struct {
-		Host                 string `yaml:"host"`
-		GinMode              string `yaml:"gin_mode"`
-		Name                 string `yaml:"name"`
-		Description          string `yaml:"description"`
-		Logo                 string `yaml:"logo"`
-		LogoJPG              string `yaml:"logo_jpg"`
-		Port                 int    `yaml:"port"`
-		LogLevel             string `yaml:"log_level"`
-		LogFormat            string `yaml:"log_format"`
-		WebPublicURL         string `yaml:"web_public_url"`
-		Version              string `yaml:"version"`
-		VersionNo            int    `yaml:"version_no"`
-		VersionCode          string `yaml:"version_code"`
-		VersionName          string `yaml:"version_name"`
-		StaticDir            string `yaml:"static_dir"`
-		PublishedDir         string `yaml:"published_dir"`
-		LogDir               string `yaml:"log_dir"`
-		UploadDir            string `yaml:"upload_dir"`
-		LoginTimeM           int    `yaml:"login_time_m"`
+		Host                 string `yaml:"host" validate:"required"`
+		GinMode              string `yaml:"gin_mode" validate:"required"`
+		Name                 string `yaml:"name" validate:"required"`
+		Description          string `yaml:"description" validate:"required"`
+		Logo                 string `yaml:"logo" validate:"required"`
+		LogoJPG              string `yaml:"logo_jpg" validate:"required"`
+		Port                 int    `yaml:"port" validate:"required"`
+		LogLevel             string `yaml:"log_level" validate:"required"`
+		LogFormat            string `yaml:"log_format" validate:"required"`
+		WebPublicURL         string `yaml:"web_public_url" validate:"required"`
+		Version              string `yaml:"version" validate:"required"`
+		VersionNo            int    `yaml:"version_no" validate:"required"`
+		VersionCode          string `yaml:"version_code" validate:"required"`
+		VersionName          string `yaml:"version_name" validate:"required"`
+		StaticDir            string `yaml:"static_dir" validate:"required"`
+		PublishedDir         string `yaml:"published_dir" validate:"required"`
+		LogDir               string `yaml:"log_dir" validate:"required"`
+		UploadDir            string `yaml:"upload_dir" validate:"required"`
+		LoginTimeM           int    `yaml:"login_time_m" validate:"required"`
 		CookieLoginDomain    string `yaml:"cookie_login_domain"`
 		CookieLoginSecure    bool   `yaml:"cookie_login_secure"`
-		MaxDisconnectionTime int    `yaml:"max_disconnection_time"`
-		AesKey               string `yaml:"aes_key"`
-		AesKeyIV             string `yaml:"aes_key_iv"`
-		MaxRetryLogin        int    `yaml:"max_retry_login"`
-		LoginLockUntil       int    `yaml:"login_lock_until"`
-		AppLogFilename       string `yaml:"app_log_filename"`
-		AppLogMaxSize        int    `yaml:"app_log_max_size"`
-		AppLogMaxAge         int    `yaml:"app_log_max_age"`
-		AppLogMaxBackups     int    `yaml:"app_log_max_backups"`
+		MaxDisconnectionTime int    `yaml:"max_disconnection_time" validate:"required"`
+		AesKey               string `yaml:"aes_key" validate:"required"`
+		AesKeyIV             string `yaml:"aes_key_iv" validate:"required"`
+		MaxRetryLogin        int    `yaml:"max_retry_login" validate:"required"`
+		LoginLockUntil       int    `yaml:"login_lock_until" validate:"required"`
+		AppLogFilename       string `yaml:"app_log_filename" validate:"required"`
+		AppLogMaxSize        int    `yaml:"app_log_maxsize" validate:"required"`
+		AppLogMaxAge         int    `yaml:"app_log_maxage" validate:"required"`
+		AppLogMaxBackups     int    `yaml:"app_log_maxbackups" validate:"required"`
 		AppLogCompress       bool   `yaml:"app_log_compress"`
-		SystemLogFilename    string `yaml:"system_log_filename"`
-		MemoryProfilePath    string `yaml:"memory_profile_path"`
+		SystemLogFilename    string `yaml:"system_log_filename" validate:"required"`
+		MemoryProfilePath    string `yaml:"memory_profile_path" validate:"required"`
 		Debug                bool   `yaml:"debug"`
-	} `yaml:"app"`
+	} `yaml:"app" validate:"required"`
 
 	Default struct {
-		LogMaxSize                      int    `yaml:"log_max_size"`
-		LogMaxAge                       int    `yaml:"log_max_age"`
-		LogMaxBackups                   int    `yaml:"log_max_backups"`
+		LogMaxSize                      int    `yaml:"log_max_size" validate:"required"`
+		LogMaxAge                       int    `yaml:"log_max_age" validate:"required"`
+		LogMaxBackups                   int    `yaml:"log_max_backups" validate:"required"`
 		LogCompress                     bool   `yaml:"log_compress"`
-		CSVTimestampFormat              string `yaml:"csv_timestamp_format"`
-		NSSMFullPath                    string `yaml:"nssm_fullpath"`
-		SuperUserEmail                  string `yaml:"super_user_email"`
-		SuperUserPassword               string `yaml:"super_user_password"`
-		SuperUserPhone                  string `yaml:"super_user_phone"`
-		MinLengthPhoneNumber            int    `yaml:"min_length_phone_number"`
-		DialingCodeDefault              string `yaml:"dialing_code_default"`
-		CPUCaptureInterval              int    `yaml:"cpu_capture_interval"`
-		MaxBadWordStrikes               int64  `yaml:"max_bad_word_strikes"`
-		DataSeparator                   string `yaml:"data_separator"`
-		PurgeOldBackupLogFilesOlderThan string `yaml:"purge_old_backup_log_files_older_than"`
-		RemoveOldNeedsDirOlderThan      string `yaml:"remove_old_needs_dir_older_than"`
-	} `yaml:"default"`
+		CSVTimestampFormat              string `yaml:"csv_timestamp_format" validate:"required"`
+		NSSMFullPath                    string `yaml:"nssm_fullpath" validate:"required"`
+		SuperUserEmail                  string `yaml:"super_user_email" validate:"required"`
+		SuperUserPassword               string `yaml:"super_user_password" validate:"required"`
+		SuperUserPhone                  string `yaml:"super_user_phone" validate:"required"`
+		MinLengthPhoneNumber            int    `yaml:"min_length_phone_number" validate:"required"`
+		DialingCodeDefault              string `yaml:"dialing_code_default" validate:"required"`
+		CPUCaptureInterval              int    `yaml:"cpu_capture_interval" validate:"required"`
+		MaxBadWordStrikes               int64  `yaml:"max_bad_word_strikes" validate:"required"`
+		DataSeparator                   string `yaml:"data_separator" validate:"required"`
+		PurgeOldBackupLogFilesOlderThan string `yaml:"purge_old_backup_log_files_older_than" validate:"required"`
+		RemoveOldNeedsDirOlderThan      string `yaml:"remove_old_needs_dir_older_than" validate:"required"`
+	} `yaml:"default" validate:"required"`
 
 	Redis struct {
-		Host       string `yaml:"host"`
-		Port       int    `yaml:"port"`
+		Host       string `yaml:"host" validate:"required"`
+		Port       int    `yaml:"port" validate:"required"`
 		Password   string `yaml:"password"`
-		Db         int    `yaml:"db"`
-		MaxRetry   int    `yaml:"max_retry"`
-		RetryDelay int    `yaml:"retry_delay"`
-		PoolSize   int    `yaml:"pool_size"`
-	} `yaml:"redis"`
+		Db         int    `yaml:"db" validate:"required"`
+		MaxRetry   int    `yaml:"max_retry" validate:"required"`
+		RetryDelay int    `yaml:"retry_delay" validate:"required"`
+		PoolSize   int    `yaml:"pool_size" validate:"required"`
+	} `yaml:"redis" validate:"required"`
 
 	Database struct {
-		Type                     string `yaml:"type"`
-		Host                     string `yaml:"host"`
-		Port                     int    `yaml:"port"`
-		Username                 string `yaml:"username"`
+		Type                     string `yaml:"type" validate:"required"`
+		Host                     string `yaml:"host" validate:"required"`
+		Port                     int    `yaml:"port" validate:"required"`
+		Username                 string `yaml:"username" validate:"required"`
 		Password                 string `yaml:"password"`
-		Name                     string `yaml:"name"`
-		MaxRetryConnect          int    `yaml:"max_retry_connect"`
-		RetryDelay               int    `yaml:"retry_delay"`
-		MaxIdleConnection        int    `yaml:"max_idle_connection"`
-		MaxOpenConnection        int    `yaml:"max_open_connection"`
-		ConnMaxLifeTime          int    `yaml:"conn_max_lifetime"`
-		ConnMaxIdleTime          int    `yaml:"conn_max_idle_time"`
-		SSLMode                  string `yaml:"ssl_mode"`
-		DBConfigPath             string `yaml:"db_config_path"`
-		DBBackupDestinationDir   string `yaml:"db_backup_destination_dir"`
-		PurgeOlderThan           string `yaml:"purge_older_than"`
-		DumpedIndonesiaRegionSQL string `yaml:"dumped_indonesia_region_sql"`
+		Name                     string `yaml:"name" validate:"required"`
+		MaxRetryConnect          int    `yaml:"max_retry_connect" validate:"required"`
+		RetryDelay               int    `yaml:"retry_delay" validate:"required"`
+		MaxIdleConnection        int    `yaml:"max_idle_connection" validate:"required"`
+		MaxOpenConnection        int    `yaml:"max_open_connection" validate:"required"`
+		ConnMaxLifeTime          int    `yaml:"conn_max_lifetime" validate:"required"`
+		ConnMaxIdleTime          int    `yaml:"conn_max_idle_time" validate:"required"`
+		SSLMode                  string `yaml:"ssl_mode" validate:"required"`
+		DBConfigPath             string `yaml:"db_config_path" validate:"required"`
+		DBBackupDestinationDir   string `yaml:"db_backup_destination_dir" validate:"required"`
+		PurgeOlderThan           string `yaml:"purge_older_than" validate:"required"`
+		DumpedIndonesiaRegionSQL string `yaml:"dumped_indonesia_region_sql" validate:"required"`
 
 		// Main tables
-		TbUser                     string `yaml:"tb_user"`
-		TbUserStatus               string `yaml:"tb_user_status"`
-		TbUserPasswordChangeLog    string `yaml:"tb_user_password_change_log"`
-		TbRole                     string `yaml:"tb_role"`
-		TbRolePrivilege            string `yaml:"tb_role_privilege"`
-		TbFeature                  string `yaml:"tb_feature"`
-		TbLogActivity              string `yaml:"tb_log_activity"`
-		TbLanguage                 string `yaml:"tb_language"`
-		TbBadWord                  string `yaml:"tb_bad_word"`
-		TbWebAppConfig             string `yaml:"tb_web_app_config"`
-		TbIndonesiaRegion          string `yaml:"tb_indonesia_region"`
-		TbWhatsappUser             string `yaml:"tb_whatsapp_user"`
-		TbWhatsappMessage          string `yaml:"tb_whatsapp_message"`
-		TbWhatsappMessageAutoReply string `yaml:"tb_whatsapp_message_auto_reply"`
-	} `yaml:"database"`
+		TbUser                     string `yaml:"tb_user" validate:"required"`
+		TbUserStatus               string `yaml:"tb_user_status" validate:"required"`
+		TbUserPasswordChangeLog    string `yaml:"tb_user_password_change_log" validate:"required"`
+		TbRole                     string `yaml:"tb_role" validate:"required"`
+		TbRolePrivilege            string `yaml:"tb_role_privilege" validate:"required"`
+		TbFeature                  string `yaml:"tb_feature" validate:"required"`
+		TbLogActivity              string `yaml:"tb_log_activity" validate:"required"`
+		TbLanguage                 string `yaml:"tb_language" validate:"required"`
+		TbBadWord                  string `yaml:"tb_bad_word" validate:"required"`
+		TbWebAppConfig             string `yaml:"tb_web_app_config" validate:"required"`
+		TbIndonesiaRegion          string `yaml:"tb_indonesia_region" validate:"required"`
+		TbWhatsappUser             string `yaml:"tb_whatsapp_user" validate:"required"`
+		TbWhatsappMessage          string `yaml:"tb_whatsapp_message" validate:"required"`
+		TbWhatsappMessageAutoReply string `yaml:"tb_whatsapp_message_auto_reply" validate:"required"`
+	} `yaml:"database" validate:"required"`
 
-	FolderFileNeeds []string `yaml:"folder_file_needs"`
+	FolderFileNeeds []string `yaml:"folder_file_needs" validate:"required"`
 
 	Schedules struct {
-		Host     string      `yaml:"host"`
-		Port     int         `yaml:"port"`
-		Timezone string      `yaml:"timezone"`
-		List     []Scheduler `yaml:"list"`
-	} `yaml:"schedules"`
+		Host     string      `yaml:"host" validate:"required"`
+		Port     int         `yaml:"port" validate:"required"`
+		Timezone string      `yaml:"timezone" validate:"required"`
+		List     []Scheduler `yaml:"list" validate:"required"`
+	} `yaml:"schedules" validate:"required"`
 
 	API struct {
-		AnalyticsDevAPIKey string `yaml:"analytics_dev_api_key"`
-	} `yaml:"api"`
+		AnalyticsDevAPIKey string `yaml:"analytics_dev_api_key" validate:"required"`
+	} `yaml:"api" validate:"required"`
 
 	Email struct {
-		Host              string `yaml:"host"`
-		Port              int    `yaml:"port"`
-		Username          string `yaml:"username"`
-		Password          string `yaml:"password"`
-		Sender            string `yaml:"sender"`
-		MaxRetry          int    `yaml:"max_retry"`
-		RetryDelay        int    `yaml:"retry_delay"`
-		MaxAttachmentSize int64  `yaml:"max_attachment_size"`
-	} `yaml:"email"`
-
-	Whatsnyan struct {
-		DBLog                          string          `yaml:"db_log"`
-		DBLogLevel                     string          `yaml:"db_log_level"`
-		ClientLog                      string          `yaml:"client_log"`
-		ClientLogLevel                 string          `yaml:"client_log_level"`
-		LogMaxSize                     int             `yaml:"log_max_size"`
-		LogMaxAge                      int             `yaml:"log_max_age"`
-		LogMaxBackups                  int             `yaml:"log_max_backups"`
-		LogCompress                    bool            `yaml:"log_compress"`
-		GRPCHost                       string          `yaml:"grpc_host"`
-		GRPCPort                       int             `yaml:"grpc_port"`
-		WATechnicalSupport             string          `yaml:"wa_technical_support"`
-		MaxMessageLength               int             `yaml:"max_message_length"`
-		Tables                         WhatsnyanTables `yaml:"tables"`
-		WAReplyPublicURL               string          `yaml:"wa_reply_public_url"`
-		NeedVerifyAccount              bool            `yaml:"need_verify_account"`
-		LanguageExpiry                 int             `yaml:"language_expiry"`
-		LanguagePromptShownExpiry      int             `yaml:"language_prompt_shown_expiry"`
-		NotRegisteredPhoneExpiry       int             `yaml:"not_registered_phone_expiry"`
-		QuotaLimitExpiry               int             `yaml:"quota_limit_expiry"`
-		LanguagePrompt                 string          `yaml:"language_prompt"`
-		WAGAllowedToInteract           []string        `yaml:"wag_allowed_to_interact"`
-		Files                          WhatsnyanFiles  `yaml:"files"`
-		MessageProcessedToleranceHours int             `yaml:"message_processed_tolerance_hours"`
-		PurgeMessageOlderThan          string          `yaml:"purge_message_older_than"`
-	} `yaml:"whatsnyan"`
+		Host              string `yaml:"host" validate:"required"`
+		Port              int    `yaml:"port" validate:"required"`
+		Username          string `yaml:"username" validate:"required"`
+		Password          string `yaml:"password" validate:"required"`
+		Sender            string `yaml:"sender" validate:"required"`
+		MaxRetry          int    `yaml:"max_retry" validate:"required"`
+		RetryDelay        int    `yaml:"retry_delay" validate:"required"`
+		MaxAttachmentSize int64  `yaml:"max_attachment_size" validate:"required"`
+	} `yaml:"email" validate:"required"`
 
 	GRPC struct {
-		Host string `yaml:"host"`
-		Port int    `yaml:"port"`
-	} `yaml:"grpc"`
+		Host string `yaml:"host" validate:"required"`
+		Port int    `yaml:"port" validate:"required"`
+	} `yaml:"grpc" validate:"required"`
+
+	Whatsnyan struct {
+		DBLog                          string          `yaml:"db_log" validate:"required"`
+		DBLogLevel                     string          `yaml:"db_log_level" validate:"required"`
+		ClientLog                      string          `yaml:"client_log" validate:"required"`
+		ClientLogLevel                 string          `yaml:"client_log_level" validate:"required"`
+		LogMaxSize                     int             `yaml:"log_max_size" validate:"required"`
+		LogMaxAge                      int             `yaml:"log_max_age" validate:"required"`
+		LogMaxBackups                  int             `yaml:"log_max_backups" validate:"required"`
+		LogCompress                    bool            `yaml:"log_compress"`
+		GRPCHost                       string          `yaml:"grpc_host" validate:"required"`
+		GRPCPort                       int             `yaml:"grpc_port" validate:"required"`
+		WATechnicalSupport             string          `yaml:"wa_technical_support" validate:"required"`
+		MaxMessageLength               int             `yaml:"max_message_length" validate:"required"`
+		Tables                         WhatsnyanTables `yaml:"tables" validate:"required"`
+		WAReplyPublicURL               string          `yaml:"wa_reply_public_url" validate:"required"`
+		NeedVerifyAccount              bool            `yaml:"need_verify_account"`
+		LanguageExpiry                 int             `yaml:"language_expiry" validate:"required"`
+		LanguagePromptShownExpiry      int             `yaml:"language_prompt_shown_expiry" validate:"required"`
+		NotRegisteredPhoneExpiry       int             `yaml:"not_registered_phone_expiry" validate:"required"`
+		QuotaLimitExpiry               int             `yaml:"quota_limit_expiry" validate:"required"`
+		LanguagePrompt                 string          `yaml:"language_prompt" validate:"required"`
+		WAGAllowedToInteract           []string        `yaml:"wag_allowed_to_interact" validate:"required"`
+		Files                          WhatsnyanFiles  `yaml:"files" validate:"required"`
+		MessageProcessedToleranceHours int             `yaml:"message_processed_tolerance_hours" validate:"required"`
+		PurgeMessageOlderThan          string          `yaml:"purge_message_older_than" validate:"required"`
+	} `yaml:"whatsnyan" validate:"required"`
 
 	Metrics struct {
-		APIPort       int `yaml:"api_port"`
-		GRPCPort      int `yaml:"grpc_port"`
-		SchedulerPort int `yaml:"scheduler_port"`
-		WhatsAppPort  int `yaml:"whatsapp_port"`
-		GrafanaPort   int `yaml:"grafana_port"`
-	} `yaml:"metrics"`
+		APIPort       int `yaml:"api_port" validate:"required"`
+		GRPCPort      int `yaml:"grpc_port" validate:"required"`
+		SchedulerPort int `yaml:"scheduler_port" validate:"required"`
+		WhatsAppPort  int `yaml:"whatsapp_port" validate:"required"`
+		GrafanaPort   int `yaml:"grafana_port" validate:"required"`
+	} `yaml:"metrics" validate:"required"`
 
 	RateLimit struct {
 		Enabled     bool `yaml:"enabled"`
-		Requests    int  `yaml:"requests"`     // requests per period
-		Period      int  `yaml:"period"`       // period in seconds
-		Burst       int  `yaml:"burst"`        // burst allowance
-		CleanupTime int  `yaml:"cleanup_time"` // cleanup time in seconds
-	} `yaml:"rate_limit"`
+		Requests    int  `yaml:"requests" validate:"required"`     // requests per period
+		Period      int  `yaml:"period" validate:"required"`       // period in seconds
+		Burst       int  `yaml:"burst" validate:"required"`        // burst allowance
+		CleanupTime int  `yaml:"cleanup_time" validate:"required"` // cleanup time in seconds
+	} `yaml:"rate_limit" validate:"required"`
 
 	Monitoring struct {
-		ServiceName string `yaml:"service_name"`
-		Description string `yaml:"description"`
-	} `yaml:"monitoring"`
+		ServiceName string `yaml:"service_name" validate:"required"`
+		Description string `yaml:"description" validate:"required"`
+	} `yaml:"monitoring" validate:"required"`
 
 	N8N struct {
-		Host              string `yaml:"host"`
-		Port              int    `yaml:"port"`
-		BridgeHost        string `yaml:"bridge_host"`
-		BridgePort        int    `yaml:"bridge_port"`
-		BridgeServiceName string `yaml:"bridge_service_name"`
-	} `yaml:"n8n"`
+		Host              string `yaml:"host" validate:"required"`
+		Port              int    `yaml:"port" validate:"required"`
+		BridgeHost        string `yaml:"bridge_host" validate:"required"`
+		BridgePort        int    `yaml:"bridge_port" validate:"required"`
+		BridgeServiceName string `yaml:"bridge_service_name" validate:"required"`
+		ApiKey            string `yaml:"api_key"`
+	} `yaml:"n8n" validate:"required"`
 
 	LibreTranslate struct {
-		Port int `yaml:"port"`
-	} `yaml:"libretranslate"`
+		Port int `yaml:"port" validate:"required"`
+	} `yaml:"libretranslate" validate:"required"`
 
 	K6 struct {
 		Enabled        bool         `yaml:"enabled"`
-		Port           int          `yaml:"port"`
-		PrometheusPort int          `yaml:"prometheus_port"`
-		ScriptsDir     string       `yaml:"scripts_dir"`
-		Thresholds     K6Thresholds `yaml:"thresholds"`
-		Scenarios      []K6Scenario `yaml:"scenarios"`
-	} `yaml:"k6"`
+		Port           int          `yaml:"port" validate:"required"`
+		PrometheusPort int          `yaml:"prometheus_port" validate:"required"`
+		ScriptsDir     string       `yaml:"scripts_dir" validate:"required"`
+		Thresholds     K6Thresholds `yaml:"thresholds" validate:"required"`
+		Scenarios      []K6Scenario `yaml:"scenarios" validate:"required"`
+	} `yaml:"k6" validate:"required"`
 
 	Observability struct {
 		Loki struct {
 			Enabled        bool              `yaml:"enabled"`
-			URL            string            `yaml:"url"`
-			BatchSize      int               `yaml:"batch_size"`
-			BatchTimeoutMs int               `yaml:"batch_timeout_ms"`
-			Labels         map[string]string `yaml:"labels"`
-		} `yaml:"loki"`
+			URL            string            `yaml:"url" validate:"required"`
+			BatchSize      int               `yaml:"batch_size" validate:"required"`
+			BatchTimeoutMs int               `yaml:"batch_timeout_ms" validate:"required"`
+			Labels         map[string]string `yaml:"labels" validate:"required"`
+		} `yaml:"loki" validate:"required"`
 
 		Tempo struct {
 			Enabled            bool    `yaml:"enabled"`
-			OTLPGRPCEndpoint   string  `yaml:"otlp_grpc_endpoint"`
-			OTLPHTTPEndpoint   string  `yaml:"otlp_http_endpoint"`
-			SampleRate         float64 `yaml:"sample_rate"`
-			MaxExportBatchSize int     `yaml:"max_export_batch_size"`
-			ExportTimeoutMs    int     `yaml:"export_timeout_ms"`
-		} `yaml:"tempo"`
+			OTLPGRPCEndpoint   string  `yaml:"otlp_grpc_endpoint" validate:"required"`
+			OTLPHTTPEndpoint   string  `yaml:"otlp_http_endpoint" validate:"required"`
+			SampleRate         float64 `yaml:"sample_rate" validate:"required"`
+			MaxExportBatchSize int     `yaml:"max_export_batch_size" validate:"required"`
+			ExportTimeoutMs    int     `yaml:"export_timeout_ms" validate:"required"`
+		} `yaml:"tempo" validate:"required"`
 
 		Jaeger struct {
 			Enabled  bool   `yaml:"enabled"`
-			Endpoint string `yaml:"endpoint"`
-		} `yaml:"jaeger"`
-	} `yaml:"observability"`
+			Endpoint string `yaml:"endpoint" validate:"required"`
+		} `yaml:"jaeger" validate:"required"`
+	} `yaml:"observability" validate:"required"`
 }
 
 // K6Thresholds represents default thresholds for k6 tests
 type K6Thresholds struct {
-	HTTPReqDuration   string `yaml:"http_req_duration"`    // p(95)<500ms
-	HTTPReqFailed     string `yaml:"http_req_failed"`      // rate<0.01
-	HTTPReqsPerSecond int    `yaml:"http_reqs_per_second"` // min value
-	IterationDuration string `yaml:"iteration_duration"`   // p(95)<2s
-	ChecksPassRate    string `yaml:"checks_pass_rate"`     // rate>0.95
+	HTTPReqDuration   string `yaml:"http_req_duration" validate:"required"`    // p(95)<500ms
+	HTTPReqFailed     string `yaml:"http_req_failed" validate:"required"`      // rate<0.01
+	HTTPReqsPerSecond int    `yaml:"http_reqs_per_second" validate:"required"` // min value
+	IterationDuration string `yaml:"iteration_duration" validate:"required"`   // p(95)<2s
+	ChecksPassRate    string `yaml:"checks_pass_rate" validate:"required"`     // rate>0.95
 }
 
 // K6Scenario represents a load test scenario configuration
 type K6Scenario struct {
-	Name        string `yaml:"name"`
-	Description string `yaml:"description,omitempty"`
-	Executor    string `yaml:"executor"`    // constant-vus, ramping-vus, etc.
-	VUs         int    `yaml:"vus"`         // number of virtual users
-	Duration    string `yaml:"duration"`    // test duration
-	ScriptPath  string `yaml:"script_path"` // path to k6 test script
+	Name        string `yaml:"name" validate:"required"`
+	Description string `yaml:"description,omitempty" validate:"required"`
+	Executor    string `yaml:"executor" validate:"required"`    // constant-vus, ramping-vus, etc.
+	VUs         int    `yaml:"vus" validate:"required"`         // number of virtual users
+	Duration    string `yaml:"duration" validate:"required"`    // test duration
+	ScriptPath  string `yaml:"script_path" validate:"required"` // path to k6 test script
 }
 
 // Scheduler represents a scheduled task configuration
 // tasks can be defined using various scheduling options
 // such as every, at, weekly, monthly, yearly
 type Scheduler struct {
-	Name        string   `yaml:"name"`
-	Description string   `yaml:"description,omitempty"`
+	Name        string   `yaml:"name" validate:"required"`
+	Description string   `yaml:"description,omitempty" validate:"required"`
 	Every       string   `yaml:"every,omitempty"`
 	At          []string `yaml:"at,omitempty"`
 	Weekly      string   `yaml:"weekly,omitempty"`
@@ -482,56 +489,56 @@ type Scheduler struct {
 
 // WhatsnyanTables holds the table names used in the Whatsmeow pkg
 type WhatsnyanTables struct {
-	TBWhatsnyanMessage          string `yaml:"tb_whatsnyan_message"`
-	TBWhatsnyanIncomingMessage  string `yaml:"tb_whatsnyan_incoming_message"`
-	TBWhatsnyanGroup            string `yaml:"tb_whatsnyan_group"`
-	TBWhatsnyanGroupParticipant string `yaml:"tb_whatsnyan_group_participant"`
+	TBWhatsnyanMessage          string `yaml:"tb_whatsnyan_message" validate:"required"`
+	TBWhatsnyanIncomingMessage  string `yaml:"tb_whatsnyan_incoming_message" validate:"required"`
+	TBWhatsnyanGroup            string `yaml:"tb_whatsnyan_group" validate:"required"`
+	TBWhatsnyanGroupParticipant string `yaml:"tb_whatsnyan_group_participant" validate:"required"`
 	// Whatsmeow tables
-	TBAppStateMutationMacs string `yaml:"tb_app_state_mutation_macs"`
-	TBAppStateSyncKeys     string `yaml:"tb_app_state_sync_keys"`
-	TBAppStateVersions     string `yaml:"tb_app_state_versions"`
-	TBChatSettings         string `yaml:"tb_chat_settings"`
-	TBContacts             string `yaml:"tb_contacts"`
-	TBDevice               string `yaml:"tb_device"`
-	TBEventBuffer          string `yaml:"tb_event_buffer"`
-	TBIdentityKeys         string `yaml:"tb_identity_keys"`
-	TBLIDMap               string `yaml:"tb_lid_map"`
-	TBMessageSecrets       string `yaml:"tb_message_secrets"`
-	TBPreKeys              string `yaml:"tb_pre_keys"`
-	TBPrivacyTokens        string `yaml:"tb_privacy_tokens"`
-	TBSenderKeys           string `yaml:"tb_sender_keys"`
-	TBSessions             string `yaml:"tb_sessions"`
-	TBVersion              string `yaml:"tb_version"`
+	TBAppStateMutationMacs string `yaml:"tb_app_state_mutation_macs" validate:"required"`
+	TBAppStateSyncKeys     string `yaml:"tb_app_state_sync_keys" validate:"required"`
+	TBAppStateVersions     string `yaml:"tb_app_state_versions" validate:"required"`
+	TBChatSettings         string `yaml:"tb_chat_settings" validate:"required"`
+	TBContacts             string `yaml:"tb_contacts" validate:"required"`
+	TBDevice               string `yaml:"tb_device" validate:"required"`
+	TBEventBuffer          string `yaml:"tb_event_buffer" validate:"required"`
+	TBIdentityKeys         string `yaml:"tb_identity_keys" validate:"required"`
+	TBLIDMap               string `yaml:"tb_lid_map" validate:"required"`
+	TBMessageSecrets       string `yaml:"tb_message_secrets" validate:"required"`
+	TBPreKeys              string `yaml:"tb_pre_keys" validate:"required"`
+	TBPrivacyTokens        string `yaml:"tb_privacy_tokens" validate:"required"`
+	TBSenderKeys           string `yaml:"tb_sender_keys" validate:"required"`
+	TBSessions             string `yaml:"tb_sessions" validate:"required"`
+	TBVersion              string `yaml:"tb_version" validate:"required"`
 }
 
 // WhatsnyanFiles holds configuration for file handling in Whatsmeow
 type WhatsnyanFiles struct {
 	Image struct {
-		MaxDailyQuota     int      `yaml:"max_daily_quota"`
-		CoolDownSeconds   int      `yaml:"cooldown_seconds"`
-		MaxSize           int64    `yaml:"max_size"`
-		AllowedMimeTypes  []string `yaml:"allowed_mime_types"`
-		AllowedExtensions []string `yaml:"allowed_extensions"`
-	} `yaml:"image"`
+		MaxDailyQuota     int      `yaml:"max_daily_quota" validate:"required"`
+		CoolDownSeconds   int      `yaml:"cooldown_seconds" validate:"required"`
+		MaxSize           int64    `yaml:"max_size" validate:"required"`
+		AllowedMimeTypes  []string `yaml:"allowed_mime_types" validate:"required"`
+		AllowedExtensions []string `yaml:"allowed_extensions" validate:"required"`
+	} `yaml:"image" validate:"required"`
 	Video struct {
-		MaxDailyQuota     int      `yaml:"max_daily_quota"`
-		CoolDownSeconds   int      `yaml:"cooldown_seconds"`
-		MaxSize           int64    `yaml:"max_size"`
-		AllowedMimeTypes  []string `yaml:"allowed_mime_types"`
-		AllowedExtensions []string `yaml:"allowed_extensions"`
-	} `yaml:"video"`
+		MaxDailyQuota     int      `yaml:"max_daily_quota" validate:"required"`
+		CoolDownSeconds   int      `yaml:"cooldown_seconds" validate:"required"`
+		MaxSize           int64    `yaml:"max_size" validate:"required"`
+		AllowedMimeTypes  []string `yaml:"allowed_mime_types" validate:"required"`
+		AllowedExtensions []string `yaml:"allowed_extensions" validate:"required"`
+	} `yaml:"video" validate:"required"`
 	Document struct {
-		MaxDailyQuota     int      `yaml:"max_daily_quota"`
-		CoolDownSeconds   int      `yaml:"cooldown_seconds"`
-		MaxSize           int64    `yaml:"max_size"`
-		AllowedMimeTypes  []string `yaml:"allowed_mime_types"`
-		AllowedExtensions []string `yaml:"allowed_extensions"`
-	} `yaml:"document"`
+		MaxDailyQuota     int      `yaml:"max_daily_quota" validate:"required"`
+		CoolDownSeconds   int      `yaml:"cooldown_seconds" validate:"required"`
+		MaxSize           int64    `yaml:"max_size" validate:"required"`
+		AllowedMimeTypes  []string `yaml:"allowed_mime_types" validate:"required"`
+		AllowedExtensions []string `yaml:"allowed_extensions" validate:"required"`
+	} `yaml:"document" validate:"required"`
 	Audio struct {
-		MaxDailyQuota     int      `yaml:"max_daily_quota"`
-		CoolDownSeconds   int      `yaml:"cooldown_seconds"`
-		MaxSize           int64    `yaml:"max_size"`
-		AllowedMimeTypes  []string `yaml:"allowed_mime_types"`
-		AllowedExtensions []string `yaml:"allowed_extensions"`
-	} `yaml:"audio"`
+		MaxDailyQuota     int      `yaml:"max_daily_quota" validate:"required"`
+		CoolDownSeconds   int      `yaml:"cooldown_seconds" validate:"required"`
+		MaxSize           int64    `yaml:"max_size" validate:"required"`
+		AllowedMimeTypes  []string `yaml:"allowed_mime_types" validate:"required"`
+		AllowedExtensions []string `yaml:"allowed_extensions" validate:"required"`
+	} `yaml:"audio" validate:"required"`
 }
