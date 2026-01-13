@@ -159,6 +159,7 @@ whatsnyan:
     tb_privacy_tokens: "whatsmeow_privacy_tokens"
     tb_sender_keys: "whatsmeow_sender_keys"
     tb_sessions: "whatsmeow_sessions"
+    tb_version: "whatsmeow_version"
   wa_reply_public_url: "http://localhost:6221/wa_reply"
   need_verify_account: true
   language_expiry: 604800 # seconds (7 days)
