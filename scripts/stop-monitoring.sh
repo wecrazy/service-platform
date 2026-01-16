@@ -29,7 +29,7 @@ PROMETHEUS_PORT=$(yq -r '.metrics.api_port' "$CONFIG_FILE")
 GRAFANA_PORT=$(yq -r '.metrics.grafana_port' "$CONFIG_FILE")
 LT_PORT=$(yq -r '.libretranslate.port' "$CONFIG_FILE")
 
-COMPOSE_FILE="${PROJECT_ROOT}/docker-compose.monitoring.yml"
+COMPOSE_FILE="${PROJECT_ROOT}/docker/docker-compose.monitoring.yml"
 
 echo "🛑 Stopping Service Platform Monitoring..."
 

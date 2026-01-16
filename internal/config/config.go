@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-playground/validator/v10"
@@ -166,7 +167,7 @@ func LoadConfig() error {
 
 	validate := validator.New()
 	if err := validate.Struct(&newConfig); err != nil {
-		log.Fatalf("config validation failed: %v", err)
+		return fmt.Errorf("config validation failed: %w", err)
 	}
 
 	configMutex.Lock()
@@ -204,10 +205,12 @@ func WatchConfig() {
 			}
 			if event.Op == fsnotify.Write {
 				log.Println("config file updated. Reloading...")
+				// Small delay to handle editors that save in multiple writes
+				time.Sleep(100 * time.Millisecond)
 				if err := LoadConfig(); err != nil {
-					log.Printf("failed to reload config:%v", err)
+					log.Printf("⚠️  Failed to reload config (keeping previous config): %v", err)
 				} else {
-					log.Println("config reloaded successfully.")
+					log.Println("✅ Config reloaded successfully.")
 				}
 			}
 		case err, ok := <-watcher.Errors:
@@ -385,6 +388,8 @@ type YamlConfig struct {
 		Files                          WhatsnyanFiles  `yaml:"files" validate:"required"`
 		MessageProcessedToleranceHours int             `yaml:"message_processed_tolerance_hours" validate:"required"`
 		PurgeMessageOlderThan          string          `yaml:"purge_message_older_than" validate:"required"`
+		EnablePhonePairing             bool            `yaml:"enable_phone_pairing"`
+		PairingPhoneNumber             string          `yaml:"pairing_phone_number"`
 	} `yaml:"whatsnyan" validate:"required"`
 
 	Metrics struct {
@@ -453,6 +458,25 @@ type YamlConfig struct {
 			Endpoint string `yaml:"endpoint" validate:"required"`
 		} `yaml:"jaeger" validate:"required"`
 	} `yaml:"observability" validate:"required"`
+
+	MongoDB struct {
+		Host        string `yaml:"host" validate:"required"`
+		Port        int    `yaml:"port" validate:"required"`
+		Username    string `yaml:"username" validate:"required"`
+		Password    string `yaml:"password" validate:"required"`
+		Database    string `yaml:"database" validate:"required"`
+		AuthSource  string `yaml:"auth_source" validate:"required"`
+		MaxPoolSize uint64 `yaml:"max_pool_size" validate:"required"`
+		MinPoolSize uint64 `yaml:"min_pool_size" validate:"required"`
+		MaxIdleTime int    `yaml:"max_idle_time" validate:"required"`
+	} `yaml:"mongodb" validate:"required"`
+
+	MongoExpress struct {
+		Host     string `yaml:"host" validate:"required"`
+		Port     int    `yaml:"port" validate:"required"`
+		Username string `yaml:"username" validate:"required"`
+		Password string `yaml:"password" validate:"required"`
+	} `yaml:"mongoexpress" validate:"required"`
 }
 
 // K6Thresholds represents default thresholds for k6 tests

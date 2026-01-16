@@ -118,10 +118,10 @@ k6 run --vus 20 --duration 30s tests/k6/health-check.js
 ### Option 3: Using Container
 ```bash
 # Using Podman Compose
-podman-compose -f docker-compose.monitoring.yml run --rm k6 run /scripts/health-check.js
+podman-compose -f docker/docker-compose.monitoring.yml run --rm k6 run /scripts/health-check.js
 
 # Using Docker Compose
-docker-compose -f docker-compose.monitoring.yml run --rm k6 run /scripts/health-check.js
+docker-compose -f docker/docker-compose.monitoring.yml run --rm k6 run /scripts/health-check.js
 ```
 
 ## Environment Variables
@@ -299,7 +299,7 @@ podman ps -a | grep k6
 podman logs service-platform-k6
 
 # Rebuild k6 container
-podman-compose -f docker-compose.monitoring.yml up -d --force-recreate k6
+podman-compose -f docker/docker-compose.monitoring.yml up -d --force-recreate k6
 ```
 
 ## Resources

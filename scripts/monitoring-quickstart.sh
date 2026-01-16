@@ -24,7 +24,7 @@ fi
 case $ACTION in
   start)
     echo "🚀 Starting monitoring stack using $RUNTIME (Prometheus, Grafana, Loki, Tempo, Nginx)..."
-    $COMPOSE_CMD -f docker-compose.monitoring.yml up -d
+    $COMPOSE_CMD -f docker/docker-compose.monitoring.yml up -d
     echo ""
     echo "✅ Monitoring stack started!"
     echo ""
@@ -45,16 +45,16 @@ case $ACTION in
 
   stop)
     echo "⛔ Stopping monitoring stack..."
-    $COMPOSE_CMD -f docker-compose.monitoring.yml down
+    $COMPOSE_CMD -f docker/docker-compose.monitoring.yml down
     echo "✅ Monitoring stack stopped!"
     ;;
 
   restart)
     echo "🔄 Restarting monitoring stack..."
-    $COMPOSE_CMD -f docker-compose.monitoring.yml down
+    $COMPOSE_CMD -f docker/docker-compose.monitoring.yml down
     echo "⏳ Waiting a moment before restarting..."
     sleep 4
-    $COMPOSE_CMD -f docker-compose.monitoring.yml up -d
+    $COMPOSE_CMD -f docker/docker-compose.monitoring.yml up -d
     echo "✅ Monitoring stack restarted!"
     ;;
 
@@ -62,31 +62,31 @@ case $ACTION in
     SERVICE=${2:-}
     if [ -z "$SERVICE" ]; then
       echo "📋 Showing logs for all services..."
-      $COMPOSE_CMD -f docker-compose.monitoring.yml logs -f
+      $COMPOSE_CMD -f docker/docker-compose.monitoring.yml logs -f
     else
       echo "📋 Showing logs for $SERVICE..."
-      $COMPOSE_CMD -f docker-compose.monitoring.yml logs -f "$SERVICE"
+      $COMPOSE_CMD -f docker/docker-compose.monitoring.yml logs -f "$SERVICE"
     fi
     ;;
 
   status)
     echo "📊 Monitoring Stack Status (using $RUNTIME):"
-    $COMPOSE_CMD -f docker-compose.monitoring.yml ps
+    $COMPOSE_CMD -f docker/docker-compose.monitoring.yml ps
     ;;
 
   ps)
-    $COMPOSE_CMD -f docker-compose.monitoring.yml ps
+    $COMPOSE_CMD -f docker/docker-compose.monitoring.yml ps
     ;;
 
   rebuild)
     echo "🔨 Rebuilding monitoring images..."
-    $COMPOSE_CMD -f docker-compose.monitoring.yml build --no-cache
+    $COMPOSE_CMD -f docker/docker-compose.monitoring.yml build --no-cache
     echo "✅ Rebuild complete!"
     ;;
 
   clean)
     echo "🧹 Cleaning up monitoring stack (volumes will be removed)..."
-    $COMPOSE_CMD -f docker-compose.monitoring.yml down -v
+    $COMPOSE_CMD -f docker/docker-compose.monitoring.yml down -v
     echo "✅ Cleanup complete!"
     ;;
 
@@ -144,7 +144,7 @@ case $ACTION in
     openssl passwd -apr1
     echo ""
     echo "Edit monitoring/nginx/.htpasswd with the new hash"
-    echo "Then restart nginx: $COMPOSE_CMD -f docker-compose.monitoring.yml restart nginx-auth"
+    echo "Then restart nginx: $COMPOSE_CMD -f docker/docker-compose.monitoring.yml restart nginx-auth"
     ;;
 
   help)

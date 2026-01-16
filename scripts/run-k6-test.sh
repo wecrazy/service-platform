@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 K6_SCRIPTS_DIR="$PROJECT_ROOT/tests/k6"
-COMPOSE_FILE="$PROJECT_ROOT/docker-compose.monitoring.yml"
+COMPOSE_FILE="$PROJECT_ROOT/docker/docker-compose.monitoring.yml"
 
 # Check if script argument is provided
 if [ -z "$1" ]; then

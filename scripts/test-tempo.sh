@@ -13,7 +13,7 @@ else
     echo "   ❌ Tempo is not ready"
     echo "   Attempting to restart Tempo..."
     cd /home/user/server/service-platform
-    podman-compose -f docker-compose.monitoring.yml restart tempo
+    podman-compose -f docker/docker-compose.monitoring.yml restart tempo
     sleep 5
     if curl -s http://localhost:3200/ready 2>&1 | grep -q "ready"; then
         echo "   ✅ Tempo is now ready"

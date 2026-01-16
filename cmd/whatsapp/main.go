@@ -501,18 +501,88 @@ func (s *server) Connect(ctx context.Context, req *pb.ConnectRequest) (*pb.Conne
 		return &pb.ConnectResponse{Success: true, Message: "Connected with existing session"}, nil
 	}
 
-	// No valid session, need QR code
+	// No valid session, need QR code or phone pairing
 	qrChan, err := s.client.GetQRChannel(context.Background())
 	if err != nil {
-		return &pb.ConnectResponse{Success: false, Message: err.Error()}, nil
+		return &pb.ConnectResponse{Success: false, Message: fmt.Sprintf("Failed to get QR channel: %v", err)}, nil
 	}
 
 	err = s.client.Connect()
 	if err != nil {
-		return &pb.ConnectResponse{Success: false, Message: err.Error()}, nil
+		return &pb.ConnectResponse{Success: false, Message: fmt.Sprintf("Failed to connect: %v", err)}, nil
 	}
 
-	// Wait for QR code or successful login
+	// Check if phone pairing is requested (config must enable it)
+	// If enable_phone_pairing is false, always use QR code
+	enablePhonePairing := config.GetConfig().Whatsnyan.EnablePhonePairing
+	usePhonePairing := enablePhonePairing && (req.PhoneNumber != "" || config.GetConfig().Whatsnyan.PairingPhoneNumber != "")
+	pairingPhone := req.PhoneNumber
+	if pairingPhone == "" && enablePhonePairing {
+		pairingPhone = config.GetConfig().Whatsnyan.PairingPhoneNumber
+	}
+
+	if usePhonePairing && pairingPhone != "" {
+		// Wait for first QR event to ensure connection is established
+		logrus.Info("Waiting for connection to establish before phone pairing...")
+		firstEvt := <-qrChan
+		if firstEvt.Event != "code" {
+			// If first event is not a code, handle other cases
+			if firstEvt.Event == "success" {
+				return &pb.ConnectResponse{
+					Success: true,
+					Message: fmt.Sprintf("Connected successfully as %s", firstEvt.Code),
+				}, nil
+			}
+			return &pb.ConnectResponse{
+				Success: false,
+				Message: fmt.Sprintf("Unexpected event: %s", firstEvt.Event),
+			}, nil
+		}
+
+		// Connection established, now request pairing code
+		logrus.Infof("Requesting phone pairing for: %s", pairingPhone)
+		pairingCode, err := s.client.PairPhone(context.Background(), pairingPhone, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
+		if err != nil {
+			return &pb.ConnectResponse{
+				Success: false,
+				Message: fmt.Sprintf("Phone pairing failed: %v", err),
+			}, nil
+		}
+
+		logrus.Infof("✅ Pairing code generated: %s", pairingCode)
+		logrus.Info("Enter this code in WhatsApp: Settings > Linked Devices > Link a Device > Link with Phone Number")
+
+		// Continue listening for pairing success
+		for evt := range qrChan {
+			switch evt.Event {
+			case "success":
+				logrus.Infof("✅ Phone pairing successful! Connected as: %s", evt.Code)
+				return &pb.ConnectResponse{
+					Success:     true,
+					Message:     fmt.Sprintf("Phone pairing successful. Connected as %s", evt.Code),
+					PairingCode: pairingCode,
+				}, nil
+			case "timeout":
+				return &pb.ConnectResponse{
+					Success:     false,
+					Message:     "Pairing code expired. Please try again.",
+					PairingCode: pairingCode,
+				}, nil
+			case "code":
+				// Ignore additional QR codes during phone pairing
+				continue
+			default:
+				logrus.Warnf("Unexpected event during phone pairing: %s", evt.Event)
+			}
+		}
+		return &pb.ConnectResponse{
+			Success:     false,
+			Message:     "Phone pairing channel closed unexpectedly",
+			PairingCode: pairingCode,
+		}, nil
+	}
+
+	// Wait for QR code or successful login (original flow)
 	for evt := range qrChan {
 		switch evt.Event {
 		case "success":
@@ -1677,6 +1747,59 @@ func main() {
 		} else {
 			logrus.Infof("✅ Auto-connected to WhatsApp as %s", srv.client.Store.ID.User)
 		}
+	} else if cfg.Whatsnyan.EnablePhonePairing && cfg.Whatsnyan.PairingPhoneNumber != "" {
+		// No session exists and phone pairing is enabled - initiate pairing
+		logrus.Infof("📱 Phone pairing enabled. Initiating pairing for: %s", cfg.Whatsnyan.PairingPhoneNumber)
+		go func() {
+			// Wait a moment for server to be ready
+			time.Sleep(2 * time.Second)
+			resp, err := srv.Connect(context.Background(), &pb.ConnectRequest{
+				PhoneNumber: cfg.Whatsnyan.PairingPhoneNumber,
+			})
+			if err != nil {
+				logrus.Errorf("Auto phone pairing failed: %v", err)
+			} else if resp.Success {
+				logrus.Infof("✅ %s", resp.Message)
+				if resp.PairingCode != "" {
+					logrus.Infof("🔐 PAIRING CODE: %s", resp.PairingCode)
+					logrus.Info("📲 Enter this code in WhatsApp: Settings > Linked Devices > Link a Device > Link with Phone Number")
+
+					// Notify superuser with pairing code
+					if suPhoneNumber := config.GetConfig().Default.SuperUserPhone; suPhoneNumber != "" {
+						// Wrap in panic recovery
+						func() {
+							defer func() {
+								if r := recover(); r != nil {
+									logrus.Warnf("Failed to send pairing code notification: %v", r)
+								}
+							}()
+
+							jidStr := fmt.Sprintf("%s@%s", suPhoneNumber, types.DefaultUserServer)
+							langMsg := controllers.NewLanguageMsgTranslation(fun.DefaultLang)
+							langMsg.Texts = map[string]string{
+								fun.LangID: fmt.Sprintf("🔐 Kode Pairing WhatsApp: %s\n\nMasukkan kode ini di WhatsApp: Pengaturan > Perangkat Tertaut > Tautkan Perangkat > Tautkan dengan Nomor Telepon", resp.PairingCode),
+								fun.LangEN: fmt.Sprintf("🔐 WhatsApp Pairing Code: %s\n\nEnter this code in WhatsApp: Settings > Linked Devices > Link a Device > Link with Phone Number", resp.PairingCode),
+								fun.LangES: fmt.Sprintf("🔐 Código de Emparejamiento de WhatsApp: %s\n\nIngresa este código en WhatsApp: Configuración > Dispositivos Vinculados > Vincular Dispositivo > Vincular con Número de Teléfono", resp.PairingCode),
+								fun.LangFR: fmt.Sprintf("🔐 Code de Jumelage WhatsApp: %s\n\nEntrez ce code dans WhatsApp: Paramètres > Appareils Liés > Lier un Appareil > Lier avec Numéro de Téléphone", resp.PairingCode),
+								fun.LangDE: fmt.Sprintf("🔐 WhatsApp-Kopplungscode: %s\n\nGib diesen Code in WhatsApp ein: Einstellungen > Verknüpfte Geräte > Gerät Verknüpfen > Mit Telefonnummer Verknüpfen", resp.PairingCode),
+								fun.LangPT: fmt.Sprintf("🔐 Código de Emparelhamento WhatsApp: %s\n\nDigite este código no WhatsApp: Configurações > Dispositivos Vinculados > Vincular Dispositivo > Vincular com Número de Telefone", resp.PairingCode),
+								fun.LangAR: fmt.Sprintf("🔐 رمز الاقتران بواتساب: %s\n\nأدخل هذا الرمز في واتساب: الإعدادات > الأجهزة المرتبطة > ربط جهاز > الربط برقم الهاتف", resp.PairingCode),
+								fun.LangJP: fmt.Sprintf("🔐 WhatsAppペアリングコード: %s\n\nこのコードをWhatsAppに入力してください: 設定 > リンク済みデバイス > デバイスをリンク > 電話番号でリンク", resp.PairingCode),
+								fun.LangCN: fmt.Sprintf("🔐 WhatsApp配对代码: %s\n\n在WhatsApp中输入此代码: 设置 > 已关联设备 > 关联设备 > 使用电话号码关联", resp.PairingCode),
+								fun.LangRU: fmt.Sprintf("🔐 Код сопряжения WhatsApp: %s\n\nВведите этот код в WhatsApp: Настройки > Связанные устройства > Привязать устройство > Привязать по номеру телефона", resp.PairingCode),
+							}
+							if srv.client != nil && srv.client.IsConnected() && srv.rdb != nil && srv.db != nil {
+								controllers.SendLangWhatsAppTextMsg(jidStr, "", nil, langMsg, langMsg.LanguageCode, srv.client, srv.rdb, srv.db)
+							}
+						}()
+					}
+				}
+			} else {
+				logrus.Errorf("Phone pairing failed: %s", resp.Message)
+			}
+		}()
+	} else {
+		logrus.Info("📱 No existing session found. Use Connect RPC with QR code or enable phone pairing in config.")
 	}
 
 	pb.RegisterWhatsAppServiceServer(s, srv)
@@ -1692,27 +1815,44 @@ func main() {
 	}()
 
 	fmt.Printf("📞 Whatsapp gRPC server listening on port %s\n", port)
-	// Notify superuser that server is up
-	suPhoneNumber := config.GetConfig().Default.SuperUserPhone
-	if suPhoneNumber != "" {
-		jidStr := fmt.Sprintf("%s@%s", suPhoneNumber, types.DefaultUserServer)
-		langMsg := controllers.NewLanguageMsgTranslation(fun.DefaultLang)
-		langMsg.Texts = map[string]string{
-			fun.LangID: "✅ WhatsApp gRPC server berhasil dijalankan dan siap menerima pesan.",
-			fun.LangEN: "✅ WhatsApp gRPC server has been successfully started and is ready to receive messages.",
-			fun.LangES: "✅ El servidor gRPC de WhatsApp se ha iniciado correctamente y está listo para recibir mensajes.",
-			fun.LangFR: "✅ Le serveur gRPC WhatsApp a démarré avec succès et est prêt à recevoir des messages.",
-			fun.LangDE: "✅ Der WhatsApp gRPC-Server wurde erfolgreich gestartet und ist bereit, Nachrichten zu empfangen.",
-			fun.LangPT: "✅ O servidor gRPC do WhatsApp foi iniciado com sucesso e está pronto para receber mensagens.",
-			fun.LangAR: "✅ تم تشغيل خادم WhatsApp gRPC بنجاح وهو جاهز لاستقبال الرسائل.",
-			fun.LangJP: "✅ WhatsApp gRPCサーバーが正常に起動し、メッセージの受信準備が整いました。",
-			fun.LangCN: "✅ WhatsApp gRPC 服务器已成功启动，准备接收消息。",
-			fun.LangRU: "✅ Сервер WhatsApp gRPC успешно запущен и готов принимать сообщения.",
+	// Notify superuser that server is up (only if connected)
+	go func() {
+		// Wrap entire goroutine in panic recovery
+		defer func() {
+			if r := recover(); r != nil {
+				logrus.Warnf("Startup notification failed: %v", r)
+			}
+		}()
+
+		// Wait for connection to be established
+		for i := 0; i < 30; i++ { // Wait up to 30 seconds
+			if srv.client != nil && srv.client.IsConnected() {
+				break
+			}
+			time.Sleep(1 * time.Second)
 		}
-		if srv.client != nil && srv.rdb != nil && srv.db != nil {
+
+		suPhoneNumber := config.GetConfig().Default.SuperUserPhone
+		if suPhoneNumber != "" && srv.client != nil && srv.client.IsConnected() && srv.rdb != nil && srv.db != nil {
+			jidStr := fmt.Sprintf("%s@%s", suPhoneNumber, types.DefaultUserServer)
+			langMsg := controllers.NewLanguageMsgTranslation(fun.DefaultLang)
+			langMsg.Texts = map[string]string{
+				fun.LangID: "✅ WhatsApp gRPC server berhasil dijalankan dan siap menerima pesan.",
+				fun.LangEN: "✅ WhatsApp gRPC server has been successfully started and is ready to receive messages.",
+				fun.LangES: "✅ El servidor gRPC de WhatsApp se ha iniciado correctamente y está listo para recibir mensajes.",
+				fun.LangFR: "✅ Le serveur gRPC WhatsApp a démarré avec succès et est prêt à recevoir des messages.",
+				fun.LangDE: "✅ Der WhatsApp gRPC-Server wurde erfolgreich gestartet und ist bereit, Nachrichten zu empfangen.",
+				fun.LangPT: "✅ O servidor gRPC do WhatsApp foi iniciado com sucesso e está pronto para receber mensagens.",
+				fun.LangAR: "✅ تم تشغيل خادم WhatsApp gRPC بنجاح وهو جاهز لاستقبال الرسائل.",
+				fun.LangJP: "✅ WhatsApp gRPCサーバーが正常に起動し、メッセージの受信準備が整いました。",
+				fun.LangCN: "✅ WhatsApp gRPC 服务器已成功启动，准备接收消息。",
+				fun.LangRU: "✅ Сервер WhatsApp gRPC успешно запущен и готов принимать сообщения.",
+			}
 			controllers.SendLangWhatsAppTextMsg(jidStr, "", nil, langMsg, langMsg.LanguageCode, srv.client, srv.rdb, srv.db)
+		} else if suPhoneNumber != "" {
+			logrus.Warn("Could not send startup notification: WhatsApp client not connected")
 		}
-	}
+	}()
 
 	// Handle graceful shutdown
 	c := make(chan os.Signal, 1)
@@ -1722,27 +1862,35 @@ func main() {
 		<-c
 		logrus.Info("🔴 Shutting down WhatsApp gRPC server...")
 
-		// Inform superuser about shutdown
-		if suPhoneNumber != "" {
-			jidStr := fmt.Sprintf("%s@%s", suPhoneNumber, types.DefaultUserServer)
-			langMsg := controllers.NewLanguageMsgTranslation(fun.DefaultLang)
-			langMsg.Texts = map[string]string{
-				fun.LangID: "🔴 WhatsApp gRPC server sedang dimatikan...",
-				fun.LangEN: "🔴 WhatsApp gRPC server is shutting down...",
-				fun.LangES: "🔴 El servidor gRPC de WhatsApp se está apagando...",
-				fun.LangFR: "🔴 Le serveur gRPC WhatsApp est en train de s'arrêter...",
-				fun.LangDE: "🔴 Der WhatsApp gRPC-Server wird heruntergefahren...",
-				fun.LangPT: "🔴 O servidor gRPC do WhatsApp está sendo desligado...",
-				fun.LangAR: "🔴 يتم إيقاف تشغيل خادم WhatsApp gRPC...",
-				fun.LangJP: "🔴 WhatsApp gRPCサーバーをシャットダウンしています...",
-				fun.LangCN: "🔴 WhatsApp gRPC 服务器正在关闭...",
-				fun.LangRU: "🔴 Сервер WhatsApp gRPC выключается...",
-			}
-			if srv.client != nil && srv.rdb != nil && srv.db != nil {
+		// Inform superuser about shutdown (with error recovery)
+		suPhoneNumber := config.GetConfig().Default.SuperUserPhone
+		if suPhoneNumber != "" && srv.client != nil && srv.client.IsConnected() && srv.rdb != nil && srv.db != nil {
+			// Wrap in defer to recover from any panic during shutdown
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						logrus.Warnf("Failed to send shutdown notification (client may have disconnected): %v", r)
+					}
+				}()
+
+				jidStr := fmt.Sprintf("%s@%s", suPhoneNumber, types.DefaultUserServer)
+				langMsg := controllers.NewLanguageMsgTranslation(fun.DefaultLang)
+				langMsg.Texts = map[string]string{
+					fun.LangID: "🔴 WhatsApp gRPC server sedang dimatikan...",
+					fun.LangEN: "🔴 WhatsApp gRPC server is shutting down...",
+					fun.LangES: "🔴 El servidor gRPC de WhatsApp se está apagando...",
+					fun.LangFR: "🔴 Le serveur gRPC WhatsApp est en train de s'arrêter...",
+					fun.LangDE: "🔴 Der WhatsApp gRPC-Server wird heruntergefahren...",
+					fun.LangPT: "🔴 O servidor gRPC do WhatsApp está sendo desligado...",
+					fun.LangAR: "🔴 يتم إيقاف تشغيل خادم WhatsApp gRPC...",
+					fun.LangJP: "🔴 WhatsApp gRPCサーバーをシャットダウンしています...",
+					fun.LangCN: "🔴 WhatsApp gRPC 服务器正在关闭...",
+					fun.LangRU: "🔴 Сервер WhatsApp gRPC выключается...",
+				}
 				controllers.SendLangWhatsAppTextMsg(jidStr, "", nil, langMsg, langMsg.LanguageCode, srv.client, srv.rdb, srv.db)
 				// Give it a moment to send before killing the server
 				time.Sleep(1 * time.Second)
-			}
+			}()
 		}
 
 		s.GracefulStop()
