@@ -351,6 +351,8 @@ message ConnectResponse {
   string message = 2;
   // QR code data if authentication is required.
   string qr_code = 3;
+  // 8-digit pairing code for phone number pairing (alternative to QR code).
+  string pairing_code = 4;
 }
 
 // DisconnectRequest is the request to disconnect from WhatsApp.

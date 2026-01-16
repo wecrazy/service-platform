@@ -193,12 +193,12 @@ The scripts automatically detect and prioritize Podman over Docker:
 
 **Alternative: Direct Podman Compose**
 ```bash
-podman-compose -f docker-compose.monitoring.yml up -d
+podman-compose -f docker/docker-compose.monitoring.yml up -d
 ```
 
 **Fallback: Docker Compose (if Podman unavailable)**
 ```bash
-docker-compose -f docker-compose.monitoring.yml up -d
+docker-compose -f docker/docker-compose.monitoring.yml up -d
 ```
 
 ### 2. Stop Monitoring Stack
@@ -210,9 +210,9 @@ docker-compose -f docker-compose.monitoring.yml up -d
 
 **Direct commands:**
 ```bash
-podman-compose -f docker-compose.monitoring.yml down -v
+podman-compose -f docker/docker-compose.monitoring.yml down -v
 # or
-docker-compose -f docker-compose.monitoring.yml down -v
+docker-compose -f docker/docker-compose.monitoring.yml down -v
 ```
 
 ## Access URLs

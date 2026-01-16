@@ -50,7 +50,7 @@ fi
 
 echo ""
 echo "🛑 Stopping monitoring services..."
-$COMPOSE_CMD -f docker-compose.monitoring.yml down
+$COMPOSE_CMD -f docker/docker-compose.monitoring.yml down
 
 echo ""
 echo "🗑️  Removing Grafana cache volume..."
@@ -59,7 +59,7 @@ $CONTAINER_CMD volume rm service-platform_grafana_data 2>/dev/null || echo "   (
 echo ""
 echo "🚀 Starting monitoring services with fresh Grafana..."
 export PROMETHEUS_PORT GRAFANA_PORT LT_PORT
-$COMPOSE_CMD -f docker-compose.monitoring.yml up -d
+$COMPOSE_CMD -f docker/docker-compose.monitoring.yml up -d
 
 echo ""
 echo "⏳ Waiting for services to be ready..."

@@ -1,13 +1,13 @@
 app:
   host: "localhost"
-  gin_mode: "debug"   # debug | release | test
+  gin_mode: "debug"                         # debug | release | test
   name: "Service Platform"
   description: "Service Platform (Development) - Contains various services including API, gRPC, Scheduler, and WhatsNyan for WhatsApp integration."
-  logo: "/assets/self/img/logo.png" # Must be PNG format
+  logo: "/assets/self/img/logo.png"         # Must be PNG format
   logo_jpg: "/assets/self/img/logo.jpg"
   port: 6221
-  log_level: "DEBUG"   # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
-  log_format: "CSV"      # TEXT | JSON | => default CSV
+  log_level: "DEBUG"                        # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
+  log_format: "CSV"                         # TEXT | JSON | => default CSV
   web_public_url: "http://localhost:6221"
   version: "Beta"
   version_no: 1
@@ -23,19 +23,19 @@ app:
   max_disconnection_time: 12 # seconds
   aes_key: "w4GwYyADnBa91vph1vCLRghvfkTmaWRF"
   aes_key_iv: "xu1HErEpSpaf87D7"
-  max_retry_login: 5 # attempts
-  login_lock_until: 10 # minutes
+  max_retry_login: 5            # attempts
+  login_lock_until: 10          # minutes
   app_log_filename: "app.log"
-  app_log_maxsize: 20 # MB
-  app_log_maxage: 7 # days
+  app_log_maxsize: 20           # MB
+  app_log_maxage: 7             # days
   app_log_maxbackups: 10
   app_log_compress: true
   system_log_filename: "sys.log"
   memory_profile_path: "mem.prof"
   debug: true
 default:
-  log_max_size: 10 # MB
-  log_max_age: 1 # days
+  log_max_size: 10  # MB
+  log_max_age: 1    # days
   log_max_backups: 5
   log_compress: false
   csv_timestamp_format: "2006-01-02 15:04:05.000 MST"
@@ -48,30 +48,30 @@ default:
   cpu_capture_interval: 30 # seconds
   max_bad_word_strikes: 3
   data_separator: "|"
-  purge_old_backup_log_files_older_than: "3Days" # 1Day | 1Week | 1Month
-  remove_old_needs_dir_older_than: "3Days" # 1Day | 1Week | 1Month
+  purge_old_backup_log_files_older_than: "3Days"    # 1Day | 1Week | 1Month
+  remove_old_needs_dir_older_than: "3Days"          # 1Day | 1Week | 1Month
 redis:
   host: "127.0.0.1"
   port: 6379
   password: ""
   db: 10
-  max_retry: 5 # attempts
-  retry_delay: 5 # seconds
-  pool_size: 20 # connections
+  max_retry: 5        # attempts
+  retry_delay: 5      # seconds
+  pool_size: 20       # connections
 database:
-  type: "PostgreSQL" # MySQL || PostgreSQL
+  type: "PostgreSQL"  # MySQL || PostgreSQL
   host: "127.0.0.1"
   port: 5432
   username: "swi"
   password: "Takasitau"
   name: "db_service_platform_dev_rm"
   max_retry_connect: 3
-  retry_delay: 5 # seconds
+  retry_delay: 5            # seconds
   max_idle_connection: 10
   max_open_connection: 10
-  conn_max_lifetime: 30 # minutes
-  conn_max_idle_time: 10 # minutes
-  ssl_mode: "disable" # disable | require | verify-ca | verify-full
+  conn_max_lifetime: 30     # minutes
+  conn_max_idle_time: 10    # minutes
+  ssl_mode: "disable"       # disable | require | verify-ca | verify-full
   db_config_path: "database/dbconfig.yaml"
   db_backup_destination_dir: "database"
   purge_older_than: "2Days"
@@ -162,10 +162,12 @@ whatsnyan:
     tb_version: "whatsmeow_version"
   wa_reply_public_url: "http://localhost:6221/wa_reply"
   need_verify_account: true
-  language_expiry: 604800 # seconds (7 days)
-  language_prompt_shown_expiry: 604800 # seconds (7 days)
-  not_registered_phone_expiry: 86400 # seconds (1 day)
-  quota_limit_expiry: 86400 # seconds (1 day)
+  enable_phone_pairing: false                 # Set to true to use phone pairing instead of QR code
+  pairing_phone_number: "6285117196875"       # Phone number in international format (e.g., "6281234567890") for auto-pairing on startup
+  language_expiry: 604800                     # seconds (7 days)
+  language_prompt_shown_expiry: 604800        # seconds (7 days)
+  not_registered_phone_expiry: 86400          # seconds (1 day)
+  quota_limit_expiry: 86400                   # seconds (1 day)
   language_prompt: |
     Silakan pilih bahasa Anda:
       🇮🇩 Bahasa Indonesia (id)
@@ -226,9 +228,9 @@ whatsnyan:
         - ".mov"
         - ".3gp"
     document:
-      max_daily_quota: 50 # files
-      cooldown_seconds: 10 # seconds
-      max_size: 20 # MB
+      max_daily_quota: 50     # files
+      cooldown_seconds: 10    # seconds
+      max_size: 20            # MB
       allowed_mime_types:
         - "application/pdf"
         - "application/msword"
@@ -246,9 +248,9 @@ whatsnyan:
         - ".txt"
         - ".zip"
     audio:
-      max_daily_quota: 100 # files
-      cooldown_seconds: 3 # seconds
-      max_size: 10 # MB
+      max_daily_quota: 100     # files
+      cooldown_seconds: 3      # seconds
+      max_size: 10             # MB
       allowed_mime_types:
         - "audio/mpeg"
         - "audio/wav"
@@ -271,10 +273,10 @@ metrics:
   grafana_port: 3063
 rate_limit:
   enabled: true
-  requests: 100  # requests per period
-  period: 60     # period in seconds (1 minute)
-  burst: 20      # burst allowance
-  cleanup_time: 3600  # cleanup time in seconds (1 hour)
+  requests: 100         # requests per period
+  period: 60            # period in seconds (1 minute)
+  burst: 20             # burst allowance
+  cleanup_time: 3600    # cleanup time in seconds (1 hour)
 monitoring:
   service_name: "monitoring-of-service-platform"
   description: "Service Platform - Monitoring System Service, that monitors various services including API, gRPC, Scheduler, WhatsNyan for WhatsApp integration and LibreTranslate for translation services."
@@ -322,8 +324,8 @@ k6:
 observability:
   loki:
     enabled: true
-    url: "http://127.0.0.1:3100"  # Local Loki endpoint
-    batch_size: 20  # Reduced from 100 for quicker visibility in development
+    url: "http://127.0.0.1:3100"    # Local Loki endpoint
+    batch_size: 20                  # Reduced from 100 for quicker visibility in development
     batch_timeout_ms: 5000
     labels:
       service: "service-platform"
@@ -335,10 +337,27 @@ observability:
     enabled: true
     otlp_grpc_endpoint: "http://127.0.0.1:4317"   # Local Tempo OTLP gRPC
     otlp_http_endpoint: "http://127.0.0.1:3200"   # Tempo HTTP endpoint
-    sample_rate: 1.0  # 100% sampling in development
+    sample_rate: 1.0                              # 100% sampling in development
     max_export_batch_size: 512
     export_timeout_ms: 30000
 
   jaeger:
     enabled: false
     endpoint: "http://127.0.0.1:14250"
+
+mongodb:
+  host: "localhost"
+  port: 27007
+  username: "mongo_admin"
+  password: "password_admin_mongo"
+  database: "service_platform_mongo_test"
+  auth_source: "admin"
+  max_pool_size: 10
+  min_pool_size: 5
+  max_idle_time: 30 # seconds 
+
+mongoexpress:
+  host: "localhost"
+  port: 8081
+  username: "admin"
+  password: "pass"

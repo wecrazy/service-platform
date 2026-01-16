@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:8.2.3
+    container_name: service-platform-mongodb
+    ports:
+      - "27007:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo_admin
+      MONGO_INITDB_ROOT_PASSWORD: password_admin_mongo
+      MONGO_INITDB_DATABASE: service_platform_mongo_test
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - mongodb_network
+    restart: unless-stopped
+
+  mongoexpress:
+    image: mongo-express:latest
+    container_name: service-platform-mongoexpress
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: mongo_admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password_admin_mongo
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: pass
+      ME_CONFIG_MONGODB_URL: mongodb://mongo_admin:password_admin_mongo@mongodb:27017/service_platform_mongo_test?authSource=admin
+    depends_on:
+      - mongodb
+    networks:
+      - mongodb_network
+    restart: unless-stopped
+
+  # Optional: mongosh for CLI access
+  # Uncomment if you want a dedicated mongosh container
+  # mongosh:
+  #   image: mongo:8.2.3
+  #   container_name: service-platform-mongosh
+  #   command: mongosh --host mongodb -u mongo_admin -p password_admin_mongo --authenticationDatabase admin
+  #   depends_on:
+  #     - mongodb
+  #   networks:
+  #     - mongodb_network
+  #   stdin_open: true
+  #   tty: true
+
+volumes:
+  mongodb_data:
+
+networks:
+  mongodb_network:
+    driver: bridge
