@@ -14,7 +14,7 @@ Successfully integrated k6 load testing into Service Platform with Grafana visua
   - 3 pre-configured test scenarios (health check, smoke test, stress test)
 
 ### 2. Docker/Container Setup
-- **docker-compose.monitoring.yml**: Added k6 service with:
+- **docker/docker-compose.monitoring.yml**: Added k6 service with:
   - Grafana k6 latest image
   - Prometheus remote write output
   - Volume mount for test scripts

@@ -1,4 +1,4 @@
-.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all help
+.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all mongo-up mongo-down mongo-logs mongo-status test test-mongo help
 
 run-api:
 	go run cmd/api/main.go
@@ -40,6 +40,10 @@ build: build-api build-wa build-grpc build-monitoring build-n8n
 
 test:
 	go test -v -cover ./tests/... ./internal/migrations/...
+
+test-mongo:
+	@echo "🧪 Running MongoDB tests..."
+	@go test -v ./tests/unit/mongodb_test.go
 
 n8n-start:
 	go run cmd/n8n/main.go
@@ -284,6 +288,54 @@ health-check-all:
 	@echo "🩺 Running comprehensive health check..."
 	@./scripts/health-check-all.sh
 
+mongo-up:
+	@echo "🐳 Starting MongoDB container..."
+	@podman-compose -f docker/docker-compose.mongodb.yml up -d
+
+mongo-down:
+	@echo "🐳 Stopping MongoDB container..."
+	@podman-compose -f docker/docker-compose.mongodb.yml down
+
+mongo-logs:
+	@echo "📋 Viewing MongoDB logs..."
+	@podman-compose -f docker/docker-compose.mongodb.yml logs -f
+
+mongo-status:
+	@echo "📊 Checking MongoDB container status..."
+	@podman ps | grep mongodb || echo "MongoDB container not running"
+
+mongo-check:
+	@echo "🔍 Checking MongoDB and MongoExpress accessibility..."
+	@echo ""
+	@echo "📦 Container Status:"
+	@podman ps --filter "name=service-platform-mongo" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "  ❌ MongoDB containers not running"
+	@echo ""
+	@echo "🌐 MongoExpress Web UI:"
+	@if podman ps --filter "name=service-platform-mongoexpress" --filter "status=running" -q 2>/dev/null | grep -q .; then \
+		HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081 2>/dev/null); \
+		if [ "$$HTTP_CODE" = "200" ] || [ "$$HTTP_CODE" = "401" ]; then \
+			echo "  ✅ MongoExpress is accessible at http://localhost:8081"; \
+			echo "     Username: admin"; \
+			echo "     Password: pass"; \
+		else \
+			echo "  ⏳ MongoExpress container is running but still initializing (HTTP $$HTTP_CODE)..."; \
+			echo "     Wait a few seconds and check: http://localhost:8081"; \
+		fi; \
+	else \
+		echo "  ❌ MongoExpress container is not running"; \
+		echo "     Run 'make mongo-up' to start the services"; \
+	fi
+	@echo ""
+	@echo "🗄️  MongoDB Database:"
+	@if timeout 2 bash -c 'until nc -z localhost 27007 2>/dev/null; do sleep 0.5; done' 2>/dev/null; then \
+		echo "  ✅ MongoDB is accessible at localhost:27007"; \
+		echo "     Connection: mongodb://mongo_admin:password_admin_mongo@localhost:27007/service_platform_mongo_test?authSource=admin"; \
+	else \
+		echo "  ❌ MongoDB is NOT accessible at localhost:27007"; \
+	fi
+	@echo ""
+	@echo "💡 Run 'make test-mongo' to execute MongoDB tests"
+
 help:
 	@echo "🚀 Service Platform - Available Commands:"
 	@echo ""
@@ -352,3 +404,9 @@ help:
 	@echo "  make tempo-test         			- Test Tempo tracing setup"
 	@echo "  make observability-verify 			- Verify observability stack (logs, tracing, metrics)"
 	@echo "  make health-check-all   			- Run comprehensive health check for all services"
+	@echo "  make mongo-up            			- Start MongoDB container"
+	@echo "  make mongo-down          			- Stop MongoDB container"
+	@echo "  make mongo-logs          			- View MongoDB logs"
+	@echo "  make mongo-status        			- Check MongoDB container status"
+	@echo "  make mongo-check         			- Check MongoDB and MongoExpress accessibility"
+	@echo "  make test-mongo          			- Run MongoDB-specific tests"

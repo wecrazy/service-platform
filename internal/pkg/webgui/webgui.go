@@ -319,7 +319,18 @@ func stringColumnConfig(className, returnValue string, visible, orderable bool, 
 	return template.JS(js)
 }
 
-// func imageFilter // ADD soon coz its not implemented yet
+func imageFilter(colHeader template.HTML, filter_id string, i int) template.HTML {
+	html := fmt.Sprintf(`<label class="form-label">%s:</label>
+					<input
+					id="%s"
+					type="text"
+					class="form-control dt-input dt-full-name"
+					data-column="%d"
+					placeholder="Search %s by filename"
+					data-column-index="%d" />`, colHeader, filter_id, i, colHeader, i-1)
+	return template.HTML(html)
+}
+
 func imageEditForm(colHeader template.HTML, edit_id, colData string, i int) template.HTML {
 	html := fmt.Sprintf(`<label class="form-label">%s</label>
 			<input

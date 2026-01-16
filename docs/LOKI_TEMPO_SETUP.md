@@ -35,24 +35,24 @@ This guide covers the integrated observability stack with centralized logging (L
 
 ### Start monitoring services
 ```bash
-docker-compose -f docker-compose.monitoring.yml up -d
+docker-compose -f docker/docker-compose.monitoring.yml up -d
 ```
 
 ### Verify services are running
 ```bash
-docker-compose -f docker-compose.monitoring.yml ps
+docker-compose -f docker/docker-compose.monitoring.yml ps
 ```
 
 ### Check logs
 ```bash
 # Loki logs
-docker-compose -f docker-compose.monitoring.yml logs -f loki
+docker-compose -f docker/docker-compose.monitoring.yml logs -f loki
 
 # Tempo logs
-docker-compose -f docker-compose.monitoring.yml logs -f tempo
+docker-compose -f docker/docker-compose.monitoring.yml logs -f tempo
 
 # Nginx logs
-docker-compose -f docker-compose.monitoring.yml logs -f nginx-auth
+docker-compose -f docker/docker-compose.monitoring.yml logs -f nginx-auth
 ```
 
 ## Accessing Services
@@ -255,10 +255,10 @@ Trace ID: click "View Logs" to see related logs in Loki
 ### Services Not Starting
 ```bash
 # Check docker-compose syntax
-docker-compose -f docker-compose.monitoring.yml config
+docker-compose -f docker/docker-compose.monitoring.yml config
 
 # View service logs
-docker-compose -f docker-compose.monitoring.yml logs <service-name>
+docker-compose -f docker/docker-compose.monitoring.yml logs <service-name>
 ```
 
 ### Loki Connection Issues
@@ -267,7 +267,7 @@ docker-compose -f docker-compose.monitoring.yml logs <service-name>
 curl -v http://localhost:3100/api/v1/status
 
 # Check Loki logs
-docker-compose -f docker-compose.monitoring.yml logs loki
+docker-compose -f docker/docker-compose.monitoring.yml logs loki
 ```
 
 ### Tempo Connection Issues
@@ -276,7 +276,7 @@ docker-compose -f docker-compose.monitoring.yml logs loki
 curl -v http://localhost:3200/tempo/api/search
 
 # Check Tempo logs
-docker-compose -f docker-compose.monitoring.yml logs tempo
+docker-compose -f docker/docker-compose.monitoring.yml logs tempo
 ```
 
 ### Nginx Authentication Issues

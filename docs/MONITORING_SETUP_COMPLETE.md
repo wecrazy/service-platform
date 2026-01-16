@@ -117,7 +117,7 @@ ingester:
 
 **Solution:** Changed Nginx to port 9180
 
-**File:** `docker-compose.monitoring.yml`
+**File:** `docker/docker-compose.monitoring.yml`
 
 ---
 
@@ -168,7 +168,7 @@ curl -u admin:admin http://localhost:9180
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `docker-compose.monitoring.yml` | Container definitions | ✅ Updated (port 9180) |
+| `docker/docker-compose.monitoring.yml` | Container definitions | ✅ Updated (port 9180) |
 | `monitoring/loki/loki-config.yml` | Loki settings | ✅ Fixed (WAL disabled) |
 | `monitoring/tempo/tempo-config.yml` | Tempo settings | ✅ Simplified |
 | `monitoring/nginx/.htpasswd` | Auth credentials | ✅ Verified |

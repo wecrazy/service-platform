@@ -10,7 +10,7 @@ services:
     ports:
       - "0.0.0.0:${PROMETHEUS_PORT:-9090}:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -41,7 +41,7 @@ services:
       - "0.0.0.0:${LOKI_PORT:-3100}:3100"
     volumes:
       - loki_data:/loki
-      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yml:ro
+      - ../monitoring/loki/loki-config.yml:/etc/loki/local-config.yml:ro
     command: -config.file=/etc/loki/local-config.yml
     environment:
       - LOKI_RETENTION_PERIOD=72h
@@ -63,7 +63,7 @@ services:
       - "0.0.0.0:${TEMPO_API_PORT:-3200}:3200"        # API
     volumes:
       - tempo_data:/var/tempo
-      - ./monitoring/tempo/tempo-config.yml:/etc/tempo/tempo-config.yml:ro
+      - ../monitoring/tempo/tempo-config.yml:/etc/tempo/tempo-config.yml:ro
     command: -config.file=/etc/tempo/tempo-config.yml
     networks:
       - monitoring
@@ -82,8 +82,8 @@ services:
     ports:
       - "0.0.0.0:${NGINX_PORT:-9180}:80"
     volumes:
-      - ./monitoring/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./monitoring/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+      - ../monitoring/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../monitoring/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
     networks:
       - monitoring
     depends_on:
@@ -105,8 +105,8 @@ services:
       - "0.0.0.0:${GRAFANA_PORT:-3063}:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     environment:
       - GF_USERS_DEFAULT_THEME=dark
       - GF_SECURITY_ADMIN_PASSWORD=Net55206011##
@@ -160,7 +160,7 @@ services:
     ports:
       - "0.0.0.0:${K6_PORT:-6680}:6680"              # k6 REST API and Web UI
     volumes:
-      - ./tests/k6:/scripts:ro               # Mount k6 test scripts (read-only)
+      - ../tests/k6:/scripts:ro               # Mount k6 test scripts (read-only)
       - k6_results:/results                  # Store test results
     environment:
       - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write

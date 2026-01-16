@@ -259,6 +259,40 @@ echo ""
 echo "🗄️  Checking Database Connectivity..."
 echo "==================================="
 
+# Check MongoDB
+MONGO_PORT=$(yq '.mongodb.port' "$CONFIG_FILE" 2>/dev/null || echo "27007")
+MONGO_HOST=$(yq '.mongodb.host' "$CONFIG_FILE" 2>/dev/null || echo "localhost")
+
+if check_container "service-platform-mongodb"; then
+    print_status "MongoDB Container" "PASS" "Running"
+    if check_port "$MONGO_HOST" "$MONGO_PORT"; then
+        print_status "MongoDB Port" "PASS" "Port $MONGO_PORT accessible"
+        # Try to connect using mongosh (if available in container)
+        if podman exec service-platform-mongodb mongosh --quiet --eval "db.adminCommand('ping')" mongodb://mongo_admin:password_admin_mongo@localhost:27017/service_platform_mongo_test?authSource=admin 2>/dev/null | grep -q "ok.*1"; then
+            print_status "MongoDB Connection" "PASS" "Database responding to ping"
+        else
+            print_status "MongoDB Connection" "WARN" "Ping command not verified (mongosh may not be available)"
+        fi
+    else
+        print_status "MongoDB Port" "FAIL" "Port $MONGO_PORT not accessible"
+    fi
+else
+    print_status "MongoDB Container" "WARN" "Not running (optional service)"
+fi
+
+# Check MongoExpress
+MONGOEXPRESS_PORT=$(yq '.mongoexpress.port' "$CONFIG_FILE" 2>/dev/null || echo "8081")
+if check_container "service-platform-mongoexpress"; then
+    print_status "MongoExpress Container" "PASS" "Running"
+    if check_port "localhost" "$MONGOEXPRESS_PORT"; then
+        print_status "MongoExpress Port" "PASS" "Port $MONGOEXPRESS_PORT accessible"
+    else
+        print_status "MongoExpress Port" "FAIL" "Port $MONGOEXPRESS_PORT not accessible"
+    fi
+else
+    print_status "MongoExpress Container" "WARN" "Not running (optional service)"
+fi
+
 # Try PostgreSQL first
 if command -v psql &> /dev/null; then
     # Try to connect to PostgreSQL (using default dev config values)
@@ -322,3 +356,7 @@ echo "   • Prometheus: http://localhost:$PROMETHEUS_PORT"
 echo "   • Loki: http://localhost:$LOKI_PORT"
 echo "   • Tempo: http://localhost:$TEMPO_PORT"
 echo "   • Grafana Nginx (auth): http://localhost:$NGINX_PORT"
+echo ""
+echo "ℹ️  Database Access:"
+echo "   • MongoExpress: http://localhost:$MONGOEXPRESS_PORT (admin/pass)"
+echo "   • MongoDB: mongodb://mongo_admin:password_admin_mongo@localhost:$MONGO_PORT"

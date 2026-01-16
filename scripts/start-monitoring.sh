@@ -42,7 +42,7 @@ echo "🌐 LibreTranslate will be available on port: $LT_PORT"
 # Update prometheus.yml with actual ports
 sed -i "s/__LT_PORT__/$LT_PORT/g" "${PROJECT_ROOT}/prometheus.yml"
 
-COMPOSE_FILE="${PROJECT_ROOT}/docker-compose.monitoring.yml"
+COMPOSE_FILE="${PROJECT_ROOT}/docker/docker-compose.monitoring.yml"
 
 echo "🚀 Starting Service Platform Monitoring..."
 
