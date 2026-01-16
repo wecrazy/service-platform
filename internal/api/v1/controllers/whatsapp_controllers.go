@@ -259,9 +259,15 @@ func ConnectWhatsApp(c *gin.Context) {
 		return
 	}
 
-	// No request body needed for connection as it uses the first available device or creates a new one
+	// Accept optional phone number for phone pairing
+	var req struct {
+		PhoneNumber string `json:"phone_number"`
+	}
+	// Don't fail if no body provided, just use empty phone number
+	c.ShouldBindJSON(&req)
+
 	resp, err := whatsapp.Client.Connect(c.Request.Context(), &pb.ConnectRequest{
-		PhoneNumber: "", // Not used in single-device mode
+		PhoneNumber: req.PhoneNumber, // If empty, will use QR code; if provided, will use phone pairing
 	})
 
 	if err != nil {
@@ -274,9 +280,10 @@ func ConnectWhatsApp(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": resp.Success,
-		"message": resp.Message,
-		"qr_code": resp.QrCode,
+		"success":      resp.Success,
+		"message":      resp.Message,
+		"qr_code":      resp.QrCode,
+		"pairing_code": resp.PairingCode,
 	})
 }
 

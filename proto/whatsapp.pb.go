@@ -2065,7 +2065,9 @@ type ConnectResponse struct {
 	// Message describing the result.
 	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	// QR code data if authentication is required.
-	QrCode        string `protobuf:"bytes,3,opt,name=qr_code,json=qrCode,proto3" json:"qr_code,omitempty"`
+	QrCode string `protobuf:"bytes,3,opt,name=qr_code,json=qrCode,proto3" json:"qr_code,omitempty"`
+	// 8-digit pairing code for phone number pairing (alternative to QR code).
+	PairingCode   string `protobuf:"bytes,4,opt,name=pairing_code,json=pairingCode,proto3" json:"pairing_code,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2117,6 +2119,13 @@ func (x *ConnectResponse) GetMessage() string {
 func (x *ConnectResponse) GetQrCode() string {
 	if x != nil {
 		return x.QrCode
+	}
+	return ""
+}
+
+func (x *ConnectResponse) GetPairingCode() string {
+	if x != nil {
+		return x.PairingCode
 	}
 	return ""
 }
@@ -2360,11 +2369,12 @@ const file_proto_whatsapp_proto_rawDesc = "" +
 	"\acaption\x18\x06 \x01(\tR\acaption\x12\x1a\n" +
 	"\bfilename\x18\a \x01(\tR\bfilename\"3\n" +
 	"\x0eConnectRequest\x12!\n" +
-	"\fphone_number\x18\x01 \x01(\tR\vphoneNumber\"^\n" +
+	"\fphone_number\x18\x01 \x01(\tR\vphoneNumber\"\x81\x01\n" +
 	"\x0fConnectResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12\x17\n" +
-	"\aqr_code\x18\x03 \x01(\tR\x06qrCode\"6\n" +
+	"\aqr_code\x18\x03 \x01(\tR\x06qrCode\x12!\n" +
+	"\fpairing_code\x18\x04 \x01(\tR\vpairingCode\"6\n" +
 	"\x11DisconnectRequest\x12!\n" +
 	"\fphone_number\x18\x01 \x01(\tR\vphoneNumber\"H\n" +
 	"\x12DisconnectResponse\x12\x18\n" +
