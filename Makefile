@@ -138,6 +138,35 @@ install-swagger:
 swagger: install-swagger
 	@GOBIN=$$(go env GOPATH)/bin; "$$GOBIN/swag" init -g cmd/api/main.go
 
+# gRPC Code Generation
+install-protoc-gen:
+	@echo "📦 Installing protoc-gen-go and protoc-gen-go-grpc..."
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	@echo "✅ protoc plugins installed"
+
+proto-gen: install-protoc-gen
+	@echo "🔧 Generating gRPC code from .proto files..."
+	@GOBIN=$$(go env GOPATH)/bin; \
+	protoc --plugin=protoc-gen-go="$$GOBIN/protoc-gen-go" \
+		--plugin=protoc-gen-go-grpc="$$GOBIN/protoc-gen-go-grpc" \
+		--go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		proto/auth.proto
+	@GOBIN=$$(go env GOPATH)/bin; \
+	protoc --plugin=protoc-gen-go="$$GOBIN/protoc-gen-go" \
+		--plugin=protoc-gen-go-grpc="$$GOBIN/protoc-gen-go-grpc" \
+		--go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		proto/scheduler.proto
+	@GOBIN=$$(go env GOPATH)/bin; \
+	protoc --plugin=protoc-gen-go="$$GOBIN/protoc-gen-go" \
+		--plugin=protoc-gen-go-grpc="$$GOBIN/protoc-gen-go-grpc" \
+		--go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		proto/whatsapp.proto
+	@echo "✅ gRPC code generation complete"
+
 # Documentation
 docs-install:
 	go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
@@ -397,6 +426,8 @@ help:
 	@echo "🛠️  Development Commands:"
 	@echo "  make config-dev         			- Setup dev configuration"
 	@echo "  make config-prod        			- Setup prod configuration"
+	@echo "  make install-protoc-gen 			- Install protoc Go plugins"
+	@echo "  make proto-gen          			- Generate gRPC code from .proto files"
 	@echo "  make docs-install       			- Install API documentation tools"
 	@echo "  make docs-serve         			- Serve API documentation"
 	@echo "  make swagger            			- Generate Swagger docs"
