@@ -1,0 +1,88 @@
+# .dockerignore for service-platform
+
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Development files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Testing
+tests/
+*.test
+coverage.out
+*.coverprofile
+
+# Documentation
+docs/
+*.md
+README.md
+LICENSE
+
+# Build artifacts
+bin/
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Logs
+log/
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Dependencies (will be downloaded in container)
+vendor/
+
+# Config files (copy explicitly if needed)
+*.yaml.example
+*.yml.example
+.env*
+
+# Monitoring (not needed in service containers)
+monitoring/
+prometheus.yml
+
+# Scripts (build-time only)
+scripts/
+
+# k6 tests
+tests/k6/
+
+# Database seeds (handled separately)
+internal/seed/
+
+# Web uploads directory
+web/uploads/
+
+# Docker files
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Makefile
+Makefile
+
+# Go workspace
+go.work
+go.work.sum
