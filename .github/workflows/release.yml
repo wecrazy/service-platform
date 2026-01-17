@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  GO_VERSION: '1.25.5'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build all services
+        run: |
+          mkdir -p dist
+          for service in api wa grpc scheduler monitoring n8n; do
+            echo "Building $service..."
+            GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/service-platform-$service-linux-amd64 cmd/$service/main.go
+            GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/service-platform-$service-darwin-amd64 cmd/$service/main.go
+            GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/service-platform-$service-darwin-arm64 cmd/$service/main.go
+            GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/service-platform-$service-windows-amd64.exe cmd/$service/main.go
+          done
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          if [ -f "CHANGELOG.md" ]; then
+            # Extract latest version changelog
+            awk '/^## \[/{if(++count==2) exit} count==1' CHANGELOG.md > release_notes.md
+          else
+            echo "Release ${{ github.ref_name }}" > release_notes.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker-release:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api, grpc, whatsapp, scheduler]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.${{ matrix.service }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Sign the images with Cosign
+        run: echo "Image signing would happen here with cosign"
+        # Uncomment when you set up image signing:
+        # - name: Install Cosign
+        #   uses: sigstore/cosign-installer@v3
+        # - name: Sign image
+        #   run: |
+        #     cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}@${{ steps.meta.outputs.digest }}

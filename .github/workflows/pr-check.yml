@@ -1,0 +1,160 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+
+env:
+  GO_VERSION: '1.25.5'
+
+jobs:
+  validate-pr:
+    name: Validate Pull Request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR title format
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|ci|build)(\(.+\))?: ]]; then
+            echo "❌ PR title must follow conventional commits format"
+            echo "Examples: feat: add new feature, fix(api): resolve bug"
+            exit 1
+          fi
+          echo "✅ PR title is valid"
+
+      - name: Check for breaking changes
+        run: |
+          git diff origin/${{ github.base_ref }}...HEAD --name-only | grep -E "(proto/|internal/api/v1/)" && echo "⚠️ Warning: Potential breaking changes detected" || echo "✅ No breaking changes detected"
+
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Check Go formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "❌ The following files are not formatted:"
+            echo "$unformatted"
+            exit 1
+          fi
+          echo "✅ All Go files are properly formatted"
+
+      - name: Check for commented code
+        run: |
+          # Simple check for excessive commented code
+          commented_lines=$(git diff origin/${{ github.base_ref }}...HEAD | grep -E "^\+.*//.*TODO|^\+.*//.*FIXME" | wc -l)
+          if [ "$commented_lines" -gt 10 ]; then
+            echo "⚠️ Warning: Found $commented_lines TODO/FIXME comments in this PR"
+          fi
+
+      - name: Check file size
+        run: |
+          large_files=$(git diff origin/${{ github.base_ref }}...HEAD --stat | grep -E "\|.*\+{10,}" || true)
+          if [ -n "$large_files" ]; then
+            echo "⚠️ Warning: Large file changes detected"
+            echo "$large_files"
+          fi
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0
+
+  test-coverage:
+    name: Test Coverage Check
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run tests with coverage
+        run: go test -v -coverprofile=coverage.out -covermode=atomic ./tests/... ./internal/migrations/...
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: test_db
+
+      - name: Check coverage threshold
+        run: |
+          coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Total coverage: $coverage%"
+          threshold=50
+          if (( $(echo "$coverage < $threshold" | bc -l) )); then
+            echo "❌ Coverage $coverage% is below threshold $threshold%"
+            exit 1
+          fi
+          echo "✅ Coverage meets threshold"
+
+  build-check:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build all services
+        run: make build
+
+      - name: Verify binaries
+        run: |
+          for binary in bin/*; do
+            if [ -f "$binary" ] && [ -x "$binary" ]; then
+              echo "✅ $binary built successfully"
+            else
+              echo "❌ $binary build failed"
+              exit 1
+            fi
+          done
