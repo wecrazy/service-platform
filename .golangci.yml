@@ -1,0 +1,29 @@
+# golangci-lint configuration for service-platform
+version: "2"
+
+linters:
+  enable:
+    - errcheck      # Check for unchecked errors
+    - gosimple      # Simplify code
+    - govet         # Vet examines Go source code
+    - ineffassign   # Detect ineffectual assignments
+    - staticcheck   # Go static analysis
+    - unused        # Check for unused constants, variables, functions
+    - gofmt         # Check code formatting
+    - goimports     # Check import order
+    - misspell      # Fix commonly misspelled words
+    - gosec         # Security checker
+    - gocritic      # Opinionated Go linter
+    - revive        # Fast, configurable linter
+    - stylecheck    # Stylecheck is a replacement for golint
+    - unconvert     # Remove unnecessary type conversions
+    - unparam       # Find unused function parameters
+    - gocyclo       # Compute cyclomatic complexity
+    - bodyclose     # Check HTTP response body is closed
+    - noctx         # Find sending http request without context.Context
+    - sqlclosecheck # Check sql.Rows and sql.Stmt are closed
+    - rowserrcheck  # Check whether Err of rows is checked
+    - exportloopref # Check for pointers to enclosing loop variables
+    - gci           # Control Go package import order
+    - godot         # Check if comments end in a period
+
