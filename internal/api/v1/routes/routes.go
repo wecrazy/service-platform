@@ -242,6 +242,7 @@ func HtmlRoutes(
 			tabWhatsapp.GET("/groups/count", controllers.GetWhatsAppGroupsCount(db))
 			tabWhatsapp.GET("/groups/:jid", controllers.GetWhatsAppGroupByJID(db))
 			tabWhatsapp.POST("/groups/sync", controllers.SyncWhatsAppGroups(db))
+			tabWhatsapp.GET("/profile-picture/:jid", controllers.GetWhatsAppProfilePicture)
 			tabWhatsapp.GET("/auto-reply", controllers.GetWhatsAppAutoReplyRules(db))
 			tabWhatsapp.GET("/auto-reply/:id", controllers.GetWhatsAppAutoReplyRule(db))
 			tabWhatsapp.POST("/auto-reply", controllers.CreateWhatsAppAutoReplyRule(db))

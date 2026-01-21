@@ -97,6 +97,8 @@
 		"apps": "Applications"
 	},
 	"table": {
+		"search": "Search",
+		"searchPlaceholder": "Type to search...",
 		"confirmSaveTitle": "Do you want to save the changes?",
 		"saveButton": "Save",
 		"cancelButton": "Cancel",
@@ -194,6 +196,12 @@
 		"groupJID": "JID",
 		"groupMembers": "Members",
 		"groupCreated": "Created",
+		"groupPhoto": "Group Photo",
+		"description": "Description",
+		"groupSettings": "Group Settings",
+		"topic": "Topic",
+		"topicSetAt": "Topic Set At",
+		"descriptionSetAt": "Description Set At",
 		"actions": "Actions",
 		"autoReplyRules": "Auto Reply Rules",
 		"addRule": "Add Rule",
@@ -221,6 +229,7 @@
 		"clientCompanyEmployee": "Client Company Employee",
 		"save": "Save",
 		"groupDetails": "Group Details",
+		"loadingGroupDetails": "Loading group details...",
 		"sync": "Sync",
 		"syncGroupsTitle": "Sync Groups from WhatsApp",
 		"syncGroupsText": "This will sync all groups from your WhatsApp account to the database.",
@@ -292,7 +301,11 @@
 		"contacts_info": "Contacts Information",
 		"contacts_sync_info": "This feature will sync and display your WhatsApp contacts count.",
 		"phone_status": "Phone Status",
-		"phone_status_not_available": "Battery and phone status information is not available through the API yet."
+		"phone_status_not_available": "Battery and phone status information is not available through the API yet.",
+		"imageViewer": "Image Viewer",
+		"download": "Download",
+		"close": "Close",
+		"jid": "JID"
 	},
 	"whatsappUserManagement": {
 		"title": "WhatsApp User Management",

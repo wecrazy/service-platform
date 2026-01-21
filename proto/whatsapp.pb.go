@@ -254,7 +254,13 @@ type GroupInfo struct {
 	// Indicates if this is a parent group (community).
 	IsParent bool `protobuf:"varint,9,opt,name=is_parent,json=isParent,proto3" json:"is_parent,omitempty"`
 	// List of participants in the group.
-	Participants  []*GroupParticipant `protobuf:"bytes,10,rep,name=participants,proto3" json:"participants,omitempty"`
+	Participants []*GroupParticipant `protobuf:"bytes,10,rep,name=participants,proto3" json:"participants,omitempty"`
+	// Description of the group.
+	Description string `protobuf:"bytes,11,opt,name=description,proto3" json:"description,omitempty"`
+	// URL of the group's profile picture.
+	PhotoUrl string `protobuf:"bytes,12,opt,name=photo_url,json=photoUrl,proto3" json:"photo_url,omitempty"`
+	// Group settings and permissions.
+	Settings      *GroupSettings `protobuf:"bytes,13,opt,name=settings,proto3" json:"settings,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -359,6 +365,109 @@ func (x *GroupInfo) GetParticipants() []*GroupParticipant {
 	return nil
 }
 
+func (x *GroupInfo) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *GroupInfo) GetPhotoUrl() string {
+	if x != nil {
+		return x.PhotoUrl
+	}
+	return ""
+}
+
+func (x *GroupInfo) GetSettings() *GroupSettings {
+	if x != nil {
+		return x.Settings
+	}
+	return nil
+}
+
+// GroupSettings contains group settings and permissions.
+type GroupSettings struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Indicates if the group is locked (only admins can change group info).
+	Locked bool `protobuf:"varint,1,opt,name=locked,proto3" json:"locked,omitempty"`
+	// Indicates if the group is announcement-only (only admins can send messages).
+	AnnouncementOnly bool `protobuf:"varint,2,opt,name=announcement_only,json=announcementOnly,proto3" json:"announcement_only,omitempty"`
+	// Indicates if non-admin members can add others.
+	NoFrequentlyForwarded bool `protobuf:"varint,3,opt,name=no_frequently_forwarded,json=noFrequentlyForwarded,proto3" json:"no_frequently_forwarded,omitempty"`
+	// Indicates if the group is ephemeral (messages disappear after a time).
+	Ephemeral bool `protobuf:"varint,4,opt,name=ephemeral,proto3" json:"ephemeral,omitempty"`
+	// Ephemeral duration in seconds (if ephemeral is true).
+	EphemeralDuration int32 `protobuf:"varint,5,opt,name=ephemeral_duration,json=ephemeralDuration,proto3" json:"ephemeral_duration,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *GroupSettings) Reset() {
+	*x = GroupSettings{}
+	mi := &file_proto_whatsapp_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GroupSettings) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GroupSettings) ProtoMessage() {}
+
+func (x *GroupSettings) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_whatsapp_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GroupSettings.ProtoReflect.Descriptor instead.
+func (*GroupSettings) Descriptor() ([]byte, []int) {
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GroupSettings) GetLocked() bool {
+	if x != nil {
+		return x.Locked
+	}
+	return false
+}
+
+func (x *GroupSettings) GetAnnouncementOnly() bool {
+	if x != nil {
+		return x.AnnouncementOnly
+	}
+	return false
+}
+
+func (x *GroupSettings) GetNoFrequentlyForwarded() bool {
+	if x != nil {
+		return x.NoFrequentlyForwarded
+	}
+	return false
+}
+
+func (x *GroupSettings) GetEphemeral() bool {
+	if x != nil {
+		return x.Ephemeral
+	}
+	return false
+}
+
+func (x *GroupSettings) GetEphemeralDuration() int32 {
+	if x != nil {
+		return x.EphemeralDuration
+	}
+	return 0
+}
+
 // IsOnWhatsAppRequest is the request to check if numbers are on WhatsApp.
 type IsOnWhatsAppRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -370,7 +479,7 @@ type IsOnWhatsAppRequest struct {
 
 func (x *IsOnWhatsAppRequest) Reset() {
 	*x = IsOnWhatsAppRequest{}
-	mi := &file_proto_whatsapp_proto_msgTypes[5]
+	mi := &file_proto_whatsapp_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -382,7 +491,7 @@ func (x *IsOnWhatsAppRequest) String() string {
 func (*IsOnWhatsAppRequest) ProtoMessage() {}
 
 func (x *IsOnWhatsAppRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[5]
+	mi := &file_proto_whatsapp_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -395,7 +504,7 @@ func (x *IsOnWhatsAppRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsOnWhatsAppRequest.ProtoReflect.Descriptor instead.
 func (*IsOnWhatsAppRequest) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{5}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *IsOnWhatsAppRequest) GetPhoneNumbers() []string {
@@ -420,7 +529,7 @@ type IsOnWhatsAppResponse struct {
 
 func (x *IsOnWhatsAppResponse) Reset() {
 	*x = IsOnWhatsAppResponse{}
-	mi := &file_proto_whatsapp_proto_msgTypes[6]
+	mi := &file_proto_whatsapp_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -432,7 +541,7 @@ func (x *IsOnWhatsAppResponse) String() string {
 func (*IsOnWhatsAppResponse) ProtoMessage() {}
 
 func (x *IsOnWhatsAppResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[6]
+	mi := &file_proto_whatsapp_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -445,7 +554,7 @@ func (x *IsOnWhatsAppResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsOnWhatsAppResponse.ProtoReflect.Descriptor instead.
 func (*IsOnWhatsAppResponse) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{6}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *IsOnWhatsAppResponse) GetSuccess() bool {
@@ -484,7 +593,7 @@ type OnWhatsAppResult struct {
 
 func (x *OnWhatsAppResult) Reset() {
 	*x = OnWhatsAppResult{}
-	mi := &file_proto_whatsapp_proto_msgTypes[7]
+	mi := &file_proto_whatsapp_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -496,7 +605,7 @@ func (x *OnWhatsAppResult) String() string {
 func (*OnWhatsAppResult) ProtoMessage() {}
 
 func (x *OnWhatsAppResult) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[7]
+	mi := &file_proto_whatsapp_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -509,7 +618,7 @@ func (x *OnWhatsAppResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OnWhatsAppResult.ProtoReflect.Descriptor instead.
 func (*OnWhatsAppResult) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{7}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *OnWhatsAppResult) GetQuery() string {
@@ -542,7 +651,7 @@ type GetMeRequest struct {
 
 func (x *GetMeRequest) Reset() {
 	*x = GetMeRequest{}
-	mi := &file_proto_whatsapp_proto_msgTypes[8]
+	mi := &file_proto_whatsapp_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -554,7 +663,7 @@ func (x *GetMeRequest) String() string {
 func (*GetMeRequest) ProtoMessage() {}
 
 func (x *GetMeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[8]
+	mi := &file_proto_whatsapp_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -567,7 +676,7 @@ func (x *GetMeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMeRequest.ProtoReflect.Descriptor instead.
 func (*GetMeRequest) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{8}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{9}
 }
 
 // GetMeResponse contains the current user's info.
@@ -595,7 +704,7 @@ type GetMeResponse struct {
 
 func (x *GetMeResponse) Reset() {
 	*x = GetMeResponse{}
-	mi := &file_proto_whatsapp_proto_msgTypes[9]
+	mi := &file_proto_whatsapp_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -607,7 +716,7 @@ func (x *GetMeResponse) String() string {
 func (*GetMeResponse) ProtoMessage() {}
 
 func (x *GetMeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[9]
+	mi := &file_proto_whatsapp_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -620,7 +729,7 @@ func (x *GetMeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMeResponse.ProtoReflect.Descriptor instead.
 func (*GetMeResponse) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{9}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetMeResponse) GetSuccess() bool {
@@ -690,7 +799,7 @@ type GetGroupInfoRequest struct {
 
 func (x *GetGroupInfoRequest) Reset() {
 	*x = GetGroupInfoRequest{}
-	mi := &file_proto_whatsapp_proto_msgTypes[10]
+	mi := &file_proto_whatsapp_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -702,7 +811,7 @@ func (x *GetGroupInfoRequest) String() string {
 func (*GetGroupInfoRequest) ProtoMessage() {}
 
 func (x *GetGroupInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[10]
+	mi := &file_proto_whatsapp_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -715,7 +824,7 @@ func (x *GetGroupInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGroupInfoRequest.ProtoReflect.Descriptor instead.
 func (*GetGroupInfoRequest) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{10}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetGroupInfoRequest) GetGroupJid() string {
@@ -735,14 +844,36 @@ type GetGroupInfoResponse struct {
 	// Name of the group.
 	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	// List of participants in the group.
-	Participants  []*GroupParticipant `protobuf:"bytes,4,rep,name=participants,proto3" json:"participants,omitempty"`
+	Participants []*GroupParticipant `protobuf:"bytes,4,rep,name=participants,proto3" json:"participants,omitempty"`
+	// JID of the group.
+	Jid string `protobuf:"bytes,5,opt,name=jid,proto3" json:"jid,omitempty"`
+	// JID of the group owner.
+	OwnerJid string `protobuf:"bytes,6,opt,name=owner_jid,json=ownerJid,proto3" json:"owner_jid,omitempty"`
+	// Topic of the group.
+	Topic string `protobuf:"bytes,7,opt,name=topic,proto3" json:"topic,omitempty"`
+	// Timestamp when the topic was set.
+	TopicSetAt int64 `protobuf:"varint,8,opt,name=topic_set_at,json=topicSetAt,proto3" json:"topic_set_at,omitempty"`
+	// JID of the user who set the topic.
+	TopicSetBy string `protobuf:"bytes,9,opt,name=topic_set_by,json=topicSetBy,proto3" json:"topic_set_by,omitempty"`
+	// JID of the parent group (if applicable).
+	LinkedParentJid string `protobuf:"bytes,10,opt,name=linked_parent_jid,json=linkedParentJid,proto3" json:"linked_parent_jid,omitempty"`
+	// Indicates if this is a default sub-group.
+	IsDefaultSubGroup bool `protobuf:"varint,11,opt,name=is_default_sub_group,json=isDefaultSubGroup,proto3" json:"is_default_sub_group,omitempty"`
+	// Indicates if this is a parent group (community).
+	IsParent bool `protobuf:"varint,12,opt,name=is_parent,json=isParent,proto3" json:"is_parent,omitempty"`
+	// Description of the group.
+	Description string `protobuf:"bytes,13,opt,name=description,proto3" json:"description,omitempty"`
+	// URL of the group's profile picture.
+	PhotoUrl string `protobuf:"bytes,14,opt,name=photo_url,json=photoUrl,proto3" json:"photo_url,omitempty"`
+	// Group settings and permissions.
+	Settings      *GroupSettings `protobuf:"bytes,15,opt,name=settings,proto3" json:"settings,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetGroupInfoResponse) Reset() {
 	*x = GetGroupInfoResponse{}
-	mi := &file_proto_whatsapp_proto_msgTypes[11]
+	mi := &file_proto_whatsapp_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -754,7 +885,7 @@ func (x *GetGroupInfoResponse) String() string {
 func (*GetGroupInfoResponse) ProtoMessage() {}
 
 func (x *GetGroupInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[11]
+	mi := &file_proto_whatsapp_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -767,7 +898,7 @@ func (x *GetGroupInfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGroupInfoResponse.ProtoReflect.Descriptor instead.
 func (*GetGroupInfoResponse) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{11}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetGroupInfoResponse) GetSuccess() bool {
@@ -798,6 +929,83 @@ func (x *GetGroupInfoResponse) GetParticipants() []*GroupParticipant {
 	return nil
 }
 
+func (x *GetGroupInfoResponse) GetJid() string {
+	if x != nil {
+		return x.Jid
+	}
+	return ""
+}
+
+func (x *GetGroupInfoResponse) GetOwnerJid() string {
+	if x != nil {
+		return x.OwnerJid
+	}
+	return ""
+}
+
+func (x *GetGroupInfoResponse) GetTopic() string {
+	if x != nil {
+		return x.Topic
+	}
+	return ""
+}
+
+func (x *GetGroupInfoResponse) GetTopicSetAt() int64 {
+	if x != nil {
+		return x.TopicSetAt
+	}
+	return 0
+}
+
+func (x *GetGroupInfoResponse) GetTopicSetBy() string {
+	if x != nil {
+		return x.TopicSetBy
+	}
+	return ""
+}
+
+func (x *GetGroupInfoResponse) GetLinkedParentJid() string {
+	if x != nil {
+		return x.LinkedParentJid
+	}
+	return ""
+}
+
+func (x *GetGroupInfoResponse) GetIsDefaultSubGroup() bool {
+	if x != nil {
+		return x.IsDefaultSubGroup
+	}
+	return false
+}
+
+func (x *GetGroupInfoResponse) GetIsParent() bool {
+	if x != nil {
+		return x.IsParent
+	}
+	return false
+}
+
+func (x *GetGroupInfoResponse) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *GetGroupInfoResponse) GetPhotoUrl() string {
+	if x != nil {
+		return x.PhotoUrl
+	}
+	return ""
+}
+
+func (x *GetGroupInfoResponse) GetSettings() *GroupSettings {
+	if x != nil {
+		return x.Settings
+	}
+	return nil
+}
+
 // GroupParticipant contains details about a group member.
 type GroupParticipant struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -821,7 +1029,7 @@ type GroupParticipant struct {
 
 func (x *GroupParticipant) Reset() {
 	*x = GroupParticipant{}
-	mi := &file_proto_whatsapp_proto_msgTypes[12]
+	mi := &file_proto_whatsapp_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -833,7 +1041,7 @@ func (x *GroupParticipant) String() string {
 func (*GroupParticipant) ProtoMessage() {}
 
 func (x *GroupParticipant) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[12]
+	mi := &file_proto_whatsapp_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -846,7 +1054,7 @@ func (x *GroupParticipant) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GroupParticipant.ProtoReflect.Descriptor instead.
 func (*GroupParticipant) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{12}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GroupParticipant) GetJid() string {
@@ -909,7 +1117,7 @@ type RefreshQRRequest struct {
 
 func (x *RefreshQRRequest) Reset() {
 	*x = RefreshQRRequest{}
-	mi := &file_proto_whatsapp_proto_msgTypes[13]
+	mi := &file_proto_whatsapp_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -921,7 +1129,7 @@ func (x *RefreshQRRequest) String() string {
 func (*RefreshQRRequest) ProtoMessage() {}
 
 func (x *RefreshQRRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[13]
+	mi := &file_proto_whatsapp_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -934,7 +1142,7 @@ func (x *RefreshQRRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RefreshQRRequest.ProtoReflect.Descriptor instead.
 func (*RefreshQRRequest) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{13}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *RefreshQRRequest) GetPhoneNumber() string {
@@ -955,7 +1163,7 @@ type WALogoutRequest struct {
 
 func (x *WALogoutRequest) Reset() {
 	*x = WALogoutRequest{}
-	mi := &file_proto_whatsapp_proto_msgTypes[14]
+	mi := &file_proto_whatsapp_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -967,7 +1175,7 @@ func (x *WALogoutRequest) String() string {
 func (*WALogoutRequest) ProtoMessage() {}
 
 func (x *WALogoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[14]
+	mi := &file_proto_whatsapp_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -980,7 +1188,7 @@ func (x *WALogoutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WALogoutRequest.ProtoReflect.Descriptor instead.
 func (*WALogoutRequest) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{14}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *WALogoutRequest) GetPhoneNumber() string {
@@ -1003,7 +1211,7 @@ type WALogoutResponse struct {
 
 func (x *WALogoutResponse) Reset() {
 	*x = WALogoutResponse{}
-	mi := &file_proto_whatsapp_proto_msgTypes[15]
+	mi := &file_proto_whatsapp_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1015,7 +1223,7 @@ func (x *WALogoutResponse) String() string {
 func (*WALogoutResponse) ProtoMessage() {}
 
 func (x *WALogoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[15]
+	mi := &file_proto_whatsapp_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1028,7 +1236,7 @@ func (x *WALogoutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WALogoutResponse.ProtoReflect.Descriptor instead.
 func (*WALogoutResponse) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{15}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *WALogoutResponse) GetSuccess() bool {
@@ -1062,7 +1270,7 @@ type CreateStatusRequest struct {
 
 func (x *CreateStatusRequest) Reset() {
 	*x = CreateStatusRequest{}
-	mi := &file_proto_whatsapp_proto_msgTypes[16]
+	mi := &file_proto_whatsapp_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1074,7 +1282,7 @@ func (x *CreateStatusRequest) String() string {
 func (*CreateStatusRequest) ProtoMessage() {}
 
 func (x *CreateStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[16]
+	mi := &file_proto_whatsapp_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1087,7 +1295,7 @@ func (x *CreateStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateStatusRequest.ProtoReflect.Descriptor instead.
 func (*CreateStatusRequest) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{16}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *CreateStatusRequest) GetContent() *MessageContent {
@@ -1133,7 +1341,7 @@ type CreateStatusResponse struct {
 
 func (x *CreateStatusResponse) Reset() {
 	*x = CreateStatusResponse{}
-	mi := &file_proto_whatsapp_proto_msgTypes[17]
+	mi := &file_proto_whatsapp_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1145,7 +1353,7 @@ func (x *CreateStatusResponse) String() string {
 func (*CreateStatusResponse) ProtoMessage() {}
 
 func (x *CreateStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[17]
+	mi := &file_proto_whatsapp_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1158,7 +1366,7 @@ func (x *CreateStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateStatusResponse.ProtoReflect.Descriptor instead.
 func (*CreateStatusResponse) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{17}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *CreateStatusResponse) GetSuccess() bool {
@@ -1195,7 +1403,7 @@ type SendMessageRequest struct {
 
 func (x *SendMessageRequest) Reset() {
 	*x = SendMessageRequest{}
-	mi := &file_proto_whatsapp_proto_msgTypes[18]
+	mi := &file_proto_whatsapp_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1207,7 +1415,7 @@ func (x *SendMessageRequest) String() string {
 func (*SendMessageRequest) ProtoMessage() {}
 
 func (x *SendMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[18]
+	mi := &file_proto_whatsapp_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1220,7 +1428,7 @@ func (x *SendMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendMessageRequest.ProtoReflect.Descriptor instead.
 func (*SendMessageRequest) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{18}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *SendMessageRequest) GetTo() string {
@@ -1255,7 +1463,7 @@ type MessageContent struct {
 
 func (x *MessageContent) Reset() {
 	*x = MessageContent{}
-	mi := &file_proto_whatsapp_proto_msgTypes[19]
+	mi := &file_proto_whatsapp_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1267,7 +1475,7 @@ func (x *MessageContent) String() string {
 func (*MessageContent) ProtoMessage() {}
 
 func (x *MessageContent) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[19]
+	mi := &file_proto_whatsapp_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1280,7 +1488,7 @@ func (x *MessageContent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessageContent.ProtoReflect.Descriptor instead.
 func (*MessageContent) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{19}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *MessageContent) GetContentType() isMessageContent_ContentType {
@@ -1407,7 +1615,7 @@ type LocationContent struct {
 
 func (x *LocationContent) Reset() {
 	*x = LocationContent{}
-	mi := &file_proto_whatsapp_proto_msgTypes[20]
+	mi := &file_proto_whatsapp_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1419,7 +1627,7 @@ func (x *LocationContent) String() string {
 func (*LocationContent) ProtoMessage() {}
 
 func (x *LocationContent) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[20]
+	mi := &file_proto_whatsapp_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1432,7 +1640,7 @@ func (x *LocationContent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LocationContent.ProtoReflect.Descriptor instead.
 func (*LocationContent) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{20}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *LocationContent) GetLatitude() float64 {
@@ -1488,7 +1696,7 @@ type LiveLocationContent struct {
 
 func (x *LiveLocationContent) Reset() {
 	*x = LiveLocationContent{}
-	mi := &file_proto_whatsapp_proto_msgTypes[21]
+	mi := &file_proto_whatsapp_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1500,7 +1708,7 @@ func (x *LiveLocationContent) String() string {
 func (*LiveLocationContent) ProtoMessage() {}
 
 func (x *LiveLocationContent) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[21]
+	mi := &file_proto_whatsapp_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1513,7 +1721,7 @@ func (x *LiveLocationContent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LiveLocationContent.ProtoReflect.Descriptor instead.
 func (*LiveLocationContent) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{21}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *LiveLocationContent) GetLatitude() float64 {
@@ -1587,7 +1795,7 @@ type PollContent struct {
 
 func (x *PollContent) Reset() {
 	*x = PollContent{}
-	mi := &file_proto_whatsapp_proto_msgTypes[22]
+	mi := &file_proto_whatsapp_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1599,7 +1807,7 @@ func (x *PollContent) String() string {
 func (*PollContent) ProtoMessage() {}
 
 func (x *PollContent) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[22]
+	mi := &file_proto_whatsapp_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1612,7 +1820,7 @@ func (x *PollContent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PollContent.ProtoReflect.Descriptor instead.
 func (*PollContent) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{22}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *PollContent) GetName() string {
@@ -1649,7 +1857,7 @@ type ContactContent struct {
 
 func (x *ContactContent) Reset() {
 	*x = ContactContent{}
-	mi := &file_proto_whatsapp_proto_msgTypes[23]
+	mi := &file_proto_whatsapp_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1661,7 +1869,7 @@ func (x *ContactContent) String() string {
 func (*ContactContent) ProtoMessage() {}
 
 func (x *ContactContent) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[23]
+	mi := &file_proto_whatsapp_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1674,7 +1882,7 @@ func (x *ContactContent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContactContent.ProtoReflect.Descriptor instead.
 func (*ContactContent) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{23}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ContactContent) GetDisplayName() string {
@@ -1712,7 +1920,7 @@ type MediaContent struct {
 
 func (x *MediaContent) Reset() {
 	*x = MediaContent{}
-	mi := &file_proto_whatsapp_proto_msgTypes[24]
+	mi := &file_proto_whatsapp_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1724,7 +1932,7 @@ func (x *MediaContent) String() string {
 func (*MediaContent) ProtoMessage() {}
 
 func (x *MediaContent) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[24]
+	mi := &file_proto_whatsapp_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1737,7 +1945,7 @@ func (x *MediaContent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MediaContent.ProtoReflect.Descriptor instead.
 func (*MediaContent) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{24}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *MediaContent) GetMediaType() string {
@@ -1799,7 +2007,7 @@ type SendMessageResponse struct {
 
 func (x *SendMessageResponse) Reset() {
 	*x = SendMessageResponse{}
-	mi := &file_proto_whatsapp_proto_msgTypes[25]
+	mi := &file_proto_whatsapp_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1811,7 +2019,7 @@ func (x *SendMessageResponse) String() string {
 func (*SendMessageResponse) ProtoMessage() {}
 
 func (x *SendMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[25]
+	mi := &file_proto_whatsapp_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1824,7 +2032,7 @@ func (x *SendMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendMessageResponse.ProtoReflect.Descriptor instead.
 func (*SendMessageResponse) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{25}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *SendMessageResponse) GetSuccess() bool {
@@ -1868,7 +2076,7 @@ type GetMessagesRequest struct {
 
 func (x *GetMessagesRequest) Reset() {
 	*x = GetMessagesRequest{}
-	mi := &file_proto_whatsapp_proto_msgTypes[26]
+	mi := &file_proto_whatsapp_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1880,7 +2088,7 @@ func (x *GetMessagesRequest) String() string {
 func (*GetMessagesRequest) ProtoMessage() {}
 
 func (x *GetMessagesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[26]
+	mi := &file_proto_whatsapp_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1893,7 +2101,7 @@ func (x *GetMessagesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMessagesRequest.ProtoReflect.Descriptor instead.
 func (*GetMessagesRequest) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{26}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *GetMessagesRequest) GetFrom() string {
@@ -1921,7 +2129,7 @@ type GetMessagesResponse struct {
 
 func (x *GetMessagesResponse) Reset() {
 	*x = GetMessagesResponse{}
-	mi := &file_proto_whatsapp_proto_msgTypes[27]
+	mi := &file_proto_whatsapp_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1933,7 +2141,7 @@ func (x *GetMessagesResponse) String() string {
 func (*GetMessagesResponse) ProtoMessage() {}
 
 func (x *GetMessagesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[27]
+	mi := &file_proto_whatsapp_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1946,7 +2154,7 @@ func (x *GetMessagesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMessagesResponse.ProtoReflect.Descriptor instead.
 func (*GetMessagesResponse) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{27}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *GetMessagesResponse) GetMessages() []*Message {
@@ -1979,7 +2187,7 @@ type Message struct {
 
 func (x *Message) Reset() {
 	*x = Message{}
-	mi := &file_proto_whatsapp_proto_msgTypes[28]
+	mi := &file_proto_whatsapp_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1991,7 +2199,7 @@ func (x *Message) String() string {
 func (*Message) ProtoMessage() {}
 
 func (x *Message) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[28]
+	mi := &file_proto_whatsapp_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2004,7 +2212,7 @@ func (x *Message) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Message.ProtoReflect.Descriptor instead.
 func (*Message) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{28}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *Message) GetFrom() string {
@@ -2067,7 +2275,7 @@ type ConnectRequest struct {
 
 func (x *ConnectRequest) Reset() {
 	*x = ConnectRequest{}
-	mi := &file_proto_whatsapp_proto_msgTypes[29]
+	mi := &file_proto_whatsapp_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2079,7 +2287,7 @@ func (x *ConnectRequest) String() string {
 func (*ConnectRequest) ProtoMessage() {}
 
 func (x *ConnectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[29]
+	mi := &file_proto_whatsapp_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2092,7 +2300,7 @@ func (x *ConnectRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectRequest.ProtoReflect.Descriptor instead.
 func (*ConnectRequest) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{29}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *ConnectRequest) GetPhoneNumber() string {
@@ -2119,7 +2327,7 @@ type ConnectResponse struct {
 
 func (x *ConnectResponse) Reset() {
 	*x = ConnectResponse{}
-	mi := &file_proto_whatsapp_proto_msgTypes[30]
+	mi := &file_proto_whatsapp_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2131,7 +2339,7 @@ func (x *ConnectResponse) String() string {
 func (*ConnectResponse) ProtoMessage() {}
 
 func (x *ConnectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[30]
+	mi := &file_proto_whatsapp_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2144,7 +2352,7 @@ func (x *ConnectResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectResponse.ProtoReflect.Descriptor instead.
 func (*ConnectResponse) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{30}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *ConnectResponse) GetSuccess() bool {
@@ -2186,7 +2394,7 @@ type DisconnectRequest struct {
 
 func (x *DisconnectRequest) Reset() {
 	*x = DisconnectRequest{}
-	mi := &file_proto_whatsapp_proto_msgTypes[31]
+	mi := &file_proto_whatsapp_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2198,7 +2406,7 @@ func (x *DisconnectRequest) String() string {
 func (*DisconnectRequest) ProtoMessage() {}
 
 func (x *DisconnectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[31]
+	mi := &file_proto_whatsapp_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2211,7 +2419,7 @@ func (x *DisconnectRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DisconnectRequest.ProtoReflect.Descriptor instead.
 func (*DisconnectRequest) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{31}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *DisconnectRequest) GetPhoneNumber() string {
@@ -2234,7 +2442,7 @@ type DisconnectResponse struct {
 
 func (x *DisconnectResponse) Reset() {
 	*x = DisconnectResponse{}
-	mi := &file_proto_whatsapp_proto_msgTypes[32]
+	mi := &file_proto_whatsapp_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2246,7 +2454,7 @@ func (x *DisconnectResponse) String() string {
 func (*DisconnectResponse) ProtoMessage() {}
 
 func (x *DisconnectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_whatsapp_proto_msgTypes[32]
+	mi := &file_proto_whatsapp_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2259,7 +2467,7 @@ func (x *DisconnectResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DisconnectResponse.ProtoReflect.Descriptor instead.
 func (*DisconnectResponse) Descriptor() ([]byte, []int) {
-	return file_proto_whatsapp_proto_rawDescGZIP(), []int{32}
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *DisconnectResponse) GetSuccess() bool {
@@ -2272,6 +2480,125 @@ func (x *DisconnectResponse) GetSuccess() bool {
 func (x *DisconnectResponse) GetMessage() string {
 	if x != nil {
 		return x.Message
+	}
+	return ""
+}
+
+// GetProfilePictureRequest is the request to get a user's profile picture.
+type GetProfilePictureRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// JID of the user whose profile picture to retrieve.
+	Jid           string `protobuf:"bytes,1,opt,name=jid,proto3" json:"jid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProfilePictureRequest) Reset() {
+	*x = GetProfilePictureRequest{}
+	mi := &file_proto_whatsapp_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProfilePictureRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProfilePictureRequest) ProtoMessage() {}
+
+func (x *GetProfilePictureRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_whatsapp_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProfilePictureRequest.ProtoReflect.Descriptor instead.
+func (*GetProfilePictureRequest) Descriptor() ([]byte, []int) {
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *GetProfilePictureRequest) GetJid() string {
+	if x != nil {
+		return x.Jid
+	}
+	return ""
+}
+
+// GetProfilePictureResponse contains the profile picture data.
+type GetProfilePictureResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Indicates if the operation was successful.
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	// Message describing the result.
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	// The profile picture data as bytes.
+	ImageData []byte `protobuf:"bytes,3,opt,name=image_data,json=imageData,proto3" json:"image_data,omitempty"`
+	// The MIME type of the image.
+	ContentType   string `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProfilePictureResponse) Reset() {
+	*x = GetProfilePictureResponse{}
+	mi := &file_proto_whatsapp_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProfilePictureResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProfilePictureResponse) ProtoMessage() {}
+
+func (x *GetProfilePictureResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_whatsapp_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProfilePictureResponse.ProtoReflect.Descriptor instead.
+func (*GetProfilePictureResponse) Descriptor() ([]byte, []int) {
+	return file_proto_whatsapp_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *GetProfilePictureResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *GetProfilePictureResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *GetProfilePictureResponse) GetImageData() []byte {
+	if x != nil {
+		return x.ImageData
+	}
+	return nil
+}
+
+func (x *GetProfilePictureResponse) GetContentType() string {
+	if x != nil {
+		return x.ContentType
 	}
 	return ""
 }
@@ -2291,7 +2618,7 @@ const file_proto_whatsapp_proto_rawDesc = "" +
 	"\x17GetJoinedGroupsResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12(\n" +
-	"\x06groups\x18\x03 \x03(\v2\x10.proto.GroupInfoR\x06groups\"\xdf\x02\n" +
+	"\x06groups\x18\x03 \x03(\v2\x10.proto.GroupInfoR\x06groups\"\xd0\x03\n" +
 	"\tGroupInfo\x12\x10\n" +
 	"\x03jid\x18\x01 \x01(\tR\x03jid\x12\x1b\n" +
 	"\towner_jid\x18\x02 \x01(\tR\bownerJid\x12\x12\n" +
@@ -2305,7 +2632,16 @@ const file_proto_whatsapp_proto_rawDesc = "" +
 	"\x14is_default_sub_group\x18\b \x01(\bR\x11isDefaultSubGroup\x12\x1b\n" +
 	"\tis_parent\x18\t \x01(\bR\bisParent\x12;\n" +
 	"\fparticipants\x18\n" +
-	" \x03(\v2\x17.proto.GroupParticipantR\fparticipants\":\n" +
+	" \x03(\v2\x17.proto.GroupParticipantR\fparticipants\x12 \n" +
+	"\vdescription\x18\v \x01(\tR\vdescription\x12\x1b\n" +
+	"\tphoto_url\x18\f \x01(\tR\bphotoUrl\x120\n" +
+	"\bsettings\x18\r \x01(\v2\x14.proto.GroupSettingsR\bsettings\"\xd9\x01\n" +
+	"\rGroupSettings\x12\x16\n" +
+	"\x06locked\x18\x01 \x01(\bR\x06locked\x12+\n" +
+	"\x11announcement_only\x18\x02 \x01(\bR\x10announcementOnly\x126\n" +
+	"\x17no_frequently_forwarded\x18\x03 \x01(\bR\x15noFrequentlyForwarded\x12\x1c\n" +
+	"\tephemeral\x18\x04 \x01(\bR\tephemeral\x12-\n" +
+	"\x12ephemeral_duration\x18\x05 \x01(\x05R\x11ephemeralDuration\":\n" +
 	"\x13IsOnWhatsAppRequest\x12#\n" +
 	"\rphone_numbers\x18\x01 \x03(\tR\fphoneNumbers\"}\n" +
 	"\x14IsOnWhatsAppResponse\x12\x18\n" +
@@ -2327,12 +2663,26 @@ const file_proto_whatsapp_proto_rawDesc = "" +
 	"\x06device\x18\a \x01(\tR\x06device\x12\x1a\n" +
 	"\bplatform\x18\b \x01(\tR\bplatform\"2\n" +
 	"\x13GetGroupInfoRequest\x12\x1b\n" +
-	"\tgroup_jid\x18\x01 \x01(\tR\bgroupJid\"\x9b\x01\n" +
+	"\tgroup_jid\x18\x01 \x01(\tR\bgroupJid\"\x8f\x04\n" +
 	"\x14GetGroupInfoResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12;\n" +
-	"\fparticipants\x18\x04 \x03(\v2\x17.proto.GroupParticipantR\fparticipants\"\xed\x01\n" +
+	"\fparticipants\x18\x04 \x03(\v2\x17.proto.GroupParticipantR\fparticipants\x12\x10\n" +
+	"\x03jid\x18\x05 \x01(\tR\x03jid\x12\x1b\n" +
+	"\towner_jid\x18\x06 \x01(\tR\bownerJid\x12\x14\n" +
+	"\x05topic\x18\a \x01(\tR\x05topic\x12 \n" +
+	"\ftopic_set_at\x18\b \x01(\x03R\n" +
+	"topicSetAt\x12 \n" +
+	"\ftopic_set_by\x18\t \x01(\tR\n" +
+	"topicSetBy\x12*\n" +
+	"\x11linked_parent_jid\x18\n" +
+	" \x01(\tR\x0flinkedParentJid\x12/\n" +
+	"\x14is_default_sub_group\x18\v \x01(\bR\x11isDefaultSubGroup\x12\x1b\n" +
+	"\tis_parent\x18\f \x01(\bR\bisParent\x12 \n" +
+	"\vdescription\x18\r \x01(\tR\vdescription\x12\x1b\n" +
+	"\tphoto_url\x18\x0e \x01(\tR\bphotoUrl\x120\n" +
+	"\bsettings\x18\x0f \x01(\v2\x14.proto.GroupSettingsR\bsettings\"\xed\x01\n" +
 	"\x10GroupParticipant\x12\x10\n" +
 	"\x03jid\x18\x01 \x01(\tR\x03jid\x12\x19\n" +
 	"\bis_admin\x18\x02 \x01(\bR\aisAdmin\x12$\n" +
@@ -2429,7 +2779,15 @@ const file_proto_whatsapp_proto_rawDesc = "" +
 	"\fphone_number\x18\x01 \x01(\tR\vphoneNumber\"H\n" +
 	"\x12DisconnectResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage2\xba\x06\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\",\n" +
+	"\x18GetProfilePictureRequest\x12\x10\n" +
+	"\x03jid\x18\x01 \x01(\tR\x03jid\"\x91\x01\n" +
+	"\x19GetProfilePictureResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +
+	"\n" +
+	"image_data\x18\x03 \x01(\fR\timageData\x12!\n" +
+	"\fcontent_type\x18\x04 \x01(\tR\vcontentType2\x92\a\n" +
 	"\x0fWhatsAppService\x12D\n" +
 	"\vSendMessage\x12\x19.proto.SendMessageRequest\x1a\x1a.proto.SendMessageResponse\x12D\n" +
 	"\vGetMessages\x12\x19.proto.GetMessagesRequest\x1a\x1a.proto.GetMessagesResponse\x128\n" +
@@ -2443,7 +2801,8 @@ const file_proto_whatsapp_proto_rawDesc = "" +
 	"\fIsOnWhatsApp\x12\x1a.proto.IsOnWhatsAppRequest\x1a\x1b.proto.IsOnWhatsAppResponse\x12P\n" +
 	"\x0fGetJoinedGroups\x12\x1d.proto.GetJoinedGroupsRequest\x1a\x1e.proto.GetJoinedGroupsResponse\x12G\n" +
 	"\fCreateStatus\x12\x1a.proto.CreateStatusRequest\x1a\x1b.proto.CreateStatusResponse\x12D\n" +
-	"\vHasContacts\x12\x19.proto.HasContactsRequest\x1a\x1a.proto.HasContactsResponseB\x18Z\x16service-platform/protob\x06proto3"
+	"\vHasContacts\x12\x19.proto.HasContactsRequest\x1a\x1a.proto.HasContactsResponse\x12V\n" +
+	"\x11GetProfilePicture\x12\x1f.proto.GetProfilePictureRequest\x1a .proto.GetProfilePictureResponseB\x18Z\x16service-platform/protob\x06proto3"
 
 var (
 	file_proto_whatsapp_proto_rawDescOnce sync.Once
@@ -2457,84 +2816,91 @@ func file_proto_whatsapp_proto_rawDescGZIP() []byte {
 	return file_proto_whatsapp_proto_rawDescData
 }
 
-var file_proto_whatsapp_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
+var file_proto_whatsapp_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
 var file_proto_whatsapp_proto_goTypes = []any{
-	(*HasContactsRequest)(nil),      // 0: proto.HasContactsRequest
-	(*HasContactsResponse)(nil),     // 1: proto.HasContactsResponse
-	(*GetJoinedGroupsRequest)(nil),  // 2: proto.GetJoinedGroupsRequest
-	(*GetJoinedGroupsResponse)(nil), // 3: proto.GetJoinedGroupsResponse
-	(*GroupInfo)(nil),               // 4: proto.GroupInfo
-	(*IsOnWhatsAppRequest)(nil),     // 5: proto.IsOnWhatsAppRequest
-	(*IsOnWhatsAppResponse)(nil),    // 6: proto.IsOnWhatsAppResponse
-	(*OnWhatsAppResult)(nil),        // 7: proto.OnWhatsAppResult
-	(*GetMeRequest)(nil),            // 8: proto.GetMeRequest
-	(*GetMeResponse)(nil),           // 9: proto.GetMeResponse
-	(*GetGroupInfoRequest)(nil),     // 10: proto.GetGroupInfoRequest
-	(*GetGroupInfoResponse)(nil),    // 11: proto.GetGroupInfoResponse
-	(*GroupParticipant)(nil),        // 12: proto.GroupParticipant
-	(*RefreshQRRequest)(nil),        // 13: proto.RefreshQRRequest
-	(*WALogoutRequest)(nil),         // 14: proto.WALogoutRequest
-	(*WALogoutResponse)(nil),        // 15: proto.WALogoutResponse
-	(*CreateStatusRequest)(nil),     // 16: proto.CreateStatusRequest
-	(*CreateStatusResponse)(nil),    // 17: proto.CreateStatusResponse
-	(*SendMessageRequest)(nil),      // 18: proto.SendMessageRequest
-	(*MessageContent)(nil),          // 19: proto.MessageContent
-	(*LocationContent)(nil),         // 20: proto.LocationContent
-	(*LiveLocationContent)(nil),     // 21: proto.LiveLocationContent
-	(*PollContent)(nil),             // 22: proto.PollContent
-	(*ContactContent)(nil),          // 23: proto.ContactContent
-	(*MediaContent)(nil),            // 24: proto.MediaContent
-	(*SendMessageResponse)(nil),     // 25: proto.SendMessageResponse
-	(*GetMessagesRequest)(nil),      // 26: proto.GetMessagesRequest
-	(*GetMessagesResponse)(nil),     // 27: proto.GetMessagesResponse
-	(*Message)(nil),                 // 28: proto.Message
-	(*ConnectRequest)(nil),          // 29: proto.ConnectRequest
-	(*ConnectResponse)(nil),         // 30: proto.ConnectResponse
-	(*DisconnectRequest)(nil),       // 31: proto.DisconnectRequest
-	(*DisconnectResponse)(nil),      // 32: proto.DisconnectResponse
+	(*HasContactsRequest)(nil),        // 0: proto.HasContactsRequest
+	(*HasContactsResponse)(nil),       // 1: proto.HasContactsResponse
+	(*GetJoinedGroupsRequest)(nil),    // 2: proto.GetJoinedGroupsRequest
+	(*GetJoinedGroupsResponse)(nil),   // 3: proto.GetJoinedGroupsResponse
+	(*GroupInfo)(nil),                 // 4: proto.GroupInfo
+	(*GroupSettings)(nil),             // 5: proto.GroupSettings
+	(*IsOnWhatsAppRequest)(nil),       // 6: proto.IsOnWhatsAppRequest
+	(*IsOnWhatsAppResponse)(nil),      // 7: proto.IsOnWhatsAppResponse
+	(*OnWhatsAppResult)(nil),          // 8: proto.OnWhatsAppResult
+	(*GetMeRequest)(nil),              // 9: proto.GetMeRequest
+	(*GetMeResponse)(nil),             // 10: proto.GetMeResponse
+	(*GetGroupInfoRequest)(nil),       // 11: proto.GetGroupInfoRequest
+	(*GetGroupInfoResponse)(nil),      // 12: proto.GetGroupInfoResponse
+	(*GroupParticipant)(nil),          // 13: proto.GroupParticipant
+	(*RefreshQRRequest)(nil),          // 14: proto.RefreshQRRequest
+	(*WALogoutRequest)(nil),           // 15: proto.WALogoutRequest
+	(*WALogoutResponse)(nil),          // 16: proto.WALogoutResponse
+	(*CreateStatusRequest)(nil),       // 17: proto.CreateStatusRequest
+	(*CreateStatusResponse)(nil),      // 18: proto.CreateStatusResponse
+	(*SendMessageRequest)(nil),        // 19: proto.SendMessageRequest
+	(*MessageContent)(nil),            // 20: proto.MessageContent
+	(*LocationContent)(nil),           // 21: proto.LocationContent
+	(*LiveLocationContent)(nil),       // 22: proto.LiveLocationContent
+	(*PollContent)(nil),               // 23: proto.PollContent
+	(*ContactContent)(nil),            // 24: proto.ContactContent
+	(*MediaContent)(nil),              // 25: proto.MediaContent
+	(*SendMessageResponse)(nil),       // 26: proto.SendMessageResponse
+	(*GetMessagesRequest)(nil),        // 27: proto.GetMessagesRequest
+	(*GetMessagesResponse)(nil),       // 28: proto.GetMessagesResponse
+	(*Message)(nil),                   // 29: proto.Message
+	(*ConnectRequest)(nil),            // 30: proto.ConnectRequest
+	(*ConnectResponse)(nil),           // 31: proto.ConnectResponse
+	(*DisconnectRequest)(nil),         // 32: proto.DisconnectRequest
+	(*DisconnectResponse)(nil),        // 33: proto.DisconnectResponse
+	(*GetProfilePictureRequest)(nil),  // 34: proto.GetProfilePictureRequest
+	(*GetProfilePictureResponse)(nil), // 35: proto.GetProfilePictureResponse
 }
 var file_proto_whatsapp_proto_depIdxs = []int32{
 	4,  // 0: proto.GetJoinedGroupsResponse.groups:type_name -> proto.GroupInfo
-	12, // 1: proto.GroupInfo.participants:type_name -> proto.GroupParticipant
-	7,  // 2: proto.IsOnWhatsAppResponse.results:type_name -> proto.OnWhatsAppResult
-	12, // 3: proto.GetGroupInfoResponse.participants:type_name -> proto.GroupParticipant
-	19, // 4: proto.CreateStatusRequest.content:type_name -> proto.MessageContent
-	19, // 5: proto.SendMessageRequest.content:type_name -> proto.MessageContent
-	24, // 6: proto.MessageContent.media:type_name -> proto.MediaContent
-	20, // 7: proto.MessageContent.location:type_name -> proto.LocationContent
-	21, // 8: proto.MessageContent.live_location:type_name -> proto.LiveLocationContent
-	22, // 9: proto.MessageContent.poll:type_name -> proto.PollContent
-	23, // 10: proto.MessageContent.contact:type_name -> proto.ContactContent
-	28, // 11: proto.GetMessagesResponse.messages:type_name -> proto.Message
-	18, // 12: proto.WhatsAppService.SendMessage:input_type -> proto.SendMessageRequest
-	26, // 13: proto.WhatsAppService.GetMessages:input_type -> proto.GetMessagesRequest
-	29, // 14: proto.WhatsAppService.Connect:input_type -> proto.ConnectRequest
-	31, // 15: proto.WhatsAppService.Disconnect:input_type -> proto.DisconnectRequest
-	14, // 16: proto.WhatsAppService.Logout:input_type -> proto.WALogoutRequest
-	13, // 17: proto.WhatsAppService.RefreshQR:input_type -> proto.RefreshQRRequest
-	10, // 18: proto.WhatsAppService.GetGroupInfo:input_type -> proto.GetGroupInfoRequest
-	8,  // 19: proto.WhatsAppService.GetMe:input_type -> proto.GetMeRequest
-	5,  // 20: proto.WhatsAppService.IsOnWhatsApp:input_type -> proto.IsOnWhatsAppRequest
-	2,  // 21: proto.WhatsAppService.GetJoinedGroups:input_type -> proto.GetJoinedGroupsRequest
-	16, // 22: proto.WhatsAppService.CreateStatus:input_type -> proto.CreateStatusRequest
-	0,  // 23: proto.WhatsAppService.HasContacts:input_type -> proto.HasContactsRequest
-	25, // 24: proto.WhatsAppService.SendMessage:output_type -> proto.SendMessageResponse
-	27, // 25: proto.WhatsAppService.GetMessages:output_type -> proto.GetMessagesResponse
-	30, // 26: proto.WhatsAppService.Connect:output_type -> proto.ConnectResponse
-	32, // 27: proto.WhatsAppService.Disconnect:output_type -> proto.DisconnectResponse
-	15, // 28: proto.WhatsAppService.Logout:output_type -> proto.WALogoutResponse
-	30, // 29: proto.WhatsAppService.RefreshQR:output_type -> proto.ConnectResponse
-	11, // 30: proto.WhatsAppService.GetGroupInfo:output_type -> proto.GetGroupInfoResponse
-	9,  // 31: proto.WhatsAppService.GetMe:output_type -> proto.GetMeResponse
-	6,  // 32: proto.WhatsAppService.IsOnWhatsApp:output_type -> proto.IsOnWhatsAppResponse
-	3,  // 33: proto.WhatsAppService.GetJoinedGroups:output_type -> proto.GetJoinedGroupsResponse
-	17, // 34: proto.WhatsAppService.CreateStatus:output_type -> proto.CreateStatusResponse
-	1,  // 35: proto.WhatsAppService.HasContacts:output_type -> proto.HasContactsResponse
-	24, // [24:36] is the sub-list for method output_type
-	12, // [12:24] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	13, // 1: proto.GroupInfo.participants:type_name -> proto.GroupParticipant
+	5,  // 2: proto.GroupInfo.settings:type_name -> proto.GroupSettings
+	8,  // 3: proto.IsOnWhatsAppResponse.results:type_name -> proto.OnWhatsAppResult
+	13, // 4: proto.GetGroupInfoResponse.participants:type_name -> proto.GroupParticipant
+	5,  // 5: proto.GetGroupInfoResponse.settings:type_name -> proto.GroupSettings
+	20, // 6: proto.CreateStatusRequest.content:type_name -> proto.MessageContent
+	20, // 7: proto.SendMessageRequest.content:type_name -> proto.MessageContent
+	25, // 8: proto.MessageContent.media:type_name -> proto.MediaContent
+	21, // 9: proto.MessageContent.location:type_name -> proto.LocationContent
+	22, // 10: proto.MessageContent.live_location:type_name -> proto.LiveLocationContent
+	23, // 11: proto.MessageContent.poll:type_name -> proto.PollContent
+	24, // 12: proto.MessageContent.contact:type_name -> proto.ContactContent
+	29, // 13: proto.GetMessagesResponse.messages:type_name -> proto.Message
+	19, // 14: proto.WhatsAppService.SendMessage:input_type -> proto.SendMessageRequest
+	27, // 15: proto.WhatsAppService.GetMessages:input_type -> proto.GetMessagesRequest
+	30, // 16: proto.WhatsAppService.Connect:input_type -> proto.ConnectRequest
+	32, // 17: proto.WhatsAppService.Disconnect:input_type -> proto.DisconnectRequest
+	15, // 18: proto.WhatsAppService.Logout:input_type -> proto.WALogoutRequest
+	14, // 19: proto.WhatsAppService.RefreshQR:input_type -> proto.RefreshQRRequest
+	11, // 20: proto.WhatsAppService.GetGroupInfo:input_type -> proto.GetGroupInfoRequest
+	9,  // 21: proto.WhatsAppService.GetMe:input_type -> proto.GetMeRequest
+	6,  // 22: proto.WhatsAppService.IsOnWhatsApp:input_type -> proto.IsOnWhatsAppRequest
+	2,  // 23: proto.WhatsAppService.GetJoinedGroups:input_type -> proto.GetJoinedGroupsRequest
+	17, // 24: proto.WhatsAppService.CreateStatus:input_type -> proto.CreateStatusRequest
+	0,  // 25: proto.WhatsAppService.HasContacts:input_type -> proto.HasContactsRequest
+	34, // 26: proto.WhatsAppService.GetProfilePicture:input_type -> proto.GetProfilePictureRequest
+	26, // 27: proto.WhatsAppService.SendMessage:output_type -> proto.SendMessageResponse
+	28, // 28: proto.WhatsAppService.GetMessages:output_type -> proto.GetMessagesResponse
+	31, // 29: proto.WhatsAppService.Connect:output_type -> proto.ConnectResponse
+	33, // 30: proto.WhatsAppService.Disconnect:output_type -> proto.DisconnectResponse
+	16, // 31: proto.WhatsAppService.Logout:output_type -> proto.WALogoutResponse
+	31, // 32: proto.WhatsAppService.RefreshQR:output_type -> proto.ConnectResponse
+	12, // 33: proto.WhatsAppService.GetGroupInfo:output_type -> proto.GetGroupInfoResponse
+	10, // 34: proto.WhatsAppService.GetMe:output_type -> proto.GetMeResponse
+	7,  // 35: proto.WhatsAppService.IsOnWhatsApp:output_type -> proto.IsOnWhatsAppResponse
+	3,  // 36: proto.WhatsAppService.GetJoinedGroups:output_type -> proto.GetJoinedGroupsResponse
+	18, // 37: proto.WhatsAppService.CreateStatus:output_type -> proto.CreateStatusResponse
+	1,  // 38: proto.WhatsAppService.HasContacts:output_type -> proto.HasContactsResponse
+	35, // 39: proto.WhatsAppService.GetProfilePicture:output_type -> proto.GetProfilePictureResponse
+	27, // [27:40] is the sub-list for method output_type
+	14, // [14:27] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_proto_whatsapp_proto_init() }
@@ -2542,7 +2908,7 @@ func file_proto_whatsapp_proto_init() {
 	if File_proto_whatsapp_proto != nil {
 		return
 	}
-	file_proto_whatsapp_proto_msgTypes[19].OneofWrappers = []any{
+	file_proto_whatsapp_proto_msgTypes[20].OneofWrappers = []any{
 		(*MessageContent_Text)(nil),
 		(*MessageContent_Media)(nil),
 		(*MessageContent_Location)(nil),
@@ -2556,7 +2922,7 @@ func file_proto_whatsapp_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_whatsapp_proto_rawDesc), len(file_proto_whatsapp_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   33,
+			NumMessages:   36,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

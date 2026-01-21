@@ -13,18 +13,18 @@ function getI18n(key) {
       return translation;
     }
   }
-  
+
   // Check for window.i18n as fallback
   if (typeof window.i18n !== 'undefined' && window.i18n && typeof window.i18n.t === 'function') {
     return window.i18n.t(key);
   }
-  
+
   // If no translation found, return the key itself for debugging
   return key;
 }
 
 // WhatsApp Bot Management Module
-const WhatsAppBotManager = (function() {
+const WhatsAppBotManager = (function () {
   // Private variables
   let connectionStatusInterval;
   let connectModal, autoReplyModal, groupDetailsModal;
@@ -32,10 +32,10 @@ const WhatsAppBotManager = (function() {
   let DATA_SEPARATOR = '|'; // Default separator
 
   // Initialize the WhatsApp Bot tab
-  function init() {    
+  function init() {
     // Get RANDOM_ACCESS from window if available
     RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     if (!RANDOM_ACCESS) {
       console.error('RANDOM_ACCESS not available yet, will retry on tab load');
       return;
@@ -43,24 +43,25 @@ const WhatsAppBotManager = (function() {
 
     // Load data separator from backend
     loadDataSeparator();
-    
+
     // Log current language for debugging
     if (typeof i18next !== 'undefined' && i18next) {
-    //   console.log('Current i18next language:', i18next.language);
+      //   console.log('Current i18next language:', i18next.language);
     }
 
     // Initialize modals
     const connectModalEl = document.getElementById('connectModal');
     const autoReplyModalEl = document.getElementById('autoReplyModal');
     const groupDetailsModalEl = document.getElementById('groupDetailsModal');
-    
+    const imageViewerModalEl = document.getElementById('imageViewerModal');
+
     if (connectModalEl) connectModal = new bootstrap.Modal(connectModalEl);
     if (autoReplyModalEl) autoReplyModal = new bootstrap.Modal(autoReplyModalEl);
     if (groupDetailsModalEl) groupDetailsModal = new bootstrap.Modal(groupDetailsModalEl);
 
     // Check connection status immediately
     checkConnectionStatus();
-    
+
     // Clear existing interval if any
     if (connectionStatusInterval) {
       clearInterval(connectionStatusInterval);
@@ -84,7 +85,7 @@ const WhatsAppBotManager = (function() {
 
     // Connection method toggle
     document.querySelectorAll('input[name="connection-method"]').forEach(radio => {
-      radio.addEventListener('change', function() {
+      radio.addEventListener('change', function () {
         const pairingField = document.getElementById('pairing-phone-field');
         if (pairingField) {
           pairingField.style.display = this.value === 'pairing' ? 'block' : 'none';
@@ -103,7 +104,7 @@ const WhatsAppBotManager = (function() {
         headers: { 'Content-Type': 'application/json' }
       });
       const data = await response.json();
-      
+
       const statusBadge = document.getElementById('connection-status');
       const accountInfo = document.getElementById('account-info');
       const noConnectionInfo = document.getElementById('no-connection-info');
@@ -113,19 +114,19 @@ const WhatsAppBotManager = (function() {
 
       if (!statusBadge) return; // Tab not loaded yet
 
-      if (data.connected) {        
+      if (data.connected) {
         statusBadge.innerHTML = '<i class="fas fa-check-circle me-1"></i>Connected';
         statusBadge.className = 'badge bg-success';
-        
+
         if (accountInfo) accountInfo.style.display = 'block';
         if (noConnectionInfo) noConnectionInfo.style.display = 'none';
-        
+
         // Show connection info panel on right side
         const connectionInfoPanel = document.getElementById('connection-info-panel');
         if (connectionInfoPanel) {
           connectionInfoPanel.style.display = 'block';
         }
-        
+
         if (data.account) {
           const nameEl = document.getElementById('account-name');
           const phoneEl = document.getElementById('account-phone');
@@ -135,7 +136,7 @@ const WhatsAppBotManager = (function() {
           const deviceInfoEl = document.getElementById('device-info');
           const platformInfoEl = document.getElementById('platform-info');
           const connectedSinceEl = document.getElementById('connected-since');
-          
+
           if (nameEl) nameEl.textContent = data.account.name || 'WhatsApp User';
           if (phoneEl) {
             const phoneDisplay = data.account.phone || data.account.jid || 'No phone number';
@@ -152,7 +153,7 @@ const WhatsAppBotManager = (function() {
           if (profilePicEl && data.account.profile_pic_url) {
             profilePicEl.src = data.account.profile_pic_url;
           }
-          
+
           // Update right panel info
           if (deviceInfoEl) deviceInfoEl.textContent = data.account.device || 'Unknown';
           if (platformInfoEl) platformInfoEl.textContent = data.account.platform || 'Unknown';
@@ -161,21 +162,21 @@ const WhatsAppBotManager = (function() {
             connectedSinceEl.textContent = now.toLocaleTimeString();
           }
         }
-        
+
         if (btnConnect) btnConnect.disabled = true;
         if (btnDisconnect) btnDisconnect.disabled = false;
         if (btnLogout) btnLogout.disabled = false;
       } else {
         statusBadge.innerHTML = '<i class="fas fa-times-circle me-1"></i>Disconnected';
         statusBadge.className = 'badge bg-danger';
-        
+
         if (accountInfo) accountInfo.style.display = 'none';
         if (noConnectionInfo) noConnectionInfo.style.display = 'block';
-        
+
         // Hide connection info panel
         const connectionInfoPanel = document.getElementById('connection-info-panel');
         if (connectionInfoPanel) connectionInfoPanel.style.display = 'none';
-        
+
         if (btnConnect) btnConnect.disabled = false;
         if (btnDisconnect) btnDisconnect.disabled = true;
         if (btnLogout) btnLogout.disabled = true;
@@ -198,10 +199,10 @@ const WhatsAppBotManager = (function() {
     try {
       const response = await fetch(`/api/v1/${RANDOM_ACCESS}/tab-whatsapp/data-separator`);
       const data = await response.json();
-      
+
       if (data.success && data.separator) {
         DATA_SEPARATOR = data.separator;
-        
+
         // Update hint text in the keywords input
         const keywordsInput = document.getElementById('auto-reply-keywords');
         if (keywordsInput) {
@@ -226,10 +227,10 @@ const WhatsAppBotManager = (function() {
 
   async function connectWhatsApp() {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     const method = document.querySelector('input[name="connection-method"]:checked')?.value;
     const phone = method === 'pairing' ? document.getElementById('pairing-phone')?.value : '';
-    
+
     if (method === 'pairing' && !phone) {
       Swal.fire({
         icon: 'warning',
@@ -250,7 +251,7 @@ const WhatsAppBotManager = (function() {
 
       if (data.success) {
         if (connectModal) connectModal.hide();
-        
+
         if (method === 'qr' && data.qr_code) {
           const qrContainer = document.getElementById('qr-container');
           const qrCode = document.getElementById('qr-code');
@@ -267,14 +268,14 @@ const WhatsAppBotManager = (function() {
             pairingContainer.style.display = 'block';
           }
         }
-        
+
         Swal.fire({
           icon: 'success',
           title: getI18n('table.successTitle'),
           text: getI18n('whatsapp.connectSuccess'),
           timer: 2000
         });
-        
+
         checkConnectionStatus();
       } else {
         Swal.fire({
@@ -295,7 +296,7 @@ const WhatsAppBotManager = (function() {
 
   async function disconnectWhatsApp() {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     const result = await Swal.fire({
       icon: 'warning',
       title: getI18n('whatsapp.confirmDelete'),
@@ -305,7 +306,7 @@ const WhatsAppBotManager = (function() {
       cancelButtonText: getI18n('table.cancelButton'),
       confirmButtonColor: '#d33'
     });
-    
+
     if (!result.isConfirmed) return;
 
     try {
@@ -324,7 +325,7 @@ const WhatsAppBotManager = (function() {
           timer: 2000
         });
         checkConnectionStatus();
-        
+
         const qrContainer = document.getElementById('qr-container');
         const pairingContainer = document.getElementById('pairing-container');
         if (qrContainer) qrContainer.style.display = 'none';
@@ -394,7 +395,7 @@ const WhatsAppBotManager = (function() {
 
   async function refreshQRCode() {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     try {
       const response = await fetch('/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp/refresh_qr', {
         method: 'POST',
@@ -447,7 +448,7 @@ const WhatsAppBotManager = (function() {
     } else if (['image', 'video', 'document', 'audio', 'sticker'].includes(messageType)) {
       if (mediaFields) mediaFields.style.display = 'block';
       if (textMessageField) textMessageField.style.display = 'block';
-      
+
       // Update placeholders based on type
       if (mediaDataInput) {
         const placeholders = {
@@ -459,7 +460,7 @@ const WhatsAppBotManager = (function() {
         };
         mediaDataInput.placeholder = placeholders[messageType] || 'URL or base64 data';
       }
-      
+
       if (mediaMimetypeInput) {
         const mimetypes = {
           'image': 'image/jpeg',
@@ -480,7 +481,7 @@ const WhatsAppBotManager = (function() {
       if (reactionFields) reactionFields.style.display = 'block';
       if (textMessageField) textMessageField.style.display = 'none';
     }
-    
+
     // Update filename placeholder based on media type
     const mediaFilenameInput = document.getElementById('media-filename');
     if (mediaFilenameInput && ['image', 'video', 'document', 'audio', 'sticker'].includes(messageType)) {
@@ -575,14 +576,14 @@ const WhatsAppBotManager = (function() {
       ajax: {
         url: '/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp/messages',
         type: 'GET',
-        data: function(d) {
+        data: function (d) {
           // DataTables params to API params
           return {
             page: Math.floor(d.start / d.length) + 1,
             limit: d.length
           };
         },
-        dataSrc: function(json) {
+        dataSrc: function (json) {
           json.recordsTotal = json.pagination?.total_items || 0;
           json.recordsFiltered = json.pagination?.total_items || 0;
           return json.data || [];
@@ -590,48 +591,48 @@ const WhatsAppBotManager = (function() {
       },
       columns: [
         { data: 'ID', title: 'ID', width: '60px', className: 'text-center' },
-        { 
-          data: 'whatsapp_message_sent_to', 
+        {
+          data: 'whatsapp_message_sent_to',
           title: 'To',
           width: '150px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             if (!data || data === '-') return '<span class="text-muted">-</span>';
             const truncated = data.length > 20 ? data.substring(0, 20) + '...' : data;
             return `<span title="${data}" data-bs-toggle="tooltip">${truncated}</span>`;
           }
         },
-        { 
+        {
           data: 'whatsapp_message_body',
           title: 'Type',
           width: '100px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             // Since whatsapp_message_type is not in JSON, infer from body or default
             const msgType = 'text'; // Default since JSON field is hidden
             return `<span class="badge bg-${getMessageTypeColor(msgType)}">${msgType}</span>`;
           }
         },
-        { 
+        {
           data: 'whatsapp_message_body',
           title: 'Message',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             if (!data || data === '-') return '<span class="text-muted">-</span>';
             const truncated = data.length > 30 ? data.substring(0, 30) + '...' : data;
             return `<span title="${data.replace(/"/g, '&quot;')}" data-bs-toggle="tooltip">${truncated}</span>`;
           }
         },
-        { 
+        {
           data: 'whatsapp_msg_status',
           title: 'Status',
           width: '100px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return `<span class="badge bg-${getStatusColor(data)}">${data || '-'}</span>`;
           }
         },
-        { 
+        {
           data: 'whatsapp_sent_at',
           title: 'Sent At',
           width: '150px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return formatDate(data || row.CreatedAt);
           }
         }
@@ -651,7 +652,7 @@ const WhatsAppBotManager = (function() {
           previous: '<i class="fas fa-angle-left"></i>'
         }
       },
-      drawCallback: function() {
+      drawCallback: function () {
         $('[data-bs-toggle="tooltip"]').tooltip();
       }
     });
@@ -679,13 +680,13 @@ const WhatsAppBotManager = (function() {
       ajax: {
         url: '/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp/incoming',
         type: 'GET',
-        data: function(d) {
+        data: function (d) {
           return {
             page: Math.floor(d.start / d.length) + 1,
             limit: d.length
           };
         },
-        dataSrc: function(json) {
+        dataSrc: function (json) {
           json.recordsTotal = json.pagination?.total_items || 0;
           json.recordsFiltered = json.pagination?.total_items || 0;
           return json.data || [];
@@ -693,38 +694,38 @@ const WhatsAppBotManager = (function() {
       },
       columns: [
         { data: 'ID', title: 'ID', width: '60px', className: 'text-center' },
-        { 
+        {
           data: 'whatsapp_sender_jid',
           title: 'From',
           width: '150px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             if (!data || data === '-') return '<span class="text-muted">-</span>';
             const truncated = data.length > 20 ? data.substring(0, 20) + '...' : data;
             return `<span title="${data}" data-bs-toggle="tooltip">${truncated}</span>`;
           }
         },
-        { 
+        {
           data: 'whatsapp_message_type',
           title: 'Type',
           width: '100px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return `<span class="badge bg-${getMessageTypeColor(data)}">${data || 'text'}</span>`;
           }
         },
-        { 
+        {
           data: 'whatsapp_message_body',
           title: 'Message',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             if (!data || data === '-') return '<span class="text-muted">-</span>';
             const truncated = data.length > 40 ? data.substring(0, 40) + '...' : data;
             return `<span title="${data.replace(/"/g, '&quot;')}" data-bs-toggle="tooltip">${truncated}</span>`;
           }
         },
-        { 
+        {
           data: 'whatsapp_received_at',
           title: 'Received At',
           width: '150px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return formatDate(data || row.CreatedAt);
           }
         }
@@ -744,7 +745,7 @@ const WhatsAppBotManager = (function() {
           previous: '<i class="fas fa-angle-left"></i>'
         }
       },
-      drawCallback: function() {
+      drawCallback: function () {
         $('[data-bs-toggle="tooltip"]').tooltip();
       }
     });
@@ -772,34 +773,34 @@ const WhatsAppBotManager = (function() {
       ajax: {
         url: '/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp/groups/datatable',
         type: 'POST',
-        data: function(d) {
+        data: function (d) {
           return JSON.stringify(d);
         },
         contentType: 'application/json',
-        error: function(xhr, error, code) {
+        error: function (xhr, error, code) {
           console.error('Groups DataTable Error:', error, code);
           console.error('Response:', xhr.responseText);
         }
       },
       columns: [
-        {data: 'name'},
-        {data: 'jid'},
+        { data: 'name' },
+        { data: 'jid' },
         {
-          data: 'participants', 
-          render: function(data) {
+          data: 'participants',
+          render: function (data) {
             return Array.isArray(data) ? data.length : 0;
           },
           orderable: false
         },
         {
-          data: 'created_at', 
-          render: function(data) {
+          data: 'created_at',
+          render: function (data) {
             return formatDate(data);
           }
         },
         {
-          data: 'jid', 
-          render: function(data) {
+          data: 'jid',
+          render: function (data) {
             return `<button class="btn btn-sm btn-info" onclick="WhatsAppBotManager.showGroupDetails('${data}')" title="${getI18n('whatsapp.groupDetails')}">
               <i class="fas fa-eye"></i>
             </button>`;
@@ -852,13 +853,13 @@ const WhatsAppBotManager = (function() {
       ajax: {
         url: '/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp/auto-reply',
         type: 'GET',
-        data: function(d) {
+        data: function (d) {
           return {
             page: Math.floor(d.start / d.length) + 1,
             limit: d.length
           };
         },
-        dataSrc: function(json) {
+        dataSrc: function (json) {
           json.recordsTotal = json.pagination?.total_items || 0;
           json.recordsFiltered = json.pagination?.total_items || 0;
           return json.data || [];
@@ -866,56 +867,56 @@ const WhatsAppBotManager = (function() {
       },
       columns: [
         { data: 'id', title: 'ID', width: '60px', className: 'text-center' },
-        { 
+        {
           data: 'keywords',
           title: 'Keywords',
           width: '180px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             if (!data || data === '-') return '<span class="text-muted">-</span>';
             const truncated = data.length > 25 ? data.substring(0, 25) + '...' : data;
             return `<span title="${data.replace(/"/g, '&quot;')}" data-bs-toggle="tooltip">${truncated}</span>`;
           }
         },
-        { 
+        {
           data: 'reply_text',
           title: 'Reply',
           width: '200px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             if (!data || data === '-') return '<span class="text-muted">-</span>';
             const truncated = data.length > 35 ? data.substring(0, 35) + '...' : data;
             return `<span title="${data.replace(/"/g, '&quot;')}" data-bs-toggle="tooltip">${truncated}</span>`;
           }
         },
-        { 
+        {
           data: 'language',
           title: 'Language',
           width: '100px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return `<span class="badge bg-primary">${data || '-'}</span>`;
           }
         },
-        { 
+        {
           data: 'lang_code',
           title: 'Lang Code',
           width: '90px',
           className: 'text-center',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return `<code>${data || '-'}</code>`;
           }
         },
-        { 
+        {
           data: 'for_user_type',
           title: 'User Type',
           width: '120px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return `<span class="badge bg-secondary">${data || '-'}</span>`;
           }
         },
-        { 
+        {
           data: 'user_of',
           title: 'User Of',
           width: '140px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return `<span class="badge bg-info">${data || '-'}</span>`;
           }
         },
@@ -926,7 +927,7 @@ const WhatsAppBotManager = (function() {
           searchable: false,
           width: '120px',
           className: 'text-center',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return `
               <div class="btn-group btn-group-sm">
                 <button class="btn btn-warning" onclick="WhatsAppBotManager.editAutoReply(${row.id})" title="Edit">
@@ -955,7 +956,7 @@ const WhatsAppBotManager = (function() {
           previous: '<i class="fas fa-angle-left"></i>'
         }
       },
-      drawCallback: function() {
+      drawCallback: function () {
         $('[data-bs-toggle="tooltip"]').tooltip();
       }
     });
@@ -971,24 +972,24 @@ const WhatsAppBotManager = (function() {
 
   async function loadLanguagesForAutoReply() {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     try {
       const response = await fetch(`/api/v1/${RANDOM_ACCESS}/tab-whatsapp/languages`);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Failed to load languages - Status:', response.status, 'Error:', errorData);
         return;
       }
-      
+
       const result = await response.json();
       const languages = result.data || result.languages || [];
-      
+
       const select = document.getElementById('auto-reply-language');
       if (select) {
         // Clear existing options except the placeholder
         select.innerHTML = '<option value="">-- Select Language --</option>';
-        
+
         // Add language options
         languages.forEach(lang => {
           const option = document.createElement('option');
@@ -1010,21 +1011,21 @@ const WhatsAppBotManager = (function() {
     }
     const modalTitle = document.getElementById('autoReplyModalTitle');
     if (modalTitle) modalTitle.textContent = 'Add Auto Reply Rule';
-    
+
     if (!autoReplyModal) {
       const modalEl = document.getElementById('autoReplyModal');
       if (modalEl) autoReplyModal = new bootstrap.Modal(modalEl);
     }
-    
+
     // Load languages before showing modal
     loadLanguagesForAutoReply();
-    
+
     if (autoReplyModal) autoReplyModal.show();
   }
 
   async function editAutoReply(id) {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     // Show confirmation dialog
     const confirmResult = await Swal.fire({
       icon: 'question',
@@ -1035,29 +1036,29 @@ const WhatsAppBotManager = (function() {
       cancelButtonText: getI18n('table.cancelButton'),
       confirmButtonColor: '#3085d6'
     });
-    
+
     if (!confirmResult.isConfirmed) return;
-    
+
     try {
       // Load languages first
       await loadLanguagesForAutoReply();
-      
+
       const response = await fetch(`/api/v1/${RANDOM_ACCESS}/tab-whatsapp/auto-reply/${id}`);
       const result = await response.json();
       const rule = result.data || result;
-      
+
       document.getElementById('auto-reply-keywords').value = rule.keywords || '';
       document.getElementById('auto-reply-text').value = rule.reply_text || '';
       document.getElementById('auto-reply-user-type').value = rule.for_user_type || '';
       document.getElementById('auto-reply-user-of').value = rule.user_of || '';
       document.getElementById('auto-reply-language').value = rule.language_id || '';
-      
+
       const form = document.getElementById('auto-reply-form');
       if (form) form.dataset.ruleId = id;
-      
+
       const modalTitle = document.getElementById('autoReplyModalTitle');
       if (modalTitle) modalTitle.textContent = 'Edit Auto Reply Rule';
-      
+
       if (!autoReplyModal) {
         const modalEl = document.getElementById('autoReplyModal');
         if (modalEl) autoReplyModal = new bootstrap.Modal(modalEl);
@@ -1075,14 +1076,14 @@ const WhatsAppBotManager = (function() {
 
   async function saveAutoReply() {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     const form = document.getElementById('auto-reply-form');
     const id = form?.dataset.ruleId;
-    
+
     const keywords = document.getElementById('auto-reply-keywords')?.value?.trim();
     const replyText = document.getElementById('auto-reply-text')?.value?.trim();
     const languageId = document.getElementById('auto-reply-language')?.value?.trim();
-    
+
     // Validate required fields
     if (!keywords) {
       Swal.fire({
@@ -1092,7 +1093,7 @@ const WhatsAppBotManager = (function() {
       });
       return;
     }
-    
+
     if (!replyText) {
       Swal.fire({
         icon: 'error',
@@ -1101,7 +1102,7 @@ const WhatsAppBotManager = (function() {
       });
       return;
     }
-    
+
     if (!languageId) {
       Swal.fire({
         icon: 'error',
@@ -1110,7 +1111,7 @@ const WhatsAppBotManager = (function() {
       });
       return;
     }
-    
+
     const ruleData = {
       keywords: keywords,
       reply_text: replyText,
@@ -1122,7 +1123,7 @@ const WhatsAppBotManager = (function() {
     try {
       const url = id ? `/api/v1/${RANDOM_ACCESS}/tab-whatsapp/auto-reply/${id}` : `/api/v1/${RANDOM_ACCESS}/tab-whatsapp/auto-reply`;
       const method = id ? 'PUT' : 'POST';
-      
+
       const response = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
@@ -1163,7 +1164,7 @@ const WhatsAppBotManager = (function() {
 
   async function deleteAutoReply(id) {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     // Show confirmation dialog
     const confirmResult = await Swal.fire({
       icon: 'warning',
@@ -1174,7 +1175,7 @@ const WhatsAppBotManager = (function() {
       cancelButtonText: getI18n('table.cancelButton'),
       confirmButtonColor: '#d33'
     });
-    
+
     if (!confirmResult.isConfirmed) return;
 
     try {
@@ -1213,55 +1214,119 @@ const WhatsAppBotManager = (function() {
     }
   }
 
+  // Show image modal
+  function showImageModal(imageUrl, title, jid) {
+    const modalEl = document.getElementById('imageViewerModal');
+    const imgEl = document.getElementById('imageViewerImg');
+    const downloadEl = document.getElementById('imageViewerDownload');
+    
+    if (modalEl && imgEl && downloadEl) {
+      // Keep original URL for display (WhatsApp URLs work for viewing)
+      imgEl.src = imageUrl;
+      
+      // Use our API endpoint for download with the JID
+      downloadEl.href = `/api/v1/${RANDOM_ACCESS}/tab-whatsapp/profile-picture/${encodeURIComponent(jid)}`;
+      downloadEl.download = `profile-${title.replace(/[^a-zA-Z0-9]/g, '-')}.jpg`;
+      
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    }
+  }
   async function showGroupDetails(jid) {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
+    // Show loading indicator
+    Swal.fire({
+      title: getI18n('common.loading') || 'Loading...',
+      text: getI18n('whatsapp.loadingGroupDetails') || 'Loading group details...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     try {
       const response = await fetch(`/api/v1/${RANDOM_ACCESS}/tab-whatsapp/groups/${encodeURIComponent(jid)}`);
       const group = await response.json();
-      
+
       const detailsContent = document.getElementById('group-details-content');
       if (detailsContent) {
+        // Group photo display
+        let photoHtml = '';
+        if (group.photo_url) {
+          photoHtml = `
+            <div class="col-12 mb-3">
+              <strong data-i18n="whatsapp.groupPhoto">Group Photo:</strong><br>
+              <img src="${group.photo_url}" alt="Group Photo" class="img-thumbnail mt-2" style="max-width: 150px; max-height: 150px; cursor: pointer;" onclick="WhatsAppBotManager.showImageModal('${group.photo_url}', '${group.name || 'Group Photo'}', '${group.jid}')">
+            </div>
+          `;
+        }
+
+        // Group settings
+        let settingsHtml = '';
+        if (group.settings) {
+          const settings = group.settings;
+          settingsHtml = `
+            <div class="col-12 mb-3">
+              <strong data-i18n="whatsapp.groupSettings">Group Settings:</strong><br>
+              <div class="mt-2">
+                <span class="badge ${settings.locked ? 'bg-warning' : 'bg-success'} me-2">
+                  ${settings.locked ? 'Locked' : 'Unlocked'}
+                </span>
+                <span class="badge ${settings.announcement_only ? 'bg-info' : 'bg-secondary'} me-2">
+                  ${settings.announcement_only ? 'Announcement Only' : 'All Can Send'}
+                </span>
+                ${settings.ephemeral ? `<span class="badge bg-primary">Ephemeral (${settings.ephemeral_duration}s)</span>` : ''}
+              </div>
+            </div>
+          `;
+        }
+
         detailsContent.innerHTML = `
           <div class="row">
+            ${photoHtml}
             <div class="col-md-6 mb-3">
-              <strong data-i18n="whatsapp.groupName">Name:</strong> ${group.name || '-'}
+              <strong data-i18n="whatsapp.groupName">Name:</strong> ${group.name && group.name !== '-' ? group.name : 'Unknown'}
             </div>
             <div class="col-md-6 mb-3">
-              <strong data-i18n="whatsapp.jid">JID:</strong> <code>${group.jid || '-'}</code>
+              <strong data-i18n="whatsapp.jid">JID:</strong> <code>${group.jid && group.jid !== '-' ? group.jid : 'Unknown'}</code>
             </div>
             <div class="col-md-6 mb-3">
-              <strong data-i18n="whatsapp.owner">Owner:</strong> <code>${group.owner_jid || '-'}</code>
+              <strong data-i18n="whatsapp.owner">Owner:</strong> <code>${group.owner_jid && group.owner_jid !== '-' ? group.owner_jid : 'Unknown'}</code>
             </div>
             <div class="col-md-6 mb-3">
               <strong data-i18n="whatsapp.participantsCount">Participants:</strong> ${group.participants?.length || 0}
             </div>
+            ${settingsHtml}
             <div class="col-md-6 mb-3">
-              <strong data-i18n="whatsapp.createdAt">Created:</strong> ${formatDate(group.created_at)}
+              <strong data-i18n="whatsapp.description">Description:</strong> ${group.description || group.topic || 'No description'}
+            </div>
+            <div class="col-md-6 mb-3">
+              <strong data-i18n="whatsapp.descriptionSetAt">Description Set At:</strong> ${group.topic_set_at ? formatDate(new Date(group.topic_set_at * 1000)) : 'Unknown'}
             </div>
           </div>
         `;
       }
-      
+
       // Show participants table container
       const tableContainer = document.getElementById('group-participants-table-container');
       if (tableContainer) tableContainer.style.display = 'block';
-      
+
       // Initialize or refresh participants DataTable
       const participantsTable = $('#group-participants-table');
       if ($.fn.DataTable.isDataTable('#group-participants-table')) {
         participantsTable.DataTable().clear().destroy();
       }
-      
+
       if (group.participants && group.participants.length > 0) {
         participantsTable.DataTable({
           data: group.participants,
           columns: [
             {
               data: 'profile_picture_url',
-              render: function(data, type, row) {
+              render: function (data, type, row) {
                 if (data && data !== '') {
-                  return `<img src="${data}" alt="Profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">`;
+                  return `<img src="${data}" alt="Profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;" onclick="WhatsAppBotManager.showImageModal('${data}', '${row.display_name || 'Profile Picture'}', '${row.jid}')">`;
                 }
                 return `<div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                   <i class="fas fa-user"></i>
@@ -1271,25 +1336,25 @@ const WhatsAppBotManager = (function() {
             },
             {
               data: 'display_name',
-              render: function(data, type, row) {
-                return data || row.user_jid || '-';
+              render: function (data, type, row) {
+                return data || row.jid || '-';
               }
             },
             {
               data: 'phone_number',
-              render: function(data) {
+              render: function (data) {
                 return data ? `<code>${data}</code>` : '-';
               }
             },
             {
-              data: 'user_jid',
-              render: function(data) {
+              data: 'jid',
+              render: function (data) {
                 return data ? `<code class="small">${data}</code>` : '-';
               }
             },
             {
               data: null,
-              render: function(data, type, row) {
+              render: function (data, type, row) {
                 if (row.is_super_admin) {
                   return `<span class="badge bg-danger"><i class="fas fa-crown"></i> Super Admin</span>`;
                 } else if (row.is_admin) {
@@ -1310,6 +1375,7 @@ const WhatsAppBotManager = (function() {
             info: getI18n('whatsapp.showingParticipants') || 'Showing _START_ to _END_ of _TOTAL_ participants',
             infoEmpty: getI18n('whatsapp.noParticipants') || 'No participants',
             search: getI18n('table.search') || 'Search:',
+            searchPlaceholder: getI18n('table.searchPlaceholder') || 'Type to search...',
             paginate: {
               first: '<i class="fas fa-angle-double-left"></i>',
               last: '<i class="fas fa-angle-double-right"></i>',
@@ -1319,14 +1385,19 @@ const WhatsAppBotManager = (function() {
           }
         });
       }
-      
+
       if (!groupDetailsModal) {
         const modalEl = document.getElementById('groupDetailsModal');
         if (modalEl) groupDetailsModal = new bootstrap.Modal(modalEl);
       }
       if (groupDetailsModal) groupDetailsModal.show();
+
+      // Close loading indicator
+      Swal.close();
     } catch (error) {
       console.error('Failed to load group details:', error);
+      // Close loading indicator
+      Swal.close();
       Swal.fire({
         icon: 'error',
         title: getI18n('table.errorTitle'),
@@ -1341,7 +1412,7 @@ const WhatsAppBotManager = (function() {
     try {
       const response = await fetch(`/api/v1/${RANDOM_ACCESS}/tab-whatsapp/status`);
       const data = await response.json();
-      
+
       if (data.connected) {
         Swal.fire({
           icon: 'success',
@@ -1367,11 +1438,11 @@ const WhatsAppBotManager = (function() {
 
   async function refreshContactsCount() {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     try {
       const response = await fetch(`/api/v1/${RANDOM_ACCESS}/tab-whatsapp/contacts-count`);
       const data = await response.json();
-      
+
       if (data.success) {
         const count = data.count || 0;
         Swal.fire({
@@ -1404,11 +1475,11 @@ const WhatsAppBotManager = (function() {
 
   async function checkBatteryStatus() {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     try {
       const response = await fetch(`/api/v1/${RANDOM_ACCESS}/tab-whatsapp/phone-status`);
       const data = await response.json();
-      
+
       if (data.success) {
         Swal.fire({
           icon: 'info',
@@ -1475,7 +1546,7 @@ const WhatsAppBotManager = (function() {
         const languages = langListData.data || [];
         const container = document.getElementById('languages-list');
         if (container) {
-          container.innerHTML = languages.map(lang => 
+          container.innerHTML = languages.map(lang =>
             `<div class="col-md-3 mb-2">
               <span class="badge bg-label-primary me-1"><i class="fas fa-check-circle"></i> ${lang.name}</span>
             </div>`
@@ -1574,7 +1645,7 @@ const WhatsAppBotManager = (function() {
 
       const response = await fetch('/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp/groups/sync', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'}
+        headers: { 'Content-Type': 'application/json' }
       });
 
       if (!response.ok) throw new Error('Sync failed');
@@ -1627,6 +1698,7 @@ const WhatsAppBotManager = (function() {
     saveAutoReply,
     deleteAutoReply,
     showGroupDetails,
+    showImageModal,
     testConnection,
     refreshContactsCount,
     checkBatteryStatus,
@@ -1635,7 +1707,7 @@ const WhatsAppBotManager = (function() {
 })();
 
 // WhatsApp User Management Module
-const WhatsAppUserManager = (function() {
+const WhatsAppUserManager = (function () {
   // Private variables
   let userModal, viewUserModal;
   let currentPage = 1;
@@ -1643,10 +1715,10 @@ const WhatsAppUserManager = (function() {
   let RANDOM_ACCESS = '';
 
   // Initialize the User Management tab
-  function init() {    
+  function init() {
     // Get RANDOM_ACCESS from window if available
     RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     if (!RANDOM_ACCESS) {
       console.error('RANDOM_ACCESS not available yet, will retry on tab load');
       return;
@@ -1654,21 +1726,21 @@ const WhatsAppUserManager = (function() {
 
     const userModalEl = document.getElementById('userModal');
     const viewUserModalEl = document.getElementById('viewUserModal');
-    
+
     if (userModalEl) userModal = new bootstrap.Modal(userModalEl);
     if (viewUserModalEl) viewUserModal = new bootstrap.Modal(viewUserModalEl);
-    
+
     // Initialize DataTable with server-side processing
     initializeDataTable();
     loadStatistics();
-    
+
     // Setup filter change handlers
-    $('#user-type-filter, #status-filter').on('change', function() {
+    $('#user-type-filter, #status-filter').on('change', function () {
       if (window.usersDataTable) {
         window.usersDataTable.ajax.reload();
       }
     });
-    
+
     // Search on Enter key or button click
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
@@ -1695,7 +1767,7 @@ const WhatsAppUserManager = (function() {
         type: 'POST',
         contentType: 'application/json',
         dataType: 'json',
-        data: function(d) {
+        data: function (d) {
           // Add custom filters to the DataTables request
           const userTypeFilter = $('#user-type-filter').val();
           const statusFilter = $('#status-filter').val();
@@ -1705,46 +1777,46 @@ const WhatsAppUserManager = (function() {
           if (userOfFilter) d.user_of = userOfFilter;
           return JSON.stringify(d);
         },
-        error: function(xhr, error, code) {
+        error: function (xhr, error, code) {
           console.error('DataTable AJAX error:', xhr.responseText, error);
         }
       },
       columns: [
-        { 
-          data: 'id', 
-          title: 'ID', 
+        {
+          data: 'id',
+          title: 'ID',
           width: '60px',
           className: 'text-center'
         },
-        { 
-          data: 'full_name', 
+        {
+          data: 'full_name',
           title: 'Full Name',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return data || '<span class="text-muted">-</span>';
           }
         },
-        { 
-          data: 'phone_number', 
+        {
+          data: 'phone_number',
           title: 'Phone Number',
           width: '140px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             if (!data) return '<span class="text-muted">-</span>';
             return `<span class="badge bg-light text-dark"><i class="fas fa-phone me-1"></i>${data}</span>`;
           }
         },
-        { 
-          data: 'email', 
+        {
+          data: 'email',
           title: 'Email',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             if (!data) return '<span class="text-muted">-</span>';
             return `<small>${data}</small>`;
           }
         },
-        { 
-          data: 'user_type', 
+        {
+          data: 'user_type',
           title: 'User Type',
           width: '130px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             const typeMap = {
               'common': '<span class="badge bg-secondary">Common</span>',
               'super_user': '<span class="badge bg-primary">Super User</span>',
@@ -1754,11 +1826,11 @@ const WhatsAppUserManager = (function() {
             return typeMap[data] || '<span class="text-muted">-</span>';
           }
         },
-        { 
-          data: 'user_of', 
+        {
+          data: 'user_of',
           title: 'User Of',
           width: '150px',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             const userOfMap = {
               'company_employee': '<span class="badge bg-success">Company Employee</span>',
               'client_company_employee': '<span class="badge bg-warning text-dark">Client Company</span>'
@@ -1766,12 +1838,12 @@ const WhatsAppUserManager = (function() {
             return userOfMap[data] || '<span class="text-muted">-</span>';
           }
         },
-        { 
+        {
           data: 'allowed_chats',
           title: 'Chat Mode',
           width: '100px',
           className: 'text-center',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             const chatMap = {
               'direct': '<i class="fas fa-user text-info" title="Direct"></i>',
               'group': '<i class="fas fa-users text-warning" title="Group"></i>',
@@ -1780,21 +1852,21 @@ const WhatsAppUserManager = (function() {
             return chatMap[data] || '<span class="text-muted">-</span>';
           }
         },
-        { 
+        {
           data: 'max_daily_quota',
           title: 'Quota',
           width: '80px',
           className: 'text-center',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return `<span class="badge bg-primary">${data || 0}</span>`;
           }
         },
-        { 
+        {
           data: 'is_banned',
           title: 'Status',
           width: '90px',
           className: 'text-center',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             if (data) {
               return '<span class="badge bg-danger"><i class="fas fa-ban me-1"></i>Banned</span>';
             }
@@ -1808,7 +1880,7 @@ const WhatsAppUserManager = (function() {
           searchable: false,
           width: '160px',
           className: 'text-center',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return `
               <div class="btn-group btn-group-sm" role="group">
                 <button class="btn btn-info" onclick="WhatsAppUserManager.viewUser(${row.id})" title="View Details">
@@ -1851,11 +1923,11 @@ const WhatsAppUserManager = (function() {
         }
       },
       dom: '<"row mb-3"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-           '<"row"<"col-sm-12"tr>>' +
-           '<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        '<"row"<"col-sm-12"tr>>' +
+        '<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
       responsive: true,
       autoWidth: false,
-      drawCallback: function() {
+      drawCallback: function () {
         // Add tooltips after table draw
         $('[title]').tooltip();
       }
@@ -1870,27 +1942,27 @@ const WhatsAppUserManager = (function() {
 
   async function loadStatistics() {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     try {
       // Build query string with current filters
       const params = new URLSearchParams();
       if (currentFilters.user_type) params.append('user_type', currentFilters.user_type);
       if (currentFilters.user_of) params.append('user_of', currentFilters.user_of);
       if (currentFilters.status) params.append('status', currentFilters.status);
-      
+
       const queryString = params.toString();
-      const url = '/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp-user-management/statistics' + 
-                  (queryString ? '?' + queryString : '');
-      
+      const url = '/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp-user-management/statistics' +
+        (queryString ? '?' + queryString : '');
+
       const response = await fetch(url);
       const data = await response.json();
-      
+
       if (data) {
         const totalEl = document.getElementById('stat-total');
         const activeEl = document.getElementById('stat-active');
         const registeredEl = document.getElementById('stat-registered');
         const bannedEl = document.getElementById('stat-banned');
-        
+
         if (totalEl) totalEl.textContent = data.total || 0;
         if (activeEl) activeEl.textContent = data.active || 0;
         if (registeredEl) registeredEl.textContent = data.registered || 0;
@@ -1908,12 +1980,12 @@ const WhatsAppUserManager = (function() {
       user_of: $('#user-of-filter').val(),
       status: $('#status-filter').val()
     };
-    
+
     if (window.usersDataTable) {
       // Trigger table reload with filters
       window.usersDataTable.ajax.reload();
     }
-    
+
     // Reload statistics after filtering
     loadStatistics();
   }
@@ -1933,7 +2005,7 @@ const WhatsAppUserManager = (function() {
     }
     const modalTitle = document.getElementById('userModalLabel');
     if (modalTitle) modalTitle.textContent = 'Add WhatsApp User';
-    
+
     if (!userModal) {
       const modalEl = document.getElementById('userModal');
       if (modalEl) userModal = new bootstrap.Modal(modalEl);
@@ -1943,7 +2015,7 @@ const WhatsAppUserManager = (function() {
 
   async function editUser(id) {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     // Show confirmation dialog
     const confirmResult = await Swal.fire({
       icon: 'question',
@@ -1954,27 +2026,27 @@ const WhatsAppUserManager = (function() {
       cancelButtonText: getI18n('table.cancelButton'),
       confirmButtonColor: '#3085d6'
     });
-    
+
     if (!confirmResult.isConfirmed) return;
-    
+
     try {
       const response = await fetch(`/api/v1/${RANDOM_ACCESS}/tab-whatsapp-user-management/users/${id}`);
       const user = await response.json();
-      
+
       // Populate form
       const fields = [
         'full-name', 'email', 'phone-number', 'allowed-chats',
         'allowed-types', 'max-daily-quota', 'allowed-to-call',
         'use-bot', 'user-type', 'user-of', 'description'
       ];
-      
+
       fields.forEach(field => {
         const el = document.getElementById(field);
-        const key = field.split('-').map((word, i) => 
-          i === 0 ? word.charAt(0).toUpperCase() + word.slice(1) : 
-          word.charAt(0).toUpperCase() + word.slice(1)
+        const key = field.split('-').map((word, i) =>
+          i === 0 ? word.charAt(0).toUpperCase() + word.slice(1) :
+            word.charAt(0).toUpperCase() + word.slice(1)
         ).join('');
-        
+
         if (el && user[key] !== undefined) {
           if (el.type === 'checkbox') {
             el.checked = user[key];
@@ -1983,13 +2055,13 @@ const WhatsAppUserManager = (function() {
           }
         }
       });
-      
+
       const form = document.getElementById('user-form');
       if (form) form.dataset.userId = id;
-      
+
       const modalTitle = document.getElementById('userModalLabel');
       if (modalTitle) modalTitle.textContent = 'Edit WhatsApp User';
-      
+
       if (!userModal) {
         const modalEl = document.getElementById('userModal');
         if (modalEl) userModal = new bootstrap.Modal(modalEl);
@@ -2007,11 +2079,11 @@ const WhatsAppUserManager = (function() {
 
   async function viewUser(id) {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     try {
       const response = await fetch(`/api/v1/${RANDOM_ACCESS}/tab-whatsapp-user-management/users/${id}`);
       const user = await response.json();
-      
+
       const detailsContent = document.getElementById('user-details-content');
       if (detailsContent) {
         detailsContent.innerHTML = `
@@ -2085,7 +2157,7 @@ const WhatsAppUserManager = (function() {
           </div>
         `;
       }
-      
+
       if (!viewUserModal) {
         const modalEl = document.getElementById('viewUserModal');
         if (modalEl) viewUserModal = new bootstrap.Modal(modalEl);
@@ -2103,10 +2175,10 @@ const WhatsAppUserManager = (function() {
 
   async function saveUser() {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     const form = document.getElementById('user-form');
     const id = form?.dataset.userId;
-    
+
     const userData = {
       full_name: document.getElementById('user-full-name')?.value,
       email: document.getElementById('user-email')?.value,
@@ -2122,11 +2194,11 @@ const WhatsAppUserManager = (function() {
     };
 
     try {
-      const url = id ? 
-        `/api/v1/${RANDOM_ACCESS}/tab-whatsapp-user-management/users/${id}` : 
+      const url = id ?
+        `/api/v1/${RANDOM_ACCESS}/tab-whatsapp-user-management/users/${id}` :
         `/api/v1/${RANDOM_ACCESS}/tab-whatsapp-user-management/users`;
       const method = id ? 'PUT' : 'POST';
-      
+
       const response = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
@@ -2164,12 +2236,12 @@ const WhatsAppUserManager = (function() {
 
   async function toggleBanUser(id, isBanned) {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     const action = isBanned ? 'ban' : 'unban';
     const confirmKey = isBanned ? 'whatsapp.confirmBanUser' : 'whatsapp.confirmUnbanUser';
     const successKey = isBanned ? 'whatsapp.userBannedSuccess' : 'whatsapp.userUnbannedSuccess';
     const buttonKey = isBanned ? 'whatsapp.confirmBan' : 'whatsapp.confirmUnban';
-    
+
     const confirmResult = await Swal.fire({
       icon: 'warning',
       title: getI18n('whatsapp.confirmAction'),
@@ -2179,7 +2251,7 @@ const WhatsAppUserManager = (function() {
       cancelButtonText: getI18n('table.cancelButton'),
       confirmButtonColor: '#d33'
     });
-    
+
     if (!confirmResult.isConfirmed) return;
 
     try {
@@ -2219,7 +2291,7 @@ const WhatsAppUserManager = (function() {
 
   async function deleteUser(id) {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     const confirmResult = await Swal.fire({
       icon: 'warning',
       title: getI18n('whatsapp.confirmDeleteUser'),
@@ -2229,7 +2301,7 @@ const WhatsAppUserManager = (function() {
       cancelButtonText: getI18n('table.cancelButton'),
       confirmButtonColor: '#d33'
     });
-    
+
     if (!confirmResult.isConfirmed) return;
 
     try {
@@ -2267,7 +2339,7 @@ const WhatsAppUserManager = (function() {
 
   async function exportUsers() {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
-    
+
     const params = new URLSearchParams(currentFilters);
     window.location.href = `/api/v1/${RANDOM_ACCESS}/tab-whatsapp-user-management/users/export?${params}`;
   }
@@ -2287,40 +2359,40 @@ const WhatsAppUserManager = (function() {
       // Build CSV content from backend data
       const headers = templateData.headers;
       const examples = templateData.examples || [];
-      
+
       let csvRows = [];
-      
+
       // Add header row
       csvRows.push(headers.join(','));
-      
+
       // Add example rows
       examples.forEach(example => {
         const row = headers.map(header => {
           let value = example[header] || '';
           // Escape values that contain commas or quotes
           if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-            value = `"${value.replace(/"/g, '""')}"`; 
+            value = `"${value.replace(/"/g, '""')}"`;
           }
           return value;
         });
         csvRows.push(row.join(','));
       });
-      
+
       const csvContent = csvRows.join('\n');
-      
+
       // Create and trigger download
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
-      
+
       link.setAttribute('href', url);
       link.setAttribute('download', 'whatsapp_users_import_template.csv');
       link.style.visibility = 'hidden';
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       Swal.fire({
         icon: 'success',
         title: getI18n('table.successTitle'),
@@ -2356,17 +2428,17 @@ const WhatsAppUserManager = (function() {
       preConfirm: () => {
         const fileInput = document.getElementById('import-file-input');
         const file = fileInput?.files?.[0];
-        
+
         if (!file) {
           Swal.showValidationMessage(getI18n('whatsappUserManagement.pleaseSelectFile'));
           return false;
         }
-        
+
         if (!file.name.endsWith('.csv')) {
           Swal.showValidationMessage(getI18n('whatsappUserManagement.invalidFileType'));
           return false;
         }
-        
+
         return file;
       }
     }).then((result) => {
@@ -2404,7 +2476,7 @@ const WhatsAppUserManager = (function() {
           .replace('{created}', data.created || 0)
           .replace('{updated}', data.updated || 0)
           .replace('{failed}', data.failed || 0);
-          
+
         Swal.fire({
           icon: 'success',
           title: getI18n('table.successTitle'),
@@ -2438,9 +2510,9 @@ const WhatsAppUserManager = (function() {
       if (isNaN(date.getTime())) {
         return dateString; // Return original if can't parse
       }
-      return date.toLocaleString('en-US', { 
-        year: 'numeric', 
-        month: '2-digit', 
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
@@ -2472,26 +2544,26 @@ const WhatsAppUserManager = (function() {
 
 // Auto-initialize when tab is loaded
 // This watches for when the RANDOM_ACCESS becomes available
-(function() {
+(function () {
   let initAttempts = 0;
   const maxAttempts = 50; // Try for 5 seconds
-  
+
   const checkAndInit = setInterval(() => {
     initAttempts++;
-    
-    if (window.RANDOM_ACCESS) {      
+
+    if (window.RANDOM_ACCESS) {
       // Check which tab is currently active and initialize accordingly
       const whatsappTab = document.getElementById('tab-whatsapp');
       const userManagementTab = document.getElementById('tab-whatsapp-user-management');
-      
+
       if (whatsappTab && whatsappTab.children.length > 0) {
         WhatsAppBotManager.init();
       }
-      
+
       if (userManagementTab && userManagementTab.children.length > 0) {
         WhatsAppUserManager.init();
       }
-      
+
       clearInterval(checkAndInit);
     } else if (initAttempts >= maxAttempts) {
       console.warn('RANDOM_ACCESS not available after 5 seconds, modules will initialize on tab load');

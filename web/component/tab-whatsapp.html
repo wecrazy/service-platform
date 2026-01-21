@@ -123,7 +123,7 @@
         <div class="card-body">
           <div class="row">
             <!-- Connected Account Info -->
-            <div class="col-md-6">
+            <div class="col-md-6 mt-3">
               <div id="account-info" class="mb-3" style="display: none;">
                 <h6 class="text-muted mb-3">
                   <i class="fas fa-user-check me-2"></i><span data-i18n="whatsapp.connectedAccount">Connected Account</span>
@@ -182,7 +182,7 @@
             </div>
 
             <!-- QR Code / Pairing Code Display -->
-            <div class="col-md-6">
+            <div class="col-md-6 mt-3">
               <!-- Connection Info Panel (shown when connected) -->
               <div id="connection-info-panel" style="display: none;">
                 <h6 class="text-muted mb-3">
@@ -617,6 +617,27 @@
             <tbody></tbody>
           </table>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Image Viewer Modal -->
+<div class="modal fade" id="imageViewerModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" data-i18n="whatsapp.imageViewer">Image Viewer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="imageViewerImg" src="" alt="Profile Picture" class="img-fluid rounded" style="max-width: 100%; max-height: 70vh;">
+      </div>
+      <div class="modal-footer">
+        <a id="imageViewerDownload" href="" download class="btn btn-primary">
+          <i class="fas fa-download me-2"></i><span data-i18n="whatsapp.download">Download</span>
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="whatsapp.close">Close</button>
       </div>
     </div>
   </div>

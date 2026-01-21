@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -802,18 +803,60 @@ func (s *server) GetGroupInfo(ctx context.Context, req *pb.GetGroupInfoRequest) 
 			}
 		}
 
+		// Try to get contact info from store
+		var displayName string
+		if contact, err := s.client.Store.Contacts.GetContact(ctx, p.JID); err == nil && contact.Found {
+			displayName = contact.PushName
+			if displayName == "" {
+				displayName = contact.FullName
+			}
+		}
+
+		// Try to get profile picture
+		profilePicURL := ""
+		if pic, err := s.client.GetProfilePictureInfo(ctx, p.JID, nil); err == nil && pic != nil {
+			profilePicURL = pic.URL
+		}
+
 		participants[i] = &pb.GroupParticipant{
-			Jid:          p.JID.User,
-			IsAdmin:      p.IsAdmin,
-			IsSuperAdmin: p.IsSuperAdmin,
-			PhoneNumber:  phoneNumber,
+			Jid:               p.JID.String(),
+			IsAdmin:           p.IsAdmin,
+			IsSuperAdmin:      p.IsSuperAdmin,
+			Lid:               p.LID.String(),
+			DisplayName:       displayName,
+			PhoneNumber:       phoneNumber,
+			ProfilePictureUrl: profilePicURL,
 		}
 	}
 
+	// Get group profile picture
+	groupPhotoURL := ""
+	if pic, err := s.client.GetProfilePictureInfo(ctx, jid, nil); err == nil && pic != nil {
+		groupPhotoURL = pic.URL
+	}
+
 	return &pb.GetGroupInfoResponse{
-		Success:      true,
-		Name:         info.Name,
-		Participants: participants,
+		Success:           true,
+		Message:           "Group info retrieved successfully",
+		Name:              info.Name,
+		Participants:      participants,
+		Jid:               info.JID.String(),
+		OwnerJid:          info.OwnerJID.String(),
+		Topic:             info.Topic,
+		TopicSetAt:        info.TopicSetAt.Unix(),
+		TopicSetBy:        info.TopicSetBy.String(),
+		LinkedParentJid:   info.LinkedParentJID.String(),
+		IsDefaultSubGroup: info.IsDefaultSubGroup,
+		IsParent:          info.IsParent,
+		Description:       info.Topic,
+		PhotoUrl:          groupPhotoURL,
+		Settings: &pb.GroupSettings{
+			Locked:                info.IsLocked,
+			AnnouncementOnly:      info.IsAnnounce,
+			NoFrequentlyForwarded: false, // Not sure if available
+			Ephemeral:             info.IsEphemeral,
+			EphemeralDuration:     int32(info.DisappearingTimer),
+		},
 	}, nil
 }
 
@@ -875,13 +918,20 @@ func (s *server) GetJoinedGroups(ctx context.Context, req *pb.GetJoinedGroupsReq
 				}
 			}
 
+			// Try to get profile picture
+			profilePicURL := ""
+			if pic, err := s.client.GetProfilePictureInfo(ctx, p.JID, nil); err == nil && pic != nil {
+				profilePicURL = pic.URL
+			}
+
 			participants[j] = &pb.GroupParticipant{
-				Jid:          p.JID.User,
-				IsAdmin:      p.IsAdmin,
-				IsSuperAdmin: p.IsSuperAdmin,
-				Lid:          p.LID.String(),
-				DisplayName:  displayName,
-				PhoneNumber:  phoneNumber,
+				Jid:               p.JID.User,
+				IsAdmin:           p.IsAdmin,
+				IsSuperAdmin:      p.IsSuperAdmin,
+				Lid:               p.LID.String(),
+				DisplayName:       displayName,
+				PhoneNumber:       phoneNumber,
+				ProfilePictureUrl: profilePicURL,
 			}
 		}
 
@@ -966,14 +1016,21 @@ func (s *server) SyncGroups() {
 						}
 					}
 
+					// Try to get profile picture
+					profilePicURL := ""
+					if pic, err := s.client.GetProfilePictureInfo(context.Background(), p.JID, nil); err == nil && pic != nil {
+						profilePicURL = pic.URL
+					}
+
 					participants[i] = whatsnyanmodel.WhatsAppGroupParticipant{
-						GroupJID:     group.JID.String(),
-						UserJID:      p.JID.String(),
-						LID:          p.LID.String(),
-						DisplayName:  displayName,
-						IsAdmin:      p.IsAdmin,
-						IsSuperAdmin: p.IsSuperAdmin,
-						PhoneNumber:  phoneNumber,
+						GroupJID:          group.JID.String(),
+						UserJID:           p.JID.String(),
+						LID:               p.LID.String(),
+						DisplayName:       displayName,
+						IsAdmin:           p.IsAdmin,
+						IsSuperAdmin:      p.IsSuperAdmin,
+						PhoneNumber:       phoneNumber,
+						ProfilePictureURL: profilePicURL,
 					}
 				}
 				if err := tx.Create(&participants).Error; err != nil {
@@ -988,6 +1045,73 @@ func (s *server) SyncGroups() {
 		}
 	}
 	logrus.Infof("Successfully synced %d WhatsApp groups to database", len(groups))
+}
+
+// GetProfilePicture retrieves a user's profile picture.
+func (s *server) GetProfilePicture(ctx context.Context, req *pb.GetProfilePictureRequest) (*pb.GetProfilePictureResponse, error) {
+	if s.client == nil || !s.client.IsConnected() {
+		return &pb.GetProfilePictureResponse{
+			Success: false,
+			Message: "WhatsApp client not connected",
+		}, nil
+	}
+
+	// Parse JID
+	parsedJID, err := types.ParseJID(req.Jid)
+	if err != nil {
+		return &pb.GetProfilePictureResponse{
+			Success: false,
+			Message: fmt.Sprintf("Invalid JID format: %v", err),
+		}, nil
+	}
+
+	// Get profile picture info
+	pic, err := s.client.GetProfilePictureInfo(ctx, parsedJID, nil)
+	if err != nil || pic == nil || pic.URL == "" {
+		return &pb.GetProfilePictureResponse{
+			Success: false,
+			Message: "Profile picture not found or not available",
+		}, nil
+	}
+
+	// Download the image
+	resp, err := http.Get(pic.URL)
+	if err != nil {
+		return &pb.GetProfilePictureResponse{
+			Success: false,
+			Message: fmt.Sprintf("Failed to download profile picture: %v", err),
+		}, nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return &pb.GetProfilePictureResponse{
+			Success: false,
+			Message: fmt.Sprintf("Failed to fetch profile picture from WhatsApp (status: %d)", resp.StatusCode),
+		}, nil
+	}
+
+	// Read the image data
+	imageData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return &pb.GetProfilePictureResponse{
+			Success: false,
+			Message: fmt.Sprintf("Failed to read image data: %v", err),
+		}, nil
+	}
+
+	// Get content type
+	contentType := resp.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "image/jpeg" // Default fallback
+	}
+
+	return &pb.GetProfilePictureResponse{
+		Success:     true,
+		Message:     "Profile picture retrieved successfully",
+		ImageData:   imageData,
+		ContentType: contentType,
+	}, nil
 }
 
 // eventHandler handles incoming events from the WhatsApp client.
