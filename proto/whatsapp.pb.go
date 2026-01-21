@@ -578,7 +578,17 @@ type GetMeResponse struct {
 	// Message describing the result.
 	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	// JID of the current user.
-	Jid           string `protobuf:"bytes,3,opt,name=jid,proto3" json:"jid,omitempty"`
+	Jid string `protobuf:"bytes,3,opt,name=jid,proto3" json:"jid,omitempty"`
+	// Phone number of the current user.
+	PhoneNumber string `protobuf:"bytes,4,opt,name=phone_number,json=phoneNumber,proto3" json:"phone_number,omitempty"`
+	// Display name / push name of the current user.
+	Name string `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
+	// Profile picture URL (if available).
+	ProfilePicUrl string `protobuf:"bytes,6,opt,name=profile_pic_url,json=profilePicUrl,proto3" json:"profile_pic_url,omitempty"`
+	// Device information.
+	Device string `protobuf:"bytes,7,opt,name=device,proto3" json:"device,omitempty"`
+	// Platform (e.g., android, iphone, web).
+	Platform      string `protobuf:"bytes,8,opt,name=platform,proto3" json:"platform,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -630,6 +640,41 @@ func (x *GetMeResponse) GetMessage() string {
 func (x *GetMeResponse) GetJid() string {
 	if x != nil {
 		return x.Jid
+	}
+	return ""
+}
+
+func (x *GetMeResponse) GetPhoneNumber() string {
+	if x != nil {
+		return x.PhoneNumber
+	}
+	return ""
+}
+
+func (x *GetMeResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *GetMeResponse) GetProfilePicUrl() string {
+	if x != nil {
+		return x.ProfilePicUrl
+	}
+	return ""
+}
+
+func (x *GetMeResponse) GetDevice() string {
+	if x != nil {
+		return x.Device
+	}
+	return ""
+}
+
+func (x *GetMeResponse) GetPlatform() string {
+	if x != nil {
+		return x.Platform
 	}
 	return ""
 }
@@ -2271,11 +2316,16 @@ const file_proto_whatsapp_proto_rawDesc = "" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x10\n" +
 	"\x03jid\x18\x02 \x01(\tR\x03jid\x12#\n" +
 	"\ris_registered\x18\x03 \x01(\bR\fisRegistered\"\x0e\n" +
-	"\fGetMeRequest\"U\n" +
+	"\fGetMeRequest\"\xe8\x01\n" +
 	"\rGetMeResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12\x10\n" +
-	"\x03jid\x18\x03 \x01(\tR\x03jid\"2\n" +
+	"\x03jid\x18\x03 \x01(\tR\x03jid\x12!\n" +
+	"\fphone_number\x18\x04 \x01(\tR\vphoneNumber\x12\x12\n" +
+	"\x04name\x18\x05 \x01(\tR\x04name\x12&\n" +
+	"\x0fprofile_pic_url\x18\x06 \x01(\tR\rprofilePicUrl\x12\x16\n" +
+	"\x06device\x18\a \x01(\tR\x06device\x12\x1a\n" +
+	"\bplatform\x18\b \x01(\tR\bplatform\"2\n" +
 	"\x13GetGroupInfoRequest\x12\x1b\n" +
 	"\tgroup_jid\x18\x01 \x01(\tR\bgroupJid\"\x9b\x01\n" +
 	"\x14GetGroupInfoResponse\x12\x18\n" +
