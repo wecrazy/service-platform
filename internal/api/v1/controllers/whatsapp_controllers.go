@@ -5,16 +5,20 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"os"
 	"service-platform/internal/api/v1/dto"
 	"service-platform/internal/config"
 	whatsnyanmodel "service-platform/internal/core/model/whatsnyan_model"
 	"service-platform/internal/pkg/fun"
 	"service-platform/internal/whatsapp"
+	"strings"
 	"time"
 
 	pb "service-platform/proto"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
+	"github.com/sirupsen/logrus"
 	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -253,38 +257,63 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Failure      500  {object}   dto.APIErrorResponse "Internal Server Error"
 // @Router       /api/v1/{access}/tab-whatsapp/connect [post]
-func ConnectWhatsApp(c *gin.Context) {
-	if whatsapp.Client == nil {
-		fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "WhatsApp service not available")
-		return
-	}
-
-	// Accept optional phone number for phone pairing
-	var req struct {
-		PhoneNumber string `json:"phone_number"`
-	}
-	// Don't fail if no body provided, just use empty phone number
-	c.ShouldBindJSON(&req)
-
-	resp, err := whatsapp.Client.Connect(c.Request.Context(), &pb.ConnectRequest{
-		PhoneNumber: req.PhoneNumber, // If empty, will use QR code; if provided, will use phone pairing
-	})
-
-	if err != nil {
-		if grpcErr, ok := status.FromError(err); ok {
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, grpcErr.Message())
+func ConnectWhatsApp(redisDB *redis.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if whatsapp.Client == nil {
+			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "WhatsApp service not available")
 			return
 		}
-		fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
-		return
-	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success":      resp.Success,
-		"message":      resp.Message,
-		"qr_code":      resp.QrCode,
-		"pairing_code": resp.PairingCode,
-	})
+		// Accept optional phone number and force_qr flag
+		var req struct {
+			PhoneNumber string `json:"phone_number"`
+			ForceQR     bool   `json:"force_qr"`
+		}
+		// Don't fail if no body provided, just use empty values
+		c.ShouldBindJSON(&req)
+
+		resp, err := whatsapp.Client.Connect(c.Request.Context(), &pb.ConnectRequest{
+			PhoneNumber: req.PhoneNumber,
+			ForceQr:     req.ForceQR,
+		})
+
+		if err != nil {
+			if grpcErr, ok := status.FromError(err); ok {
+				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, grpcErr.Message())
+				return
+			}
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		qrCode := resp.QrCode
+
+		// If response contains a file path (PNG file), generate secure token and proxy URL
+		if resp.Success && strings.HasSuffix(resp.QrCode, ".png") && strings.Contains(resp.QrCode, "qr_") {
+			// Generate secure token for QR access
+			token := fmt.Sprintf("qr_%d_%s", time.Now().Unix(), fun.GenerateRandomString(16))
+
+			// Store token in Redis with 5-minute expiration
+			ctx := context.Background()
+			key := fmt.Sprintf("qr_token:%s", token)
+			err := redisDB.Set(ctx, key, resp.QrCode, 5*time.Minute).Err()
+			if err != nil {
+				logrus.Errorf("Failed to store QR token in Redis: %v", err)
+				// Fall back to returning the raw QR data if token storage fails
+			} else {
+				// Generate proxy URL
+				randomAccess := c.Param("access")
+				qrCode = fmt.Sprintf("/api/v1/%s/tab-whatsapp/qr/%s", randomAccess, token)
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success":      resp.Success,
+			"message":      resp.Message,
+			"qr_code":      qrCode,
+			"pairing_code": resp.PairingCode,
+		})
+	}
 }
 
 // DisconnectWhatsApp disconnects the WhatsApp client
@@ -294,10 +323,8 @@ func ConnectWhatsApp(c *gin.Context) {
 // @Tags         WhatsApp
 // @Accept       json
 // @Produce      json
-// @Param        request body dto.DisconnectWhatsAppRequest true "Disconnect Request"
 // @Success      200  {object}   map[string]string
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
-// @Failure      400  {object}   dto.APIErrorResponse "Bad Request"
 // @Failure      500  {object}   dto.APIErrorResponse "Internal Server Error"
 // @Router       /api/v1/{access}/tab-whatsapp/disconnect [post]
 func DisconnectWhatsApp(c *gin.Context) {
@@ -306,16 +333,7 @@ func DisconnectWhatsApp(c *gin.Context) {
 		return
 	}
 
-	var req dto.DisconnectWhatsAppRequest
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	resp, err := whatsapp.Client.Disconnect(c.Request.Context(), &pb.DisconnectRequest{
-		PhoneNumber: req.PhoneNumber,
-	})
+	resp, err := whatsapp.Client.Disconnect(c.Request.Context(), &pb.DisconnectRequest{})
 
 	if err != nil {
 		if grpcErr, ok := status.FromError(err); ok {
@@ -375,28 +393,62 @@ func LogoutWhatsApp(c *gin.Context) {
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Failure      500  {object}   dto.APIErrorResponse "Internal Server Error"
 // @Router       /api/v1/{access}/tab-whatsapp/refresh_qr [post]
-func RefreshWhatsAppQR(c *gin.Context) {
-	if whatsapp.Client == nil {
-		fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "WhatsApp service not available")
-		return
-	}
-
-	resp, err := whatsapp.Client.RefreshQR(c.Request.Context(), &pb.RefreshQRRequest{})
-
-	if err != nil {
-		if grpcErr, ok := status.FromError(err); ok {
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, grpcErr.Message())
+func RefreshWhatsAppQR(redisDB *redis.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if whatsapp.Client == nil {
+			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "WhatsApp service not available")
 			return
 		}
-		fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
-		return
-	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": resp.Success,
-		"message": resp.Message,
-		"qr_code": resp.QrCode,
-	})
+		// Parse request body for force_new parameter
+		var reqBody struct {
+			ForceNew bool `json:"force_new"`
+		}
+		if err := c.ShouldBindJSON(&reqBody); err != nil {
+			// If JSON parsing fails, default to force_new=false
+			reqBody.ForceNew = false
+		}
+
+		resp, err := whatsapp.Client.RefreshQR(c.Request.Context(), &pb.RefreshQRRequest{
+			ForceNew: reqBody.ForceNew,
+		})
+
+		if err != nil {
+			if grpcErr, ok := status.FromError(err); ok {
+				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, grpcErr.Message())
+				return
+			}
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		qrCode := resp.QrCode
+
+		// If response contains a file path (PNG file), generate secure token and proxy URL
+		if resp.Success && strings.HasSuffix(resp.QrCode, ".png") && strings.Contains(resp.QrCode, "qr_") {
+			// Generate secure token for QR access
+			token := fmt.Sprintf("qr_%d_%s", time.Now().Unix(), fun.GenerateRandomString(16))
+
+			// Store token in Redis with 5-minute expiration
+			ctx := context.Background()
+			key := fmt.Sprintf("qr_token:%s", token)
+			err := redisDB.Set(ctx, key, resp.QrCode, 5*time.Minute).Err()
+			if err != nil {
+				logrus.Errorf("Failed to store QR token in Redis: %v", err)
+				// Fall back to returning the raw QR data if token storage fails
+			} else {
+				// Generate proxy URL
+				randomAccess := c.Param("access")
+				qrCode = fmt.Sprintf("/api/v1/%s/tab-whatsapp/qr/%s", randomAccess, token)
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": resp.Success,
+			"message": resp.Message,
+			"qr_code": qrCode,
+		})
+	}
 }
 
 // CreateStatus godoc
@@ -494,5 +546,39 @@ func CreateStatus(db *gorm.DB) gin.HandlerFunc {
 			"message":   resp.Message,
 			"status_id": resp.StatusId,
 		})
+	}
+}
+
+// ServeQRImage serves QR code images with secure token verification
+func ServeQRImage(redisDB *redis.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Get token from URL parameter
+		token := c.Param("token")
+		if token == "" {
+			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Token required")
+			return
+		}
+
+		// Verify token in Redis
+		ctx := context.Background()
+		key := fmt.Sprintf("qr_token:%s", token)
+		qrPath, err := redisDB.Get(ctx, key).Result()
+		if err != nil {
+			if err == redis.Nil {
+				fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, "Invalid or expired token")
+				return
+			}
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Token verification failed")
+			return
+		}
+
+		// Check if file exists
+		if _, err := os.Stat(qrPath); os.IsNotExist(err) {
+			fun.HandleAPIErrorSimple(c, http.StatusNotFound, "QR image not found")
+			return
+		}
+
+		// Serve the image file
+		c.File(qrPath)
 	}
 }

@@ -80,8 +80,8 @@ type CreateWhatsAppStatusRequest struct {
 
 // DisconnectWhatsAppRequest represents the request body for disconnecting WhatsApp
 type DisconnectWhatsAppRequest struct {
-	// Phone Number to disconnect
-	PhoneNumber string `json:"phone_number" binding:"required" example:"6281234567890"`
+	// Phone Number to disconnect (optional)
+	PhoneNumber string `json:"phone_number" example:"6281234567890"`
 }
 
 // CheckWARegisteredRequest represents the query parameters for checking if a phone number is registered on WhatsApp

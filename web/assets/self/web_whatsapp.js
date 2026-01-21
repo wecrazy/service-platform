@@ -166,6 +166,12 @@ const WhatsAppBotManager = (function () {
         if (btnConnect) btnConnect.disabled = true;
         if (btnDisconnect) btnDisconnect.disabled = false;
         if (btnLogout) btnLogout.disabled = false;
+
+        // Hide any QR code or pairing code displays when connected
+        const qrContainer = document.getElementById('qr-container');
+        const pairingContainer = document.getElementById('pairing-container');
+        if (qrContainer) qrContainer.style.display = 'none';
+        if (pairingContainer) pairingContainer.style.display = 'none';
       } else {
         statusBadge.innerHTML = '<i class="fas fa-times-circle me-1"></i>Disconnected';
         statusBadge.className = 'badge bg-danger';
@@ -218,6 +224,17 @@ const WhatsAppBotManager = (function () {
   }
 
   function showConnectModal() {
+    // Don't show connect modal if already connected
+    const btnConnect = document.getElementById('btn-connect');
+    if (btnConnect && btnConnect.disabled) {
+      Swal.fire({
+        icon: 'info',
+        title: getI18n('table.infoTitle') || 'Info',
+        text: getI18n('whatsapp.alreadyConnected') || 'WhatsApp is already connected'
+      });
+      return;
+    }
+
     if (!connectModal) {
       const modalEl = document.getElementById('connectModal');
       if (modalEl) connectModal = new bootstrap.Modal(modalEl);
@@ -244,7 +261,11 @@ const WhatsAppBotManager = (function () {
       const response = await fetch('/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method, phone })
+        body: JSON.stringify({ 
+          method, 
+          phone,
+          force_qr: method === 'qr' || method === 'pairing'  // Force new connection for both QR and pairing methods
+        })
       });
 
       const data = await response.json();
@@ -252,14 +273,82 @@ const WhatsAppBotManager = (function () {
       if (data.success) {
         if (connectModal) connectModal.hide();
 
+        // Clear any existing QR code or pairing code displays
+        const qrContainer = document.getElementById('qr-container');
+        const pairingContainer = document.getElementById('pairing-container');
+        if (qrContainer) qrContainer.style.display = 'none';
+        if (pairingContainer) pairingContainer.style.display = 'none';
+
         if (method === 'qr' && data.qr_code) {
           const qrContainer = document.getElementById('qr-container');
           const qrCode = document.getElementById('qr-code');
           if (qrContainer && qrCode) {
             qrCode.innerHTML = '';
-            QRCode.toCanvas(qrCode, data.qr_code, { width: 256 });
+
+            // Check if qr_code is already a proxy URL (starts with /api/v1/)
+            if (data.qr_code.startsWith('/api/v1/')) {
+              console.log('QR code is a proxy URL, displaying as image');
+              // Display the QR image directly from the proxy URL
+              const img = document.createElement('img');
+              img.src = data.qr_code;
+              img.alt = 'WhatsApp QR Code';
+              img.style.width = '256px';
+              img.style.height = '256px';
+              img.style.border = '1px solid #ddd';
+              img.style.borderRadius = '8px';
+              qrCode.appendChild(img);
+
+              // Add error handling for image loading
+              img.onerror = function() {
+                console.error('Failed to load QR image from proxy URL, attempting automatic refresh');
+                qrCode.innerHTML = '<div class="alert alert-info">QR code expired or invalid. Refreshing...</div>';
+                // Automatically refresh the QR code (only once to avoid infinite loops)
+                setTimeout(() => {
+                  refreshQRCode(true);
+                }, 1000);
+              };
+            } else {
+              // Fallback: generate QR code from text data
+              try {
+                // Create a canvas element for QR code rendering
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 256;
+                canvas.style.width = '256px';
+                canvas.style.height = '256px';
+                qrCode.appendChild(canvas);
+
+                // Check if QRCode library is available
+                if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+                  QRCode.toCanvas(canvas, data.qr_code, {
+                    width: 256,
+                    errorCorrectionLevel: 'M',
+                    color: {
+                      dark: '#000000',
+                      light: '#FFFFFF'
+                    }
+                  }).then(() => {
+                    // console.log('QR code rendered successfully');
+                  }).catch((canvasError) => {
+                    console.error('QRCode.toCanvas failed:', canvasError);
+                    throw canvasError;
+                  });
+                } else {
+                  console.error('QRCode library not available:', {
+                    QRCode: typeof QRCode,
+                    toCanvas: QRCode && typeof QRCode.toCanvas
+                  });
+                  throw new Error('QRCode library not loaded');
+                }
+              } catch (qrError) {
+                console.error('Failed to generate QR code:', qrError);
+                // Fallback: show QR code as text
+                qrCode.innerHTML = `<div class="alert alert-warning"><strong>QR Code:</strong><br><code style="word-break: break-all;">${data.qr_code}</code></div>`;
+              }
+            }
             qrContainer.style.display = 'block';
           }
+          // Don't show success message when QR code is displayed
         } else if (method === 'pairing' && data.pairing_code) {
           const pairingContainer = document.getElementById('pairing-container');
           const pairingCodeEl = document.getElementById('pairing-code');
@@ -267,21 +356,102 @@ const WhatsAppBotManager = (function () {
             pairingCodeEl.textContent = data.pairing_code;
             pairingContainer.style.display = 'block';
           }
+          // Show info message about pairing process
+          Swal.fire({
+            icon: 'info',
+            title: getI18n('table.infoTitle') || 'Info',
+            text: getI18n('whatsapp.pairingInstructions') || 'Enter the pairing code in WhatsApp on your phone. The connection will complete automatically.',
+            timer: 5000
+          });
+          // Don't show success message when pairing code is displayed
+          // Note: Don't check connection status immediately for pairing codes,
+          // as the actual connection happens asynchronously when user enters code in WhatsApp
+        } else if (method === 'pairing' && data.qr_code && !data.pairing_code) {
+          // Fallback: pairing requested but got QR code instead (config issue or backend fallback)
+          console.log('Pairing requested but received QR code - showing QR code as fallback');
+          const qrContainer = document.getElementById('qr-container');
+          const qrCode = document.getElementById('qr-code');
+          if (qrContainer && qrCode) {
+            qrCode.innerHTML = '';
+            try {
+              // Create a canvas element for QR code rendering
+              const canvas = document.createElement('canvas');
+              canvas.width = 256;
+              canvas.height = 256;
+              canvas.style.width = '256px';
+              canvas.style.height = '256px';
+              qrCode.appendChild(canvas);
+
+              // Check if QRCode library is available
+              if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+                console.log('QRCode library found, generating canvas QR code');
+                QRCode.toCanvas(canvas, data.qr_code, {
+                  width: 256,
+                  errorCorrectionLevel: 'M',
+                  color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                  }
+                }).then(() => {
+                  console.log('QR code rendered successfully');
+                }).catch((canvasError) => {
+                  console.error('QRCode.toCanvas failed:', canvasError);
+                  throw canvasError;
+                });
+              } else {
+                console.error('QRCode library not available:', {
+                  QRCode: typeof QRCode,
+                  toCanvas: QRCode && typeof QRCode.toCanvas
+                });
+                throw new Error('QRCode library not loaded');
+              }
+              qrContainer.style.display = 'block';
+            } catch (qrError) {
+              console.error('Failed to generate QR code:', qrError);
+              // Fallback: show QR code as text
+              qrCode.innerHTML = `<div class="alert alert-warning"><strong>QR Code:</strong><br><code style="word-break: break-all;">${data.qr_code}</code></div>`;
+              qrContainer.style.display = 'block';
+            }
+          }
+          // Show warning that pairing fell back to QR
+          Swal.fire({
+            icon: 'warning',
+            title: getI18n('table.warningTitle') || 'Warning',
+            text: 'Phone pairing not available, using QR code instead. Please check your configuration.',
+            timer: 5000
+          });
+          // Don't show success message when QR code is displayed
+        } else {
+          console.log('No QR code or pairing code in response, showing success message'); // Debug logging
+          // Only show success message when actually connected (no QR/pairing needed)
+          Swal.fire({
+            icon: 'success',
+            title: getI18n('table.successTitle'),
+            text: getI18n('whatsapp.connectSuccess'),
+            timer: 2000
+          });
+
+          // Check connection status after connect attempt
+          checkConnectionStatus();
+        }
+
+        // Check connection status after connect attempt (only for QR codes)
+        if (method === 'qr') {
+          checkConnectionStatus();
+        }
+      } else {
+        // Check for rate limit errors and show appropriate message
+        let errorMessage = data.message || getI18n('whatsapp.connectFailed');
+        if (data.message && (data.message.includes('rate limit') || data.message.includes('Rate limit') || data.message.includes('rate-overlimit') || data.message.includes('429'))) {
+          errorMessage = getI18n('whatsapp.rateLimitExceeded') || 'Rate limit exceeded. Please wait 5-10 minutes before trying to pair again.';
+        } else if (data.message && data.message.includes('wait') && data.message.includes('before attempting to pair')) {
+          errorMessage = getI18n('whatsapp.pairingCooldown') ? getI18n('whatsapp.pairingCooldown').replace('{time}', data.message.match(/wait (\d+:\d+:\d+)/)?.[1] || '5 minutes') : data.message;
         }
 
         Swal.fire({
-          icon: 'success',
-          title: getI18n('table.successTitle'),
-          text: getI18n('whatsapp.connectSuccess'),
-          timer: 2000
-        });
-
-        checkConnectionStatus();
-      } else {
-        Swal.fire({
           icon: 'error',
           title: getI18n('table.errorTitle'),
-          text: data.message || getI18n('whatsapp.connectFailed')
+          text: errorMessage
         });
       }
     } catch (error) {
@@ -377,6 +547,7 @@ const WhatsAppBotManager = (function () {
         });
         checkConnectionStatus();
       } else {
+        console.log('Connect failed:', data.message); // Debug logging
         Swal.fire({
           icon: 'error',
           title: getI18n('table.errorTitle'),
@@ -393,13 +564,14 @@ const WhatsAppBotManager = (function () {
     }
   }
 
-  async function refreshQRCode() {
+  async function refreshQRCode(autoRetry = false, forceNew = false) {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
 
     try {
       const response = await fetch('/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp/refresh_qr', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ force_new: forceNew })
       });
 
       const data = await response.json();
@@ -408,7 +580,68 @@ const WhatsAppBotManager = (function () {
         const qrCode = document.getElementById('qr-code');
         if (qrCode) {
           qrCode.innerHTML = '';
-          QRCode.toCanvas(qrCode, data.qr_code, { width: 256 });
+
+          // Check if qr_code is already a proxy URL (starts with /api/v1/)
+          if (data.qr_code.startsWith('/api/v1/')) {
+            console.log('Refresh QR: displaying proxy URL as image');
+            // Display the QR image directly from the proxy URL
+            const img = document.createElement('img');
+            img.src = data.qr_code;
+            img.alt = 'WhatsApp QR Code';
+            img.style.width = '256px';
+            img.style.height = '256px';
+            img.style.border = '1px solid #ddd';
+            img.style.borderRadius = '8px';
+            qrCode.appendChild(img);
+
+            // Add error handling for image loading
+            img.onerror = function() {
+              if (!autoRetry) {
+                console.error('Failed to load refreshed QR image from proxy URL, attempting automatic refresh');
+                qrCode.innerHTML = '<div class="alert alert-info">QR code expired or invalid. Refreshing...</div>';
+                // Automatically refresh the QR code (only once to avoid infinite loops)
+                setTimeout(() => {
+                  refreshQRCode(true);
+                }, 1000);
+              } else {
+                console.error('Failed to load refreshed QR image from proxy URL after auto-retry');
+                qrCode.innerHTML = '<div class="alert alert-warning">Failed to load QR code image. <button class="btn btn-sm btn-primary" onclick="refreshQRCode()">Try Again</button></div>';
+              }
+            };
+          } else {
+            // Fallback: generate QR code from text data
+            try {
+              // Create a canvas element for QR code rendering
+              const canvas = document.createElement('canvas');
+              canvas.width = 256;
+              canvas.height = 256;
+              canvas.style.width = '256px';
+              canvas.style.height = '256px';
+              qrCode.appendChild(canvas);
+
+              await QRCode.toCanvas(canvas, data.qr_code, { width: 256 });
+            } catch (qrError) {
+              console.error('Failed to generate refreshed QR code:', qrError);
+              qrCode.innerHTML = `<div class="alert alert-warning"><strong>QR Code:</strong><br><code style="word-break: break-all;">${data.qr_code}</code></div>`;
+            }
+          }
+        }
+
+        // Show different messages for new vs existing QR codes
+        if (data.message && data.message.includes('using existing')) {
+          Swal.fire({
+            icon: 'info',
+            title: getI18n('table.infoTitle') || 'Info',
+            text: 'QR code refreshed (using existing code)',
+            timer: 2000
+          });
+        } else {
+          Swal.fire({
+            icon: 'success',
+            title: getI18n('table.successTitle'),
+            text: getI18n('whatsapp.refreshQRSuccess') || 'QR code refreshed successfully',
+            timer: 2000
+          });
         }
       } else {
         Swal.fire({
@@ -423,6 +656,39 @@ const WhatsAppBotManager = (function () {
         icon: 'error',
         title: getI18n('table.errorTitle'),
         text: getI18n('whatsapp.refreshQRFailed')
+      });
+    }
+  }
+
+  async function refreshPairingCode() {
+    if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
+
+    try {
+      const response = await fetch('/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp/refresh_qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.pairing_code) {
+        const pairingCodeEl = document.getElementById('pairing-code');
+        if (pairingCodeEl) {
+          pairingCodeEl.textContent = data.pairing_code;
+        }
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: getI18n('table.errorTitle'),
+          text: getI18n('whatsapp.refreshPairingFailed') || 'Failed to refresh pairing code'
+        });
+      }
+    } catch (error) {
+      console.error('Failed to refresh pairing code:', error);
+      Swal.fire({
+        icon: 'error',
+        title: getI18n('table.errorTitle'),
+        text: getI18n('whatsapp.refreshPairingFailed') || 'Failed to refresh pairing code'
       });
     }
   }
@@ -1686,6 +1952,7 @@ const WhatsAppBotManager = (function () {
     disconnectWhatsApp,
     logoutWhatsApp,
     refreshQRCode,
+    refreshPairingCode,
     toggleMessageFields,
     toggleGroupMode,
     refreshMessagesTable,

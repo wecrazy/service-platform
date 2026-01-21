@@ -225,10 +225,11 @@ func HtmlRoutes(
 		{
 			// Connection management
 			tabWhatsapp.GET("/status", controllers.GetWhatsAppStatus)
-			tabWhatsapp.POST("/connect", controllers.ConnectWhatsApp)
+			tabWhatsapp.POST("/connect", controllers.ConnectWhatsApp(redisDB))
 			tabWhatsapp.POST("/disconnect", controllers.DisconnectWhatsApp)
 			tabWhatsapp.POST("/logout", controllers.LogoutWhatsApp)
-			tabWhatsapp.POST("/refresh_qr", controllers.RefreshWhatsAppQR)
+			tabWhatsapp.POST("/refresh_qr", controllers.RefreshWhatsAppQR(redisDB))
+			tabWhatsapp.GET("/qr/:token", controllers.ServeQRImage(redisDB))
 
 			// Messaging
 			tabWhatsapp.POST("/send_message", controllers.SendWhatsAppMessage(db))

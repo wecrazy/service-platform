@@ -46,10 +46,11 @@ import (
 
 // server implements the WhatsAppServiceServer interface.
 type server struct {
-	pb.UnimplementedWhatsAppServiceServer                   // Embed for forward compatibility
-	client                                *whatsmeow.Client // WhatsApp client instance
-	db                                    *gorm.DB          // Database connection
-	rdb                                   *redis.Client     // Redis client
+	pb.UnimplementedWhatsAppServiceServer                      // Embed for forward compatibility
+	client                                *whatsmeow.Client    // WhatsApp client instance
+	db                                    *gorm.DB             // Database connection
+	rdb                                   *redis.Client        // Redis client
+	pairingAttempts                       map[string]time.Time // Track pairing attempts by phone number
 }
 
 // SendMessage sends a WhatsApp message to a specified recipient.
@@ -492,14 +493,16 @@ func (s *server) Connect(ctx context.Context, req *pb.ConnectRequest) (*pb.Conne
 		s.client.Disconnect()
 	}
 
-	// Check if we have a valid session (device is logged in)
-	if s.client.Store.ID != nil {
+	// Check if we should force QR code generation (skip existing session check)
+	if !req.ForceQr && s.client.Store.ID != nil {
 		// Try to connect with existing session
 		err := s.client.Connect()
 		if err != nil {
-			return &pb.ConnectResponse{Success: false, Message: err.Error()}, nil
+			logrus.Warnf("Failed to connect with existing session: %v", err)
+			// Continue to QR generation
+		} else {
+			return &pb.ConnectResponse{Success: true, Message: "Connected with existing session"}, nil
 		}
-		return &pb.ConnectResponse{Success: true, Message: "Connected with existing session"}, nil
 	}
 
 	// No valid session, need QR code or phone pairing
@@ -540,47 +543,81 @@ func (s *server) Connect(ctx context.Context, req *pb.ConnectRequest) (*pb.Conne
 			}, nil
 		}
 
+		// Check for rate limiting - don't allow pairing attempts too frequently
+		const cooldownPeriod = 5 * time.Minute // 5 minutes cooldown between pairing attempts
+		if lastAttempt, exists := s.pairingAttempts[pairingPhone]; exists {
+			timeSinceLastAttempt := time.Since(lastAttempt)
+			if timeSinceLastAttempt < cooldownPeriod {
+				remainingTime := cooldownPeriod - timeSinceLastAttempt
+				return &pb.ConnectResponse{
+					Success: false,
+					Message: fmt.Sprintf("Please wait %v before attempting to pair again. WhatsApp limits pairing attempts.", remainingTime.Round(time.Second)),
+				}, nil
+			}
+		}
+
 		// Connection established, now request pairing code
 		logrus.Infof("Requesting phone pairing for: %s", pairingPhone)
 		pairingCode, err := s.client.PairPhone(context.Background(), pairingPhone, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
 		if err != nil {
+			errorMsg := fmt.Sprintf("Phone pairing failed: %v", err)
+			// Check for rate limit errors and provide more helpful message
+			if strings.Contains(err.Error(), "rate-overlimit") || strings.Contains(err.Error(), "429") {
+				errorMsg = "Rate limit exceeded. Please wait 5-10 minutes before trying to pair again. WhatsApp limits pairing attempts to prevent abuse."
+				logrus.Warn("Rate limit hit during phone pairing, suggesting cooldown period")
+			}
 			return &pb.ConnectResponse{
 				Success: false,
-				Message: fmt.Sprintf("Phone pairing failed: %v", err),
+				Message: errorMsg,
 			}, nil
 		}
 
 		logrus.Infof("✅ Pairing code generated: %s", pairingCode)
 		logrus.Info("Enter this code in WhatsApp: Settings > Linked Devices > Link a Device > Link with Phone Number")
 
-		// Continue listening for pairing success
-		for evt := range qrChan {
-			switch evt.Event {
-			case "success":
-				logrus.Infof("✅ Phone pairing successful! Connected as: %s", evt.Code)
-				return &pb.ConnectResponse{
-					Success:     true,
-					Message:     fmt.Sprintf("Phone pairing successful. Connected as %s", evt.Code),
-					PairingCode: pairingCode,
-				}, nil
-			case "timeout":
-				return &pb.ConnectResponse{
-					Success:     false,
-					Message:     "Pairing code expired. Please try again.",
-					PairingCode: pairingCode,
-				}, nil
-			case "code":
-				// Ignore additional QR codes during phone pairing
-				continue
-			default:
-				logrus.Warnf("Unexpected event during phone pairing: %s", evt.Event)
-			}
-		}
+		// Record successful pairing attempt
+		s.pairingAttempts[pairingPhone] = time.Now()
+
+		// Return pairing code immediately so frontend can display it
+		// The pairing success/failure will be monitored asynchronously
 		return &pb.ConnectResponse{
-			Success:     false,
-			Message:     "Phone pairing channel closed unexpectedly",
+			Success:     true,
+			Message:     "Pairing code generated. Enter this code in WhatsApp on your phone.",
 			PairingCode: pairingCode,
 		}, nil
+
+		// Note: The original code below would wait for pairing completion,
+		// but we return immediately so the frontend can display the code
+		/*
+			// Continue listening for pairing success
+			for evt := range qrChan {
+				switch evt.Event {
+				case "success":
+					logrus.Infof("✅ Phone pairing successful! Connected as: %s", evt.Code)
+					return &pb.ConnectResponse{
+						Success:     true,
+						Message:     fmt.Sprintf("Phone pairing successful. Connected as %s", evt.Code),
+						PairingCode: pairingCode,
+					}, nil
+				case "timeout":
+					return &pb.ConnectResponse{
+						Success:     false,
+						Message:     "Pairing code expired. Please try again.",
+						PairingCode: pairingCode,
+					}, nil
+				case "code":
+					// Ignore additional QR codes during phone pairing
+					continue
+				default:
+					logrus.Warnf("Unexpected event during phone pairing: %s", evt.Event)
+				}
+			}
+			return &pb.ConnectResponse{
+				Success:     false,
+				Message:     "Phone pairing channel closed unexpectedly",
+				PairingCode: pairingCode,
+			}, nil
+		*/
 	}
 
 	// Wait for QR code or successful login (original flow)
@@ -687,6 +724,27 @@ func (s *server) Disconnect(ctx context.Context, req *pb.DisconnectRequest) (*pb
 	return &pb.DisconnectResponse{Success: false, Message: "Not connected"}, nil
 }
 
+// IsConnected checks if the WhatsApp client is currently connected.
+func (s *server) IsConnected(ctx context.Context, req *pb.IsConnectedRequest) (*pb.IsConnectedResponse, error) {
+	if s.client == nil {
+		return &pb.IsConnectedResponse{Connected: false, Message: "WhatsApp client not initialized"}, nil
+	}
+
+	connected := s.client.IsConnected()
+	loggedIn := s.client.IsLoggedIn()
+	message := "Connected and logged in"
+	if !connected {
+		message = "Not connected"
+	} else if !loggedIn {
+		message = "Connected but not logged in"
+	}
+
+	return &pb.IsConnectedResponse{
+		Connected: connected && loggedIn, // Only consider connected if both connected AND logged in
+		Message:   message,
+	}, nil
+}
+
 // Logout logs out the current user from WhatsApp and deletes the session.
 func (s *server) Logout(ctx context.Context, req *pb.WALogoutRequest) (*pb.WALogoutResponse, error) {
 	if s.client != nil {
@@ -704,6 +762,63 @@ func (s *server) RefreshQR(ctx context.Context, req *pb.RefreshQRRequest) (*pb.C
 	if s.client == nil {
 		return &pb.ConnectResponse{Success: false, Message: "Client not initialized"}, nil
 	}
+
+	// If force_new is true, skip checking for existing QR files and generate a new one
+	if !req.GetForceNew() {
+		// Check for existing recent QR PNG files first
+		dirQR, err := fun.FindValidDirectory([]string{
+			"web/file/wa_qr",
+			"../web/file/wa_qr",
+			"../../web/file/wa_qr",
+			"../../../web/file/wa_qr",
+		})
+		if err == nil {
+			now := time.Now()
+			dateStr := now.Format(config.DATE_YYYY_MM_DD)
+			dirPath := filepath.Join(dirQR, dateStr)
+
+			// Check if directory exists
+			if _, err := os.Stat(dirPath); err == nil {
+				// Look for QR PNG files from the last 5 minutes
+				files, err := os.ReadDir(dirPath)
+				if err == nil {
+					const maxAge = 5 * time.Minute
+					var latestQRFile string
+					var latestTime time.Time
+
+					for _, file := range files {
+						if strings.HasSuffix(file.Name(), ".png") && strings.HasPrefix(file.Name(), "qr_") {
+							filePath := filepath.Join(dirPath, file.Name())
+							fileInfo, err := os.Stat(filePath)
+							if err != nil {
+								continue
+							}
+
+							if now.Sub(fileInfo.ModTime()) <= maxAge {
+								if fileInfo.ModTime().After(latestTime) {
+									latestTime = fileInfo.ModTime()
+									latestQRFile = filePath
+								}
+							}
+						}
+					}
+
+					// If we found a recent QR PNG file, return its path for proxy serving
+					if latestQRFile != "" {
+						logrus.Infof("Using existing QR PNG from: %s", latestQRFile)
+						return &pb.ConnectResponse{
+							Success: true,
+							Message: "QR code refreshed (using existing)",
+							QrCode:  latestQRFile, // Return file path for proxy serving
+						}, nil
+					}
+				}
+			}
+		}
+	}
+
+	// No recent QR found or force_new requested, generate a new one
+	logrus.Info("Generating new QR code (force_new or no recent QR found)")
 
 	// Force logout if logged in or if session exists to ensure new QR generation
 	if s.client.IsLoggedIn() || s.client.Store.ID != nil {
@@ -1898,10 +2013,13 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	srv := &server{}
+	srv := &server{
+		pairingAttempts: make(map[string]time.Time),
+	}
 
 	// Initialize client and try to auto-connect
 	if err := srv.initializeClient(); err != nil {
+		log.Fatal(err)
 		logrus.Errorf("Failed to initialize WhatsApp client: %v", err)
 	} else if srv.client.Store.ID != nil {
 		// If session exists, try to connect
