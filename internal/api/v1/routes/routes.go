@@ -219,16 +219,62 @@ func HtmlRoutes(
 		}
 
 		/*
-			Tab Whatsapp
+			Tab Whatsapp - Bot & Messaging
 		*/
 		tabWhatsapp := api.Group("/tab-whatsapp")
 		{
+			// Connection management
+			tabWhatsapp.GET("/status", controllers.GetWhatsAppStatus)
 			tabWhatsapp.POST("/connect", controllers.ConnectWhatsApp)
 			tabWhatsapp.POST("/disconnect", controllers.DisconnectWhatsApp)
 			tabWhatsapp.POST("/logout", controllers.LogoutWhatsApp)
 			tabWhatsapp.POST("/refresh_qr", controllers.RefreshWhatsAppQR)
+
+			// Messaging
 			tabWhatsapp.POST("/send_message", controllers.SendWhatsAppMessage(db))
 			tabWhatsapp.POST("/create_status", controllers.CreateStatus(db))
+
+			// Data tables
+			tabWhatsapp.GET("/messages", controllers.GetWhatsAppMessages(db))
+			tabWhatsapp.GET("/incoming", controllers.GetWhatsAppIncomingMessages(db))
+			tabWhatsapp.GET("/groups", controllers.GetWhatsAppGroups(db))
+			tabWhatsapp.POST("/groups/datatable", controllers.GetWhatsAppGroupsDataTable(db))
+			tabWhatsapp.GET("/groups/count", controllers.GetWhatsAppGroupsCount(db))
+			tabWhatsapp.GET("/groups/:jid", controllers.GetWhatsAppGroupByJID(db))
+			tabWhatsapp.POST("/groups/sync", controllers.SyncWhatsAppGroups(db))
+			tabWhatsapp.GET("/auto-reply", controllers.GetWhatsAppAutoReplyRules(db))
+			tabWhatsapp.GET("/auto-reply/:id", controllers.GetWhatsAppAutoReplyRule(db))
+			tabWhatsapp.POST("/auto-reply", controllers.CreateWhatsAppAutoReplyRule(db))
+			tabWhatsapp.PUT("/auto-reply/:id", controllers.UpdateWhatsAppAutoReplyRule(db))
+			tabWhatsapp.DELETE("/auto-reply/:id", controllers.DeleteWhatsAppAutoReplyRule(db))
+
+			// Language support
+			tabWhatsapp.GET("/languages/count", controllers.GetWhatsAppLanguagesCount(db))
+			tabWhatsapp.GET("/languages", controllers.GetWhatsAppLanguages(db))
+
+			// Phone & Contacts status
+			tabWhatsapp.GET("/contacts-count", controllers.GetWhatsAppContactsCount)
+			tabWhatsapp.GET("/phone-status", controllers.GetWhatsAppPhoneStatus)
+
+			// Configuration
+			tabWhatsapp.GET("/data-separator", controllers.GetDataSeparator)
+		}
+
+		/*
+			Tab WhatsApp User Management - User CRUD
+		*/
+		tabWhatsappUserManagement := api.Group("/tab-whatsapp-user-management")
+		{
+			// Statistics
+			tabWhatsappUserManagement.GET("/statistics", controllers.GetWhatsAppUserStatistics(db))
+
+			// Export & Import (must be before :id routes to avoid conflicts)
+			tabWhatsappUserManagement.GET("/users/export", controllers.ExportWhatsAppUsers(db))
+			tabWhatsappUserManagement.GET("/users/:id", controllers.GetWhatsAppUser(db))
+			tabWhatsappUserManagement.POST("/users", controllers.CreateWhatsAppUser(db))
+			tabWhatsappUserManagement.PUT("/users/:id", controllers.UpdateWhatsAppUser(db))
+			tabWhatsappUserManagement.PATCH("/users/:id/ban", controllers.ToggleBanWhatsAppUser(db))
+			tabWhatsappUserManagement.DELETE("/users/:id", controllers.DeleteWhatsAppUser(db))
 		}
 
 		/*

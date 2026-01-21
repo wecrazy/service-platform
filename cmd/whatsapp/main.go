@@ -731,9 +731,48 @@ func (s *server) GetMe(ctx context.Context, req *pb.GetMeRequest) (*pb.GetMeResp
 	if s.client.Store.ID == nil {
 		return &pb.GetMeResponse{Success: false, Message: "Not logged in"}, nil
 	}
+
+	// Get user JID and phone
+	userJID := s.client.Store.ID.User
+	phoneNumber := s.client.Store.ID.User // The User field is the phone number
+
+	// Get push name (display name)
+	pushName := ""
+	if s.client.Store.PushName != "" {
+		pushName = s.client.Store.PushName
+	}
+
+	// Get device info
+	device := "Unknown"
+	platform := "Unknown"
+	if s.client.Store.ID != nil {
+		if s.client.Store.ID.Device > 0 {
+			device = fmt.Sprintf("Device %d", s.client.Store.ID.Device)
+		}
+		// Platform is in the Server field
+		if s.client.Store.ID.Server != "" {
+			platform = s.client.Store.ID.Server
+		}
+	}
+
+	// Try to get profile picture
+	profilePicURL := ""
+	if s.client.Store.ID != nil {
+		pic, err := s.client.GetProfilePictureInfo(ctx, types.NewJID(userJID, types.DefaultUserServer), nil)
+		if err == nil && pic != nil {
+			profilePicURL = pic.URL
+		}
+	}
+
 	return &pb.GetMeResponse{
-		Success: true,
-		Jid:     s.client.Store.ID.User,
+		Success:       true,
+		Message:       "User info retrieved successfully",
+		Jid:           userJID,
+		PhoneNumber:   phoneNumber,
+		Name:          pushName,
+		ProfilePicUrl: profilePicURL,
+		Device:        device,
+		Platform:      platform,
 	}, nil
 }
 

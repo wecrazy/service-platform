@@ -121,6 +121,16 @@ message GetMeResponse {
   string message = 2;
   // JID of the current user.
   string jid = 3;
+  // Phone number of the current user.
+  string phone_number = 4;
+  // Display name / push name of the current user.
+  string name = 5;
+  // Profile picture URL (if available).
+  string profile_pic_url = 6;
+  // Device information.
+  string device = 7;
+  // Platform (e.g., android, iphone, web).
+  string platform = 8;
 }
 
 // GetGroupInfoRequest is the request to get info about a specific group.

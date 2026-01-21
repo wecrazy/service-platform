@@ -1210,6 +1210,8 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			// logrus.Infof("Using default app config for role %d (no specific config found)", user.Role)
 		}
 
+		randAccessToken := fun.GetRedis("web:"+user.Session, redisDB)
+
 		replacements := map[string]any{
 			"APP_NAME":         appName,
 			"APP_LOGO":         appLogo,
@@ -1228,6 +1230,7 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			"profile_image":    profile_image,
 			"ip":               user.IP,
 			"GLOBAL_URL":       globalURL,
+			"RANDOM_ACCESS":    randAccessToken,
 
 			/* App Config */
 			"TABLE_APP_CONFIGURATION": webguibuilder.TABLE_APP_CONFIGURATION(user.Session, redisDB),
