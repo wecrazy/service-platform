@@ -9,7 +9,8 @@
 		"backToHome": "Back to Home",
 		"hello": "Hello",
 		"profile": "Profile",
-		"logout": "Logout"
+		"logout": "Logout",
+		"success": "Success"
 	},
 	"login": {
 		"welcomeTo": "Welcome to",
@@ -313,7 +314,10 @@
 		"download": "Download",
 		"close": "Close",
 		"jid": "JID",
-		"refreshQRSuccess": "QR code refreshed successfully!"
+		"refreshQRSuccess": "QR code refreshed successfully!",
+		"checkingConnection": "Checking Connection...",
+    "statusRefreshed": "Status Refreshed",
+    "connectionCheckFailed": "Failed to check connection status. Please try again."
 	},
 	"whatsappUserManagement": {
 		"title": "WhatsApp User Management",
