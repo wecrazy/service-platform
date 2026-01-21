@@ -281,13 +281,14 @@ func GetWhatsappGroup(db *gorm.DB) {
 				participants := make([]whatsnyanmodel.WhatsAppGroupParticipant, len(group.Participants))
 				for i, p := range group.Participants {
 					participants[i] = whatsnyanmodel.WhatsAppGroupParticipant{
-						GroupJID:     group.Jid,
-						UserJID:      p.Jid,
-						LID:          p.Lid,
-						DisplayName:  p.DisplayName,
-						IsAdmin:      p.IsAdmin,
-						IsSuperAdmin: p.IsSuperAdmin,
-						PhoneNumber:  p.PhoneNumber,
+						GroupJID:          group.Jid,
+						UserJID:           p.Jid,
+						LID:               p.Lid,
+						DisplayName:       p.DisplayName,
+						IsAdmin:           p.IsAdmin,
+						IsSuperAdmin:      p.IsSuperAdmin,
+						PhoneNumber:       p.PhoneNumber,
+						ProfilePictureURL: p.ProfilePictureUrl,
 					}
 				}
 				if err := tx.Create(&participants).Error; err != nil {

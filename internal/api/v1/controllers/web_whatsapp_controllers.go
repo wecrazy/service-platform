@@ -286,30 +286,144 @@ func GetWhatsAppGroups(db *gorm.DB) gin.HandlerFunc {
 
 // GetWhatsAppGroupByJID godoc
 // @Summary      Get WhatsApp Group Details
-// @Description  Returns detailed information about a specific WhatsApp group
+// @Description  Returns detailed information about a specific WhatsApp group from database with live updates
 // @Tags         WhatsApp Web
 // @Accept       json
 // @Produce      json
 // @Param        jid path string true "Group JID"
-// @Success      200  {object}   whatsnyanmodel.WhatsAppGroup
+// @Success      200  {object}   map[string]interface{}
 // @Router       /api/v1/{access}/tab-whatsapp/groups/{jid} [get]
 func GetWhatsAppGroupByJID(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		jid := c.Param("jid")
 
-		var group whatsnyanmodel.WhatsAppGroup
-		result := db.Preload("Participants").Where("jid = ?", jid).First(&group)
+		// First, try to get basic info from database
+		var dbGroup whatsnyanmodel.WhatsAppGroup
+		dbResult := db.Preload("Participants").Where("jid = ?", jid).First(&dbGroup)
 
-		if result.Error != nil {
-			if result.Error == gorm.ErrRecordNotFound {
-				fun.HandleAPIErrorSimple(c, http.StatusNotFound, "Group not found")
-				return
-			}
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Failed to fetch group")
-			return
+		// Initialize with database data
+		groupData := map[string]interface{}{
+			"jid":                  jid,
+			"name":                 "-",
+			"owner_jid":            "-",
+			"topic":                "-",
+			"topic_set_at":         nil,
+			"topic_set_by":         "-",
+			"linked_parent_jid":    "-",
+			"is_default_sub_group": false,
+			"is_parent":            false,
+			"description":          "-",
+			"photo_url":            "",
+			"participants":         []map[string]interface{}{},
+			"participant_count":    0,
+			"settings": map[string]interface{}{
+				"locked":                  false,
+				"announcement_only":       false,
+				"no_frequently_forwarded": false,
+				"ephemeral":               false,
+				"ephemeral_duration":      0,
+			},
 		}
 
-		c.JSON(http.StatusOK, group)
+		if dbResult.Error == nil {
+			// Populate with database data
+			groupData["name"] = dbGroup.Name
+			groupData["owner_jid"] = dbGroup.OwnerJID
+			groupData["topic"] = dbGroup.Topic
+			if dbGroup.TopicSetAt.Unix() > 0 {
+				groupData["topic_set_at"] = dbGroup.TopicSetAt.Unix()
+			}
+			groupData["topic_set_by"] = dbGroup.TopicSetBy
+			groupData["linked_parent_jid"] = dbGroup.LinkedParentJID
+			groupData["is_default_sub_group"] = dbGroup.IsDefaultSubGroup
+			groupData["is_parent"] = dbGroup.IsParent
+
+			// Participants from database
+			participants := make([]map[string]interface{}, len(dbGroup.Participants))
+			for i, p := range dbGroup.Participants {
+				participants[i] = map[string]interface{}{
+					"jid":                 p.UserJID,
+					"is_admin":            p.IsAdmin,
+					"is_super_admin":      p.IsSuperAdmin,
+					"lid":                 p.LID,
+					"display_name":        p.DisplayName,
+					"profile_picture_url": p.ProfilePictureURL,
+					"phone_number":        p.PhoneNumber,
+				}
+			}
+			groupData["participants"] = participants
+			groupData["participant_count"] = len(participants)
+		}
+
+		// Now try to get live data from WhatsApp
+		if whatsapp.Client != nil {
+			ctx := c.Request.Context()
+			groupResp, err := whatsapp.Client.GetGroupInfo(ctx, &pb.GetGroupInfoRequest{
+				GroupJid: jid,
+			})
+
+			if err == nil && groupResp.Success {
+				// Update with live data
+				if groupResp.Name != "" {
+					groupData["name"] = groupResp.Name
+				}
+				if groupResp.Jid != "" {
+					groupData["jid"] = groupResp.Jid
+				}
+				if groupResp.OwnerJid != "" {
+					groupData["owner_jid"] = groupResp.OwnerJid
+				}
+				if groupResp.Topic != "" {
+					groupData["topic"] = groupResp.Topic
+					groupData["description"] = groupResp.Topic // Use topic as description
+				}
+				if groupResp.TopicSetAt > 0 {
+					groupData["topic_set_at"] = groupResp.TopicSetAt
+				}
+				if groupResp.TopicSetBy != "" {
+					groupData["topic_set_by"] = groupResp.TopicSetBy
+				}
+				if groupResp.LinkedParentJid != "" {
+					groupData["linked_parent_jid"] = groupResp.LinkedParentJid
+				}
+				groupData["is_default_sub_group"] = groupResp.IsDefaultSubGroup
+				groupData["is_parent"] = groupResp.IsParent
+				if groupResp.PhotoUrl != "" {
+					groupData["photo_url"] = groupResp.PhotoUrl
+				}
+
+				// Live participants
+				if len(groupResp.Participants) > 0 {
+					participants := make([]map[string]interface{}, len(groupResp.Participants))
+					for i, p := range groupResp.Participants {
+						participants[i] = map[string]interface{}{
+							"jid":                 p.Jid,
+							"is_admin":            p.IsAdmin,
+							"is_super_admin":      p.IsSuperAdmin,
+							"lid":                 p.Lid,
+							"display_name":        p.DisplayName,
+							"profile_picture_url": p.ProfilePictureUrl,
+							"phone_number":        p.PhoneNumber,
+						}
+					}
+					groupData["participants"] = participants
+					groupData["participant_count"] = len(participants)
+				}
+
+				// Settings
+				if groupResp.Settings != nil {
+					groupData["settings"] = map[string]interface{}{
+						"locked":                  groupResp.Settings.Locked,
+						"announcement_only":       groupResp.Settings.AnnouncementOnly,
+						"no_frequently_forwarded": groupResp.Settings.NoFrequentlyForwarded,
+						"ephemeral":               groupResp.Settings.Ephemeral,
+						"ephemeral_duration":      groupResp.Settings.EphemeralDuration,
+					}
+				}
+			}
+		}
+
+		c.JSON(http.StatusOK, groupData)
 	}
 }
 
@@ -1955,4 +2069,62 @@ func ImportWhatsAppUsers(db *gorm.DB) gin.HandlerFunc {
 			"failed":  failed,
 		})
 	}
+}
+
+// GetWhatsAppProfilePicture godoc
+// @Summary      Get WhatsApp Profile Picture
+// @Description  Downloads and serves a WhatsApp profile picture as a proper image file
+// @Tags         WhatsApp Web
+// @Accept       json
+// @Produce      image/jpeg,image/png,image/webp
+// @Param        jid path string true "User JID"
+// @Success      200  {file}   binary
+// @Router       /api/v1/{access}/tab-whatsapp/profile-picture/{jid} [get]
+func GetWhatsAppProfilePicture(c *gin.Context) {
+	jid := c.Param("jid")
+
+	// Check if gRPC client is available
+	if whatsapp.Client == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"success": false,
+			"message": "WhatsApp gRPC service not available",
+		})
+		return
+	}
+
+	// Call gRPC service to get profile picture
+	ctx := c.Request.Context()
+	resp, err := whatsapp.Client.GetProfilePicture(ctx, &pb.GetProfilePictureRequest{
+		Jid: jid,
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": fmt.Sprintf("Failed to get profile picture: %v", err),
+		})
+		return
+	}
+
+	if !resp.Success {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"message": resp.Message,
+		})
+		return
+	}
+
+	// Set content type header
+	contentType := resp.ContentType
+	if contentType == "" {
+		contentType = "image/jpeg" // Default fallback
+	}
+
+	// Set headers for file download
+	filename := fmt.Sprintf("profile-%s.jpg", strings.ReplaceAll(jid, "@", "-"))
+	c.Header("Content-Type", contentType)
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+
+	// Return the image data
+	c.Data(http.StatusOK, contentType, resp.ImageData)
 }

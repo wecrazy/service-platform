@@ -97,6 +97,8 @@
     "apps": "Aplikasi"
   },
   "table": {
+    "search": "Cari",
+    "searchPlaceholder": "Ketik untuk mencari...",
     "confirmSaveTitle": "Apakah Anda ingin menyimpan perubahan?",
     "saveButton": "Simpan",
     "cancelButton": "Batal",
@@ -194,6 +196,12 @@
     "groupJID": "JID",
     "groupMembers": "Anggota",
     "groupCreated": "Dibuat",
+    "groupPhoto": "Foto Grup",
+    "description": "Deskripsi",
+    "groupSettings": "Pengaturan Grup",
+    "topic": "Topik",
+    "topicSetAt": "Topik Ditetapkan Pada",
+    "descriptionSetAt": "Deskripsi Ditetapkan Pada",
     "actions": "Aksi",
     "autoReplyRules": "Aturan Auto Reply",
     "addRule": "Tambah Aturan",
@@ -221,6 +229,7 @@
     "clientCompanyEmployee": "Karyawan Perusahaan Klien",
     "save": "Simpan",
     "groupDetails": "Detail Grup",
+    "loadingGroupDetails": "Memuat detail grup...",
     "sync": "Sinkronkan",
     "syncGroupsTitle": "Sinkronkan Grup dari WhatsApp",
     "syncGroupsText": "Ini akan menyinkronkan semua grup dari akun WhatsApp Anda ke database.",
@@ -292,7 +301,11 @@
     "contacts_info": "Informasi Kontak",
     "contacts_sync_info": "Fitur ini akan menyinkronkan dan menampilkan jumlah kontak WhatsApp Anda.",
     "phone_status": "Status Ponsel",
-    "phone_status_not_available": "Informasi status baterai dan ponsel belum tersedia melalui API."
+    "phone_status_not_available": "Informasi status baterai dan ponsel belum tersedia melalui API.",
+    "imageViewer": "Lihat Gambar",
+    "download": "Unduh",
+    "close": "Tutup",
+    "jid": "JID"
   },
   "whatsappUserManagement": {
     "title": "Manajemen Pengguna WhatsApp",

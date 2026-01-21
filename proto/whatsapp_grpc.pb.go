@@ -19,18 +19,19 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	WhatsAppService_SendMessage_FullMethodName     = "/proto.WhatsAppService/SendMessage"
-	WhatsAppService_GetMessages_FullMethodName     = "/proto.WhatsAppService/GetMessages"
-	WhatsAppService_Connect_FullMethodName         = "/proto.WhatsAppService/Connect"
-	WhatsAppService_Disconnect_FullMethodName      = "/proto.WhatsAppService/Disconnect"
-	WhatsAppService_Logout_FullMethodName          = "/proto.WhatsAppService/Logout"
-	WhatsAppService_RefreshQR_FullMethodName       = "/proto.WhatsAppService/RefreshQR"
-	WhatsAppService_GetGroupInfo_FullMethodName    = "/proto.WhatsAppService/GetGroupInfo"
-	WhatsAppService_GetMe_FullMethodName           = "/proto.WhatsAppService/GetMe"
-	WhatsAppService_IsOnWhatsApp_FullMethodName    = "/proto.WhatsAppService/IsOnWhatsApp"
-	WhatsAppService_GetJoinedGroups_FullMethodName = "/proto.WhatsAppService/GetJoinedGroups"
-	WhatsAppService_CreateStatus_FullMethodName    = "/proto.WhatsAppService/CreateStatus"
-	WhatsAppService_HasContacts_FullMethodName     = "/proto.WhatsAppService/HasContacts"
+	WhatsAppService_SendMessage_FullMethodName       = "/proto.WhatsAppService/SendMessage"
+	WhatsAppService_GetMessages_FullMethodName       = "/proto.WhatsAppService/GetMessages"
+	WhatsAppService_Connect_FullMethodName           = "/proto.WhatsAppService/Connect"
+	WhatsAppService_Disconnect_FullMethodName        = "/proto.WhatsAppService/Disconnect"
+	WhatsAppService_Logout_FullMethodName            = "/proto.WhatsAppService/Logout"
+	WhatsAppService_RefreshQR_FullMethodName         = "/proto.WhatsAppService/RefreshQR"
+	WhatsAppService_GetGroupInfo_FullMethodName      = "/proto.WhatsAppService/GetGroupInfo"
+	WhatsAppService_GetMe_FullMethodName             = "/proto.WhatsAppService/GetMe"
+	WhatsAppService_IsOnWhatsApp_FullMethodName      = "/proto.WhatsAppService/IsOnWhatsApp"
+	WhatsAppService_GetJoinedGroups_FullMethodName   = "/proto.WhatsAppService/GetJoinedGroups"
+	WhatsAppService_CreateStatus_FullMethodName      = "/proto.WhatsAppService/CreateStatus"
+	WhatsAppService_HasContacts_FullMethodName       = "/proto.WhatsAppService/HasContacts"
+	WhatsAppService_GetProfilePicture_FullMethodName = "/proto.WhatsAppService/GetProfilePicture"
 )
 
 // WhatsAppServiceClient is the client API for WhatsAppService service.
@@ -63,6 +64,8 @@ type WhatsAppServiceClient interface {
 	CreateStatus(ctx context.Context, in *CreateStatusRequest, opts ...grpc.CallOption) (*CreateStatusResponse, error)
 	// HasContacts checks if the user has any contacts.
 	HasContacts(ctx context.Context, in *HasContactsRequest, opts ...grpc.CallOption) (*HasContactsResponse, error)
+	// GetProfilePicture retrieves a user's profile picture.
+	GetProfilePicture(ctx context.Context, in *GetProfilePictureRequest, opts ...grpc.CallOption) (*GetProfilePictureResponse, error)
 }
 
 type whatsAppServiceClient struct {
@@ -193,6 +196,16 @@ func (c *whatsAppServiceClient) HasContacts(ctx context.Context, in *HasContacts
 	return out, nil
 }
 
+func (c *whatsAppServiceClient) GetProfilePicture(ctx context.Context, in *GetProfilePictureRequest, opts ...grpc.CallOption) (*GetProfilePictureResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProfilePictureResponse)
+	err := c.cc.Invoke(ctx, WhatsAppService_GetProfilePicture_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WhatsAppServiceServer is the server API for WhatsAppService service.
 // All implementations must embed UnimplementedWhatsAppServiceServer
 // for forward compatibility.
@@ -223,6 +236,8 @@ type WhatsAppServiceServer interface {
 	CreateStatus(context.Context, *CreateStatusRequest) (*CreateStatusResponse, error)
 	// HasContacts checks if the user has any contacts.
 	HasContacts(context.Context, *HasContactsRequest) (*HasContactsResponse, error)
+	// GetProfilePicture retrieves a user's profile picture.
+	GetProfilePicture(context.Context, *GetProfilePictureRequest) (*GetProfilePictureResponse, error)
 	mustEmbedUnimplementedWhatsAppServiceServer()
 }
 
@@ -268,6 +283,9 @@ func (UnimplementedWhatsAppServiceServer) CreateStatus(context.Context, *CreateS
 }
 func (UnimplementedWhatsAppServiceServer) HasContacts(context.Context, *HasContactsRequest) (*HasContactsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method HasContacts not implemented")
+}
+func (UnimplementedWhatsAppServiceServer) GetProfilePicture(context.Context, *GetProfilePictureRequest) (*GetProfilePictureResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProfilePicture not implemented")
 }
 func (UnimplementedWhatsAppServiceServer) mustEmbedUnimplementedWhatsAppServiceServer() {}
 func (UnimplementedWhatsAppServiceServer) testEmbeddedByValue()                         {}
@@ -506,6 +524,24 @@ func _WhatsAppService_HasContacts_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WhatsAppService_GetProfilePicture_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProfilePictureRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WhatsAppServiceServer).GetProfilePicture(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WhatsAppService_GetProfilePicture_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WhatsAppServiceServer).GetProfilePicture(ctx, req.(*GetProfilePictureRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // WhatsAppService_ServiceDesc is the grpc.ServiceDesc for WhatsAppService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -560,6 +596,10 @@ var WhatsAppService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "HasContacts",
 			Handler:    _WhatsAppService_HasContacts_Handler,
+		},
+		{
+			MethodName: "GetProfilePicture",
+			Handler:    _WhatsAppService_GetProfilePicture_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
