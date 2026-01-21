@@ -417,6 +417,7 @@ func startWebServer(
 	go func() {
 		logrus.Printf("🌐 Starting server on %s ...", listenAddr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
 			serverErr <- fmt.Errorf("server listen error: %w", err)
 		}
 	}()

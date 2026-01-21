@@ -38,10 +38,9 @@ func GetWhatsAppStatus(c *gin.Context) {
 		return
 	}
 
-	// Try to check if WhatsApp service is actually running and has an active session
-	// by attempting to get contacts (this will fail if not connected/logged in)
+	// Check if WhatsApp client is actually connected
 	ctx := c.Request.Context()
-	hasContactsResp, err := whatsapp.Client.HasContacts(ctx, &pb.HasContactsRequest{})
+	isConnectedResp, err := whatsapp.Client.IsConnected(ctx, &pb.IsConnectedRequest{})
 
 	if err != nil {
 		// gRPC service is down or not responding
@@ -52,16 +51,16 @@ func GetWhatsAppStatus(c *gin.Context) {
 		return
 	}
 
-	if !hasContactsResp.Success {
-		// Service is running but WhatsApp is not connected/logged in
+	if !isConnectedResp.Connected {
+		// WhatsApp is not connected
 		c.JSON(http.StatusOK, gin.H{
 			"connected": false,
-			"message":   hasContactsResp.Message,
+			"message":   isConnectedResp.Message,
 		})
 		return
 	}
 
-	// WhatsApp is connected and logged in - get account info
+	// WhatsApp is connected - get account info
 	accountResp, err := whatsapp.Client.GetMe(ctx, &pb.GetMeRequest{})
 	if err == nil && accountResp.Success {
 		c.JSON(http.StatusOK, gin.H{

@@ -24,6 +24,7 @@ const (
 	WhatsAppService_Connect_FullMethodName           = "/proto.WhatsAppService/Connect"
 	WhatsAppService_Disconnect_FullMethodName        = "/proto.WhatsAppService/Disconnect"
 	WhatsAppService_Logout_FullMethodName            = "/proto.WhatsAppService/Logout"
+	WhatsAppService_IsConnected_FullMethodName       = "/proto.WhatsAppService/IsConnected"
 	WhatsAppService_RefreshQR_FullMethodName         = "/proto.WhatsAppService/RefreshQR"
 	WhatsAppService_GetGroupInfo_FullMethodName      = "/proto.WhatsAppService/GetGroupInfo"
 	WhatsAppService_GetMe_FullMethodName             = "/proto.WhatsAppService/GetMe"
@@ -50,6 +51,8 @@ type WhatsAppServiceClient interface {
 	Disconnect(ctx context.Context, in *DisconnectRequest, opts ...grpc.CallOption) (*DisconnectResponse, error)
 	// Logout logs out the current session.
 	Logout(ctx context.Context, in *WALogoutRequest, opts ...grpc.CallOption) (*WALogoutResponse, error)
+	// IsConnected checks if the WhatsApp client is currently connected.
+	IsConnected(ctx context.Context, in *IsConnectedRequest, opts ...grpc.CallOption) (*IsConnectedResponse, error)
 	// RefreshQR forces a new QR code generation for login.
 	RefreshQR(ctx context.Context, in *RefreshQRRequest, opts ...grpc.CallOption) (*ConnectResponse, error)
 	// GetGroupInfo retrieves information about a specific group.
@@ -120,6 +123,16 @@ func (c *whatsAppServiceClient) Logout(ctx context.Context, in *WALogoutRequest,
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(WALogoutResponse)
 	err := c.cc.Invoke(ctx, WhatsAppService_Logout_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *whatsAppServiceClient) IsConnected(ctx context.Context, in *IsConnectedRequest, opts ...grpc.CallOption) (*IsConnectedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IsConnectedResponse)
+	err := c.cc.Invoke(ctx, WhatsAppService_IsConnected_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -222,6 +235,8 @@ type WhatsAppServiceServer interface {
 	Disconnect(context.Context, *DisconnectRequest) (*DisconnectResponse, error)
 	// Logout logs out the current session.
 	Logout(context.Context, *WALogoutRequest) (*WALogoutResponse, error)
+	// IsConnected checks if the WhatsApp client is currently connected.
+	IsConnected(context.Context, *IsConnectedRequest) (*IsConnectedResponse, error)
 	// RefreshQR forces a new QR code generation for login.
 	RefreshQR(context.Context, *RefreshQRRequest) (*ConnectResponse, error)
 	// GetGroupInfo retrieves information about a specific group.
@@ -262,6 +277,9 @@ func (UnimplementedWhatsAppServiceServer) Disconnect(context.Context, *Disconnec
 }
 func (UnimplementedWhatsAppServiceServer) Logout(context.Context, *WALogoutRequest) (*WALogoutResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Logout not implemented")
+}
+func (UnimplementedWhatsAppServiceServer) IsConnected(context.Context, *IsConnectedRequest) (*IsConnectedResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method IsConnected not implemented")
 }
 func (UnimplementedWhatsAppServiceServer) RefreshQR(context.Context, *RefreshQRRequest) (*ConnectResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RefreshQR not implemented")
@@ -394,6 +412,24 @@ func _WhatsAppService_Logout_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WhatsAppServiceServer).Logout(ctx, req.(*WALogoutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WhatsAppService_IsConnected_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsConnectedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WhatsAppServiceServer).IsConnected(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WhatsAppService_IsConnected_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WhatsAppServiceServer).IsConnected(ctx, req.(*IsConnectedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -568,6 +604,10 @@ var WhatsAppService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Logout",
 			Handler:    _WhatsAppService_Logout_Handler,
+		},
+		{
+			MethodName: "IsConnected",
+			Handler:    _WhatsAppService_IsConnected_Handler,
 		},
 		{
 			MethodName: "RefreshQR",

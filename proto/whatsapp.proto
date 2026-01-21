@@ -16,6 +16,8 @@ service WhatsAppService {
   rpc Disconnect(DisconnectRequest) returns (DisconnectResponse);
   // Logout logs out the current session.
   rpc Logout(WALogoutRequest) returns (WALogoutResponse);
+  // IsConnected checks if the WhatsApp client is currently connected.
+  rpc IsConnected(IsConnectedRequest) returns (IsConnectedResponse);
   // RefreshQR forces a new QR code generation for login.
   rpc RefreshQR(RefreshQRRequest) returns (ConnectResponse);
   // GetGroupInfo retrieves information about a specific group.
@@ -217,6 +219,8 @@ message GroupParticipant {
 message RefreshQRRequest {
   // Phone number associated with the request (optional).
   string phone_number = 1;
+  // Force generation of a new QR code instead of reusing existing one.
+  bool force_new = 2;
 }
 
 // WALogoutRequest is the request to logout from WhatsApp.
@@ -230,6 +234,17 @@ message WALogoutResponse {
   // Indicates if the logout was successful.
   bool success = 1;
   // Message describing the result.
+  string message = 2;
+}
+
+// IsConnectedRequest is the request to check connection status.
+message IsConnectedRequest {}
+
+// IsConnectedResponse contains the connection status.
+message IsConnectedResponse {
+  // Indicates if the client is connected.
+  bool connected = 1;
+  // Message describing the connection status.
   string message = 2;
 }
 
@@ -395,6 +410,8 @@ message Message {
 message ConnectRequest {
   // Phone number to connect (optional).
   string phone_number = 1;
+  // Force QR code generation even if session exists.
+  bool force_qr = 2;
 }
 
 // ConnectResponse contains the result of the connection attempt.
