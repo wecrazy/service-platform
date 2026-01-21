@@ -9,7 +9,8 @@
     "backToHome": "Kembali ke Beranda",
     "hello": "Halo",
     "profile": "Profil",
-    "logout": "Keluar"
+    "logout": "Keluar",
+    "success": "Berhasil"
   },
   "login": {
     "welcomeTo": "Selamat Datang di",
@@ -313,7 +314,10 @@
     "download": "Unduh",
     "close": "Tutup",
     "jid": "JID",
-    "refreshQRSuccess": "Kode QR berhasil disegarkan!"
+    "refreshQRSuccess": "Kode QR berhasil disegarkan!",
+    "checkingConnection": "Memeriksa Koneksi...",
+    "statusRefreshed": "Status Diperbarui",
+    "connectionCheckFailed": "Gagal memeriksa status koneksi. Silakan coba lagi."
   },
   "whatsappUserManagement": {
     "title": "Manajemen Pengguna WhatsApp",

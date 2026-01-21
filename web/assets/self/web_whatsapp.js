@@ -95,9 +95,21 @@ const WhatsAppBotManager = (function () {
   }
 
   // Check connection status
-  async function checkConnectionStatus() {
+  async function checkConnectionStatus(showSwal = false) {
     if (!RANDOM_ACCESS) RANDOM_ACCESS = window.RANDOM_ACCESS || '';
     if (!RANDOM_ACCESS) return;
+
+    let swalInstance = null;
+    if (showSwal) {
+      swalInstance = Swal.fire({
+        title: getI18n('common.loading') || 'Loading...',
+        text: getI18n('whatsapp.checkingConnection') || 'Checking connection status...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+    }
 
     try {
       const response = await fetch('/api/v1/' + RANDOM_ACCESS + '/tab-whatsapp/status', {
@@ -187,12 +199,37 @@ const WhatsAppBotManager = (function () {
         if (btnDisconnect) btnDisconnect.disabled = true;
         if (btnLogout) btnLogout.disabled = true;
       }
+
+      // Show success message if manually triggered
+      if (showSwal) {
+        Swal.fire({
+          icon: 'success',
+          title: getI18n('common.success') || 'Success',
+          text: getI18n('whatsapp.statusRefreshed') || 'Connection status has been refreshed successfully.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
     } catch (error) {
       console.error('Failed to check connection status:', error);
       const statusBadge = document.getElementById('connection-status');
       if (statusBadge) {
         statusBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';
         statusBadge.className = 'badge bg-warning';
+      }
+
+      if (showSwal && swalInstance) {
+        Swal.fire({
+          icon: 'error',
+          title: getI18n('common.error') || 'Error',
+          text: getI18n('whatsapp.connectionCheckFailed') || 'Failed to check connection status. Please try again.',
+          timer: 2000,
+          confirmButtonText: getI18n('common.ok') || 'OK'
+        });
+      }
+    } finally {
+      if (showSwal && swalInstance) {
+        Swal.close();
       }
     }
   }
