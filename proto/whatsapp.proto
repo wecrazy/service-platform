@@ -16,6 +16,8 @@ service WhatsAppService {
   rpc Disconnect(DisconnectRequest) returns (DisconnectResponse);
   // Logout logs out the current session.
   rpc Logout(WALogoutRequest) returns (WALogoutResponse);
+  // IsConnected checks if the WhatsApp client is currently connected.
+  rpc IsConnected(IsConnectedRequest) returns (IsConnectedResponse);
   // RefreshQR forces a new QR code generation for login.
   rpc RefreshQR(RefreshQRRequest) returns (ConnectResponse);
   // GetGroupInfo retrieves information about a specific group.
@@ -30,6 +32,8 @@ service WhatsAppService {
   rpc CreateStatus(CreateStatusRequest) returns (CreateStatusResponse);
   // HasContacts checks if the user has any contacts.
   rpc HasContacts(HasContactsRequest) returns (HasContactsResponse);
+  // GetProfilePicture retrieves a user's profile picture.
+  rpc GetProfilePicture(GetProfilePictureRequest) returns (GetProfilePictureResponse);
 }
 
 // HasContactsRequest is the request to check for contacts.
@@ -82,6 +86,26 @@ message GroupInfo {
   bool is_parent = 9;
   // List of participants in the group.
   repeated GroupParticipant participants = 10;
+  // Description of the group.
+  string description = 11;
+  // URL of the group's profile picture.
+  string photo_url = 12;
+  // Group settings and permissions.
+  GroupSettings settings = 13;
+}
+
+// GroupSettings contains group settings and permissions.
+message GroupSettings {
+  // Indicates if the group is locked (only admins can change group info).
+  bool locked = 1;
+  // Indicates if the group is announcement-only (only admins can send messages).
+  bool announcement_only = 2;
+  // Indicates if non-admin members can add others.
+  bool no_frequently_forwarded = 3;
+  // Indicates if the group is ephemeral (messages disappear after a time).
+  bool ephemeral = 4;
+  // Ephemeral duration in seconds (if ephemeral is true).
+  int32 ephemeral_duration = 5;
 }
 
 // IsOnWhatsAppRequest is the request to check if numbers are on WhatsApp.
@@ -121,6 +145,16 @@ message GetMeResponse {
   string message = 2;
   // JID of the current user.
   string jid = 3;
+  // Phone number of the current user.
+  string phone_number = 4;
+  // Display name / push name of the current user.
+  string name = 5;
+  // Profile picture URL (if available).
+  string profile_pic_url = 6;
+  // Device information.
+  string device = 7;
+  // Platform (e.g., android, iphone, web).
+  string platform = 8;
 }
 
 // GetGroupInfoRequest is the request to get info about a specific group.
@@ -139,6 +173,28 @@ message GetGroupInfoResponse {
   string name = 3;
   // List of participants in the group.
   repeated GroupParticipant participants = 4;
+  // JID of the group.
+  string jid = 5;
+  // JID of the group owner.
+  string owner_jid = 6;
+  // Topic of the group.
+  string topic = 7;
+  // Timestamp when the topic was set.
+  int64 topic_set_at = 8;
+  // JID of the user who set the topic.
+  string topic_set_by = 9;
+  // JID of the parent group (if applicable).
+  string linked_parent_jid = 10;
+  // Indicates if this is a default sub-group.
+  bool is_default_sub_group = 11;
+  // Indicates if this is a parent group (community).
+  bool is_parent = 12;
+  // Description of the group.
+  string description = 13;
+  // URL of the group's profile picture.
+  string photo_url = 14;
+  // Group settings and permissions.
+  GroupSettings settings = 15;
 }
 
 // GroupParticipant contains details about a group member.
@@ -163,6 +219,8 @@ message GroupParticipant {
 message RefreshQRRequest {
   // Phone number associated with the request (optional).
   string phone_number = 1;
+  // Force generation of a new QR code instead of reusing existing one.
+  bool force_new = 2;
 }
 
 // WALogoutRequest is the request to logout from WhatsApp.
@@ -176,6 +234,17 @@ message WALogoutResponse {
   // Indicates if the logout was successful.
   bool success = 1;
   // Message describing the result.
+  string message = 2;
+}
+
+// IsConnectedRequest is the request to check connection status.
+message IsConnectedRequest {}
+
+// IsConnectedResponse contains the connection status.
+message IsConnectedResponse {
+  // Indicates if the client is connected.
+  bool connected = 1;
+  // Message describing the connection status.
   string message = 2;
 }
 
@@ -341,6 +410,8 @@ message Message {
 message ConnectRequest {
   // Phone number to connect (optional).
   string phone_number = 1;
+  // Force QR code generation even if session exists.
+  bool force_qr = 2;
 }
 
 // ConnectResponse contains the result of the connection attempt.
@@ -367,4 +438,22 @@ message DisconnectResponse {
   bool success = 1;
   // Message describing the result.
   string message = 2;
+}
+
+// GetProfilePictureRequest is the request to get a user's profile picture.
+message GetProfilePictureRequest {
+  // JID of the user whose profile picture to retrieve.
+  string jid = 1;
+}
+
+// GetProfilePictureResponse contains the profile picture data.
+message GetProfilePictureResponse {
+  // Indicates if the operation was successful.
+  bool success = 1;
+  // Message describing the result.
+  string message = 2;
+  // The profile picture data as bytes.
+  bytes image_data = 3;
+  // The MIME type of the image.
+  string content_type = 4;
 }

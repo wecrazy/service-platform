@@ -118,6 +118,8 @@
   <script src="{{.GLOBAL_URL}}assets/vendor/libs/@form-validation/umd/plugin-auto-focus/index.min.js"></script>
 
   <script src="{{.GLOBAL_URL}}assets/vendor/libs/select2/select2.js"></script>
+  <!-- QRCode -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.4.4/qrcode.min.js"></script>
   <!-- Uppy -->
   <script src="https://cdn.jsdelivr.net/npm/uppy@4.13.2/dist/uppy.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/uppy@4.13.2/dist/uppy.min.css" rel="stylesheet">
@@ -646,7 +648,6 @@
   <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/accessibility.js"></script>
   <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/exporting.js"></script>
   <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/export-data.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
   <script src="{{.GLOBAL_URL}}assets/vendor/libs/bootstrap-maxlength/bootstrap-maxlength.js"></script>
 
@@ -665,8 +666,10 @@
 
   <!-- Page JS -->
   <script src="{{.GLOBAL_URL}}assets/self/scripts.js?_=v{{.APP_VERSION_CODE}}"></script>
-
   <!-- <script src="{{.GLOBAL_URL}}assets/self/function.js?_=last_update12112025_v1.0.0"></script> -->
+  
+  <!-- Web Whatsapp JS -->
+  <script src="{{.GLOBAL_URL}}assets/self/web_whatsapp.js?_=v{{.APP_VERSION_CODE}}"></script>
 
   {{if .IsEnableDebug}}
   <script>
