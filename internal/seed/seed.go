@@ -291,7 +291,7 @@ func SeedFeature(db *gorm.DB) {
 		}{
 			{
 				Title:         "Whatsapp",
-				ChildPrefixes: []string{"tab-whatsapp"},
+				ChildPrefixes: []string{"tab-whatsapp", "tab-whatsapp-user-management"},
 			},
 			// {
 			// 	Title:         "Client Company",
