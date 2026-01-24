@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"service-platform/internal/config"
+	"service-platform/internal/telegram"
 	"service-platform/internal/whatsapp"
 	pb "service-platform/proto"
 
@@ -630,6 +631,9 @@ func main() {
 
 	// WhatsApp Client by Whatsmeow https://pkg.go.dev/go.mau.fi/whatsmeow
 	whatsapp.InitClient()
+
+	// Telegram Client
+	telegram.InitClient()
 
 	// Scheduler gRPC Client - connects to scheduler service
 	scheduler.InitClient()

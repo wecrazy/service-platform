@@ -1,0 +1,164 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "service-platform/proto";
+
+// TelegramService provides RPC methods for interacting with the Telegram Bot API.
+service TelegramService {
+
+    // SendMessage sends a text message to a specific Telegram chat.
+    //
+    // The message can be formatted using Markdown or HTML depending on the
+    // specified parse_mode.
+    rpc SendMessage(SendTelegramMessageRequest) returns (SendTelegramMessageResponse);
+
+    // SendMessageWithKeyboard sends a message with an inline keyboard.
+    rpc SendMessageWithKeyboard(SendTelegramMessageWithKeyboardRequest) returns (SendTelegramMessageWithKeyboardResponse);
+
+    // EditMessage edits an existing message text and/or reply markup.
+    rpc EditMessage(EditTelegramMessageRequest) returns (EditTelegramMessageResponse);
+
+    // AnswerCallbackQuery sends an answer to a callback query.
+    rpc AnswerCallbackQuery(TelegramAnswerCallbackQueryRequest) returns (TelegramAnswerCallbackQueryResponse);
+}
+
+// SendTelegramMessageRequest represents the payload required to send a message
+// to a Telegram chat.
+message SendTelegramMessageRequest {
+
+    // chat_id is the unique identifier for the target chat or username
+    // of the target channel (in the format @channelusername).
+    string chat_id = 1;
+
+    // text is the actual message content to be sent.
+    string text = 2;
+
+    // parse_mode specifies how the text should be parsed.
+    // Supported values are "Markdown" and "HTML".
+    // If omitted or empty, the message is sent as plain text.
+    string parse_mode = 3;
+}
+
+// SendTelegramMessageResponse represents the result of a SendMessage operation.
+message SendTelegramMessageResponse {
+
+    // success indicates whether the message was sent successfully.
+    bool success = 1;
+
+    // message contains a human-readable status or error description.
+    string message = 2;
+
+    // message_id is the unique identifier of the sent message in Telegram.
+    // This field is set only if the message was sent successfully.
+    int64 message_id = 3;
+}
+
+// SendTelegramMessageWithKeyboardResponse represents the result of a SendMessageWithKeyboard operation.
+message SendTelegramMessageWithKeyboardResponse {
+
+    // success indicates whether the message was sent successfully.
+    bool success = 1;
+
+    // message contains a human-readable status or error description.
+    string message = 2;
+
+    // message_id is the unique identifier of the sent message in Telegram.
+    // This field is set only if the message was sent successfully.
+    int64 message_id = 3;
+}
+
+// SendTelegramMessageWithKeyboardRequest represents a request to send a message with inline keyboard.
+message SendTelegramMessageWithKeyboardRequest {
+
+    // chat_id is the unique identifier for the target chat.
+    string chat_id = 1;
+
+    // text is the message text.
+    string text = 2;
+
+    // parse_mode specifies how the text should be parsed.
+    string parse_mode = 3;
+
+    // keyboard is the inline keyboard markup.
+    InlineKeyboardMarkup keyboard = 4;
+}
+
+// EditTelegramMessageRequest represents a request to edit an existing message.
+message EditTelegramMessageRequest {
+
+    // chat_id is the unique identifier for the target chat.
+    string chat_id = 1;
+
+    // message_id is the ID of the message to edit.
+    int64 message_id = 2;
+
+    // text is the new message text.
+    string text = 3;
+
+    // parse_mode specifies how the text should be parsed.
+    string parse_mode = 4;
+
+    // keyboard is the new inline keyboard markup (optional).
+    InlineKeyboardMarkup keyboard = 5;
+}
+
+// EditTelegramMessageResponse represents the result of an EditMessage operation.
+message EditTelegramMessageResponse {
+
+    // success indicates whether the message was edited successfully.
+    bool success = 1;
+
+    // message contains a human-readable status or error description.
+    string message = 2;
+}
+
+// TelegramAnswerCallbackQueryRequest represents a request to answer a callback query.
+message TelegramAnswerCallbackQueryRequest {
+
+    // callback_query_id is the unique identifier for the query to be answered.
+    string callback_query_id = 1;
+
+    // text is the text of the notification (optional).
+    string text = 2;
+
+    // show_alert specifies whether to show an alert instead of a notification.
+    bool show_alert = 3;
+}
+
+// TelegramAnswerCallbackQueryResponse represents the result of an AnswerCallbackQuery operation.
+message TelegramAnswerCallbackQueryResponse {
+
+    // success indicates whether the callback query was answered successfully.
+    bool success = 1;
+
+    // message contains a human-readable status or error description.
+    string message = 2;
+}
+
+// InlineKeyboardMarkup represents an inline keyboard markup.
+message InlineKeyboardMarkup {
+
+    // inline_keyboard is an array of button rows.
+    repeated InlineKeyboardButtonRow inline_keyboard = 1;
+}
+
+// InlineKeyboardButtonRow represents a row of inline keyboard buttons.
+message InlineKeyboardButtonRow {
+
+    // buttons is an array of buttons in this row.
+    repeated InlineKeyboardButton buttons = 1;
+}
+
+// InlineKeyboardButton represents an inline keyboard button.
+message InlineKeyboardButton {
+
+    // text is the label text on the button.
+    string text = 1;
+
+    // callback_data is the data to be sent when the button is pressed.
+    string callback_data = 2;
+
+    // url is the URL to be opened when the button is pressed (optional).
+    string url = 3;
+}

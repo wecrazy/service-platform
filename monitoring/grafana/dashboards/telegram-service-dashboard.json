@@ -1,0 +1,172 @@
+{
+  "id": null,
+  "title": "Telegram Service Dashboard",
+  "tags": ["service-platform", "telegram"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Telegram Service Status",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "up{job=\"telegram-service\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Metrics Endpoint Requests",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(promhttp_metric_handler_requests_total{job=\"telegram-service\",code=\"200\"}[5m])",
+          "refId": "A",
+          "legendFormat": "Successful Requests"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "title": "Goroutines",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "go_goroutines{job=\"telegram-service\"}",
+          "refId": "A",
+          "legendFormat": "Goroutines"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 4,
+      "title": "Memory Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "go_memstats_alloc_bytes{job=\"telegram-service\"}",
+          "refId": "A",
+          "legendFormat": "Heap Allocated"
+        },
+        {
+          "expr": "go_memstats_heap_inuse_bytes{job=\"telegram-service\"}",
+          "refId": "B",
+          "legendFormat": "Heap In Use"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      }
+    },
+    {
+      "id": 5,
+      "title": "GC Duration",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(go_gc_duration_seconds_sum{job=\"telegram-service\"}[5m]) / rate(go_gc_duration_seconds_count{job=\"telegram-service\"}[5m])",
+          "refId": "A",
+          "legendFormat": "GC Duration (avg)"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      }
+    },
+    {
+      "id": 6,
+      "title": "CPU Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(process_cpu_user_seconds_total{job=\"telegram-service\"}[5m])",
+          "refId": "A",
+          "legendFormat": "User CPU"
+        },
+        {
+          "expr": "rate(process_cpu_system_seconds_total{job=\"telegram-service\"}[5m])",
+          "refId": "B",
+          "legendFormat": "System CPU"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      }
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "refresh": "30s",
+  "schemaVersion": 27,
+  "version": 0,
+  "links": []
+}

@@ -397,6 +397,7 @@ type YamlConfig struct {
 		GRPCPort      int `yaml:"grpc_port" validate:"required"`
 		SchedulerPort int `yaml:"scheduler_port" validate:"required"`
 		WhatsAppPort  int `yaml:"whatsapp_port" validate:"required"`
+		TelegramPort  int `yaml:"telegram_port" validate:"required"`
 		GrafanaPort   int `yaml:"grafana_port" validate:"required"`
 	} `yaml:"metrics" validate:"required"`
 
@@ -477,6 +478,15 @@ type YamlConfig struct {
 		Username string `yaml:"username" validate:"required"`
 		Password string `yaml:"password" validate:"required"`
 	} `yaml:"mongoexpress" validate:"required"`
+
+	Telegram struct {
+		Debug    bool           `yaml:"debug"`
+		APIURL   string         `yaml:"api_url" validate:"required"`
+		BotToken string         `yaml:"bot_token" validate:"required"`
+		Host     string         `yaml:"host" validate:"required"`
+		GRPCPort int            `yaml:"grpc_port" validate:"required"`
+		Tables   TelegramTables `yaml:"tables" validate:"required"`
+	} `yaml:"telegram" validate:"required"`
 }
 
 // K6Thresholds represents default thresholds for k6 tests
@@ -565,4 +575,10 @@ type WhatsnyanFiles struct {
 		AllowedMimeTypes  []string `yaml:"allowed_mime_types" validate:"required"`
 		AllowedExtensions []string `yaml:"allowed_extensions" validate:"required"`
 	} `yaml:"audio" validate:"required"`
+}
+
+// TelegramTables holds the table names used in the Telegram service
+type TelegramTables struct {
+	TBTelegramMessage         string `yaml:"tb_telegram_message" validate:"required"`
+	TBTelegramIncomingMessage string `yaml:"tb_telegram_incoming_message" validate:"required"`
 }
