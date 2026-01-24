@@ -5,27 +5,28 @@ global:
 scrape_configs:
   - job_name: 'api-service'
     static_configs:
-      # - targets: ['localhost:6221', 'host.containers.internal:6221']  # API service with /metrics (main API port)
       - targets: ['host.containers.internal:6221']  # API service with /metrics (main API port)
     metrics_path: '/api-metrics'
 
   - job_name: 'grpc-service'
     static_configs:
-      # - targets: ['localhost:9092', 'host.containers.internal:9092']  # Auth gRPC service metrics (matches config.dev.yaml metrics.grpc_port)
-      - targets: ['host.containers.internal:9092']  # Auth gRPC service metrics (matches config.dev.yaml metrics.grpc_port)
+      - targets: ['host.containers.internal:9092']  # Auth gRPC service metrics (matches config.%s.yaml metrics.grpc_port)
     metrics_path: '/grpc-metrics'
 
   - job_name: 'scheduler-service'
     static_configs:
-      # - targets: ['localhost:9091', 'host.containers.internal:9091']  # Scheduler service metrics (matches config.dev.yaml metrics.scheduler_port)
-      - targets: ['host.containers.internal:9091']  # Scheduler service metrics (matches config.dev.yaml metrics.scheduler_port)
+      - targets: ['host.containers.internal:9091']  # Scheduler service metrics (matches config.%s.yaml metrics.scheduler_port)
     metrics_path: '/scheduler-metrics'
 
   - job_name: 'whatsapp-service'
     static_configs:
-      # - targets: ['localhost:9093', 'host.containers.internal:9093']  # WhatsApp service metrics (matches config.dev.yaml metrics.whatsapp_port)
-      - targets: ['host.containers.internal:9093']  # WhatsApp service metrics (matches config.dev.yaml metrics.whatsapp_port)
+      - targets: ['host.containers.internal:9093']  # WhatsApp service metrics (matches config.%s.yaml metrics.whatsapp_port)
     metrics_path: '/whatsapp-metrics'
+
+  - job_name: 'telegram-service'
+    static_configs:
+      - targets: ['host.containers.internal:9094']  # Telegram service metrics (matches config.%s.yaml metrics.telegram_port)
+    metrics_path: '/telegram-metrics'
 
   - job_name: 'libretranslate-service'
     static_configs:
