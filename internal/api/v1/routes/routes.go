@@ -291,5 +291,18 @@ func HtmlRoutes(
 			tabScheduler.DELETE("/jobs/:name", controllers.UnregisterScheduledJob()) // Unregister job
 			tabScheduler.POST("/reload", controllers.ReloadScheduler())              // Reload scheduler config
 		}
+
+		/*
+			Tab Telegram - Bot & Messaging
+		*/
+		tabTelegram := api.Group("/tab-telegram")
+		{
+			// Messaging
+			tabTelegram.POST("/send_message", controllers.SendTelegramMessage(db))
+			tabTelegram.POST("/send_message_with_keyboard", controllers.SendMessageWithKeyboard(db))
+			tabTelegram.POST("/edit_message", controllers.EditTelegramMessage(db))
+			tabTelegram.POST("/answer_callback_query", controllers.AnswerCallbackQuery(db))
+		}
+
 	}
 }

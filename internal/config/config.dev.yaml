@@ -270,6 +270,7 @@ metrics:
   grpc_port: 9092
   scheduler_port: 9091
   whatsapp_port: 9093
+  telegram_port: 9094
   grafana_port: 3063
 rate_limit:
   enabled: true
@@ -319,7 +320,6 @@ k6:
       vus: 100
       duration: "5m"
       script_path: "stress-test.js"
-
 # Observability Stack Configuration (Loki + Tempo + Grafana)
 observability:
   loki:
@@ -332,7 +332,6 @@ observability:
       environment: "development"
       version: "0.0.0.1.2025.12.26"
       hostname: "localhost"
-
   tempo:
     enabled: true
     otlp_grpc_endpoint: "http://127.0.0.1:4317"   # Local Tempo OTLP gRPC
@@ -340,11 +339,9 @@ observability:
     sample_rate: 1.0                              # 100% sampling in development
     max_export_batch_size: 512
     export_timeout_ms: 30000
-
   jaeger:
     enabled: false
     endpoint: "http://127.0.0.1:14250"
-
 mongodb:
   host: "localhost"
   port: 27007
@@ -355,9 +352,17 @@ mongodb:
   max_pool_size: 10
   min_pool_size: 5
   max_idle_time: 30 # seconds 
-
 mongoexpress:
   host: "localhost"
   port: 8081
   username: "admin"
   password: "pass"
+telegram:
+  debug: true
+  api_url: "https://api.telegram.org"
+  bot_token: "8254288273:AAF-Qu9nB0zF2f-ubJ7CdtWTzy5rss3coBU"
+  host: "localhost"
+  grpc_port: 50044
+  tables:
+    tb_telegram_message: "telegram_messages"
+    tb_telegram_incoming_message: "telegram_incoming_messages"
