@@ -1,10 +1,13 @@
-.PHONY: run-api run-wa run-scheduler run-grpc run-all build build-api build-wa build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all mongo-up mongo-down mongo-logs mongo-status test test-mongo help
+.PHONY: run-api run-wa run-telegram run-scheduler run-grpc run-all build build-api build-wa build-telegram build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all mongo-up mongo-down mongo-logs mongo-status test test-mongo help
 
 run-api:
 	go run cmd/api/main.go
 
 run-wa:
 	go run cmd/whatsapp/main.go
+
+run-telegram:
+	go run cmd/telegram/main.go
 
 run-scheduler:
 	go run cmd/scheduler/main.go
@@ -19,6 +22,10 @@ build-api:
 build-wa:
 	mkdir -p bin
 	go build -o bin/wa cmd/whatsapp/main.go
+
+build-telegram:
+	mkdir -p bin
+	go build -o bin/telegram cmd/telegram/main.go
 
 build-scheduler:
 	mkdir -p bin
@@ -147,24 +154,34 @@ install-protoc-gen:
 
 proto-gen: install-protoc-gen
 	@echo "🔧 Generating gRPC code from .proto files..."
+	@echo "⛓️  Generating code for auth.proto"
 	@GOBIN=$$(go env GOPATH)/bin; \
 	protoc --plugin=protoc-gen-go="$$GOBIN/protoc-gen-go" \
 		--plugin=protoc-gen-go-grpc="$$GOBIN/protoc-gen-go-grpc" \
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		proto/auth.proto
+	@echo "⛓️  Generating code for scheduler.proto"
 	@GOBIN=$$(go env GOPATH)/bin; \
 	protoc --plugin=protoc-gen-go="$$GOBIN/protoc-gen-go" \
 		--plugin=protoc-gen-go-grpc="$$GOBIN/protoc-gen-go-grpc" \
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		proto/scheduler.proto
+	@echo "⛓️  Generating code for whatsapp.proto"
 	@GOBIN=$$(go env GOPATH)/bin; \
 	protoc --plugin=protoc-gen-go="$$GOBIN/protoc-gen-go" \
 		--plugin=protoc-gen-go-grpc="$$GOBIN/protoc-gen-go-grpc" \
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		proto/whatsapp.proto
+	@echo "⛓️  Generating code for telegram.proto"
+	@GOBIN=$$(go env GOPATH)/bin; \
+	protoc --plugin=protoc-gen-go="$$GOBIN/protoc-gen-go" \
+		--plugin=protoc-gen-go-grpc="$$GOBIN/protoc-gen-go-grpc" \
+		--go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		proto/telegram.proto
 	@echo "✅ gRPC code generation complete"
 
 # Documentation
@@ -176,6 +193,7 @@ docs-grpc:
 	mkdir -p docs/grpc/html
 	protoc --plugin=protoc-gen-doc=$(shell go env GOPATH)/bin/protoc-gen-doc --doc_out=./docs/grpc/html --doc_opt=html,whatsapp.html proto/whatsapp.proto
 	protoc --plugin=protoc-gen-doc=$(shell go env GOPATH)/bin/protoc-gen-doc --doc_out=./docs/grpc/html --doc_opt=html,auth.html proto/auth.proto
+	protoc --plugin=protoc-gen-doc=$(shell go env GOPATH)/bin/protoc-gen-doc --doc_out=./docs/grpc/html --doc_opt=html,telegram.html proto/telegram.proto
 	@echo "gRPC HTML docs generated in docs/grpc/html/"
 
 docs-serve:
@@ -373,6 +391,7 @@ help:
 	@echo "  make build-grpc         			- Build gRPC service"
 	@echo "  make build-scheduler   			- Build scheduler service"
 	@echo "  make build-wa           			- Build WhatsApp service"
+	@echo "  make build-telegram      			- Build Telegram service"
 	@echo "  make build-monitoring   			- Build monitoring service"
 	@echo "  make build             			- Build all services"
 	@echo ""
@@ -381,6 +400,7 @@ help:
 	@echo "  make run-grpc           			- Run gRPC service"
 	@echo "  make run-scheduler      			- Run scheduler service"
 	@echo "  make run-wa             			- Run WhatsApp service"
+	@echo "  make run-telegram         			- Run Telegram service"
 	@echo "  make run-all            			- Run all services"
 	@echo ""
 	@echo "🤖 n8n Workflow Automation Commands:"

@@ -13,6 +13,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-redis/redis_rate/v9 v9.1.2
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/lib/pq v1.10.9
 	github.com/microcosm-cc/bluemonday v1.0.27
@@ -27,7 +28,7 @@ require (
 	github.com/tom-draper/api-analytics/analytics/go/gin v0.0.0-20251222101928-a076bea009fb
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
-	go.mau.fi/whatsmeow v0.0.0-20260120190750-84f938d06436
+	go.mau.fi/whatsmeow v0.0.0-20260123225751-89be06b020db
 	go.mongodb.org/mongo-driver v1.17.6
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.39.0

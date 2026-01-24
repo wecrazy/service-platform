@@ -75,6 +75,7 @@ metrics:
   grpc_port: 9092       # Metrics port for gRPC service
   scheduler_port: 9091  # Metrics port for scheduler service
   whatsapp_port: 9093   # Metrics port for WhatsApp service
+  telegram_port: 9094   # Metrics port for Telegram service
   grafana_port: 3063    # Grafana port
   libretranslate_port: 5004  # LibreTranslate port
 ```
@@ -87,6 +88,7 @@ Metrics struct {
     GRPCPort           int `yaml:"grpc_port"`
     SchedulerPort      int `yaml:"scheduler_port"`
     WhatsAppPort       int `yaml:"whatsapp_port"`
+    TelegramPort       int `yaml:"telegram_port"`
     GrafanaPort        int `yaml:"grafana_port"`
     LibreTranslatePort int `yaml:"libretranslate_port"`
 } `yaml:"metrics"`
@@ -157,6 +159,7 @@ monitoring/grafana/
     ├── grpc-service-dashboard.json
     ├── scheduler-service-dashboard.json
     ├── whatsapp-service-dashboard.json
+    ├── telegram-service-dashboard.json
     ├── libretranslate-dashboard.json
     └── n8n-service-dashboard.json
 ```
@@ -169,6 +172,7 @@ These files are mounted into the Grafana container and automatically loaded on s
 - **Auth gRPC Service**: gRPC on port 50041, metrics on port from config (default 9092)
 - **Scheduler Service**: gRPC on port 50043, metrics on port from config (default 9091)
 - **WhatsApp Service**: gRPC on port 50042, metrics on port from config (default 9093)
+- **Telegram Service**: gRPC on port 50044, metrics on port from config (default 9094)
 - **LibreTranslate Service**: metrics running on port from config (default 5004)
 - **N8N Service**: metrics running on port from config (default 5775)
 
@@ -240,6 +244,9 @@ go run cmd/scheduler/main.go
 
 # WhatsApp Service
 go run cmd/whatsapp/main.go
+
+# Telegram Service
+go run cmd/telegram/main.go
 ```
 
 ### 3. Access Grafana
@@ -254,6 +261,7 @@ go run cmd/whatsapp/main.go
 - **gRPC Service Dashboard** - Detailed metrics for the gRPC service  
 - **Scheduler Service Dashboard** - Detailed metrics for the scheduler service
 - **WhatsApp Service Dashboard** - Detailed metrics for the WhatsApp service
+- **Telegram Service Dashboard** - Detailed metrics for the Telegram service
 - **LibreTranslate Service Dashboard** - Detailed metrics for the LibreTranslate service
 - **N8N Service Dashboard** - Detailed metrics for the N8N service
 
@@ -272,6 +280,7 @@ go run cmd/whatsapp/main.go
   - Auth gRPC: http://localhost:9092/grpc-metrics
   - Scheduler: http://localhost:9091/scheduler-metrics
   - WhatsApp: http://localhost:9093/whatsapp-metrics
+  - Telegram: http://localhost:9094/telegram-metrics
   - LibreTranslate: http://localhost:5004/metrics
   - N8N: http://localhost:5775/metrics
 
