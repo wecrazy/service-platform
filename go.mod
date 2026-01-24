@@ -4,7 +4,7 @@ go 1.25.6
 
 require (
 	github.com/agnivade/levenshtein v1.2.1
-	github.com/alicebob/miniredis/v2 v2.35.0
+	github.com/alicebob/miniredis/v2 v2.36.1
 	github.com/dchest/captcha v1.1.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-contrib/cors v1.7.6
@@ -20,16 +20,15 @@ require (
 	github.com/mssola/user_agent v0.6.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/prometheus/client_golang v1.23.2
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.1
-	github.com/swaggo/swag v1.16.6
 	github.com/tom-draper/api-analytics/analytics/go/gin v0.0.0-20251222101928-a076bea009fb
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
 	go.mau.fi/whatsmeow v0.0.0-20260123225751-89be06b020db
-	go.mongodb.org/mongo-driver v1.17.6
+	go.mongodb.org/mongo-driver v1.17.7
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.39.0
 	go.opentelemetry.io/otel/sdk v1.39.0
@@ -113,6 +112,7 @@ require (
 	github.com/quic-go/quic-go v0.54.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rs/zerolog v1.34.0 // indirect
+	github.com/swaggo/swag v1.16.6 // indirect
 	github.com/tom-draper/api-analytics/analytics/go/core v0.0.0-20250423161653-bf0660dc994c // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
