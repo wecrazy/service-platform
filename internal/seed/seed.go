@@ -34,9 +34,12 @@ import (
 	"path/filepath"
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
+	telegrammodel "service-platform/internal/core/model/telegram_model"
 	"service-platform/internal/pkg/fun"
 	"strings"
 	"time"
+
+	"github.com/nyaruka/phonenumbers"
 
 	"github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
@@ -216,6 +219,26 @@ func SeedFeature(db *gorm.DB) {
 			// 	// Level:    0,
 			// 	Icon: "fad fa-whatsapp",
 			// },
+			/* * * * * * * * * * * * * * * * * * * * * * * * * * * */
+			/*
+				Telegram
+			*/
+			{
+				ParentID: 0,
+				Title:    "Telegram",
+				Path:     "",
+				Status:   1,
+				Level:    0,
+				Icon:     "fab fa-telegram-plane",
+			},
+			{
+				ParentID: 0,
+				Title:    "Bot Telegram",
+				Path:     "tab-telegram",
+				Status:   1,
+				Level:    1,
+				Icon:     "fab fa-telegram",
+			},
 			/* * * * * * * * * * * * * * * * * * * * * * * * * * * */
 			{
 				ParentID: 0,
@@ -1244,4 +1267,58 @@ func importIndonesiaRegionData(db *gorm.DB, filePath string) error {
 	}
 
 	return nil
+}
+
+// SeedTelegramUser creates default Telegram users for system operation.
+// Each user is assigned properties such as full name, username, phone number, email, user type, user organization, ban status, verification status, and daily quota.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function checks if any Telegram users already exist to avoid duplicates, ensuring idempotent behavior.
+func SeedTelegramUser(db *gorm.DB) {
+	var count int64
+	db.Model(&telegrammodel.TelegramUsers{}).Count(&count)
+
+	telegramUsers := []telegrammodel.TelegramUsers{
+		{
+			ChatID:        nil,
+			FullName:      "Super Admin - Wegil",
+			Username:      "rm_developer",
+			PhoneNumber:   "+6287718545247",
+			Email:         "wegirandol@smartwebindonesia.com",
+			UserType:      telegrammodel.SuperUser,
+			UserOf:        telegrammodel.CompanyEmployee,
+			IsBanned:      false,
+			VerifiedUser:  true,
+			MaxDailyQuota: 250,
+		},
+	}
+
+	for _, user := range telegramUsers {
+		var existingUser telegrammodel.TelegramUsers
+
+		validPhone, err := phonenumbers.Parse(user.PhoneNumber, "ID")
+		if err != nil {
+			logrus.Printf("Error parsing [ID] phone number %s: %v", user.PhoneNumber, err)
+			continue
+		}
+		user.PhoneNumber = phonenumbers.Format(validPhone, phonenumbers.E164)
+
+		if err := db.Where("phone_number = ?", user.PhoneNumber).First(&existingUser).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// User with this phone number does not exist, create it
+				if err := db.Create(&user).Error; err != nil {
+					logrus.Printf("Error creating Telegram user with phone number %s: %v", user.PhoneNumber, err)
+				} else {
+					logrus.Println("Inserted new Telegram user with phone number:", user.PhoneNumber, "ID:", user.ID)
+				}
+			} else {
+				logrus.Printf("Error checking Telegram user with phone number %s: %v", user.PhoneNumber, err)
+			}
+		} else {
+			// Skip updating existing user
+		}
+	}
+
 }

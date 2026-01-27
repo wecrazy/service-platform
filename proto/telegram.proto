@@ -21,6 +21,21 @@ service TelegramService {
 
     // AnswerCallbackQuery sends an answer to a callback query.
     rpc AnswerCallbackQuery(TelegramAnswerCallbackQueryRequest) returns (TelegramAnswerCallbackQueryResponse);
+
+    // SendVoice sends a voice message.
+    rpc SendVoice(SendTelegramVoiceRequest) returns (SendTelegramVoiceResponse);
+
+    // SendDocument sends a document.
+    rpc SendDocument(SendTelegramDocumentRequest) returns (SendTelegramDocumentResponse);
+
+    // SendPhoto sends a photo.
+    rpc SendPhoto(SendTelegramPhotoRequest) returns (SendTelegramPhotoResponse);
+
+    // SendAudio sends an audio file.
+    rpc SendAudio(SendTelegramAudioRequest) returns (SendTelegramAudioResponse);
+
+    // SendVideo sends a video.
+    rpc SendVideo(SendTelegramVideoRequest) returns (SendTelegramVideoResponse);
 }
 
 // SendTelegramMessageRequest represents the payload required to send a message
@@ -161,4 +176,170 @@ message InlineKeyboardButton {
 
     // url is the URL to be opened when the button is pressed (optional).
     string url = 3;
+}
+
+// SendTelegramVoiceRequest represents a request to send a voice message.
+message SendTelegramVoiceRequest {
+
+    // chat_id is the unique identifier for the target chat.
+    string chat_id = 1;
+
+    // voice is the voice file to send. Can be a file_id, URL, or file path.
+    string voice = 2;
+
+    // caption is the caption for the voice message (optional).
+    string caption = 3;
+
+    // parse_mode specifies how the caption should be parsed.
+    string parse_mode = 4;
+
+    // duration is the duration of the voice message in seconds (optional).
+    int32 duration = 5;
+}
+
+// SendTelegramVoiceResponse represents the result of a SendVoice operation.
+message SendTelegramVoiceResponse {
+
+    // success indicates whether the voice was sent successfully.
+    bool success = 1;
+
+    // message contains a human-readable status or error description.
+    string message = 2;
+
+    // message_id is the unique identifier of the sent message.
+    int64 message_id = 3;
+}
+
+// SendTelegramDocumentRequest represents a request to send a document.
+message SendTelegramDocumentRequest {
+
+    // chat_id is the unique identifier for the target chat.
+    string chat_id = 1;
+
+    // document is the document file to send. Can be a file_id, URL, or file path.
+    string document = 2;
+
+    // caption is the caption for the document (optional).
+    string caption = 3;
+
+    // parse_mode specifies how the caption should be parsed.
+    string parse_mode = 4;
+}
+
+// SendTelegramDocumentResponse represents the result of a SendDocument operation.
+message SendTelegramDocumentResponse {
+
+    // success indicates whether the document was sent successfully.
+    bool success = 1;
+
+    // message contains a human-readable status or error description.
+    string message = 2;
+
+    // message_id is the unique identifier of the sent message.
+    int64 message_id = 3;
+}
+
+// SendTelegramPhotoRequest represents a request to send a photo.
+message SendTelegramPhotoRequest {
+
+    // chat_id is the unique identifier for the target chat.
+    string chat_id = 1;
+
+    // photo is the photo file to send. Can be a file_id, URL, or file path.
+    string photo = 2;
+
+    // caption is the caption for the photo (optional).
+    string caption = 3;
+
+    // parse_mode specifies how the caption should be parsed.
+    string parse_mode = 4;
+}
+
+// SendTelegramPhotoResponse represents the result of a SendPhoto operation.
+message SendTelegramPhotoResponse {
+
+    // success indicates whether the photo was sent successfully.
+    bool success = 1;
+
+    // message contains a human-readable status or error description.
+    string message = 2;
+
+    // message_id is the unique identifier of the sent message.
+    int64 message_id = 3;
+}
+
+// SendTelegramAudioRequest represents a request to send an audio file.
+message SendTelegramAudioRequest {
+
+    // chat_id is the unique identifier for the target chat.
+    string chat_id = 1;
+
+    // audio is the audio file to send. Can be a file_id, URL, or file path.
+    string audio = 2;
+
+    // caption is the caption for the audio (optional).
+    string caption = 3;
+
+    // parse_mode specifies how the caption should be parsed.
+    string parse_mode = 4;
+
+    // duration is the duration of the audio in seconds (optional).
+    int32 duration = 5;
+
+    // performer is the performer of the audio (optional).
+    string performer = 6;
+
+    // title is the title of the audio (optional).
+    string title = 7;
+}
+
+// SendTelegramAudioResponse represents the result of a SendAudio operation.
+message SendTelegramAudioResponse {
+
+    // success indicates whether the audio was sent successfully.
+    bool success = 1;
+
+    // message contains a human-readable status or error description.
+    string message = 2;
+
+    // message_id is the unique identifier of the sent message.
+    int64 message_id = 3;
+}
+
+// SendTelegramVideoRequest represents a request to send a video.
+message SendTelegramVideoRequest {
+
+    // chat_id is the unique identifier for the target chat.
+    string chat_id = 1;
+
+    // video is the video file to send. Can be a file_id, URL, or file path.
+    string video = 2;
+
+    // caption is the caption for the video (optional).
+    string caption = 3;
+
+    // parse_mode specifies how the caption should be parsed.
+    string parse_mode = 4;
+
+    // duration is the duration of the video in seconds (optional).
+    int32 duration = 5;
+
+    // width is the video width (optional).
+    int32 width = 6;
+
+    // height is the video height (optional).
+    int32 height = 7;
+}
+
+// SendTelegramVideoResponse represents the result of a SendVideo operation.
+message SendTelegramVideoResponse {
+
+    // success indicates whether the video was sent successfully.
+    bool success = 1;
+
+    // message contains a human-readable status or error description.
+    string message = 2;
+
+    // message_id is the unique identifier of the sent message.
+    int64 message_id = 3;
 }

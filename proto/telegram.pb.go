@@ -704,6 +704,754 @@ func (x *InlineKeyboardButton) GetUrl() string {
 	return ""
 }
 
+// SendTelegramVoiceRequest represents a request to send a voice message.
+type SendTelegramVoiceRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// chat_id is the unique identifier for the target chat.
+	ChatId string `protobuf:"bytes,1,opt,name=chat_id,json=chatId,proto3" json:"chat_id,omitempty"`
+	// voice is the voice file to send. Can be a file_id, URL, or file path.
+	Voice string `protobuf:"bytes,2,opt,name=voice,proto3" json:"voice,omitempty"`
+	// caption is the caption for the voice message (optional).
+	Caption string `protobuf:"bytes,3,opt,name=caption,proto3" json:"caption,omitempty"`
+	// parse_mode specifies how the caption should be parsed.
+	ParseMode string `protobuf:"bytes,4,opt,name=parse_mode,json=parseMode,proto3" json:"parse_mode,omitempty"`
+	// duration is the duration of the voice message in seconds (optional).
+	Duration      int32 `protobuf:"varint,5,opt,name=duration,proto3" json:"duration,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTelegramVoiceRequest) Reset() {
+	*x = SendTelegramVoiceRequest{}
+	mi := &file_proto_telegram_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTelegramVoiceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTelegramVoiceRequest) ProtoMessage() {}
+
+func (x *SendTelegramVoiceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telegram_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTelegramVoiceRequest.ProtoReflect.Descriptor instead.
+func (*SendTelegramVoiceRequest) Descriptor() ([]byte, []int) {
+	return file_proto_telegram_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SendTelegramVoiceRequest) GetChatId() string {
+	if x != nil {
+		return x.ChatId
+	}
+	return ""
+}
+
+func (x *SendTelegramVoiceRequest) GetVoice() string {
+	if x != nil {
+		return x.Voice
+	}
+	return ""
+}
+
+func (x *SendTelegramVoiceRequest) GetCaption() string {
+	if x != nil {
+		return x.Caption
+	}
+	return ""
+}
+
+func (x *SendTelegramVoiceRequest) GetParseMode() string {
+	if x != nil {
+		return x.ParseMode
+	}
+	return ""
+}
+
+func (x *SendTelegramVoiceRequest) GetDuration() int32 {
+	if x != nil {
+		return x.Duration
+	}
+	return 0
+}
+
+// SendTelegramVoiceResponse represents the result of a SendVoice operation.
+type SendTelegramVoiceResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// success indicates whether the voice was sent successfully.
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	// message contains a human-readable status or error description.
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	// message_id is the unique identifier of the sent message.
+	MessageId     int64 `protobuf:"varint,3,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTelegramVoiceResponse) Reset() {
+	*x = SendTelegramVoiceResponse{}
+	mi := &file_proto_telegram_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTelegramVoiceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTelegramVoiceResponse) ProtoMessage() {}
+
+func (x *SendTelegramVoiceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telegram_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTelegramVoiceResponse.ProtoReflect.Descriptor instead.
+func (*SendTelegramVoiceResponse) Descriptor() ([]byte, []int) {
+	return file_proto_telegram_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *SendTelegramVoiceResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SendTelegramVoiceResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *SendTelegramVoiceResponse) GetMessageId() int64 {
+	if x != nil {
+		return x.MessageId
+	}
+	return 0
+}
+
+// SendTelegramDocumentRequest represents a request to send a document.
+type SendTelegramDocumentRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// chat_id is the unique identifier for the target chat.
+	ChatId string `protobuf:"bytes,1,opt,name=chat_id,json=chatId,proto3" json:"chat_id,omitempty"`
+	// document is the document file to send. Can be a file_id, URL, or file path.
+	Document string `protobuf:"bytes,2,opt,name=document,proto3" json:"document,omitempty"`
+	// caption is the caption for the document (optional).
+	Caption string `protobuf:"bytes,3,opt,name=caption,proto3" json:"caption,omitempty"`
+	// parse_mode specifies how the caption should be parsed.
+	ParseMode     string `protobuf:"bytes,4,opt,name=parse_mode,json=parseMode,proto3" json:"parse_mode,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTelegramDocumentRequest) Reset() {
+	*x = SendTelegramDocumentRequest{}
+	mi := &file_proto_telegram_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTelegramDocumentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTelegramDocumentRequest) ProtoMessage() {}
+
+func (x *SendTelegramDocumentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telegram_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTelegramDocumentRequest.ProtoReflect.Descriptor instead.
+func (*SendTelegramDocumentRequest) Descriptor() ([]byte, []int) {
+	return file_proto_telegram_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *SendTelegramDocumentRequest) GetChatId() string {
+	if x != nil {
+		return x.ChatId
+	}
+	return ""
+}
+
+func (x *SendTelegramDocumentRequest) GetDocument() string {
+	if x != nil {
+		return x.Document
+	}
+	return ""
+}
+
+func (x *SendTelegramDocumentRequest) GetCaption() string {
+	if x != nil {
+		return x.Caption
+	}
+	return ""
+}
+
+func (x *SendTelegramDocumentRequest) GetParseMode() string {
+	if x != nil {
+		return x.ParseMode
+	}
+	return ""
+}
+
+// SendTelegramDocumentResponse represents the result of a SendDocument operation.
+type SendTelegramDocumentResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// success indicates whether the document was sent successfully.
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	// message contains a human-readable status or error description.
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	// message_id is the unique identifier of the sent message.
+	MessageId     int64 `protobuf:"varint,3,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTelegramDocumentResponse) Reset() {
+	*x = SendTelegramDocumentResponse{}
+	mi := &file_proto_telegram_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTelegramDocumentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTelegramDocumentResponse) ProtoMessage() {}
+
+func (x *SendTelegramDocumentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telegram_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTelegramDocumentResponse.ProtoReflect.Descriptor instead.
+func (*SendTelegramDocumentResponse) Descriptor() ([]byte, []int) {
+	return file_proto_telegram_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *SendTelegramDocumentResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SendTelegramDocumentResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *SendTelegramDocumentResponse) GetMessageId() int64 {
+	if x != nil {
+		return x.MessageId
+	}
+	return 0
+}
+
+// SendTelegramPhotoRequest represents a request to send a photo.
+type SendTelegramPhotoRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// chat_id is the unique identifier for the target chat.
+	ChatId string `protobuf:"bytes,1,opt,name=chat_id,json=chatId,proto3" json:"chat_id,omitempty"`
+	// photo is the photo file to send. Can be a file_id, URL, or file path.
+	Photo string `protobuf:"bytes,2,opt,name=photo,proto3" json:"photo,omitempty"`
+	// caption is the caption for the photo (optional).
+	Caption string `protobuf:"bytes,3,opt,name=caption,proto3" json:"caption,omitempty"`
+	// parse_mode specifies how the caption should be parsed.
+	ParseMode     string `protobuf:"bytes,4,opt,name=parse_mode,json=parseMode,proto3" json:"parse_mode,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTelegramPhotoRequest) Reset() {
+	*x = SendTelegramPhotoRequest{}
+	mi := &file_proto_telegram_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTelegramPhotoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTelegramPhotoRequest) ProtoMessage() {}
+
+func (x *SendTelegramPhotoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telegram_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTelegramPhotoRequest.ProtoReflect.Descriptor instead.
+func (*SendTelegramPhotoRequest) Descriptor() ([]byte, []int) {
+	return file_proto_telegram_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *SendTelegramPhotoRequest) GetChatId() string {
+	if x != nil {
+		return x.ChatId
+	}
+	return ""
+}
+
+func (x *SendTelegramPhotoRequest) GetPhoto() string {
+	if x != nil {
+		return x.Photo
+	}
+	return ""
+}
+
+func (x *SendTelegramPhotoRequest) GetCaption() string {
+	if x != nil {
+		return x.Caption
+	}
+	return ""
+}
+
+func (x *SendTelegramPhotoRequest) GetParseMode() string {
+	if x != nil {
+		return x.ParseMode
+	}
+	return ""
+}
+
+// SendTelegramPhotoResponse represents the result of a SendPhoto operation.
+type SendTelegramPhotoResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// success indicates whether the photo was sent successfully.
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	// message contains a human-readable status or error description.
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	// message_id is the unique identifier of the sent message.
+	MessageId     int64 `protobuf:"varint,3,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTelegramPhotoResponse) Reset() {
+	*x = SendTelegramPhotoResponse{}
+	mi := &file_proto_telegram_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTelegramPhotoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTelegramPhotoResponse) ProtoMessage() {}
+
+func (x *SendTelegramPhotoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telegram_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTelegramPhotoResponse.ProtoReflect.Descriptor instead.
+func (*SendTelegramPhotoResponse) Descriptor() ([]byte, []int) {
+	return file_proto_telegram_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *SendTelegramPhotoResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SendTelegramPhotoResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *SendTelegramPhotoResponse) GetMessageId() int64 {
+	if x != nil {
+		return x.MessageId
+	}
+	return 0
+}
+
+// SendTelegramAudioRequest represents a request to send an audio file.
+type SendTelegramAudioRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// chat_id is the unique identifier for the target chat.
+	ChatId string `protobuf:"bytes,1,opt,name=chat_id,json=chatId,proto3" json:"chat_id,omitempty"`
+	// audio is the audio file to send. Can be a file_id, URL, or file path.
+	Audio string `protobuf:"bytes,2,opt,name=audio,proto3" json:"audio,omitempty"`
+	// caption is the caption for the audio (optional).
+	Caption string `protobuf:"bytes,3,opt,name=caption,proto3" json:"caption,omitempty"`
+	// parse_mode specifies how the caption should be parsed.
+	ParseMode string `protobuf:"bytes,4,opt,name=parse_mode,json=parseMode,proto3" json:"parse_mode,omitempty"`
+	// duration is the duration of the audio in seconds (optional).
+	Duration int32 `protobuf:"varint,5,opt,name=duration,proto3" json:"duration,omitempty"`
+	// performer is the performer of the audio (optional).
+	Performer string `protobuf:"bytes,6,opt,name=performer,proto3" json:"performer,omitempty"`
+	// title is the title of the audio (optional).
+	Title         string `protobuf:"bytes,7,opt,name=title,proto3" json:"title,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTelegramAudioRequest) Reset() {
+	*x = SendTelegramAudioRequest{}
+	mi := &file_proto_telegram_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTelegramAudioRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTelegramAudioRequest) ProtoMessage() {}
+
+func (x *SendTelegramAudioRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telegram_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTelegramAudioRequest.ProtoReflect.Descriptor instead.
+func (*SendTelegramAudioRequest) Descriptor() ([]byte, []int) {
+	return file_proto_telegram_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *SendTelegramAudioRequest) GetChatId() string {
+	if x != nil {
+		return x.ChatId
+	}
+	return ""
+}
+
+func (x *SendTelegramAudioRequest) GetAudio() string {
+	if x != nil {
+		return x.Audio
+	}
+	return ""
+}
+
+func (x *SendTelegramAudioRequest) GetCaption() string {
+	if x != nil {
+		return x.Caption
+	}
+	return ""
+}
+
+func (x *SendTelegramAudioRequest) GetParseMode() string {
+	if x != nil {
+		return x.ParseMode
+	}
+	return ""
+}
+
+func (x *SendTelegramAudioRequest) GetDuration() int32 {
+	if x != nil {
+		return x.Duration
+	}
+	return 0
+}
+
+func (x *SendTelegramAudioRequest) GetPerformer() string {
+	if x != nil {
+		return x.Performer
+	}
+	return ""
+}
+
+func (x *SendTelegramAudioRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+// SendTelegramAudioResponse represents the result of a SendAudio operation.
+type SendTelegramAudioResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// success indicates whether the audio was sent successfully.
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	// message contains a human-readable status or error description.
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	// message_id is the unique identifier of the sent message.
+	MessageId     int64 `protobuf:"varint,3,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTelegramAudioResponse) Reset() {
+	*x = SendTelegramAudioResponse{}
+	mi := &file_proto_telegram_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTelegramAudioResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTelegramAudioResponse) ProtoMessage() {}
+
+func (x *SendTelegramAudioResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telegram_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTelegramAudioResponse.ProtoReflect.Descriptor instead.
+func (*SendTelegramAudioResponse) Descriptor() ([]byte, []int) {
+	return file_proto_telegram_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *SendTelegramAudioResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SendTelegramAudioResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *SendTelegramAudioResponse) GetMessageId() int64 {
+	if x != nil {
+		return x.MessageId
+	}
+	return 0
+}
+
+// SendTelegramVideoRequest represents a request to send a video.
+type SendTelegramVideoRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// chat_id is the unique identifier for the target chat.
+	ChatId string `protobuf:"bytes,1,opt,name=chat_id,json=chatId,proto3" json:"chat_id,omitempty"`
+	// video is the video file to send. Can be a file_id, URL, or file path.
+	Video string `protobuf:"bytes,2,opt,name=video,proto3" json:"video,omitempty"`
+	// caption is the caption for the video (optional).
+	Caption string `protobuf:"bytes,3,opt,name=caption,proto3" json:"caption,omitempty"`
+	// parse_mode specifies how the caption should be parsed.
+	ParseMode string `protobuf:"bytes,4,opt,name=parse_mode,json=parseMode,proto3" json:"parse_mode,omitempty"`
+	// duration is the duration of the video in seconds (optional).
+	Duration int32 `protobuf:"varint,5,opt,name=duration,proto3" json:"duration,omitempty"`
+	// width is the video width (optional).
+	Width int32 `protobuf:"varint,6,opt,name=width,proto3" json:"width,omitempty"`
+	// height is the video height (optional).
+	Height        int32 `protobuf:"varint,7,opt,name=height,proto3" json:"height,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTelegramVideoRequest) Reset() {
+	*x = SendTelegramVideoRequest{}
+	mi := &file_proto_telegram_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTelegramVideoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTelegramVideoRequest) ProtoMessage() {}
+
+func (x *SendTelegramVideoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telegram_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTelegramVideoRequest.ProtoReflect.Descriptor instead.
+func (*SendTelegramVideoRequest) Descriptor() ([]byte, []int) {
+	return file_proto_telegram_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *SendTelegramVideoRequest) GetChatId() string {
+	if x != nil {
+		return x.ChatId
+	}
+	return ""
+}
+
+func (x *SendTelegramVideoRequest) GetVideo() string {
+	if x != nil {
+		return x.Video
+	}
+	return ""
+}
+
+func (x *SendTelegramVideoRequest) GetCaption() string {
+	if x != nil {
+		return x.Caption
+	}
+	return ""
+}
+
+func (x *SendTelegramVideoRequest) GetParseMode() string {
+	if x != nil {
+		return x.ParseMode
+	}
+	return ""
+}
+
+func (x *SendTelegramVideoRequest) GetDuration() int32 {
+	if x != nil {
+		return x.Duration
+	}
+	return 0
+}
+
+func (x *SendTelegramVideoRequest) GetWidth() int32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+func (x *SendTelegramVideoRequest) GetHeight() int32 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
+}
+
+// SendTelegramVideoResponse represents the result of a SendVideo operation.
+type SendTelegramVideoResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// success indicates whether the video was sent successfully.
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	// message contains a human-readable status or error description.
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	// message_id is the unique identifier of the sent message.
+	MessageId     int64 `protobuf:"varint,3,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTelegramVideoResponse) Reset() {
+	*x = SendTelegramVideoResponse{}
+	mi := &file_proto_telegram_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTelegramVideoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTelegramVideoResponse) ProtoMessage() {}
+
+func (x *SendTelegramVideoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telegram_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTelegramVideoResponse.ProtoReflect.Descriptor instead.
+func (*SendTelegramVideoResponse) Descriptor() ([]byte, []int) {
+	return file_proto_telegram_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *SendTelegramVideoResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SendTelegramVideoResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *SendTelegramVideoResponse) GetMessageId() int64 {
+	if x != nil {
+		return x.MessageId
+	}
+	return 0
+}
+
 var File_proto_telegram_proto protoreflect.FileDescriptor
 
 const file_proto_telegram_proto_rawDesc = "" +
@@ -756,12 +1504,79 @@ const file_proto_telegram_proto_rawDesc = "" +
 	"\x14InlineKeyboardButton\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\x12#\n" +
 	"\rcallback_data\x18\x02 \x01(\tR\fcallbackData\x12\x10\n" +
-	"\x03url\x18\x03 \x01(\tR\x03url2\xa5\x03\n" +
+	"\x03url\x18\x03 \x01(\tR\x03url\"\x9e\x01\n" +
+	"\x18SendTelegramVoiceRequest\x12\x17\n" +
+	"\achat_id\x18\x01 \x01(\tR\x06chatId\x12\x14\n" +
+	"\x05voice\x18\x02 \x01(\tR\x05voice\x12\x18\n" +
+	"\acaption\x18\x03 \x01(\tR\acaption\x12\x1d\n" +
+	"\n" +
+	"parse_mode\x18\x04 \x01(\tR\tparseMode\x12\x1a\n" +
+	"\bduration\x18\x05 \x01(\x05R\bduration\"n\n" +
+	"\x19SendTelegramVoiceResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +
+	"\n" +
+	"message_id\x18\x03 \x01(\x03R\tmessageId\"\x8b\x01\n" +
+	"\x1bSendTelegramDocumentRequest\x12\x17\n" +
+	"\achat_id\x18\x01 \x01(\tR\x06chatId\x12\x1a\n" +
+	"\bdocument\x18\x02 \x01(\tR\bdocument\x12\x18\n" +
+	"\acaption\x18\x03 \x01(\tR\acaption\x12\x1d\n" +
+	"\n" +
+	"parse_mode\x18\x04 \x01(\tR\tparseMode\"q\n" +
+	"\x1cSendTelegramDocumentResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +
+	"\n" +
+	"message_id\x18\x03 \x01(\x03R\tmessageId\"\x82\x01\n" +
+	"\x18SendTelegramPhotoRequest\x12\x17\n" +
+	"\achat_id\x18\x01 \x01(\tR\x06chatId\x12\x14\n" +
+	"\x05photo\x18\x02 \x01(\tR\x05photo\x12\x18\n" +
+	"\acaption\x18\x03 \x01(\tR\acaption\x12\x1d\n" +
+	"\n" +
+	"parse_mode\x18\x04 \x01(\tR\tparseMode\"n\n" +
+	"\x19SendTelegramPhotoResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +
+	"\n" +
+	"message_id\x18\x03 \x01(\x03R\tmessageId\"\xd2\x01\n" +
+	"\x18SendTelegramAudioRequest\x12\x17\n" +
+	"\achat_id\x18\x01 \x01(\tR\x06chatId\x12\x14\n" +
+	"\x05audio\x18\x02 \x01(\tR\x05audio\x12\x18\n" +
+	"\acaption\x18\x03 \x01(\tR\acaption\x12\x1d\n" +
+	"\n" +
+	"parse_mode\x18\x04 \x01(\tR\tparseMode\x12\x1a\n" +
+	"\bduration\x18\x05 \x01(\x05R\bduration\x12\x1c\n" +
+	"\tperformer\x18\x06 \x01(\tR\tperformer\x12\x14\n" +
+	"\x05title\x18\a \x01(\tR\x05title\"n\n" +
+	"\x19SendTelegramAudioResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +
+	"\n" +
+	"message_id\x18\x03 \x01(\x03R\tmessageId\"\xcc\x01\n" +
+	"\x18SendTelegramVideoRequest\x12\x17\n" +
+	"\achat_id\x18\x01 \x01(\tR\x06chatId\x12\x14\n" +
+	"\x05video\x18\x02 \x01(\tR\x05video\x12\x18\n" +
+	"\acaption\x18\x03 \x01(\tR\acaption\x12\x1d\n" +
+	"\n" +
+	"parse_mode\x18\x04 \x01(\tR\tparseMode\x12\x1a\n" +
+	"\bduration\x18\x05 \x01(\x05R\bduration\x12\x14\n" +
+	"\x05width\x18\x06 \x01(\x05R\x05width\x12\x16\n" +
+	"\x06height\x18\a \x01(\x05R\x06height\"n\n" +
+	"\x19SendTelegramVideoResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +
+	"\n" +
+	"message_id\x18\x03 \x01(\x03R\tmessageId2\xbe\x06\n" +
 	"\x0fTelegramService\x12T\n" +
 	"\vSendMessage\x12!.proto.SendTelegramMessageRequest\x1a\".proto.SendTelegramMessageResponse\x12x\n" +
 	"\x17SendMessageWithKeyboard\x12-.proto.SendTelegramMessageWithKeyboardRequest\x1a..proto.SendTelegramMessageWithKeyboardResponse\x12T\n" +
 	"\vEditMessage\x12!.proto.EditTelegramMessageRequest\x1a\".proto.EditTelegramMessageResponse\x12l\n" +
-	"\x13AnswerCallbackQuery\x12).proto.TelegramAnswerCallbackQueryRequest\x1a*.proto.TelegramAnswerCallbackQueryResponseB\x18Z\x16service-platform/protob\x06proto3"
+	"\x13AnswerCallbackQuery\x12).proto.TelegramAnswerCallbackQueryRequest\x1a*.proto.TelegramAnswerCallbackQueryResponse\x12N\n" +
+	"\tSendVoice\x12\x1f.proto.SendTelegramVoiceRequest\x1a .proto.SendTelegramVoiceResponse\x12W\n" +
+	"\fSendDocument\x12\".proto.SendTelegramDocumentRequest\x1a#.proto.SendTelegramDocumentResponse\x12N\n" +
+	"\tSendPhoto\x12\x1f.proto.SendTelegramPhotoRequest\x1a .proto.SendTelegramPhotoResponse\x12N\n" +
+	"\tSendAudio\x12\x1f.proto.SendTelegramAudioRequest\x1a .proto.SendTelegramAudioResponse\x12N\n" +
+	"\tSendVideo\x12\x1f.proto.SendTelegramVideoRequest\x1a .proto.SendTelegramVideoResponseB\x18Z\x16service-platform/protob\x06proto3"
 
 var (
 	file_proto_telegram_proto_rawDescOnce sync.Once
@@ -775,7 +1590,7 @@ func file_proto_telegram_proto_rawDescGZIP() []byte {
 	return file_proto_telegram_proto_rawDescData
 }
 
-var file_proto_telegram_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_proto_telegram_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_proto_telegram_proto_goTypes = []any{
 	(*SendTelegramMessageRequest)(nil),              // 0: proto.SendTelegramMessageRequest
 	(*SendTelegramMessageResponse)(nil),             // 1: proto.SendTelegramMessageResponse
@@ -788,6 +1603,16 @@ var file_proto_telegram_proto_goTypes = []any{
 	(*InlineKeyboardMarkup)(nil),                    // 8: proto.InlineKeyboardMarkup
 	(*InlineKeyboardButtonRow)(nil),                 // 9: proto.InlineKeyboardButtonRow
 	(*InlineKeyboardButton)(nil),                    // 10: proto.InlineKeyboardButton
+	(*SendTelegramVoiceRequest)(nil),                // 11: proto.SendTelegramVoiceRequest
+	(*SendTelegramVoiceResponse)(nil),               // 12: proto.SendTelegramVoiceResponse
+	(*SendTelegramDocumentRequest)(nil),             // 13: proto.SendTelegramDocumentRequest
+	(*SendTelegramDocumentResponse)(nil),            // 14: proto.SendTelegramDocumentResponse
+	(*SendTelegramPhotoRequest)(nil),                // 15: proto.SendTelegramPhotoRequest
+	(*SendTelegramPhotoResponse)(nil),               // 16: proto.SendTelegramPhotoResponse
+	(*SendTelegramAudioRequest)(nil),                // 17: proto.SendTelegramAudioRequest
+	(*SendTelegramAudioResponse)(nil),               // 18: proto.SendTelegramAudioResponse
+	(*SendTelegramVideoRequest)(nil),                // 19: proto.SendTelegramVideoRequest
+	(*SendTelegramVideoResponse)(nil),               // 20: proto.SendTelegramVideoResponse
 }
 var file_proto_telegram_proto_depIdxs = []int32{
 	8,  // 0: proto.SendTelegramMessageWithKeyboardRequest.keyboard:type_name -> proto.InlineKeyboardMarkup
@@ -798,12 +1623,22 @@ var file_proto_telegram_proto_depIdxs = []int32{
 	3,  // 5: proto.TelegramService.SendMessageWithKeyboard:input_type -> proto.SendTelegramMessageWithKeyboardRequest
 	4,  // 6: proto.TelegramService.EditMessage:input_type -> proto.EditTelegramMessageRequest
 	6,  // 7: proto.TelegramService.AnswerCallbackQuery:input_type -> proto.TelegramAnswerCallbackQueryRequest
-	1,  // 8: proto.TelegramService.SendMessage:output_type -> proto.SendTelegramMessageResponse
-	2,  // 9: proto.TelegramService.SendMessageWithKeyboard:output_type -> proto.SendTelegramMessageWithKeyboardResponse
-	5,  // 10: proto.TelegramService.EditMessage:output_type -> proto.EditTelegramMessageResponse
-	7,  // 11: proto.TelegramService.AnswerCallbackQuery:output_type -> proto.TelegramAnswerCallbackQueryResponse
-	8,  // [8:12] is the sub-list for method output_type
-	4,  // [4:8] is the sub-list for method input_type
+	11, // 8: proto.TelegramService.SendVoice:input_type -> proto.SendTelegramVoiceRequest
+	13, // 9: proto.TelegramService.SendDocument:input_type -> proto.SendTelegramDocumentRequest
+	15, // 10: proto.TelegramService.SendPhoto:input_type -> proto.SendTelegramPhotoRequest
+	17, // 11: proto.TelegramService.SendAudio:input_type -> proto.SendTelegramAudioRequest
+	19, // 12: proto.TelegramService.SendVideo:input_type -> proto.SendTelegramVideoRequest
+	1,  // 13: proto.TelegramService.SendMessage:output_type -> proto.SendTelegramMessageResponse
+	2,  // 14: proto.TelegramService.SendMessageWithKeyboard:output_type -> proto.SendTelegramMessageWithKeyboardResponse
+	5,  // 15: proto.TelegramService.EditMessage:output_type -> proto.EditTelegramMessageResponse
+	7,  // 16: proto.TelegramService.AnswerCallbackQuery:output_type -> proto.TelegramAnswerCallbackQueryResponse
+	12, // 17: proto.TelegramService.SendVoice:output_type -> proto.SendTelegramVoiceResponse
+	14, // 18: proto.TelegramService.SendDocument:output_type -> proto.SendTelegramDocumentResponse
+	16, // 19: proto.TelegramService.SendPhoto:output_type -> proto.SendTelegramPhotoResponse
+	18, // 20: proto.TelegramService.SendAudio:output_type -> proto.SendTelegramAudioResponse
+	20, // 21: proto.TelegramService.SendVideo:output_type -> proto.SendTelegramVideoResponse
+	13, // [13:22] is the sub-list for method output_type
+	4,  // [4:13] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
 	4,  // [4:4] is the sub-list for extension extendee
 	0,  // [0:4] is the sub-list for field type_name
@@ -820,7 +1655,7 @@ func file_proto_telegram_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_telegram_proto_rawDesc), len(file_proto_telegram_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

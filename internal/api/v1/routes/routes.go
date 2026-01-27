@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"service-platform/internal/api/v1/controllers"
+	telegramcontrollers "service-platform/internal/api/v1/controllers/telegram_controllers"
 	"service-platform/internal/config"
 	"service-platform/internal/middleware"
 	"service-platform/internal/pkg/fun"
@@ -298,10 +299,16 @@ func HtmlRoutes(
 		tabTelegram := api.Group("/tab-telegram")
 		{
 			// Messaging
-			tabTelegram.POST("/send_message", controllers.SendTelegramMessage(db))
-			tabTelegram.POST("/send_message_with_keyboard", controllers.SendMessageWithKeyboard(db))
-			tabTelegram.POST("/edit_message", controllers.EditTelegramMessage(db))
-			tabTelegram.POST("/answer_callback_query", controllers.AnswerCallbackQuery(db))
+			tabTelegram.POST("/send_message", telegramcontrollers.SendTelegramMessage(db))
+			tabTelegram.POST("/send_message_with_keyboard", telegramcontrollers.SendMessageWithKeyboard(db))
+			tabTelegram.POST("/edit_message", telegramcontrollers.EditTelegramMessage(db))
+			tabTelegram.POST("/answer_callback_query", telegramcontrollers.AnswerCallbackQuery(db))
+			// Media
+			tabTelegram.POST("/send_voice", telegramcontrollers.SendTelegramVoice(db))
+			tabTelegram.POST("/send_document", telegramcontrollers.SendTelegramDocument(db))
+			tabTelegram.POST("/send_photo", telegramcontrollers.SendTelegramPhoto(db))
+			tabTelegram.POST("/send_audio", telegramcontrollers.SendTelegramAudio(db))
+			tabTelegram.POST("/send_video", telegramcontrollers.SendTelegramVideo(db))
 		}
 
 	}
