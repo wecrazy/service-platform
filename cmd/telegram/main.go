@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"gorm.io/gorm"
 
-	"service-platform/internal/api/v1/controllers"
+	telegramcontrollers "service-platform/internal/api/v1/controllers/telegram_controllers"
 	"service-platform/internal/config"
 	telegrammodel "service-platform/internal/core/model/telegram_model"
 	"service-platform/internal/database"
@@ -36,7 +36,7 @@ type server struct {
 	redis       *redis.Client
 	db          *gorm.DB
 	defaultLang string
-	helper      *controllers.TelegramHelper
+	helper      *telegramcontrollers.TelegramHelper
 }
 
 // SendMessage sends a text message to a specified chat.
@@ -59,15 +59,15 @@ func (s *server) SendMessage(ctx context.Context, req *pb.SendTelegramMessageReq
 	sentTime := sentMsg.Time()
 	isGroup := sentMsg.Chat.IsGroup() || sentMsg.Chat.IsSuperGroup()
 	telegramMsg := telegrammodel.TelegramMsg{
-		TelegramChatID:        req.ChatId,
-		TelegramMessageSentTo: req.ChatId,
-		TelegramSentAt:        &sentTime,
-		TelegramSenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
-		TelegramMessageBody:   req.Text,
-		TelegramMessageType:   telegrammodel.TelegramTextMessage,
-		TelegramIsGroup:       isGroup,
-		TelegramMsgStatus:     "sent",
-		TelegramMessageID:     int64(sentMsg.MessageID),
+		ChatID:        req.ChatId,
+		MessageSentTo: req.ChatId,
+		SentAt:        &sentTime,
+		SenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
+		MessageBody:   req.Text,
+		MessageType:   telegrammodel.TelegramTextMessage,
+		IsGroup:       isGroup,
+		MsgStatus:     "sent",
+		MessageID:     int64(sentMsg.MessageID),
 	}
 
 	if err := s.db.Create(&telegramMsg).Error; err != nil {
@@ -107,15 +107,15 @@ func (s *server) SendMessageWithKeyboard(ctx context.Context, req *pb.SendTelegr
 	sentTime := sentMsg.Time()
 	isGroup := sentMsg.Chat.IsGroup() || sentMsg.Chat.IsSuperGroup()
 	telegramMsg := telegrammodel.TelegramMsg{
-		TelegramChatID:        req.ChatId,
-		TelegramMessageSentTo: req.ChatId,
-		TelegramSentAt:        &sentTime,
-		TelegramSenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
-		TelegramMessageBody:   req.Text,
-		TelegramMessageType:   telegrammodel.TelegramTextMessage,
-		TelegramIsGroup:       isGroup,
-		TelegramMsgStatus:     "sent",
-		TelegramMessageID:     int64(sentMsg.MessageID),
+		ChatID:        req.ChatId,
+		MessageSentTo: req.ChatId,
+		SentAt:        &sentTime,
+		SenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
+		MessageBody:   req.Text,
+		MessageType:   telegrammodel.TelegramTextMessage,
+		IsGroup:       isGroup,
+		MsgStatus:     "sent",
+		MessageID:     int64(sentMsg.MessageID),
 	}
 
 	if err := s.db.Create(&telegramMsg).Error; err != nil {
@@ -178,15 +178,15 @@ func (s *server) EditMessage(ctx context.Context, req *pb.EditTelegramMessageReq
 	}
 
 	telegramMsg := telegrammodel.TelegramMsg{
-		TelegramChatID:        req.ChatId,
-		TelegramMessageSentTo: req.ChatId,
-		TelegramSentAt:        &currentTime,
-		TelegramSenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
-		TelegramMessageBody:   req.Text,
-		TelegramMessageType:   telegrammodel.TelegramTextMessage,
-		TelegramIsGroup:       isGroup,
-		TelegramMsgStatus:     "edited",
-		TelegramMessageID:     req.MessageId,
+		ChatID:        req.ChatId,
+		MessageSentTo: req.ChatId,
+		SentAt:        &currentTime,
+		SenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
+		MessageBody:   req.Text,
+		MessageType:   telegrammodel.TelegramTextMessage,
+		IsGroup:       isGroup,
+		MsgStatus:     "edited",
+		MessageID:     req.MessageId,
 	}
 
 	if err := s.db.Create(&telegramMsg).Error; err != nil {
@@ -219,6 +219,287 @@ func (s *server) AnswerCallbackQuery(ctx context.Context, req *pb.TelegramAnswer
 	return &pb.TelegramAnswerCallbackQueryResponse{
 		Success: true,
 		Message: "Callback query answered successfully",
+	}, nil
+}
+
+// SendVoice sends a voice message to a specified chat.
+func (s *server) SendVoice(ctx context.Context, req *pb.SendTelegramVoiceRequest) (*pb.SendTelegramVoiceResponse, error) {
+	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
+	if err != nil {
+		return &pb.SendTelegramVoiceResponse{
+			Success: false,
+			Message: "Invalid chat ID: must be numeric for media messages",
+		}, nil
+	}
+
+	voice := tgbotapi.NewVoice(chatID, tgbotapi.FileURL(req.Voice))
+	if req.Caption != "" {
+		voice.Caption = req.Caption
+	}
+	if req.ParseMode != "" {
+		voice.ParseMode = req.ParseMode
+	}
+	if req.Duration > 0 {
+		voice.Duration = int(req.Duration)
+	}
+
+	sentMsg, err := s.bot.Send(voice)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to send voice message")
+		return &pb.SendTelegramVoiceResponse{
+			Success: false,
+			Message: err.Error(),
+		}, nil
+	}
+
+	currentTime := time.Now()
+	isGroup := sentMsg.Chat.IsGroup() || sentMsg.Chat.IsSuperGroup()
+	telegramMsg := telegrammodel.TelegramMsg{
+		ChatID:        req.ChatId,
+		MessageSentTo: req.ChatId,
+		SentAt:        &currentTime,
+		SenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
+		MessageBody:   req.Caption,
+		MessageType:   telegrammodel.TelegramVoiceMessage,
+		IsGroup:       isGroup,
+		MsgStatus:     "sent",
+		MessageID:     int64(sentMsg.MessageID),
+	}
+
+	if err := s.db.Create(&telegramMsg).Error; err != nil {
+		logrus.WithError(err).Error("Failed to store sent Telegram voice message")
+		// Don't return error, message was sent successfully
+	}
+
+	return &pb.SendTelegramVoiceResponse{
+		Success:   true,
+		Message:   "Voice message sent successfully",
+		MessageId: int64(sentMsg.MessageID),
+	}, nil
+}
+
+// SendDocument sends a document to a specified chat.
+func (s *server) SendDocument(ctx context.Context, req *pb.SendTelegramDocumentRequest) (*pb.SendTelegramDocumentResponse, error) {
+	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
+	if err != nil {
+		return &pb.SendTelegramDocumentResponse{
+			Success: false,
+			Message: "Invalid chat ID: must be numeric for media messages",
+		}, nil
+	}
+
+	doc := tgbotapi.NewDocument(chatID, tgbotapi.FileURL(req.Document))
+	if req.Caption != "" {
+		doc.Caption = req.Caption
+	}
+	if req.ParseMode != "" {
+		doc.ParseMode = req.ParseMode
+	}
+
+	sentMsg, err := s.bot.Send(doc)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to send document")
+		return &pb.SendTelegramDocumentResponse{
+			Success: false,
+			Message: err.Error(),
+		}, nil
+	}
+
+	currentTime := time.Now()
+	isGroup := sentMsg.Chat.IsGroup() || sentMsg.Chat.IsSuperGroup()
+	telegramMsg := telegrammodel.TelegramMsg{
+		ChatID:        req.ChatId,
+		MessageSentTo: req.ChatId,
+		SentAt:        &currentTime,
+		SenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
+		MessageBody:   req.Caption,
+		MessageType:   telegrammodel.TelegramDocumentMessage,
+		IsGroup:       isGroup,
+		MsgStatus:     "sent",
+		MessageID:     int64(sentMsg.MessageID),
+	}
+
+	if err := s.db.Create(&telegramMsg).Error; err != nil {
+		logrus.WithError(err).Error("Failed to store sent Telegram document message")
+		// Don't return error, message was sent successfully
+	}
+
+	return &pb.SendTelegramDocumentResponse{
+		Success:   true,
+		Message:   "Document sent successfully",
+		MessageId: int64(sentMsg.MessageID),
+	}, nil
+}
+
+// SendPhoto sends a photo to a specified chat.
+func (s *server) SendPhoto(ctx context.Context, req *pb.SendTelegramPhotoRequest) (*pb.SendTelegramPhotoResponse, error) {
+	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
+	if err != nil {
+		return &pb.SendTelegramPhotoResponse{
+			Success: false,
+			Message: "Invalid chat ID: must be numeric for media messages",
+		}, nil
+	}
+
+	photo := tgbotapi.NewPhoto(chatID, tgbotapi.FileURL(req.Photo))
+	if req.Caption != "" {
+		photo.Caption = req.Caption
+	}
+	if req.ParseMode != "" {
+		photo.ParseMode = req.ParseMode
+	}
+
+	sentMsg, err := s.bot.Send(photo)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to send photo")
+		return &pb.SendTelegramPhotoResponse{
+			Success: false,
+			Message: err.Error(),
+		}, nil
+	}
+
+	currentTime := time.Now()
+	isGroup := sentMsg.Chat.IsGroup() || sentMsg.Chat.IsSuperGroup()
+	telegramMsg := telegrammodel.TelegramMsg{
+		ChatID:        req.ChatId,
+		MessageSentTo: req.ChatId,
+		SentAt:        &currentTime,
+		SenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
+		MessageBody:   req.Caption,
+		MessageType:   telegrammodel.TelegramImageMessage,
+		IsGroup:       isGroup,
+		MsgStatus:     "sent",
+		MessageID:     int64(sentMsg.MessageID),
+	}
+
+	if err := s.db.Create(&telegramMsg).Error; err != nil {
+		logrus.WithError(err).Error("Failed to store sent Telegram photo message")
+		// Don't return error, message was sent successfully
+	}
+
+	return &pb.SendTelegramPhotoResponse{
+		Success:   true,
+		Message:   "Photo sent successfully",
+		MessageId: int64(sentMsg.MessageID),
+	}, nil
+}
+
+// SendAudio sends an audio file to a specified chat.
+func (s *server) SendAudio(ctx context.Context, req *pb.SendTelegramAudioRequest) (*pb.SendTelegramAudioResponse, error) {
+	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
+	if err != nil {
+		return &pb.SendTelegramAudioResponse{
+			Success: false,
+			Message: "Invalid chat ID: must be numeric for media messages",
+		}, nil
+	}
+
+	audio := tgbotapi.NewAudio(chatID, tgbotapi.FileURL(req.Audio))
+	if req.Caption != "" {
+		audio.Caption = req.Caption
+	}
+	if req.ParseMode != "" {
+		audio.ParseMode = req.ParseMode
+	}
+	if req.Duration > 0 {
+		audio.Duration = int(req.Duration)
+	}
+	if req.Performer != "" {
+		audio.Performer = req.Performer
+	}
+	if req.Title != "" {
+		audio.Title = req.Title
+	}
+
+	sentMsg, err := s.bot.Send(audio)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to send audio")
+		return &pb.SendTelegramAudioResponse{
+			Success: false,
+			Message: err.Error(),
+		}, nil
+	}
+
+	currentTime := time.Now()
+	isGroup := sentMsg.Chat.IsGroup() || sentMsg.Chat.IsSuperGroup()
+	telegramMsg := telegrammodel.TelegramMsg{
+		ChatID:        req.ChatId,
+		MessageSentTo: req.ChatId,
+		SentAt:        &currentTime,
+		SenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
+		MessageBody:   req.Caption,
+		MessageType:   telegrammodel.TelegramAudioMessage,
+		IsGroup:       isGroup,
+		MsgStatus:     "sent",
+		MessageID:     int64(sentMsg.MessageID),
+	}
+
+	if err := s.db.Create(&telegramMsg).Error; err != nil {
+		logrus.WithError(err).Error("Failed to store sent Telegram audio message")
+		// Don't return error, message was sent successfully
+	}
+
+	return &pb.SendTelegramAudioResponse{
+		Success:   true,
+		Message:   "Audio sent successfully",
+		MessageId: int64(sentMsg.MessageID),
+	}, nil
+}
+
+// SendVideo sends a video to a specified chat.
+func (s *server) SendVideo(ctx context.Context, req *pb.SendTelegramVideoRequest) (*pb.SendTelegramVideoResponse, error) {
+	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
+	if err != nil {
+		return &pb.SendTelegramVideoResponse{
+			Success: false,
+			Message: "Invalid chat ID: must be numeric for media messages",
+		}, nil
+	}
+
+	video := tgbotapi.NewVideo(chatID, tgbotapi.FileURL(req.Video))
+	if req.Caption != "" {
+		video.Caption = req.Caption
+	}
+	if req.ParseMode != "" {
+		video.ParseMode = req.ParseMode
+	}
+	if req.Duration > 0 {
+		video.Duration = int(req.Duration)
+	}
+	// Width and Height are not settable in VideoConfig
+
+	sentMsg, err := s.bot.Send(video)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to send video")
+		return &pb.SendTelegramVideoResponse{
+			Success: false,
+			Message: err.Error(),
+		}, nil
+	}
+
+	currentTime := time.Now()
+	isGroup := sentMsg.Chat.IsGroup() || sentMsg.Chat.IsSuperGroup()
+	telegramMsg := telegrammodel.TelegramMsg{
+		ChatID:        req.ChatId,
+		MessageSentTo: req.ChatId,
+		SentAt:        &currentTime,
+		SenderID:      fmt.Sprintf("%d", s.bot.Self.ID),
+		MessageBody:   req.Caption,
+		MessageType:   telegrammodel.TelegramVideoMessage,
+		IsGroup:       isGroup,
+		MsgStatus:     "sent",
+		MessageID:     int64(sentMsg.MessageID),
+	}
+
+	if err := s.db.Create(&telegramMsg).Error; err != nil {
+		logrus.WithError(err).Error("Failed to store sent Telegram video message")
+		// Don't return error, message was sent successfully
+	}
+
+	return &pb.SendTelegramVideoResponse{
+		Success:   true,
+		Message:   "Video sent successfully",
+		MessageId: int64(sentMsg.MessageID),
 	}, nil
 }
 
@@ -266,7 +547,7 @@ func main() {
 			}
 		}
 	}
-	if err := db.AutoMigrate(&telegrammodel.TelegramMsg{}, &telegrammodel.TelegramIncomingMsg{}); err != nil {
+	if err := db.AutoMigrate(&telegrammodel.TelegramMsg{}, &telegrammodel.TelegramIncomingMsg{}, &telegrammodel.TelegramUsers{}); err != nil {
 		logrus.WithError(err).Fatal("Failed to migrate Telegram models")
 	}
 	logrus.Info("✅ Migrated Telegram models")
@@ -309,7 +590,7 @@ func main() {
 		db:          db,
 		defaultLang: fun.DefaultLang,
 	}
-	serverInstance.helper = controllers.NewTelegramHelper(bot, redisClient, db, fun.DefaultLang)
+	serverInstance.helper = telegramcontrollers.NewTelegramHelper(bot, redisClient, db, &cfg, fun.DefaultLang)
 	pb.RegisterTelegramServiceServer(s, serverInstance)
 	reflection.Register(s)
 

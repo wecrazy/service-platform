@@ -81,7 +81,7 @@ type WAUsers struct {
 	UseBot        bool              `gorm:"column:use_bot;not null;default:true" json:"use_bot"`
 	UserType      WAUserType        `gorm:"column:user_type;type:varchar(20);not null;default:'common'" json:"user_type"`
 
-	QuotaExcedeed *time.Time `gorm:"-" json:"quota_excedeed"`
+	QuotaExceeded *time.Time `gorm:"-" json:"quota_exceeded"`
 	UserOf        WAUserOf   `gorm:"column:user_of;type:varchar(20);not null;default:'company_employee'" json:"user_of"`
 }
 

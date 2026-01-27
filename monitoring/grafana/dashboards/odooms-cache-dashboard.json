@@ -1,0 +1,305 @@
+{
+  "id": null,
+  "title": "ODOO MS Session Cache Dashboard",
+  "tags": ["service-platform", "odooms", "cache", "session"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Cache Hit Rate %",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "rate(odooms_session_cache_hits_total[5m]) / (rate(odooms_session_cache_hits_total[5m]) + rate(odooms_session_cache_misses_total[5m])) * 100",
+          "legendFormat": "Hit Rate",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "green",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Cache Age",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "odooms_session_cache_age_seconds",
+          "legendFormat": "Cache Age",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "max": 1800,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1500
+              },
+              {
+                "color": "red",
+                "value": 1700
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "title": "Cache Status",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "odooms_session_cache_age_seconds < 1800",
+          "legendFormat": "Cache Valid",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "EXPIRED",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "VALID",
+                  "color": "green"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      }
+    },
+    {
+      "id": 4,
+      "title": "Cache Operations Rate (per minute)",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(odooms_session_cache_hits_total[5m]) * 60",
+          "legendFormat": "Cache Hits/min",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(odooms_session_cache_misses_total[5m]) * 60",
+          "legendFormat": "Cache Misses/min",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(odooms_session_cache_errors_total[5m]) * 60",
+          "legendFormat": "Cache Errors/min",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 5,
+      "title": "Cache Efficiency Over Time",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "(rate(odooms_session_cache_hits_total[5m]) / (rate(odooms_session_cache_hits_total[5m]) + rate(odooms_session_cache_misses_total[5m]))) * 100",
+          "legendFormat": "Cache Efficiency %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      }
+    },
+    {
+      "id": 6,
+      "title": "Total Operations Summary",
+      "type": "table",
+      "targets": [
+        {
+          "expr": "odooms_session_cache_hits_total",
+          "legendFormat": "Total Hits",
+          "refId": "A"
+        },
+        {
+          "expr": "odooms_session_cache_misses_total",
+          "legendFormat": "Total Misses",
+          "refId": "B"
+        },
+        {
+          "expr": "odooms_session_cache_errors_total",
+          "legendFormat": "Total Errors",
+          "refId": "C"
+        },
+        {
+          "expr": "(odooms_session_cache_hits_total / (odooms_session_cache_hits_total + odooms_session_cache_misses_total)) * 100",
+          "legendFormat": "Overall Efficiency %",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Overall Efficiency %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      }
+    },
+    {
+      "id": 7,
+      "title": "Cache Age Trend",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "odooms_session_cache_age_seconds",
+          "legendFormat": "Cache Age (seconds)",
+          "refId": "A"
+        },
+        {
+          "expr": "1800",
+          "legendFormat": "Max Age (30 min)",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      }
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "refresh": "30s",
+  "schemaVersion": 27,
+  "version": 0,
+  "links": []
+}

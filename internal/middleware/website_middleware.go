@@ -551,7 +551,7 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 				// fmt.Println("method :", c.Request.Method, "Part :", part)
 				path, ok := claims[part].(string)
 				if !ok {
-					c.JSON(http.StatusNotFound, gin.H{"error": "access tab not found"})
+					c.JSON(http.StatusNotFound, gin.H{"error": "access tab not found, try to check your permissions or path exists"})
 					c.Abort()
 					return
 				}

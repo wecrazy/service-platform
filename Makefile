@@ -129,6 +129,27 @@ migrate-reset:
 		go run cmd/migrate/main.go -action reset; \
 	fi
 
+# Database seeding
+seed:
+	@echo "🌱 Running all database seeds..."
+	@go run -tags=seed cmd/seed/main.go
+
+seed-users:
+	@echo "👥 Seeding user-related data (roles, features, privileges, users, status)..."
+	@go run -tags=seed cmd/seed/main.go -only=users
+
+seed-whatsapp:
+	@echo "📱 Seeding WhatsApp data (users, languages, auto-replies)..."
+	@go run -tags=seed cmd/seed/main.go -only=whatsapp
+
+seed-telegram:
+	@echo "📱 Seeding Telegram data (users)..."
+	@go run -tags=seed cmd/seed/main.go -only=telegram
+
+seed-config:
+	@echo "⚙️ Seeding configuration data (app config, bad words, regions)..."
+	@go run -tags=seed cmd/seed/main.go -only=config
+
 # clean:
 # 	rm -rf bin
 
@@ -417,6 +438,11 @@ help:
 	@echo "  make migrate-status     			- Check migration status (auto-detects binary)"
 	@echo "  make migrate-reset      			- Reset all migrations (⚠️  destructive, auto-detects binary)"
 	@echo "  make build-migrate      			- Build migration CLI tool"
+	@echo "  make seed               			- Run all database seeds"
+	@echo "  make seed-users         			- Seed user-related data (roles, features, privileges)"
+	@echo "  make seed-whatsapp      			- Seed WhatsApp data (users, languages, auto-replies)"
+	@echo "  make seed-telegram      			- Seed Telegram data (users)"
+	@echo "  make seed-config        			- Seed configuration data (app config, bad words, regions)"
 	@echo ""
 	@echo "📊 Monitoring Commands:"
 	@echo "  make monitoring-start   			- Start Prometheus + Grafana"

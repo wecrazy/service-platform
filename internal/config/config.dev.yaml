@@ -366,3 +366,21 @@ telegram:
   tables:
     tb_telegram_message: "telegram_messages"
     tb_telegram_incoming_message: "telegram_incoming_messages"
+    tb_telegram_user: "telegram_users"
+  technical_support_phone: "6287883507445"
+odoo_ms:
+  jsonrpc_version: "2.0"
+  login: "desta@smartwebindonesia.com"
+  password: "Makan198"
+  db: "gsa_db"
+  url: "https://192.101.1.66:8069"                          # Development (:20080)
+  path_session: "/web/session/authenticate"
+  path_getdata: "/api/getdata"
+  path_updatedata: "/api/updatedata"
+  path_createdata: "/api/createdata"
+  max_retry: 10
+  retry_delay: 5                                            # seconds
+  session_timeout: 90                                       # seconds  
+  data_timeout: 900                                         # seconds
+  skip_ssl_verify: true
+  ADD: company included or excluded here if needed !

@@ -480,13 +480,31 @@ type YamlConfig struct {
 	} `yaml:"mongoexpress" validate:"required"`
 
 	Telegram struct {
-		Debug    bool           `yaml:"debug"`
-		APIURL   string         `yaml:"api_url" validate:"required"`
-		BotToken string         `yaml:"bot_token" validate:"required"`
-		Host     string         `yaml:"host" validate:"required"`
-		GRPCPort int            `yaml:"grpc_port" validate:"required"`
-		Tables   TelegramTables `yaml:"tables" validate:"required"`
+		Debug                 bool           `yaml:"debug"`
+		APIURL                string         `yaml:"api_url" validate:"required"`
+		BotToken              string         `yaml:"bot_token" validate:"required"`
+		Host                  string         `yaml:"host" validate:"required"`
+		GRPCPort              int            `yaml:"grpc_port" validate:"required"`
+		Tables                TelegramTables `yaml:"tables" validate:"required"`
+		TechnicalSupportPhone string         `yaml:"technical_support_phone" validate:"required"`
 	} `yaml:"telegram" validate:"required"`
+
+	ODOOManageService struct {
+		JsonRPCVersion string `yaml:"jsonrpc_version" validate:"required"`
+		Login          string `yaml:"login" validate:"required"`
+		Password       string `yaml:"password" validate:"required"`
+		DB             string `yaml:"db" validate:"required"`
+		URL            string `yaml:"url" validate:"required"`
+		PathSession    string `yaml:"path_session" validate:"required"`
+		PathGetData    string `yaml:"path_getdata" validate:"required"`
+		PathUpdateData string `yaml:"path_updatedata" validate:"required"`
+		PathCreateData string `yaml:"path_createdata" validate:"required"`
+		MaxRetry       int    `yaml:"max_retry" validate:"required"`
+		RetryDelay     int    `yaml:"retry_delay" validate:"required"`
+		SessionTimeout int    `yaml:"session_timeout" validate:"required"`
+		DataTimeout    int    `yaml:"data_timeout"`
+		SkipSSLVerify  bool   `yaml:"skip_ssl_verify"`
+	} `yaml:"odoo_ms" validate:"required"`
 }
 
 // K6Thresholds represents default thresholds for k6 tests
@@ -581,4 +599,5 @@ type WhatsnyanFiles struct {
 type TelegramTables struct {
 	TBTelegramMessage         string `yaml:"tb_telegram_message" validate:"required"`
 	TBTelegramIncomingMessage string `yaml:"tb_telegram_incoming_message" validate:"required"`
+	TBTelegramUser            string `yaml:"tb_telegram_user" validate:"required"`
 }

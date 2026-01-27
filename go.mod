@@ -19,6 +19,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/mssola/user_agent v0.6.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
+	github.com/nyaruka/phonenumbers v1.6.8
 	github.com/prometheus/client_golang v1.23.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.11.1
@@ -28,7 +29,7 @@ require (
 	github.com/tom-draper/api-analytics/analytics/go/gin v0.0.0-20251222101928-a076bea009fb
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
-	go.mau.fi/whatsmeow v0.0.0-20260123225751-89be06b020db
+	go.mau.fi/whatsmeow v0.0.0-20260126173513-4dbbef8d4d4a
 	go.mongodb.org/mongo-driver v1.17.6
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.39.0

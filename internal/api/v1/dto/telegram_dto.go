@@ -67,3 +67,77 @@ type InlineKeyboardButton struct {
 	// URL to open when button is pressed (optional)
 	URL string `json:"url" example:"https://example.com"`
 }
+
+// SendTelegramVoiceRequest represents the request body for sending a voice message
+type SendTelegramVoiceRequest struct {
+	// Chat ID (recipient identifier, can be username or chat ID)
+	ChatID string `json:"chat_id" binding:"required" example:"@username or 123456789"`
+	// Voice file to send (URL, file_id, or file path)
+	Voice string `json:"voice" binding:"required" example:"https://example.com/voice.ogg"`
+	// Caption for the voice message (optional)
+	Caption string `json:"caption" example:"Voice message"`
+	// Parse mode for the caption (optional: Markdown, HTML)
+	ParseMode string `json:"parse_mode" example:"Markdown"`
+	// Duration of the voice message in seconds (optional)
+	Duration int32 `json:"duration" example:"10"`
+}
+
+// SendTelegramDocumentRequest represents the request body for sending a document
+type SendTelegramDocumentRequest struct {
+	// Chat ID (recipient identifier, can be username or chat ID)
+	ChatID string `json:"chat_id" binding:"required" example:"@username or 123456789"`
+	// Document file to send (URL, file_id, or file path)
+	Document string `json:"document" binding:"required" example:"https://example.com/document.pdf"`
+	// Caption for the document (optional)
+	Caption string `json:"caption" example:"Document"`
+	// Parse mode for the caption (optional: Markdown, HTML)
+	ParseMode string `json:"parse_mode" example:"Markdown"`
+}
+
+// SendTelegramPhotoRequest represents the request body for sending a photo
+type SendTelegramPhotoRequest struct {
+	// Chat ID (recipient identifier, can be username or chat ID)
+	ChatID string `json:"chat_id" binding:"required" example:"@username or 123456789"`
+	// Photo file to send (URL, file_id, or file path)
+	Photo string `json:"photo" binding:"required" example:"https://example.com/photo.jpg"`
+	// Caption for the photo (optional)
+	Caption string `json:"caption" example:"Photo"`
+	// Parse mode for the caption (optional: Markdown, HTML)
+	ParseMode string `json:"parse_mode" example:"Markdown"`
+}
+
+// SendTelegramAudioRequest represents the request body for sending an audio file
+type SendTelegramAudioRequest struct {
+	// Chat ID (recipient identifier, can be username or chat ID)
+	ChatID string `json:"chat_id" binding:"required" example:"@username or 123456789"`
+	// Audio file to send (URL, file_id, or file path)
+	Audio string `json:"audio" binding:"required" example:"https://example.com/audio.mp3"`
+	// Caption for the audio (optional)
+	Caption string `json:"caption" example:"Audio"`
+	// Parse mode for the caption (optional: Markdown, HTML)
+	ParseMode string `json:"parse_mode" example:"Markdown"`
+	// Duration of the audio in seconds (optional)
+	Duration int32 `json:"duration" example:"180"`
+	// Performer of the audio (optional)
+	Performer string `json:"performer" example:"Artist Name"`
+	// Title of the audio (optional)
+	Title string `json:"title" example:"Song Title"`
+}
+
+// SendTelegramVideoRequest represents the request body for sending a video
+type SendTelegramVideoRequest struct {
+	// Chat ID (recipient identifier, can be username or chat ID)
+	ChatID string `json:"chat_id" binding:"required" example:"@username or 123456789"`
+	// Video file to send (URL, file_id, or file path)
+	Video string `json:"video" binding:"required" example:"https://example.com/video.mp4"`
+	// Caption for the video (optional)
+	Caption string `json:"caption" example:"Video"`
+	// Parse mode for the caption (optional: Markdown, HTML)
+	ParseMode string `json:"parse_mode" example:"Markdown"`
+	// Duration of the video in seconds (optional)
+	Duration int32 `json:"duration" example:"60"`
+	// Video width (optional)
+	Width int32 `json:"width" example:"640"`
+	// Video height (optional)
+	Height int32 `json:"height" example:"480"`
+}
