@@ -904,23 +904,22 @@ func (h *TelegramHelper) CreateLanguageKeyboard() tgbotapi.InlineKeyboardMarkup 
 			tgbotapi.NewInlineKeyboardButtonData("🇮🇩 Indonesia", "lang_id"),
 			tgbotapi.NewInlineKeyboardButtonData("🇺🇸 English", "lang_en"),
 		),
-		// TODO: uncomment this soon after you complete the localization for other languages
-		// tgbotapi.NewInlineKeyboardRow(
-		// 	tgbotapi.NewInlineKeyboardButtonData("🇪🇸 Español", "lang_es"),
-		// 	tgbotapi.NewInlineKeyboardButtonData("🇫🇷 Français", "lang_fr"),
-		// ),
-		// tgbotapi.NewInlineKeyboardRow(
-		// 	tgbotapi.NewInlineKeyboardButtonData("🇩🇪 Deutsch", "lang_de"),
-		// 	tgbotapi.NewInlineKeyboardButtonData("🇵🇹 Português", "lang_pt"),
-		// ),
-		// tgbotapi.NewInlineKeyboardRow(
-		// 	tgbotapi.NewInlineKeyboardButtonData("🇷🇺 Русский", "lang_ru"),
-		// 	tgbotapi.NewInlineKeyboardButtonData("🇯🇵 日本語", "lang_jp"),
-		// ),
-		// tgbotapi.NewInlineKeyboardRow(
-		// 	tgbotapi.NewInlineKeyboardButtonData("🇨🇳 中文", "lang_cn"),
-		// 	tgbotapi.NewInlineKeyboardButtonData("🇸🇦 العربية", "lang_ar"),
-		// ),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("🇪🇸 Español", "lang_es"),
+			tgbotapi.NewInlineKeyboardButtonData("🇫🇷 Français", "lang_fr"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("🇩🇪 Deutsch", "lang_de"),
+			tgbotapi.NewInlineKeyboardButtonData("🇵🇹 Português", "lang_pt"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("🇷🇺 Русский", "lang_ru"),
+			tgbotapi.NewInlineKeyboardButtonData("🇯🇵 日本語", "lang_jp"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("🇨🇳 中文", "lang_cn"),
+			tgbotapi.NewInlineKeyboardButtonData("🇸🇦 العربية", "lang_ar"),
+		),
 	)
 }
 

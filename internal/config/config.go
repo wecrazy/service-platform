@@ -546,6 +546,22 @@ type YamlConfig struct {
 		MySQLDBConnMaxIdleTime int    `yaml:"mysqldb_conn_max_idle_time" validate:"required"`
 		MySQLDBSSLMode         string `yaml:"mysqldb_ssl_mode" validate:"required"`
 	} `yaml:"ms_middleware" validate:"required"`
+
+	// WebPanelService holds Dashboard & Reporting of ODOO Manage Service
+	WebPanelService struct {
+		MySQLDBHost            string `yaml:"mysqldb_host" validate:"required"`
+		MySQLDBPort            int    `yaml:"mysqldb_port" validate:"required"`
+		MySQLDBUser            string `yaml:"mysqldb_user" validate:"required"`
+		MySQLDBPass            string `yaml:"mysqldb_password" validate:"required"`
+		MySQLDBName            string `yaml:"mysqldb_dbname" validate:"required"`
+		MySQLDBMaxRetryConnect int    `yaml:"mysqldb_max_retry_connect" validate:"required"`
+		MySQLDBRetryDelay      int    `yaml:"mysqldb_retry_delay" validate:"required"`
+		MySQLDBIdleConnection  int    `yaml:"mysqldb_idle_connection" validate:"required"`
+		MySQLDBOpenConnection  int    `yaml:"mysqldb_open_connection" validate:"required"`
+		MySQLDBConnMaxLifetime int    `yaml:"mysqldb_conn_max_lifetime" validate:"required"`
+		MySQLDBConnMaxIdleTime int    `yaml:"mysqldb_conn_max_idle_time" validate:"required"`
+		MySQLDBSSLMode         string `yaml:"mysqldb_ssl_mode" validate:"required"`
+	} `yaml:"web_panel" validate:"required"`
 }
 
 // K6Thresholds represents default thresholds for k6 tests
