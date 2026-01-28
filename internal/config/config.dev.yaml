@@ -373,7 +373,8 @@ odoo_ms:
   login: "desta@smartwebindonesia.com"
   password: "Makan198"
   db: "gsa_db"
-  url: "https://192.101.1.66:8069"                          # Development (:20080)
+  # url: "https://192.101.1.66:8069"                          # Development (:20080)
+  url: "https://gsa4u.net:13070"                          # Production GL
   path_session: "/web/session/authenticate"
   path_getdata: "/api/getdata"
   path_updatedata: "/api/updatedata"

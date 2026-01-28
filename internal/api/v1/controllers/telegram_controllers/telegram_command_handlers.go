@@ -7,6 +7,7 @@ import (
 	"service-platform/internal/config"
 	telegrammodel "service-platform/internal/core/model/telegram_model"
 	"service-platform/internal/database"
+	"service-platform/internal/pkg/fun"
 	"strings"
 	"time"
 
@@ -93,6 +94,12 @@ func (h *TelegramHelper) handleHelpCommand(message *tgbotapi.Message, telegramUs
 
 // handleResetCommand handles the /reset command to allow re-registration
 func (h *TelegramHelper) handleResetCommand(message *tgbotapi.Message, userLang string) {
+	// Use the language code from the message to re-get userLang
+	userLang = message.From.LanguageCode
+	if userLang == "" {
+		userLang = fun.DefaultLang // default fallback
+	}
+
 	// Try to find and delete the user record
 	var telegramUser telegrammodel.TelegramUsers
 	err := h.db.Where("telegram_chat_id = ?", message.Chat.ID).First(&telegramUser).Error
@@ -116,8 +123,21 @@ func (h *TelegramHelper) handleResetCommand(message *tgbotapi.Message, userLang 
 		fmt.Sprintf("telegram:unverified:count:%d", message.Chat.ID),
 		fmt.Sprintf("telegram:expecting_input:%d", message.Chat.ID),
 		fmt.Sprintf("telegram:expecting_sp_name:%d", message.Chat.ID),
+		fmt.Sprintf("telegram:registration:step:%d", message.Chat.ID),
+		fmt.Sprintf("telegram:registration:fullname:%d", message.Chat.ID),
+		fmt.Sprintf("telegram:registration:username:%d", message.Chat.ID),
+		fmt.Sprintf("telegram:registration:email:%d", message.Chat.ID),
+		fmt.Sprintf("telegram:registration:phone:%d", message.Chat.ID),
+		fmt.Sprintf("telegram:registration:usertype:%d", message.Chat.ID),
+		fmt.Sprintf("telegram:registration:lang:%d", message.Chat.ID),
 	}
 	h.redis.Del(context.Background(), keys...)
+
+	// Set language based on current LanguageCode
+	h.setUserLanguage(message.From.ID, userLang)
+
+	// Start registration again
+	h.startRegistration(message.Chat.ID, message.From, userLang)
 
 	msg := tgbotapi.NewMessage(message.Chat.ID, h.getLocalizedMessage(userLang, "reset_success"))
 	msg.ReplyToMessageID = message.MessageID
@@ -201,6 +221,11 @@ func (h *TelegramHelper) HandleCommand(message *tgbotapi.Message) {
 	var telegramUser telegrammodel.TelegramUsers
 	err := h.db.Where("telegram_chat_id = ?", message.Chat.ID).First(&telegramUser).Error
 	if err != nil {
+		// If user not found and command is start, start registration
+		if command == "start" {
+			h.startRegistration(message.Chat.ID, message.From, userLang)
+			return
+		}
 		logrus.WithError(err).Error("Failed to get user information for command processing")
 		msg := tgbotapi.NewMessage(message.Chat.ID, h.getLocalizedMessage(userLang, "database_error"))
 		msg.ReplyToMessageID = message.MessageID

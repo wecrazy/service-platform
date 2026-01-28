@@ -11,6 +11,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/nyaruka/phonenumbers"
+	"github.com/sirupsen/logrus"
 )
 
 // startRegistration starts the user registration process
@@ -32,14 +33,34 @@ func (h *TelegramHelper) startRegistration(chatID int64, user *tgbotapi.User, la
 	msgText := h.getLocalizedMessage(userLang, "registration_fullname_prompt")
 	msg := tgbotapi.NewMessage(chatID, msgText)
 	msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true, InputFieldPlaceholder: currentName}
-	h.bot.Send(msg)
+	if _, err := h.bot.Send(msg); err != nil {
+		logrus.WithError(err).Error("Failed to send registration fullname prompt")
+	}
 }
 
 // handleRegistrationStep handles the registration steps for messages
 func (h *TelegramHelper) handleRegistrationStep(message *tgbotapi.Message, step string) {
-	userLang := h.getUserLanguage(message.From.ID)
+	userLang := h.getUserLanguage(message.From.ID, message.From.LanguageCode)
 	switch step {
 	case "fullname":
+		// Check if user wants to reset registration
+		if strings.TrimSpace(message.Text) == "/reset" || strings.TrimSpace(message.Text) == "/start" {
+			// Clear Redis keys
+			keys := []string{
+				fmt.Sprintf("telegram:registration:step:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:fullname:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:username:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:email:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:phone:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:usertype:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:lang:%d", message.Chat.ID),
+			}
+			h.redis.Del(context.Background(), keys...)
+			// Restart registration
+			h.startRegistration(message.Chat.ID, message.From, message.From.LanguageCode)
+			return
+		}
+
 		fullname := strings.TrimSpace(message.Text)
 		if fullname == "" {
 			msg := tgbotapi.NewMessage(message.Chat.ID, h.getLocalizedMessage(userLang, "registration_fullname_required"))
@@ -55,13 +76,35 @@ func (h *TelegramHelper) handleRegistrationStep(message *tgbotapi.Message, step 
 		} else {
 			msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true}
 		}
-		h.bot.Send(msg)
+		if _, err := h.bot.Send(msg); err != nil {
+			logrus.WithError(err).Error("Failed to send username prompt")
+		}
 
 	case "username":
+		// Check if user wants to reset registration
+		if strings.TrimSpace(message.Text) == "/reset" || strings.TrimSpace(message.Text) == "/start" {
+			// Clear Redis keys
+			keys := []string{
+				fmt.Sprintf("telegram:registration:step:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:fullname:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:username:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:email:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:phone:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:usertype:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:lang:%d", message.Chat.ID),
+			}
+			h.redis.Del(context.Background(), keys...)
+			// Restart registration
+			h.startRegistration(message.Chat.ID, message.From, message.From.LanguageCode)
+			return
+		}
+
 		username := strings.TrimSpace(message.Text)
 		if username == "" {
 			msg := tgbotapi.NewMessage(message.Chat.ID, h.getLocalizedMessage(userLang, "registration_username_required"))
-			h.bot.Send(msg)
+			if _, err := h.bot.Send(msg); err != nil {
+				logrus.WithError(err).Error("Failed to send username required message")
+			}
 			return
 		}
 		h.redis.Set(context.Background(), fmt.Sprintf("telegram:registration:username:%d", message.Chat.ID), username, time.Hour)
@@ -72,6 +115,24 @@ func (h *TelegramHelper) handleRegistrationStep(message *tgbotapi.Message, step 
 		h.bot.Send(msg)
 
 	case "email":
+		// Check if user wants to reset registration
+		if strings.TrimSpace(message.Text) == "/reset" || strings.TrimSpace(message.Text) == "/start" {
+			// Clear Redis keys
+			keys := []string{
+				fmt.Sprintf("telegram:registration:step:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:fullname:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:username:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:email:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:phone:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:usertype:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:lang:%d", message.Chat.ID),
+			}
+			h.redis.Del(context.Background(), keys...)
+			// Restart registration
+			h.startRegistration(message.Chat.ID, message.From, message.From.LanguageCode)
+			return
+		}
+
 		email := strings.TrimSpace(message.Text)
 		if email == "" {
 			msg := tgbotapi.NewMessage(message.Chat.ID, h.getLocalizedMessage(userLang, "registration_invalid_email"))
@@ -121,7 +182,7 @@ func (h *TelegramHelper) handleRegistrationStep(message *tgbotapi.Message, step 
 			}
 			h.redis.Del(context.Background(), keys...)
 			// Restart registration
-			h.startRegistration(message.Chat.ID, message.From, userLang)
+			h.startRegistration(message.Chat.ID, message.From, message.From.LanguageCode)
 			return
 		}
 
@@ -156,6 +217,24 @@ func (h *TelegramHelper) handleRegistrationStep(message *tgbotapi.Message, step 
 		h.bot.Send(msg)
 
 	case "usertype":
+		// Check if user wants to reset registration
+		if strings.TrimSpace(message.Text) == "/reset" || strings.TrimSpace(message.Text) == "/start" {
+			// Clear Redis keys
+			keys := []string{
+				fmt.Sprintf("telegram:registration:step:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:fullname:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:username:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:email:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:phone:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:usertype:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:lang:%d", message.Chat.ID),
+			}
+			h.redis.Del(context.Background(), keys...)
+			// Restart registration
+			h.startRegistration(message.Chat.ID, message.From, message.From.LanguageCode)
+			return
+		}
+
 		msg := tgbotapi.NewMessage(message.Chat.ID, h.getLocalizedMessage(userLang, "registration_select_usertype"))
 		h.bot.Send(msg)
 	}
@@ -168,8 +247,8 @@ func (h *TelegramHelper) handleRegistrationCallback(callback *tgbotapi.CallbackQ
 
 		// Map short names to full usertype strings
 		switch usertype {
-		case "common":
-			usertype = string(telegrammodel.CommonUser)
+		// case "common":
+		// 	usertype = string(telegrammodel.CommonUser)
 		case "super_user":
 			usertype = string(telegrammodel.SuperUser)
 		case "technician_ms":
@@ -201,8 +280,10 @@ func (h *TelegramHelper) handleRegistrationCallback(callback *tgbotapi.CallbackQ
 		answer := tgbotapi.NewCallback(callback.ID, "")
 		h.bot.Request(answer)
 		// Remove the keyboard from the message
-		editMsg := tgbotapi.NewEditMessageReplyMarkup(callback.Message.Chat.ID, callback.Message.MessageID, tgbotapi.InlineKeyboardMarkup{})
-		h.bot.Send(editMsg)
+		editMsg := tgbotapi.NewEditMessageReplyMarkup(callback.Message.Chat.ID, callback.Message.MessageID, tgbotapi.InlineKeyboardMarkup{InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{}})
+		if _, err := h.bot.Send(editMsg); err != nil {
+			logrus.WithError(err).Error("Failed to remove keyboard from message")
+		}
 	}
 }
 
@@ -488,7 +569,8 @@ func (h *TelegramHelper) completeRegistration(chatID int64, userID int64) {
 		parsedPhone, err := phonenumbers.Parse(phone, "ID")
 		if err != nil {
 			userLang := h.getUserLanguage(userID)
-			errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_technicianms_check_failed"), err.Error())
+			// errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_technicianms_check_failed"), err.Error())
+			errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_technicianms_check_failed"), "")
 			msg := tgbotapi.NewMessage(chatID, errorMsg)
 			h.bot.Send(msg)
 			// Clear Redis keys and return without confirmation
@@ -510,7 +592,8 @@ func (h *TelegramHelper) completeRegistration(chatID int64, userID int64) {
 		technicianExists, techData, err := odoomscontrollers.CheckExistingTechnicianInODOOMS("", email, nationalPhoneStr)
 		if err != nil {
 			userLang := h.getUserLanguage(userID)
-			errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_technicianms_check_failed"), err.Error())
+			// errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_technicianms_check_failed"), err.Error())
+			errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_technicianms_check_failed"), "")
 			msg := tgbotapi.NewMessage(chatID, errorMsg)
 			h.bot.Send(msg)
 			// Clear Redis keys and return without confirmation
