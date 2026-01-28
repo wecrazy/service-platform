@@ -61,6 +61,7 @@ func main() {
 	case "telegram":
 		fmt.Println("📱 Seeding Telegram data...")
 		seed.SeedTelegramUser(db)
+		seed.SeedTelegramUserOfSACMS(db)
 
 	case "config":
 		fmt.Println("⚙️ Seeding configuration data...")
@@ -83,6 +84,7 @@ func main() {
 		seed.SeedAppConfig(db)
 		seed.SeedIndonesiaRegion(db)
 		seed.SeedTelegramUser(db)
+		seed.SeedTelegramUserOfSACMS(db)
 
 	default:
 		logrus.Fatalf("Unknown seed group: %s. Use: users, whatsapp, telegram, config, all", *only)

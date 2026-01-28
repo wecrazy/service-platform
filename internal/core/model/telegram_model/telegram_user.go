@@ -21,6 +21,8 @@ const (
 	CommonUser   TelegramUserType = "common"
 	SuperUser    TelegramUserType = "super_user"
 	TechnicianMS TelegramUserType = "technician_ms"
+	SPLMS        TelegramUserType = "spl_ms"
+	SACMS        TelegramUserType = "sac_ms"
 	TAMS         TelegramUserType = "technical_assistance_ms"
 	HeadMS       TelegramUserType = "head_ms"
 )
@@ -35,6 +37,7 @@ type TelegramUsers struct {
 	Username    string `gorm:"column:username;type:varchar(255)" json:"username"`
 	PhoneNumber string `gorm:"column:phone_number;type:varchar(30)" json:"phone_number"`
 	Email       string `gorm:"column:email;type:varchar(255)" json:"email"`
+	Description string `gorm:"column:description;type:text" json:"description"`
 
 	UserType     TelegramUserType `gorm:"column:telegram_user_type;type:varchar(100)" json:"telegram_user_type"`
 	UserOf       TelegramUserOf   `gorm:"column:telegram_user_of;type:varchar(100)" json:"telegram_user_of"`

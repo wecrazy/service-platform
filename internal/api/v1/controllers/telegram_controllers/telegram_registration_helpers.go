@@ -148,6 +148,24 @@ func (h *TelegramHelper) handleRegistrationCallback(callback *tgbotapi.CallbackQ
 	if step == "usertype" && strings.HasPrefix(callback.Data, "usertype_") {
 		usertype := strings.TrimPrefix(callback.Data, "usertype_")
 
+		// Map short names to full usertype strings
+		switch usertype {
+		case "common":
+			usertype = string(telegrammodel.CommonUser)
+		case "super_user":
+			usertype = string(telegrammodel.SuperUser)
+		case "technician_ms":
+			usertype = string(telegrammodel.TechnicianMS)
+		case "tams":
+			usertype = string(telegrammodel.TAMS)
+		case "splms":
+			usertype = string(telegrammodel.SPLMS)
+		case "sacms":
+			usertype = string(telegrammodel.SACMS)
+		case "head_ms":
+			usertype = string(telegrammodel.HeadMS)
+		}
+
 		// Validate usertype against model constants
 		if !h.isValidUserType(usertype) {
 			userLang := h.getUserLanguage(callback.From.ID)
@@ -471,7 +489,7 @@ func (h *TelegramHelper) completeRegistration(chatID int64, userID int64) {
 		nationalNumber := parsedPhone.GetNationalNumber()
 		nationalPhoneStr := strconv.FormatUint(nationalNumber, 10)
 
-		technicianExists, err := odoomscontrollers.CheckExistingTechnicianInODOOMS("", email, nationalPhoneStr)
+		technicianExists, techData, err := odoomscontrollers.CheckExistingTechnicianInODOOMS("", email, nationalPhoneStr)
 		if err != nil {
 			userLang := h.getUserLanguage(userID)
 			errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_technicianms_check_failed"), err.Error())
@@ -550,6 +568,7 @@ func (h *TelegramHelper) completeRegistration(chatID int64, userID int64) {
 					return
 				}
 			}
+
 			// Now update the TechnicianMS
 			err := h.db.Model(&existing).Updates(map[string]interface{}{
 				"telegram_chat_id": chatID,
@@ -558,6 +577,7 @@ func (h *TelegramHelper) completeRegistration(chatID int64, userID int64) {
 				"email":            email,
 				"verified_user":    true,
 				"telegram_user_of": telegrammodel.CompanyEmployee,
+				"description":      fmt.Sprintf("%s", techData.NameFS.String),
 			}).Error
 			if err != nil {
 				// Update failed, show error
@@ -638,6 +658,286 @@ func (h *TelegramHelper) completeRegistration(chatID int64, userID int64) {
 			}
 		}
 
+	case string(telegrammodel.SPLMS):
+		// Parse phone to get national number for Indonesia
+		parsedPhone, err := phonenumbers.Parse(phone, "ID")
+		if err != nil {
+			userLang := h.getUserLanguage(userID)
+			errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_splms_check_failed"), err.Error())
+			msg := tgbotapi.NewMessage(chatID, errorMsg)
+			h.bot.Send(msg)
+			// Clear Redis keys and return without confirmation
+			keys := []string{
+				fmt.Sprintf("telegram:registration:step:%d", chatID),
+				fmt.Sprintf("telegram:registration:fullname:%d", chatID),
+				fmt.Sprintf("telegram:registration:username:%d", chatID),
+				fmt.Sprintf("telegram:registration:email:%d", chatID),
+				fmt.Sprintf("telegram:registration:phone:%d", chatID),
+				fmt.Sprintf("telegram:registration:usertype:%d", chatID),
+				fmt.Sprintf("telegram:registration:lang:%d", chatID),
+			}
+			h.redis.Del(context.Background(), keys...)
+			return
+		}
+		nationalNumber := parsedPhone.GetNationalNumber()
+		nationalPhoneStr := strconv.FormatUint(nationalNumber, 10)
+
+		splExists, splData, err := odoomscontrollers.CheckExistingTechnicianInODOOMS("", email, nationalPhoneStr)
+		if err != nil {
+			userLang := h.getUserLanguage(userID)
+			errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_splms_check_failed"), err.Error())
+			msg := tgbotapi.NewMessage(chatID, errorMsg)
+			h.bot.Send(msg)
+			// Clear Redis keys and return without confirmation
+			keys := []string{
+				fmt.Sprintf("telegram:registration:step:%d", chatID),
+				fmt.Sprintf("telegram:registration:fullname:%d", chatID),
+				fmt.Sprintf("telegram:registration:username:%d", chatID),
+				fmt.Sprintf("telegram:registration:email:%d", chatID),
+				fmt.Sprintf("telegram:registration:phone:%d", chatID),
+				fmt.Sprintf("telegram:registration:usertype:%d", chatID),
+				fmt.Sprintf("telegram:registration:lang:%d", chatID),
+			}
+			h.redis.Del(context.Background(), keys...)
+			return
+		}
+		if !splExists {
+			// Technician does not exist in ODOOMS, show error
+			userLang := h.getUserLanguage(userID)
+			errorMsg := h.getLocalizedMessage(userLang, "registration_splms_not_registered_odooms")
+			msg := tgbotapi.NewMessage(chatID, errorMsg)
+			h.bot.Send(msg)
+			// Clear Redis keys and return without confirmation
+			keys := []string{
+				fmt.Sprintf("telegram:registration:step:%d", chatID),
+				fmt.Sprintf("telegram:registration:fullname:%d", chatID),
+				fmt.Sprintf("telegram:registration:username:%d", chatID),
+				fmt.Sprintf("telegram:registration:email:%d", chatID),
+				fmt.Sprintf("telegram:registration:phone:%d", chatID),
+				fmt.Sprintf("telegram:registration:usertype:%d", chatID),
+				fmt.Sprintf("telegram:registration:lang:%d", chatID),
+			}
+			h.redis.Del(context.Background(), keys...)
+			return
+		}
+
+		// For SPLMS, check if phone number already exists with SPLMS type
+		var splUsers []telegrammodel.TelegramUsers
+		h.db.Where("telegram_user_type = ?", telegrammodel.SPLMS).Find(&splUsers)
+		var existing telegrammodel.TelegramUsers
+		found := false
+		for _, user := range splUsers {
+			if user.PhoneNumber == phone {
+				existing = user
+				found = true
+				break
+			}
+		}
+		if found {
+			// Check if chat_id is already in use by another user
+			var otherUser telegrammodel.TelegramUsers
+			if err := h.db.Unscoped().Where("telegram_chat_id = ? AND id != ?", chatID, existing.ID).First(&otherUser).Error; err == nil {
+				// Another user has this chat_id, check if it's soft deleted or unverified common user
+				if otherUser.DeletedAt.Valid || (otherUser.UserType == telegrammodel.CommonUser && !otherUser.VerifiedUser) {
+					// Set the conflicting user's chat_id to null to free it
+					h.db.Model(&otherUser).Update("telegram_chat_id", nil)
+				} else {
+					// Other user is verified or not common, cannot take chat_id
+					userLang := h.getUserLanguage(userID)
+					errorMsg := h.getLocalizedMessage(userLang, "registration_chat_id_in_use")
+					msg := tgbotapi.NewMessage(chatID, errorMsg)
+					h.bot.Send(msg)
+					// Clear Redis keys and return without confirmation
+					keys := []string{
+						fmt.Sprintf("telegram:registration:step:%d", chatID),
+						fmt.Sprintf("telegram:registration:fullname:%d", chatID),
+						fmt.Sprintf("telegram:registration:username:%d", chatID),
+						fmt.Sprintf("telegram:registration:email:%d", chatID),
+						fmt.Sprintf("telegram:registration:phone:%d", chatID),
+						fmt.Sprintf("telegram:registration:usertype:%d", chatID),
+						fmt.Sprintf("telegram:registration:lang:%d", chatID),
+					}
+					h.redis.Del(context.Background(), keys...)
+					return
+				}
+			}
+			// Now update the SPLMS
+			err := h.db.Model(&existing).Updates(map[string]interface{}{
+				"telegram_chat_id": chatID,
+				"full_name":        fullname,
+				"username":         username,
+				"email":            email,
+				"verified_user":    true,
+				"telegram_user_of": telegrammodel.CompanyEmployee,
+				"description":      fmt.Sprintf("%s", splData.NameFS.String),
+			}).Error
+			if err != nil {
+				// Update failed, show error
+				userLang := h.getUserLanguage(userID)
+				errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_splms_update_failed"), err.Error())
+				msg := tgbotapi.NewMessage(chatID, errorMsg)
+				h.bot.Send(msg)
+				// Clear Redis keys and return without confirmation
+				keys := []string{
+					fmt.Sprintf("telegram:registration:step:%d", chatID),
+					fmt.Sprintf("telegram:registration:fullname:%d", chatID),
+					fmt.Sprintf("telegram:registration:username:%d", chatID),
+					fmt.Sprintf("telegram:registration:email:%d", chatID),
+					fmt.Sprintf("telegram:registration:phone:%d", chatID),
+					fmt.Sprintf("telegram:registration:usertype:%d", chatID),
+					fmt.Sprintf("telegram:registration:lang:%d", chatID),
+				}
+				h.redis.Del(context.Background(), keys...)
+				return
+			}
+		} else {
+			// Phone not exists in local DB, create new SPLMS record
+			// Check if chat_id is already in use by another user
+			var otherUser telegrammodel.TelegramUsers
+			if err := h.db.Where("telegram_chat_id = ?", chatID).First(&otherUser).Error; err == nil {
+				// Another user has this chat_id, check if it's an unverified common user
+				if otherUser.UserType == telegrammodel.CommonUser && !otherUser.VerifiedUser {
+					// Delete the unverified common user to allow SPLMS to take the chat_id
+					h.db.Unscoped().Delete(&otherUser)
+				} else {
+					// Other user is verified or not common, cannot take chat_id
+					userLang := h.getUserLanguage(userID)
+					errorMsg := h.getLocalizedMessage(userLang, "registration_chat_id_in_use")
+					msg := tgbotapi.NewMessage(chatID, errorMsg)
+					h.bot.Send(msg)
+					// Clear Redis keys and return without confirmation
+					keys := []string{
+						fmt.Sprintf("telegram:registration:step:%d", chatID),
+						fmt.Sprintf("telegram:registration:fullname:%d", chatID),
+						fmt.Sprintf("telegram:registration:username:%d", chatID),
+						fmt.Sprintf("telegram:registration:email:%d", chatID),
+						fmt.Sprintf("telegram:registration:phone:%d", chatID),
+						fmt.Sprintf("telegram:registration:usertype:%d", chatID),
+						fmt.Sprintf("telegram:registration:lang:%d", chatID),
+					}
+					h.redis.Del(context.Background(), keys...)
+					return
+				}
+			}
+			telegramUser := telegrammodel.TelegramUsers{
+				ChatID:       &chatID,
+				FullName:     fullname,
+				Username:     username,
+				PhoneNumber:  phone,
+				Email:        email,
+				UserType:     telegrammodel.SPLMS,
+				UserOf:       telegrammodel.CompanyEmployee,
+				VerifiedUser: true,
+			}
+			err = h.db.Create(&telegramUser).Error
+			if err != nil {
+				userLang := h.getUserLanguage(userID)
+				errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_splms_update_failed"), err.Error())
+				msg := tgbotapi.NewMessage(chatID, errorMsg)
+				h.bot.Send(msg)
+				// Clear Redis keys and return without confirmation
+				keys := []string{
+					fmt.Sprintf("telegram:registration:step:%d", chatID),
+					fmt.Sprintf("telegram:registration:fullname:%d", chatID),
+					fmt.Sprintf("telegram:registration:username:%d", chatID),
+					fmt.Sprintf("telegram:registration:email:%d", chatID),
+					fmt.Sprintf("telegram:registration:phone:%d", chatID),
+					fmt.Sprintf("telegram:registration:usertype:%d", chatID),
+					fmt.Sprintf("telegram:registration:lang:%d", chatID),
+				}
+				h.redis.Del(context.Background(), keys...)
+				return
+			}
+		}
+
+	case string(telegrammodel.SACMS):
+		// For SACMS, check if phone number already exists with SACMS type
+		var sacmsUsers []telegrammodel.TelegramUsers
+		h.db.Where("telegram_user_type = ?", telegrammodel.SACMS).Find(&sacmsUsers)
+		var existing telegrammodel.TelegramUsers
+		found := false
+		for _, user := range sacmsUsers {
+			if user.PhoneNumber == phone {
+				existing = user
+				found = true
+				break
+			}
+		}
+		if found {
+			// Check if chat_id is already in use by another user
+			var otherUser telegrammodel.TelegramUsers
+			if err := h.db.Unscoped().Where("telegram_chat_id = ? AND id != ?", chatID, existing.ID).First(&otherUser).Error; err == nil {
+				// Another user has this chat_id, check if it's soft deleted or unverified common user
+				if otherUser.DeletedAt.Valid || (otherUser.UserType == telegrammodel.CommonUser && !otherUser.VerifiedUser) {
+					// Set the conflicting user's chat_id to null to free it
+					h.db.Model(&otherUser).Update("telegram_chat_id", nil)
+				} else {
+					// Other user is verified or not common, cannot take chat_id
+					userLang := h.getUserLanguage(userID)
+					errorMsg := h.getLocalizedMessage(userLang, "registration_chat_id_in_use")
+					msg := tgbotapi.NewMessage(chatID, errorMsg)
+					h.bot.Send(msg)
+					// Clear Redis keys and return without confirmation
+					keys := []string{
+						fmt.Sprintf("telegram:registration:step:%d", chatID),
+						fmt.Sprintf("telegram:registration:fullname:%d", chatID),
+						fmt.Sprintf("telegram:registration:username:%d", chatID),
+						fmt.Sprintf("telegram:registration:email:%d", chatID),
+						fmt.Sprintf("telegram:registration:phone:%d", chatID),
+						fmt.Sprintf("telegram:registration:usertype:%d", chatID),
+						fmt.Sprintf("telegram:registration:lang:%d", chatID),
+					}
+					h.redis.Del(context.Background(), keys...)
+					return
+				}
+			}
+			// Now update the SACMS
+			err := h.db.Model(&existing).Updates(map[string]interface{}{
+				"telegram_chat_id": chatID,
+				// "full_name":        fullname,
+				// "username":         username,
+				// "email":            email,
+				"verified_user": true,
+			}).Error
+			if err != nil {
+				// Update failed, show error
+				userLang := h.getUserLanguage(userID)
+				errorMsg := fmt.Sprintf(h.getLocalizedMessage(userLang, "registration_sacms_update_failed"), err.Error())
+				msg := tgbotapi.NewMessage(chatID, errorMsg)
+				h.bot.Send(msg)
+				// Clear Redis keys and return without confirmation
+				keys := []string{
+					fmt.Sprintf("telegram:registration:step:%d", chatID),
+					fmt.Sprintf("telegram:registration:fullname:%d", chatID),
+					fmt.Sprintf("telegram:registration:username:%d", chatID),
+					fmt.Sprintf("telegram:registration:email:%d", chatID),
+					fmt.Sprintf("telegram:registration:phone:%d", chatID),
+					fmt.Sprintf("telegram:registration:usertype:%d", chatID),
+					fmt.Sprintf("telegram:registration:lang:%d", chatID),
+				}
+				h.redis.Del(context.Background(), keys...)
+				return
+			}
+		} else {
+			// Phone not exists, show error
+			userLang := h.getUserLanguage(userID)
+			errorMsg := h.getLocalizedMessage(userLang, "registration_sacms_not_allowed")
+			msg := tgbotapi.NewMessage(chatID, errorMsg)
+			h.bot.Send(msg)
+			// Clear Redis keys and return without confirmation
+			keys := []string{
+				fmt.Sprintf("telegram:registration:step:%d", chatID),
+				fmt.Sprintf("telegram:registration:fullname:%d", chatID),
+				fmt.Sprintf("telegram:registration:username:%d", chatID),
+				fmt.Sprintf("telegram:registration:email:%d", chatID),
+				fmt.Sprintf("telegram:registration:phone:%d", chatID),
+				fmt.Sprintf("telegram:registration:usertype:%d", chatID),
+				fmt.Sprintf("telegram:registration:lang:%d", chatID),
+			}
+			h.redis.Del(context.Background(), keys...)
+			return
+		}
+
 	default:
 		// For other user types, create new user
 		telegramUser := telegrammodel.TelegramUsers{
@@ -673,15 +973,19 @@ func (h *TelegramHelper) completeRegistration(chatID int64, userID int64) {
 	// Get the user type display name
 	var userTypeDisplay string
 	switch usertype {
-	case "common":
+	case string(telegrammodel.CommonUser):
 		userTypeDisplay = h.getLocalizedMessage(userLang, "usertype_common")
-	case "super_user":
+	case string(telegrammodel.SuperUser):
 		userTypeDisplay = h.getLocalizedMessage(userLang, "usertype_super_user")
-	case "technician_ms":
+	case string(telegrammodel.TechnicianMS):
 		userTypeDisplay = h.getLocalizedMessage(userLang, "usertype_technician_ms")
-	case "tams":
+	case string(telegrammodel.SPLMS):
+		userTypeDisplay = h.getLocalizedMessage(userLang, "usertype_splms")
+	case string(telegrammodel.SACMS):
+		userTypeDisplay = h.getLocalizedMessage(userLang, "usertype_sacms")
+	case string(telegrammodel.TAMS):
 		userTypeDisplay = h.getLocalizedMessage(userLang, "usertype_tams")
-	case "head_ms":
+	case string(telegrammodel.HeadMS):
 		userTypeDisplay = h.getLocalizedMessage(userLang, "usertype_head_ms")
 	default:
 		userTypeDisplay = usertype

@@ -30,10 +30,12 @@ import (
 	"time"
 
 	"service-platform/internal/config"
+	"service-platform/internal/database"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 const (
@@ -73,13 +75,6 @@ var (
 	})
 )
 
-func init() {
-	// Initialize the global ODOOMS helper with application configuration
-	// This ensures the helper is ready when the package is imported
-	cfg := config.GetConfig()
-	odoomsHelper = NewODOOMSAPIHelper(&cfg)
-}
-
 // ODOOMSAPIHelper provides a cached and monitored interface to ODOO Management Service.
 // It implements session caching to reduce authentication overhead and provides
 // comprehensive monitoring through Prometheus metrics.
@@ -96,8 +91,10 @@ func init() {
 //	cookies, err := helper.GetODOOMSCookies("user@company.com", "password")
 //	stats := helper.GetSessionCacheStats()
 type ODOOMSAPIHelper struct {
-	config *config.YamlConfig
-	client *http.Client
+	config         *config.YamlConfig
+	client         *http.Client
+	dbTA           *gorm.DB // Database connection for Dashboard Technical Assistance - Manage Service Integration
+	dbMSMiddleware *gorm.DB // Database connection for Middleware Manage Service Integration
 }
 
 // NewODOOMSAPIHelper creates a new ODOOMSAPIHelper instance with the provided configuration.
@@ -113,8 +110,8 @@ type ODOOMSAPIHelper struct {
 // Example:
 //
 //	config := config.GetConfig()
-//	helper := NewODOOMSAPIHelper(&config)
-func NewODOOMSAPIHelper(cfg *config.YamlConfig) *ODOOMSAPIHelper {
+//	helper := NewODOOMSAPIHelper(&config, dbTA)
+func NewODOOMSAPIHelper(cfg *config.YamlConfig, dbTA *gorm.DB, dbMSMiddleware *gorm.DB) *ODOOMSAPIHelper {
 	return &ODOOMSAPIHelper{
 		config: cfg,
 		client: &http.Client{
@@ -122,6 +119,8 @@ func NewODOOMSAPIHelper(cfg *config.YamlConfig) *ODOOMSAPIHelper {
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.ODOOManageService.SkipSSLVerify},
 			},
 		},
+		dbTA:           dbTA,
+		dbMSMiddleware: dbMSMiddleware,
 	}
 }
 
@@ -416,6 +415,13 @@ func SetTestHelper(helper *ODOOMSAPIHelper) {
 //	Session caching is handled automatically with proper mutex locking.
 func FetchODOOMS(url, method, req string) ([]byte, error) {
 	yamlCfg := config.GetConfig()
+
+	// Lazy initialize the global ODOOMS helper
+	if odoomsHelper == nil {
+		dbTA := database.GetDBTA()
+		dbMSMiddleware := database.GetDBMS()
+		odoomsHelper = NewODOOMSAPIHelper(&yamlCfg, dbTA, dbMSMiddleware)
+	}
 
 	// Use ODOOManageService config instead of non-existent ApiODOO
 	odooConfig := yamlCfg.ODOOManageService

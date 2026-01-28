@@ -1,0 +1,126 @@
+{
+  "id": null,
+  "title": "Database Monitoring Dashboard - MS Services",
+  "tags": ["database", "mysql", "postgres", "monitoring"],
+  "timezone": "UTC",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Total Database Connections",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(db_connections_total)",
+          "legendFormat": "Total Connections"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Connections by Database Type",
+      "type": "bargauge",
+      "targets": [
+        {
+          "expr": "sum(db_connections_total) by (db_type)",
+          "legendFormat": "{{db_type}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Connection Errors by Database",
+      "type": "table",
+      "targets": [
+        {
+          "expr": "sum(db_connection_errors_total) by (db_type, db_name)",
+          "legendFormat": "{{db_type}}/{{db_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Health Check Duration by Database",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(db_health_check_duration_seconds_bucket[5m])) by (le, db_type, db_name))",
+          "legendFormat": "{{db_type}}/{{db_name}} 95th percentile"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Database Overview",
+      "type": "table",
+      "targets": [
+        {
+          "expr": "sum(db_connections_total) by (db_type, db_name)",
+          "legendFormat": "Connections"
+        },
+        {
+          "expr": "sum(db_connection_errors_total) by (db_type, db_name)",
+          "legendFormat": "Errors"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        }
+      }
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "refresh": "30s",
+  "schemaVersion": 27,
+  "version": 0,
+  "links": []
+}
