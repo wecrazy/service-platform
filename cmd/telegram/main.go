@@ -529,6 +529,9 @@ func main() {
 	}
 	logrus.Info("✅ Connected to database")
 
+	// #############################################################################
+	// Other databases used ########################################################
+
 	// Initialize TA database
 	if err := database.InitDBTA(); err != nil {
 		logrus.WithError(err).Fatal("Failed to initialize TA database")
@@ -540,6 +543,13 @@ func main() {
 		logrus.WithError(err).Fatal("Failed to initialize MS database")
 	}
 	logrus.Info("✅ Connected to MS database")
+
+	// Initialize WebPanel database
+	if err := database.InitDBWebPanel(); err != nil {
+		logrus.WithError(err).Fatal("Failed to initialize WebPanel database")
+	}
+	logrus.Info("✅ Connected to WebPanel database")
+	// #############################################################################
 
 	// Auto-migrate Telegram models
 	// Drop old unique indexes on telegram_chat_id if they exist

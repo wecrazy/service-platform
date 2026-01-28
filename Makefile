@@ -306,6 +306,18 @@ uninstall-monitoring:
 		sudo go run cmd/monitoring/main.go --uninstall; \
 	fi
 
+install-telegram:
+	@echo "🔧 Installing Telegram service..."
+	@sudo ./scripts/install-telegram-service.sh install
+
+uninstall-telegram:
+	@echo "🗑️  Uninstalling Telegram service..."
+	@sudo ./scripts/install-telegram-service.sh uninstall
+
+status-telegram:
+	@echo "📊 Checking Telegram service status..."
+	@sudo ./scripts/install-telegram-service.sh status
+
 # k6 Load Testing
 k6-health-check:
 	@echo "🧪 Running k6 health check load test..."
@@ -458,6 +470,9 @@ help:
 	@echo "  make monitoring-stop-alt 			- Stop monitoring (config-based alternative)"
 	@echo "  make install-monitoring 			- Install monitoring as a system service"
 	@echo "  make uninstall-monitoring 			- Uninstall monitoring system service"
+	@echo "  make install-telegram    			- Install Telegram bot as a system service"
+	@echo "  make uninstall-telegram  			- Uninstall Telegram system service"
+	@echo "  make status-telegram     			- Check Telegram service status"
 	@echo ""
 	@echo "🧪 k6 Load Testing Commands:"
 	@echo "  make k6-health-check    			- Run health check load test"

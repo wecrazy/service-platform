@@ -368,13 +368,28 @@ func (h *TelegramHelper) HandleReplyMessage(message *tgbotapi.Message) {
 
 // HandleMessage processes incoming messages from users
 func (h *TelegramHelper) HandleMessage(message *tgbotapi.Message) {
+	// Check if in registration process first
+	step, err := h.redis.Get(context.Background(), fmt.Sprintf("telegram:registration:step:%d", message.Chat.ID)).Result()
+	if err == nil && step != "" {
+		h.handleRegistrationStep(message, step)
+		return
+	}
+
 	// Check if this is a completely new user (no record in database)
 	var telegramUser telegrammodel.TelegramUsers
-	err := h.db.Where("telegram_chat_id = ?", message.Chat.ID).First(&telegramUser).Error
+	err = h.db.Where("telegram_chat_id = ?", message.Chat.ID).First(&telegramUser).Error
 
 	if err != nil && err == gorm.ErrRecordNotFound {
-		// Completely new user - show start menu instead of verification message
+		// Completely new user
 		userLang := h.getUserLanguage(message.From.ID, message.From.LanguageCode)
+
+		// If new user types /start, start registration directly
+		if message.IsCommand() && message.Command() == "start" {
+			h.startRegistration(message.Chat.ID, message.From, userLang)
+			return
+		}
+
+		// Otherwise, show start menu
 		welcomeMsg := h.getLocalizedMessage(userLang, "welcome_new_user")
 		keyboard := h.CreateStartKeyboard(userLang)
 
@@ -390,13 +405,6 @@ func (h *TelegramHelper) HandleMessage(message *tgbotapi.Message) {
 			"action":  "new_user_welcome",
 		}).Info("Sent welcome message to new user")
 
-		return
-	}
-
-	// Check if in registration process
-	step, err := h.redis.Get(context.Background(), fmt.Sprintf("telegram:registration:step:%d", message.Chat.ID)).Result()
-	if err == nil && step != "" {
-		h.handleRegistrationStep(message, step)
 		return
 	}
 
@@ -653,7 +661,9 @@ func (h *TelegramHelper) HandleCallbackQuery(callback *tgbotapi.CallbackQuery) {
 			} else {
 				logrus.WithError(err).Error("Failed to check Telegram user")
 				editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "database_error"))
-				h.bot.Send(editMsg)
+				if _, err := h.bot.Send(editMsg); err != nil {
+					logrus.WithError(err).Error("Failed to send database error message")
+				}
 				return
 			}
 		}
@@ -668,7 +678,9 @@ func (h *TelegramHelper) HandleCallbackQuery(callback *tgbotapi.CallbackQuery) {
 		keyboard := h.CreateStartKeyboard(userLang)
 		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "welcome"))
 		editMsg.ReplyMarkup = &keyboard
-		h.bot.Send(editMsg)
+		if _, err := h.bot.Send(editMsg); err != nil {
+			logrus.WithError(err).Error("Failed to send start menu")
+		}
 
 	case "help":
 		keyboard := h.CreateHelpKeyboard(userLang)
@@ -970,7 +982,8 @@ func (h *TelegramHelper) validateAndFormatPhoneNumber(phoneNumber string, lang s
 	countryCode := h.getCountryCodeFromLanguage(lang)
 
 	// Parse the phone number with country code
-	num, err := phonenumbers.Parse(phoneNumber, countryCode)
+	// num, err := phonenumbers.Parse(phoneNumber, countryCode)
+	num, err := phonenumbers.Parse(phoneNumber, "ID")
 	if err != nil {
 		return "", fmt.Errorf("failed to parse phone number for country %s: %w", countryCode, err)
 	}
@@ -993,9 +1006,9 @@ func (h *TelegramHelper) validateEmail(email string) error {
 // CreateUsertypeKeyboard creates the inline keyboard for user type selection
 func (h *TelegramHelper) CreateUsertypeKeyboard(lang string) tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(h.getLocalizedMessage(lang, "usertype_common"), "usertype_common"),
-		),
+		// tgbotapi.NewInlineKeyboardRow(
+		// 	tgbotapi.NewInlineKeyboardButtonData(h.getLocalizedMessage(lang, "usertype_common"), "usertype_common"),
+		// ),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(h.getLocalizedMessage(lang, "usertype_super_user"), "usertype_super_user"),
 		),
@@ -1011,9 +1024,9 @@ func (h *TelegramHelper) CreateUsertypeKeyboard(lang string) tgbotapi.InlineKeyb
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(h.getLocalizedMessage(lang, "usertype_tams"), "usertype_tams"),
 		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(h.getLocalizedMessage(lang, "usertype_head_ms"), "usertype_head_ms"),
-		),
+		// tgbotapi.NewInlineKeyboardRow(
+		// 	tgbotapi.NewInlineKeyboardButtonData(h.getLocalizedMessage(lang, "usertype_head_ms"), "usertype_head_ms"),
+		// ),
 	)
 }
 
