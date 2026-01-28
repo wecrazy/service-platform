@@ -107,6 +107,24 @@ func (h *TelegramHelper) handleRegistrationStep(message *tgbotapi.Message, step 
 			return
 		}
 
+		// Check if user wants to reset registration
+		if strings.TrimSpace(message.Text) == "/reset" || strings.TrimSpace(message.Text) == "/start" {
+			// Clear Redis keys
+			keys := []string{
+				fmt.Sprintf("telegram:registration:step:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:fullname:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:username:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:email:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:phone:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:usertype:%d", message.Chat.ID),
+				fmt.Sprintf("telegram:registration:lang:%d", message.Chat.ID),
+			}
+			h.redis.Del(context.Background(), keys...)
+			// Restart registration
+			h.startRegistration(message.Chat.ID, message.From, userLang)
+			return
+		}
+
 		// Get phone number from contact or text
 		var phone string
 		if message.Contact != nil && message.Contact.PhoneNumber != "" {

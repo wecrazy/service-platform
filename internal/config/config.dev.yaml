@@ -509,3 +509,16 @@ ms_middleware:
   mysqldb_conn_max_lifetime: 30                            # minutes
   mysqldb_conn_max_idle_time: 10                           # minutes
   mysqldb_ssl_mode: "disable"                              # disable | require | verify-ca |
+web_panel:                                                 # Web Panel service holds Reporting, Dashboard of ODOO Manage Service
+  mysqldb_host: "127.0.0.1"
+  mysqldb_port: 3306
+  mysqldb_user: "swi"
+  mysqldb_password: "Takasitau"
+  mysqldb_dbname: "db_web_panel_rm"
+  mysqldb_max_retry_connect: 3
+  mysqldb_retry_delay: 5                                   # seconds
+  mysqldb_idle_connection: 10
+  mysqldb_open_connection: 10
+  mysqldb_conn_max_lifetime: 30                            # minutes
+  mysqldb_conn_max_idle_time: 10                           # minutes
+  mysqldb_ssl_mode: "disable"                              # disable | require | verify-ca |

@@ -15,6 +15,10 @@ import (
 var (
 	MySQLDBTA           *gorm.DB // MySQLDBTA holds the GORM DB connection for Dashboard Technical Assistance - Manage Service Integration of MySQL database
 	MySQLDBMSMiddleware *gorm.DB // MySQLDBMSMiddleware holds the GORM DB connection for Middleware Microservice of MySQL database
+
+	// TODO: faiz
+	// pakai pakai koneksi db web panel ini untuk langsung query ke db WebPanel.service
+	MySQLDBWebPanel *gorm.DB // MySQLDBWebPanel holds the GORM DB connection for Reporting, Dashboard, Other Function in MySQL Database
 )
 
 // InitDBMS initializes the Manage Service MySQL database connection
@@ -188,6 +192,92 @@ func MonitorDBTAConnection(interval time.Duration) {
 				logrus.Errorf("Failed to reconnect to TA database: %v", reconnectErr)
 			} else {
 				logrus.Info("Reconnected to TA MySQL database successfully")
+			}
+		}
+	}
+}
+
+// InitDBWebPanel initializes the WebPanel MySQL database connection
+func InitDBWebPanel() error {
+	cfg := config.GetConfig()
+
+	dbCfgWebPanel := DBConfig{
+		Type:              "MySQL",
+		User:              cfg.WebPanelService.MySQLDBUser,
+		Password:          cfg.WebPanelService.MySQLDBPass,
+		Host:              cfg.WebPanelService.MySQLDBHost,
+		Port:              cfg.WebPanelService.MySQLDBPort,
+		Database:          cfg.WebPanelService.MySQLDBName,
+		SSLMode:           cfg.WebPanelService.MySQLDBSSLMode,
+		MaxRetryConnect:   cfg.WebPanelService.MySQLDBMaxRetryConnect,
+		RetryDelay:        cfg.WebPanelService.MySQLDBRetryDelay,
+		MaxIdleConnection: cfg.WebPanelService.MySQLDBIdleConnection,
+		MaxOpenConnection: cfg.WebPanelService.MySQLDBOpenConnection,
+		ConnMaxLifeTime:   cfg.WebPanelService.MySQLDBConnMaxLifetime,
+	}
+
+	db, err := InitDBConnection(dbCfgWebPanel)
+	if err != nil {
+		logrus.Errorf("Failed to initialize WebPanel database: %v", err)
+		return err
+	}
+
+	MySQLDBWebPanel = db
+
+	log.Println("✅ WebPanel MySQL database initialized successfully")
+	return nil
+}
+
+// GetDBWebPanel returns the WebPanel database connection
+func GetDBWebPanel() *gorm.DB {
+	if MySQLDBWebPanel == nil {
+		if err := InitDBWebPanel(); err != nil {
+			logrus.Fatalf("Failed to initialize WebPanel database: %v", err)
+		}
+	}
+	return MySQLDBWebPanel
+}
+
+// CloseDBWebPanel closes the WebPanel database connection
+func CloseDBWebPanel() error {
+	if MySQLDBWebPanel != nil {
+		sqlDB, err := MySQLDBWebPanel.DB()
+		if err != nil {
+			return fmt.Errorf("failed to get sql.DB from WebPanel DB: %v", err)
+		}
+		if err := sqlDB.Close(); err != nil {
+			return fmt.Errorf("failed to close WebPanel database: %v", err)
+		}
+		log.Println("Disconnected from WebPanel MySQL database")
+	}
+	return nil
+}
+
+// HealthCheckDBWebPanel checks if the WebPanel database connection is healthy
+func HealthCheckDBWebPanel() error {
+	if MySQLDBWebPanel == nil {
+		return fmt.Errorf("WebPanel database not initialized")
+	}
+	return HealthCheckDB(
+		MySQLDBWebPanel,
+		"mysql",
+		config.GetConfig().WebPanelService.MySQLDBName,
+	)
+}
+
+// MonitorDBWebPanelConnection monitors the WebPanel database connection and logs disconnections
+func MonitorDBWebPanelConnection(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if err := HealthCheckDBWebPanel(); err != nil {
+			logrus.Errorf("WebPanel database connection lost: %v", err)
+			// Attempt to reconnect
+			if reconnectErr := InitDBWebPanel(); reconnectErr != nil {
+				logrus.Errorf("Failed to reconnect to WebPanel database: %v", reconnectErr)
+			} else {
+				logrus.Info("Reconnected to WebPanel MySQL database successfully")
 			}
 		}
 	}
