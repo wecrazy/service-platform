@@ -1292,6 +1292,7 @@ func SeedTelegramUser(db *gorm.DB) {
 			IsBanned:      false,
 			VerifiedUser:  true,
 			MaxDailyQuota: 250,
+			Description:   "Super User of Telegram Bot",
 		},
 	}
 
@@ -1315,6 +1316,65 @@ func SeedTelegramUser(db *gorm.DB) {
 				}
 			} else {
 				logrus.Printf("Error checking Telegram user with phone number %s: %v", user.PhoneNumber, err)
+			}
+		} else {
+			// Skip updating existing user
+		}
+	}
+
+}
+
+// SeedTelegramUserOfSACMS creates Telegram users for SACMS from configuration.
+//
+// This function reads SACMS user data from the application configuration
+// and inserts Telegram user records into the database if they do not already exist.
+//
+// Parameters:
+//   - db: GORM database instance
+//
+// The function checks for existing users by phone number to avoid duplicates,
+// ensuring idempotent behavior.
+func SeedTelegramUserOfSACMS(db *gorm.DB) {
+	sacData := config.GetConfig().ODOOManageService.SACData
+	if len(sacData) == 0 {
+		logrus.Info("No SAC data found in configuration, skipping Telegram UserOf SACMS seeding.")
+		return
+	}
+
+	for _, sac := range sacData {
+		var existingUser telegrammodel.TelegramUsers
+
+		validPhone, err := phonenumbers.Parse(sac.Phone, "ID")
+		if err != nil {
+			logrus.Printf("Error parsing [ID] phone number %s: %v", sac.Phone, err)
+			continue
+		}
+		sac.Phone = phonenumbers.Format(validPhone, phonenumbers.E164)
+
+		if err := db.Where("phone_number = ?", sac.Phone).First(&existingUser).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				insertSAC := telegrammodel.TelegramUsers{
+					ChatID:        nil,
+					FullName:      sac.Fullname,
+					Username:      sac.Username,
+					PhoneNumber:   sac.Phone,
+					Email:         sac.Email,
+					UserType:      telegrammodel.SACMS,
+					UserOf:        telegrammodel.CompanyEmployee,
+					IsBanned:      false,
+					VerifiedUser:  true,
+					MaxDailyQuota: 150,
+					Description:   fmt.Sprintf("SAC Region %d", sac.Region),
+				}
+
+				// User with this phone number does not exist, create it
+				if err := db.Create(&insertSAC).Error; err != nil {
+					logrus.Printf("Error creating Telegram user with phone number %s: %v", sac.Phone, err)
+				} else {
+					logrus.Println("Inserted new Telegram user with phone number:", sac.Phone, "Region:", sac.Region, "ID:", insertSAC.ID)
+				}
+			} else {
+				logrus.Printf("Error checking Telegram user with phone number %s: %v", sac.Phone, err)
 			}
 		} else {
 			// Skip updating existing user

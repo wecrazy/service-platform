@@ -2,6 +2,7 @@ package unit
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,20 +17,21 @@ import (
 func createTestConfigODOOMSAPIHelper() *config.YamlConfig {
 	return &config.YamlConfig{
 		ODOOManageService: struct {
-			JsonRPCVersion string `yaml:"jsonrpc_version" validate:"required"`
-			Login          string `yaml:"login" validate:"required"`
-			Password       string `yaml:"password" validate:"required"`
-			DB             string `yaml:"db" validate:"required"`
-			URL            string `yaml:"url" validate:"required"`
-			PathSession    string `yaml:"path_session" validate:"required"`
-			PathGetData    string `yaml:"path_getdata" validate:"required"`
-			PathUpdateData string `yaml:"path_updatedata" validate:"required"`
-			PathCreateData string `yaml:"path_createdata" validate:"required"`
-			MaxRetry       int    `yaml:"max_retry" validate:"required"`
-			RetryDelay     int    `yaml:"retry_delay" validate:"required"`
-			SessionTimeout int    `yaml:"session_timeout" validate:"required"`
-			DataTimeout    int    `yaml:"data_timeout"`
-			SkipSSLVerify  bool   `yaml:"skip_ssl_verify"`
+			JsonRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
+			Login          string                         `yaml:"login" validate:"required"`
+			Password       string                         `yaml:"password" validate:"required"`
+			DB             string                         `yaml:"db" validate:"required"`
+			URL            string                         `yaml:"url" validate:"required"`
+			PathSession    string                         `yaml:"path_session" validate:"required"`
+			PathGetData    string                         `yaml:"path_getdata" validate:"required"`
+			PathUpdateData string                         `yaml:"path_updatedata" validate:"required"`
+			PathCreateData string                         `yaml:"path_createdata" validate:"required"`
+			MaxRetry       int                            `yaml:"max_retry" validate:"required"`
+			RetryDelay     int                            `yaml:"retry_delay" validate:"required"`
+			SessionTimeout int                            `yaml:"session_timeout" validate:"required"`
+			DataTimeout    int                            `yaml:"data_timeout"`
+			SkipSSLVerify  bool                           `yaml:"skip_ssl_verify"`
+			SACData        map[string]config.ODOOMSACData `yaml:"sac" validate:"required"`
 		}{
 			JsonRPCVersion: "2.0",
 			Login:          "desta@smartwebdindonesia.com",
@@ -45,6 +47,16 @@ func createTestConfigODOOMSAPIHelper() *config.YamlConfig {
 			SessionTimeout: 30,
 			DataTimeout:    300,
 			SkipSSLVerify:  true,
+			SACData: map[string]config.ODOOMSACData{
+				"test_sac": {
+					Username: "sac_user",
+					Fullname: "SAC User",
+					Phone:    "+628123456789",
+					Email:    "email@test.com",
+					TTDPath:  "/path/to/ttd.png",
+					Region:   1,
+				},
+			},
 		},
 	}
 }
@@ -60,17 +72,17 @@ func TestCheckExistingTechnicianInODOOMS_Success(t *testing.T) {
 	testConfig.ODOOManageService.URL = server.URL
 
 	// Test with phone number
-	exists, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "", "+628123456789", *testConfig)
+	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "", "+628123456789", *testConfig)
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
 	// Test with name
-	exists, err = odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("John Doe", "", "", *testConfig)
+	exists, _, err = odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("John Doe", "", "", *testConfig)
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
 	// Test with email
-	exists, err = odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "john.doe@example.com", "", *testConfig)
+	exists, _, err = odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "john.doe@example.com", "", *testConfig)
 	assert.NoError(t, err)
 	assert.True(t, exists)
 }
@@ -107,7 +119,7 @@ func TestCheckExistingTechnicianInODOOMS_NotFound(t *testing.T) {
 	testConfig.ODOOManageService.URL = server.URL
 
 	// Test with non-existent technician
-	exists, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Nonexistent", "nonexistent@example.com", "+628000000000", *testConfig)
+	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Nonexistent", "nonexistent@example.com", "+628000000000", *testConfig)
 	assert.Error(t, err)
 	assert.False(t, exists)
 	assert.Contains(t, err.Error(), "'result' array is empty")
@@ -127,7 +139,7 @@ func TestCheckExistingTechnicianInODOOMS_ServerError(t *testing.T) {
 	testConfig.ODOOManageService.URL = server.URL
 
 	// Test server error
-	exists, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
+	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
 	assert.Error(t, err)
 	assert.False(t, exists)
 }
@@ -161,7 +173,7 @@ func TestCheckExistingTechnicianInODOOMS_SessionExpired(t *testing.T) {
 	testConfig.ODOOManageService.URL = server.URL
 
 	// Test session expired error
-	exists, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
+	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
 	assert.Error(t, err)
 	assert.False(t, exists)
 	assert.Equal(t, "odoo Session Expired", err.Error())
@@ -191,7 +203,7 @@ func TestCheckExistingTechnicianInODOOMS_InvalidResponse(t *testing.T) {
 	testConfig.ODOOManageService.URL = server.URL
 
 	// Test invalid response
-	exists, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
+	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
 	assert.Error(t, err)
 	assert.False(t, exists)
 }
@@ -223,7 +235,7 @@ func TestCheckExistingTechnicianInODOOMS_NoResultField(t *testing.T) {
 	testConfig.ODOOManageService.URL = server.URL
 
 	// Test missing result field
-	exists, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
+	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
 	assert.Error(t, err)
 	assert.False(t, exists)
 	assert.Contains(t, err.Error(), "'result' field not found in the response")
@@ -273,7 +285,7 @@ func TestCheckExistingTechnicianInODOOMS_EmptyParameters(t *testing.T) {
 	testConfig.ODOOManageService.URL = server.URL
 
 	// Test with all empty parameters (should still work but return error due to empty domain)
-	exists, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "", "", *testConfig)
+	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "", "", *testConfig)
 	assert.Error(t, err)
 	assert.False(t, exists)
 	assert.Contains(t, err.Error(), "at least one search parameter")
@@ -282,16 +294,23 @@ func TestCheckExistingTechnicianInODOOMS_EmptyParameters(t *testing.T) {
 // TestCheckExistingTechnicianInODOOMS_SingleParameter tests with single parameter
 // run it with: go test -v ./tests/unit -run ^TestCheckExistingTechnicianInODOOMS_SingleParameter$
 func TestCheckExistingTechnicianInODOOMS_SingleParameter(t *testing.T) {
-	// Create mock server
-	server := createMockODOOServerForTechnician()
-	defer server.Close()
+	// // Create mock server
+	// server := createMockODOOServerForTechnician()
+	// defer server.Close()
+
+	if err := config.LoadConfig(); err != nil {
+		log.Fatal(err)
+	}
+
+	cfg := config.GetConfig()
 
 	// Create test config
 	testConfig := createTestConfigODOOMSAPIHelper()
-	testConfig.ODOOManageService.URL = server.URL
+	// testConfig.ODOOManageService.URL = server.URL
+	testConfig.ODOOManageService.URL = cfg.ODOOManageService.URL
 
 	// Test with only email
-	exists, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "aaaaaaa", "", *testConfig)
+	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "testmfjr@gmail.com", "", cfg)
 
 	fmt.Println("TestCheckExistingTechnicianInODOOMS_SingleParameter:", exists)
 	fmt.Printf("Error: %v\n", err)

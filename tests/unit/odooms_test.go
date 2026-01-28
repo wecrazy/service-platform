@@ -12,6 +12,7 @@ import (
 	odoomscontrollers "service-platform/internal/api/v1/controllers/odooms_controllers"
 	"service-platform/internal/config"
 	odoomsmodel "service-platform/internal/core/model/odooms_model"
+	"service-platform/internal/database"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -24,20 +25,21 @@ type MockConfig struct {
 func createTestConfig() *config.YamlConfig {
 	return &config.YamlConfig{
 		ODOOManageService: struct {
-			JsonRPCVersion string `yaml:"jsonrpc_version" validate:"required"`
-			Login          string `yaml:"login" validate:"required"`
-			Password       string `yaml:"password" validate:"required"`
-			DB             string `yaml:"db" validate:"required"`
-			URL            string `yaml:"url" validate:"required"`
-			PathSession    string `yaml:"path_session" validate:"required"`
-			PathGetData    string `yaml:"path_getdata" validate:"required"`
-			PathUpdateData string `yaml:"path_updatedata" validate:"required"`
-			PathCreateData string `yaml:"path_createdata" validate:"required"`
-			MaxRetry       int    `yaml:"max_retry" validate:"required"`
-			RetryDelay     int    `yaml:"retry_delay" validate:"required"`
-			SessionTimeout int    `yaml:"session_timeout" validate:"required"`
-			DataTimeout    int    `yaml:"data_timeout"`
-			SkipSSLVerify  bool   `yaml:"skip_ssl_verify"`
+			JsonRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
+			Login          string                         `yaml:"login" validate:"required"`
+			Password       string                         `yaml:"password" validate:"required"`
+			DB             string                         `yaml:"db" validate:"required"`
+			URL            string                         `yaml:"url" validate:"required"`
+			PathSession    string                         `yaml:"path_session" validate:"required"`
+			PathGetData    string                         `yaml:"path_getdata" validate:"required"`
+			PathUpdateData string                         `yaml:"path_updatedata" validate:"required"`
+			PathCreateData string                         `yaml:"path_createdata" validate:"required"`
+			MaxRetry       int                            `yaml:"max_retry" validate:"required"`
+			RetryDelay     int                            `yaml:"retry_delay" validate:"required"`
+			SessionTimeout int                            `yaml:"session_timeout" validate:"required"`
+			DataTimeout    int                            `yaml:"data_timeout"`
+			SkipSSLVerify  bool                           `yaml:"skip_ssl_verify"`
+			SACData        map[string]config.ODOOMSACData `yaml:"sac" validate:"required"`
 		}{
 			JsonRPCVersion: "2.0",
 			Login:          "test@example.com",
@@ -53,13 +55,16 @@ func createTestConfig() *config.YamlConfig {
 			SessionTimeout: 30,
 			DataTimeout:    300,
 			SkipSSLVerify:  true,
+			SACData:        map[string]config.ODOOMSACData{},
 		},
 	}
 }
 
 func TestNewODOOMSAPIHelper(t *testing.T) {
 	cfg := createTestConfig()
-	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg)
+	dbTA := database.GetDBTA()
+	dbMSMW := database.GetDBMS()
+	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg, dbTA, dbMSMW)
 
 	assert.NotNil(t, helper)
 	// Note: Client and Config are private fields, so we can't test them directly
@@ -68,7 +73,9 @@ func TestNewODOOMSAPIHelper(t *testing.T) {
 
 func TestGetSessionCacheStats(t *testing.T) {
 	cfg := createTestConfig()
-	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg)
+	dbTA := database.GetDBTA()
+	dbMSMW := database.GetDBMS()
+	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg, dbTA, dbMSMW)
 
 	stats := helper.GetSessionCacheStats()
 
@@ -86,7 +93,9 @@ func TestGetSessionCacheStats(t *testing.T) {
 
 func TestClearSessionCache(t *testing.T) {
 	cfg := createTestConfig()
-	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg)
+	dbTA := database.GetDBTA()
+	dbMSMW := database.GetDBMS()
+	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg, dbTA, dbMSMW)
 
 	// Clear cache (should work even if empty)
 	helper.ClearSessionCache()
@@ -97,7 +106,9 @@ func TestClearSessionCache(t *testing.T) {
 
 func TestIsSessionCacheValid(t *testing.T) {
 	cfg := createTestConfig()
-	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg)
+	dbTA := database.GetDBTA()
+	dbMSMW := database.GetDBMS()
+	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg, dbTA, dbMSMW)
 
 	// Initially should be invalid
 	assert.False(t, helper.IsSessionCacheValid())
@@ -148,7 +159,9 @@ func TestGetODOOMSCookies_Success(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.ODOOManageService.URL = server.URL // Use mock server URL
 
-	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg)
+	dbTA := database.GetDBTA()
+	dbMSMW := database.GetDBMS()
+	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg, dbTA, dbMSMW)
 
 	cookies, err := helper.GetODOOMSCookies("test@example.com", "testpass")
 
@@ -168,7 +181,9 @@ func TestGetODOOMSCookies_ServerError(t *testing.T) {
 	cfg.ODOOManageService.URL = server.URL
 	cfg.ODOOManageService.MaxRetry = 1 // Reduce retries for faster test
 
-	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg)
+	dbTA := database.GetDBTA()
+	dbMSMW := database.GetDBMS()
+	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg, dbTA, dbMSMW)
 
 	// Clear any existing cache to ensure we hit the server
 	helper.ClearSessionCache()
@@ -213,7 +228,9 @@ func TestFetchODOOMS_Success(t *testing.T) {
 func TestFetchODOOMS_InvalidURL(t *testing.T) {
 	// Create a helper with a test config that has valid structure
 	cfg := createTestConfig()
-	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg)
+	dbTA := database.GetDBTA()
+	dbMSMW := database.GetDBMS()
+	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg, dbTA, dbMSMW)
 
 	// Test the helper's error handling by trying to make a request to invalid URL
 	// This simulates what FetchODOOMS does internally
@@ -324,7 +341,9 @@ func TestCheckExistingTechnicianInODOOMS_NotFound(t *testing.T) {
 // TestSessionCacheConcurrency tests concurrent access to session cache methods
 func TestSessionCacheConcurrency(t *testing.T) {
 	cfg := createTestConfig()
-	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg)
+	dbTA := database.GetDBTA()
+	dbMSMW := database.GetDBMS()
+	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg, dbTA, dbMSMW)
 
 	// Test concurrent access to cache methods
 	var wg sync.WaitGroup
@@ -346,7 +365,9 @@ func TestSessionCacheConcurrency(t *testing.T) {
 // BenchmarkGetSessionCacheStats benchmarks GetSessionCacheStats method
 func BenchmarkGetSessionCacheStats(b *testing.B) {
 	cfg := createTestConfig()
-	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg)
+	dbTA := database.GetDBTA()
+	dbMSMW := database.GetDBMS()
+	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg, dbTA, dbMSMW)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -357,7 +378,9 @@ func BenchmarkGetSessionCacheStats(b *testing.B) {
 // BenchmarkIsSessionCacheValid benchmarks IsSessionCacheValid method
 func BenchmarkIsSessionCacheValid(b *testing.B) {
 	cfg := createTestConfig()
-	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg)
+	dbTA := database.GetDBTA()
+	dbMSMW := database.GetDBMS()
+	helper := odoomscontrollers.NewODOOMSAPIHelper(cfg, dbTA, dbMSMW)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

@@ -529,6 +529,18 @@ func main() {
 	}
 	logrus.Info("✅ Connected to database")
 
+	// Initialize TA database
+	if err := database.InitDBTA(); err != nil {
+		logrus.WithError(err).Fatal("Failed to initialize TA database")
+	}
+	logrus.Info("✅ Connected to TA database")
+
+	// Initialize MS database
+	if err := database.InitDBMS(); err != nil {
+		logrus.WithError(err).Fatal("Failed to initialize MS database")
+	}
+	logrus.Info("✅ Connected to MS database")
+
 	// Auto-migrate Telegram models
 	// Drop old unique indexes on telegram_chat_id if they exist
 	indexesToDrop := []string{
