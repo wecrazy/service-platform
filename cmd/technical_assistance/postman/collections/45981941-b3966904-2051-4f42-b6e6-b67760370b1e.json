@@ -1,0 +1,41 @@
+{
+	"info": {
+		"_postman_id": "45981941-b3966904-2051-4f42-b6e6-b67760370b1e",
+		"name": "[DEV] TECHNICAL ASSISTANCE",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "ENDPOINT KUKUH - GET DATA",
+			"id": "45981941-9a312897-8586-49ae-b511-91999463552f",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id_task\": \"2830612\",\r\n    \"data\": [\r\n        {\r\n            \"name\": \"partner_street\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_street2\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_street3\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_master_tid\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_tid2\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_tid3\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_tid4\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_tid5\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_tid6\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_tid7\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_tid8\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_tiqr\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_master_mid\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_mid2\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_mid3\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_mid4\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_mid5\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_mid6\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_mid7\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_mid8\",\r\n            \"type\": \"string\"\r\n        },\r\n        {\r\n            \"name\": \"x_cimb_midqr\",\r\n            \"type\": \"string\"\r\n        },\r\n        // {\r\n        //     \"name\": \"x_studio_edc\",\r\n        //     \"type\": \"array\",\r\n        //     \"index\": 1\r\n        // },\r\n        // {\r\n        //     \"name\": \"active\",\r\n        //     \"type\": \"boolean\"\r\n        // },\r\n        {\r\n            \"name\": \"x_supply_thermal\",\r\n            \"type\": \"integer\"\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{APP_HOST}}:{{APP_PORT}}/here/getData",
+					"host": [
+						"{{APP_HOST}}"
+					],
+					"port": "{{APP_PORT}}",
+					"path": [
+						"here",
+						"getData"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

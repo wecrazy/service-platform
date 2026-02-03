@@ -1,0 +1,70 @@
+# === Config Files ===
+.env
+.ini
+database/dbconfig.yaml
+.hintrc
+.prettierrc
+
+# === IDE & Editor Files ===
+.vscode/
+.idea/
+
+# === Application Binaries ===
+web_panel.exe
+web_panel
+
+# === Chat & Call WA Files ===
+ChatAndCall.7z
+
+# === Certificates ===
+cert/
+
+# === Logs ===
+*.log
+log/
+
+# === Tests ===
+# tests/
+
+# === WhatsMeow Data ===
+whatsmeow/whatsmeow.db
+whatsmeow/wa_group.json
+whatsmeow/
+
+# === Docker Files ===
+Dockerfile
+docker-compose.yml
+
+# === Golang Mod & Pkg (uncomment if needed) ===
+# go.mod
+# go.sum
+
+# === Office & Document Files ===
+*.xlsxz
+*.xls
+*.pdf
+*.docx
+*.doc
+*.txt
+
+# === Images & Archives ===
+*.jfif
+*.gz
+
+# === Whatsapp Assets ===
+web/assets/whatsapp_media/
+
+# === Miscellaneous ===
+*.mp3
+*.mp4
+*.mkv
+*.avi
+*.wav
+*.bin
+*.tar
+
+# === File Generated ===
+web/file/excel_report
+
+# == File Uploaded ==
+web/file/uploaded_excel_to_odoo_ms

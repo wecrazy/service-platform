@@ -1,0 +1,255 @@
+
+<div class="row g-4 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-start justify-content-between">
+          <div class="content-left">
+            <label for="total-users">Session</label>
+            <div class="d-flex align-items-end mt-2">
+              <h4 class="mb-0 me-2" id="total-users"></h4>
+              <small class="text-success"></small>
+            </div>
+            <p class="mb-0">Total Users</p>
+          </div>
+          <div class="avatar">
+            <span class="avatar-initial rounded bg-label-primary">
+              <i class="bx bx-user bx-sm"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-start justify-content-between">
+          <div class="content-left">
+            <label for="total-active-users">Active Users</label>
+            <div class="d-flex align-items-end mt-2">
+              <h4 class="mb-0 me-2" id="total-active-users"></h4>
+              <small class="text-danger"></small>
+            </div>
+            <p class="mb-0">Total Active Users</p>
+          </div>
+          <div class="avatar">
+            <span class="avatar-initial rounded bg-label-success">
+              <i class="bx bx-group bx-sm"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-start justify-content-between">
+          <div class="content-left">
+            <label for="total-inactive-users">Inactive Users</label>
+            <div class="d-flex align-items-end mt-2">
+              <h4 class="mb-0 me-2" id="total-inactive-users"></h4>
+              <small class="text-danger"></small>
+            </div>
+            <p class="mb-0">Total Inactive Users</p>
+          </div>
+          <div class="avatar">
+            <span class="avatar-initial rounded bg-label-danger">
+              <i class="bx bxs-user-x bx-sm"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-start justify-content-between">
+          <div class="content-left">
+            <label for="total-inactive-users">Pending Users</label>
+            <div class="d-flex align-items-end mt-2">
+              <h4 class="mb-0 me-2" id="total-pending-users"></h4>
+              <small class="text-success"></small>
+            </div>
+            <p class="mb-0">Total Pending Users</p>
+          </div>
+          <div class="avatar">
+            <span class="avatar-initial rounded bg-label-warning">
+              <i class="bx bx-user-voice bx-sm"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Users List Table -->
+<div class="card">
+  <div class="card-header border-bottom">
+    <h5 class="card-title">Search Filter</h5>
+    <div class="d-flex row py-3 gap-3 gap-md-0">
+      <div class="col-md-4 user_roles"></div>
+      <div class="col-md-4 user_status"></div>
+    </div>
+  </div>
+  <div class="card-datatable table-responsive">
+    <table class="datatables-usersIRF table border-top">
+      <thead>
+        <tr>
+          <th></th>
+          <th>User</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+  <!-- Offcanvas to add new user -->
+  <div
+    class="offcanvas offcanvas-end"
+    tabindex="-1"
+    id="offcanvasAddUser"
+    aria-labelledby="offcanvasAddUserLabel">
+    <div class="offcanvas-header">
+      <h5 id="offcanvasAddUserLabel" class="offcanvas-title">Add User</h5>
+      <button
+        type="button"
+        class="btn-close text-reset"
+        data-bs-dismiss="offcanvas"
+        aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body mx-0 flex-grow-0">
+      <!-- FORM START -->
+      <form class="add-new-user pt-0" id="addNewUserForm" onsubmit="return false">
+        <div class="mb-3">
+          <label class="form-label" for="add-user-fullname">Full Name</label>
+          <input
+            type="text"
+            class="form-control"
+            id="add-user-fullname"
+            placeholder="user"
+            name="userFullname"
+            aria-label="John Doe"
+            required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="add-user-fullname">User Name</label>
+          <input
+            type="text"
+            class="form-control"
+            id="add-user-username"
+            placeholder="user"
+            name="userName"
+            aria-label="User"
+            required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="add-user-email">Email</label>
+          <input
+            type="email"
+            id="add-user-email"
+            class="form-control"
+            placeholder="user@example.com"
+            aria-label="user@example.com"
+            name="userEmail"
+            required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="add-user-password">Password</label>
+          <input
+            type="password"
+            id="add-user-password"
+            class="form-control"
+            placeholder="password"
+            aria-label="password"
+            name="userPassword"
+            required />
+          <p style="font-size: 12px;" class="p-1">Harus mengandung Huruf Kapital, Huruf Kecil, Angka, Karakter (~!@#$%^&*()_+`{}|:"<>?), Minimal 12 Karakter</p>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="add-user-phone">Phone</label>
+          <input
+            type="text"
+            id="add-user-phone"
+            class="form-control phone-mask"
+            placeholder="+62"
+            aria-label="+62"
+            name="userPhone"
+            required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="add-user-company">Company</label>
+          <input
+            type="text"
+            id="add-user-company"
+            class="form-control"
+            placeholder="Company Name"
+            aria-label="Company Name"
+            name="companyName"
+            required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="user-role">User Role</label>
+          <select id="user-role" name="userRole" class="form-select" required>
+            <option value="">Select</option>
+            <option value="1">Admin</option>
+            <option value="2">Corporate Admin</option>
+            <option value="3">Operator</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="user-status">Status</label>
+          <select id="user-status" name="userStatus" class="form-select" required>
+            <option value="">Select</option>
+            <option value="1">Pending</option>
+            <option value="2">Active</option>
+            <option value="3">Inactive</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">Submit</button>
+        <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="offcanvas">Cancel</button>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Modal to add new user member START -->
+<!-- <div class="modal fade" id="editAdmin" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-simple modal-edit-user">
+    <div class="modal-content p-3 p-md-5">
+      <div class="modal-body">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="text-center mb-4">
+          <h3>Edit Admin Status</h3>
+        </div>
+        <form id="editAdminStatusForm" class="row g-3" onsubmit="return false">
+          <input type="hidden" name="user-status-update-id" id="user-status-update-id" value="">
+          <div class="col-12">
+            <label class="form-label" for="user-status-update">Status</label>
+            <select
+              id="user-status-update"
+              name="user-status-update"
+              class="form-select"
+              aria-label="Default select example">
+              <option selected>Status</option>
+              <option value="0">Pending</option>
+              <option value="1">Active</option>
+              <option value="2">Inactive</option>
+            </select>
+          </div>
+          <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit" onclick="updateNewUserForm()">Submit</button>
+            <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div> -->
+<!-- Modal to add new user member END -->
+<script src="../assets/js/app-userIRF-list.js"></script>
+<script>
+ getUserInfoValue ();
+</script>

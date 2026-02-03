@@ -1,0 +1,91 @@
+<!-- Product List Table -->
+<div class="card">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Search Filter</h3>
+      <div class="d-flex justify-content-between align-items-center row py-3 gap-3 gap-md-0">
+        <div class="col-md-4 product_name"></div>
+      </div>
+    </div>
+    <div class="card-datatable table-responsive">
+      <table class="datatables-products table border-top">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+  </div>
+</div>
+<!--/ Product List Table -->
+<!-- Modal to add new user member START -->
+<div class="modal fade" id="addProduct" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-simple modal-edit-user">
+    <div class="modal-content p-3 p-md-5">
+      <div class="modal-body">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="text-center mb-4">
+          <h3>Member Information</h3>
+          <p>Updating user details will receive a privacy audit.</p>
+        </div>
+        <form id="editProductForm" class="row g-3" onsubmit="return false">
+          <div class="col-6">
+            <label class="form-label" for="add-product-name">Product Name</label>
+            <input
+              type="text"
+              id="add-product-name"
+              name="add-product-name"
+              class="form-control"
+              placeholder="" />
+          </div>
+          <div class="col-6">
+            <label class="form-label" for="add-product-type">Product Type</label>
+            <input
+            type="text"
+            id="add-product-type"
+            name="add-product-type"
+            class="form-control"
+            placeholder="" />
+          </div>
+          <div class="col-6">
+            <label class="form-label" for="add-product-price">Product Price</label>
+            <input
+              type="number"
+              id="add-product-price"
+              name="add-product-price"
+              class="form-control"
+              placeholder="" />
+          </div>
+          </div>
+          <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit" onclick="addNewProductForm()">Submit</button>
+            <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal to add new user member END -->
+<script src="../assets/js/app-product-report.js"></script>
+<script>
+  $.ajax({
+    type: 'GET',
+    url: webPath+'admin/product',
+    contentType: 'application/json; charset=utf-8',
+    dataType: 'json',
+    success: function (response) {
+        console.log('Data sent successfully:', response);
+    },
+    error: function (error) {
+      console.log(error)
+      console.error('Error sending data:', error);
+    },
+});
+</script>

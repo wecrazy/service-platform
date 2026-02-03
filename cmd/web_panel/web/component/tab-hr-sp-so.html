@@ -1,0 +1,29 @@
+<!-- List User -->
+<div id="dataSPSO" class="accordion accordion-popout mb-3">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-danger text-white" data-bs-toggle="collapse"
+                    data-bs-target="#dataSPSO-1" aria-controls="dataSPSO-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                        <i class="fad fa-user me-2"></i>
+                        List User
+                    </div>
+                </button>
+            </div>
+
+            <!-- RIGHT: ..... -->
+            <div class="d-flex align-items-center ms-3 me-3 flex-wrap justify-content-end">
+                <!-- Add some here if needed -->
+            </div>
+
+        </div>
+
+        <div id="dataSPSO-1" class="accordion-collapse collapse show" data-bs-parent="#dataSPSO">
+            <div class="accordion-body mt-3">
+                {{.TABLE_DATA_SP_SO}}
+            </div>
+        </div>
+    </div>
+</div>

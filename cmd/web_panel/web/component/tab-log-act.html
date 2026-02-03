@@ -1,0 +1,16 @@
+{{.TABLE_LOG_ACT}}
+
+<script>
+    $(document).ready(async function () {
+        await hideFilterButton();
+    });
+
+    async function hideFilterButton() {
+        $("button").each(function () {
+            if ($(this).find("i.bx.bx-filter-alt").length) {
+                $(this).hide(); // Hide filter button
+            }
+        });
+    }
+
+</script>

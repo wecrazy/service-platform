@@ -1,0 +1,47 @@
+<script>
+    window.EndpointRegeneratePDFContractTechnician = '{{.REGENERATE_PDF_CONTRACT_TECHNICIAN}}';
+    window.EndpointSendIndividualContractTechnician = '{{.SEND_INDIVIDUAL_CONTRACT_TECHNICIAN}}';
+    window.EndpointGetContractTechnicianWhatsAppConversation = '{{.GET_CONTRACT_TECHNICIAN_WHATSAPP_CONVERSATION}}';
+    window.EndpointSendAllContractTechnician = '{{.SEND_ALL_CONTRACT_TECHNICIAN}}';
+</script>
+
+<!-- Kontrak Teknisi -->
+<div id="dataKontrakTeknisi" class="accordion accordion-popout mb-3">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-info text-white" data-bs-toggle="collapse"
+                    data-bs-target="#dataKontrakTeknisi-1" aria-controls="dataKontrakTeknisi-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                        <i class="fad fa-file-signature me-2"></i>
+                        Surat Kontrak
+                    </div>
+                </button>
+            </div>
+
+            <!-- RIGHT: ..... -->
+            <div class="d-flex align-items-center ms-3 me-3 flex-wrap justify-content-end">
+                <button disabled type="button" class="btn btn-sm btn-danger btn-sent-all-contract-technician me-2"
+                    onclick="sentAllContractTechnician('last_updated_data_kontrak_teknisi', 'dt_kontrak_teknisi', 'btn-sent-all-contract-technician')">
+                    <i class="far fa-paper-plane me-2"></i>
+                    Sent All Contract
+                </button>
+
+                <button type="button" class="btn btn-sm btn-info btn-refresh-data-contract-technician me-2"
+                    onclick="refreshDataContractTechnician('{{.REFRESH_TABLE_DATA_CONTRACT_TECHNICIAN}}', 'last_updated_data_kontrak_teknisi', 'dt_kontrak_teknisi', 'btn-refresh-data-contract-technician')">
+                    <i class="far fa-sync-alt me-2"></i>
+                    Refresh
+                </button>
+            </div>
+
+        </div>
+
+        <div id="dataKontrakTeknisi-1" class="accordion-collapse collapse show" data-bs-parent="#dataKontrakTeknisi">
+            <div class="accordion-body mt-3">
+                <div class="last_updated_data_kontrak_teknisi mb-3 p-3 bg-light rounded"></div>
+                {{.TABLE_DATA_KONTRAK_TEKNISI}}
+            </div>
+        </div>
+    </div>
+</div>

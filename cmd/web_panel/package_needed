@@ -1,0 +1,71 @@
+sudo apt install libasound2-dev pkg-config
+sudo apt install mplayer
+ghostwriter
+imagemagick / convert
+libreoffice
+go-pdf/fpdf:
+    sudo nano ~/go/pkg/mod/codeberg.org/go-pdf/fpdf@v0.11.1/makefont/cp1252.map
+    get raw from nano ~/go/pkg/mod/codeberg.org/go-pdf/fpdf@v0.11.1/makefont/cp1252.map
+    chmod u+w ~/go/pkg/mod/codeberg.org/go-pdf/fpdf@v0.11.1/makefont
+    cd ~/go/pkg/mod/codeberg.org/go-pdf/fpdf@v0.11.1/makefont
+    go run makefont.go ~/server/service-platform/cmd/web_panel/web/assets/font/arial.ttf
+        or use below:
+        for f in ~/server/service-platform/cmd/web_panel/web/assets/font/*.ttf; do
+            go run makefont.go "$f"
+        done
+
+    then mv the json to your font dir
+        mv ./*.json ~/server/service-platform/cmd/web_panel/web/assets/font/
+sudo apt install espeak
+sudo apt install ffmpeg
+nginx error pages:
+    do :
+        # Fix ownership - change from user:user to www-data:www-data
+        in dev use: 
+            sudo chown -R www-data:www-data /home/user/server/service-platform/cmd/web_panel/web/error_page/
+
+            # Make sure all parent directories are accessible to www-data
+            sudo chmod 755 /home/user/
+            sudo chmod 755 /home/user/server/
+            sudo chmod 755 /home/user/server/service-platform/cmd/web_panel/
+            sudo chmod 755 /home/user/server/service-platform/cmd/web_panel/web/
+            sudo chmod 755 /home/user/server/service-platform/cmd/web_panel/web/error_page/
+
+            # Set proper file permissions
+            sudo chmod 644 /home/user/server/service-platform/cmd/web_panel/web/error_page/502.html
+        in prod use:
+            sudo chown -R www-data:www-data /home/user/Golang/service-platform/cmd/web_panel/web/error_page/
+
+            # Make sure all parent directories are accessible to www-data
+            sudo chmod 755 /home/user/
+            sudo chmod 755 /home/user/Golang/
+            sudo chmod 755 /home/user/Golang/service-platform/cmd/web_panel/
+            sudo chmod 755 /home/user/Golang/service-platform/cmd/web_panel/web/
+            sudo chmod 755 /home/user/Golang/service-platform/cmd/web_panel/web/error_page/
+
+            # Set proper file permissions
+            sudo chmod 644 /home/user/Golang/service-platform/cmd/web_panel/web/error_page/502.html
+
+# Docker for LibreTranslate
+    git clone https://github.com/LibreTranslate/LibreTranslate.git
+    cd LibreTranslate
+    sudo apt install -y docker.io docker-compose
+    sudo systemctl enable --now docker
+    # Normally run with docker-compose up -d
+    sudo docker run -d -p 5000:5000 libretranslate/libretranslate
+    # Running with auto restart
+    sudo docker run -d --name libretranslate --restart unless-stopped -p 5000:5000 libretranslate/libretranslate
+    # Optional: Check logs
+        sudo docker restart libretranslate
+        sudo docker ps
+    # Check languages
+        curl -X GET "http://localhost:5000/languages"
+    # if you need more then just run these:
+        sudo docker exec -it libretranslate bash
+        source venv/bin/activate
+        libretranslate --update-models
+        exit # to exit from docker container shell
+        sudo docker restart libretranslate
+
+# To view memory profile
+    go tool pprof -http=localhost:2222 mem.prof

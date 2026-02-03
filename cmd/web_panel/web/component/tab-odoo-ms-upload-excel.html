@@ -1,0 +1,1331 @@
+<div class="container">
+  <!-- <div id="modalContainer"></div> -->
+
+  <!-- Navigation tabs -->
+  <ul class="nav nav-tabs" id="odooMsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload-panel" type="button" role="tab" aria-controls="upload-panel" aria-selected="true">
+        <i class="fal fa-upload me-2"></i>Upload Excel
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-panel" type="button" role="tab" aria-controls="history-panel" aria-selected="false">
+        <i class="fal fa-history me-2"></i>Upload History
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab content -->
+  <div class="tab-content" id="odooMsTabContent">
+    <!-- Upload Panel -->
+    <div class="tab-pane fade show active" id="upload-panel" role="tabpanel" aria-labelledby="upload-tab">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            Upload via <i class="fal fa-upload me-2 ms-2"></i> Import Excel <i class="fal fa-file-excel ms-2"></i>
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap align-items-end gap-2 mt-2 mb-4">
+            <!-- Dropdown -->
+            <div class="flex-grow-1">
+              <label for="templateSelect" class="form-label">
+                Use:
+              </label>
+              <select id="templateSelect" class="form-select">
+                <option value="" selected disabled>-- Select a Template --</option>
+                <option value="3">Create New Ticket (Helpdesk.Ticket)</option>
+                <option value="4">Custom Template (Helpdesk.Ticket) for Update Data</option>
+                <option value="5">BA Lost Data (Import via Excel)</option>
+                <option value="6">Technician Payslip (Based on Payroll Template)</option>
+                <option value="7">Custom Template (Project.Task) for Update Data</option>
+              </select>
+            </div>
+
+            <!-- Button -->
+            <button id="excel-template" type="button" class="btn btn-sm rounded-pill btn-label-dark m-2">
+              Excel Template &nbsp; <i class="fad fa-download"></i>
+            </button>
+          </div>
+          <div class="row">
+            <div id="uppy"></div>
+            <div id="informer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Panel -->
+    <div class="tab-pane fade" id="history-panel" role="tabpanel" aria-labelledby="history-tab">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h2 class="card-title mb-0">
+            Your <i class="fal fa-history me-2 ms-2"></i> Upload History
+          </h2>
+          <button id="refresh-history" type="button" class="btn btn-sm btn-outline-info">
+            <i class="fal fa-sync-alt me-2"></i> Refresh
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table id="historyTable" class="table table-striped table-hover" style="width:100%">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Filename</th>
+                  <th>Template</th>
+                  <th>Status</th>
+                  <th>Progress</th>
+                  <th>Uploaded At</th>
+                  <th>Completed At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Data will be loaded via AJAX -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ---------------------------------------------------------------------- */
+  let wsConnection = null;
+  let reconnectAttempts = 0;
+  const maxReconnectAttempts = 5;
+  const reconnectDelay = 3000; // 3 seconds
+  
+  // Track active modals to prevent duplicates
+  const activeModals = new Map();
+
+  async function connectWebSocket() {
+    return new Promise((resolve, reject) => {
+      let wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      let socketUrl = `${wsProtocol}//${window.location.host}/ws-odoo-ms-upload-excel`;
+
+      const ws = new WebSocket(socketUrl);
+
+      ws.onopen = () => {
+        console.log("✅ WebSocket Progress connected!");
+        reconnectAttempts = 0; // Reset on successful connection
+        resolve(ws);
+      };
+
+      ws.onerror = (error) => {
+        console.error("❌ WebSocket Progress Error:", error);
+        reject(error);
+      };
+
+      ws.onclose = (event) => {
+        console.warn("⚠️ WebSocket Progress disconnected. Code:", event.code, "Reason:", event.reason);
+        wsConnection = null;
+        
+        // Auto-reconnect with exponential backoff
+        if (reconnectAttempts < maxReconnectAttempts) {
+          const delay = reconnectDelay * Math.pow(2, reconnectAttempts);
+          reconnectAttempts++;
+          console.log(`🔄 Attempting to reconnect in ${delay/1000}s... (${reconnectAttempts}/${maxReconnectAttempts})`);
+          
+          setTimeout(() => {
+            startWebSocket();
+          }, delay);
+        } else {
+          console.error("❌ Max reconnection attempts reached. Please refresh the page.");
+          // Show user notification
+          if (typeof iziToast !== 'undefined') {
+            showIziToast("error", "WebSocket connection lost. Please refresh the page to see processing updates.");
+          }
+        }
+      };
+    });
+  }
+
+  function createModal(filename, ori_filename) {
+    let modalId = `modal-${filename}`;
+    
+    // Check if modal already exists in activeModals AND in DOM
+    if (activeModals.has(filename)) {
+      const existingModalId = activeModals.get(filename);
+      if ($(`#${existingModalId}`).length) {
+        // Modal exists and is in DOM, reopen if closed
+        if (!$(`#${existingModalId}`).hasClass('iziModal-opened')) {
+          $(`#${existingModalId}`).iziModal('open');
+        }
+        return existingModalId;
+      } else {
+        // Modal registered but not in DOM, clean up
+        activeModals.delete(filename);
+      }
+    }
+    
+    // If modal element exists in DOM but not tracked, remove it first
+    if ($(`#${modalId}`).length) {
+      $(`#${modalId}`).iziModal('destroy');
+      $(`#${modalId}`).remove();
+    }
+
+    $("body").append(`
+      <div id="${modalId}" class="iziModal" data-iziModal-title="Processing: ${ori_filename}">
+        <p class="px-2 mt-2">Status: <span id="status-${filename}" class="fw-bold">Waiting...</span></p>
+        <div class="progress mx-2">
+          <div id="bar-${filename}" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <br>
+        <div class="d-flex justify-content-between mx-2 mb-2 px-2">
+          <button type="button" class="btn btn-danger btn-sm" id="closeBtn-${filename}" style="display: none;" tabindex="0">
+            Close
+          </button>
+          <button class="btn btn-info btn-sm" id="logs-${filename}" tabindex="0">
+            <i class="fal fa-info-square me-2"></i> Logs
+          </button>
+        </div>
+      </div>
+    `);
+
+    $(`#${modalId}`).iziModal({
+      width: 500,
+      overlayColor: 'rgba(0, 0, 0, 0.6)',
+      closeButton: true,
+      transitionIn: 'fadeInUp',
+      transitionOut: 'fadeOutDown',
+      zindex: 9999,
+      onOpening: function (modal) {
+        $(modal).attr("aria-hidden", "false");
+      },
+      onClosing: function (modal) {
+        // ✅ FIX: Remove focus before hiding to prevent aria-hidden warning
+        $(modal).find(':focus').blur();
+        $(document.activeElement).blur();
+        $(modal).attr("aria-hidden", "true");
+        // Remove from active modals when closed
+        activeModals.delete(filename);
+      }
+    }).iziModal('open');
+
+    activeModals.set(filename, modalId);
+    return modalId;
+  }
+
+  function closeModalWSUpdateTicket(modalId) {
+    if ($(`#${modalId}`).length) {
+      $(`#${modalId}`).iziModal('close');
+      setTimeout(() => {
+        $(`#${modalId}`).remove();
+        // Clean up from active modals
+        const filename = modalId.replace('modal-', '');
+        activeModals.delete(filename);
+      }, 300);
+    }
+  }
+
+  function updateProgress(filename, ori_filename, progress, status, logs) {
+    filename = filename.replace(".xlsx", "").replace(".xls", "");
+    let modalId = `modal-${filename}`;
+
+    // Create modal if it doesn't exist
+    if (!activeModals.has(filename)) {
+      createModal(filename, ori_filename);
+    }
+
+    // Update progress bar and status
+    $(`#bar-${filename}`).css("width", `${progress}%`).attr("aria-valuenow", progress);
+    $(`#status-${filename}`).text(`${status} (${progress}%)`);
+
+    // Update progress bar color based on status
+    const progressBar = $(`#bar-${filename}`);
+    progressBar.removeClass('bg-success bg-danger bg-warning');
+    
+    if (status === "Completed") {
+      progressBar.addClass('bg-success');
+    } else if (status === "Failed") {
+      progressBar.addClass('bg-danger');
+    } else if (status === "Processing") {
+      progressBar.addClass('bg-info');
+    }
+
+    // Handle logs button - only register handler once when modal is created
+    // Don't re-register on every progress update to prevent performance issues
+    const logsButton = $(`#logs-${filename}`);
+    if (!logsButton.data('handler-registered')) {
+      logsButton.on("click", function () {
+        // Get latest logs from the data attribute or closure
+        const latestLogs = $(this).data('latest-logs') || logs;
+        showLogsModal(filename, ori_filename, latestLogs);
+      });
+      logsButton.data('handler-registered', true);
+    }
+    // Update the logs data so button always has latest logs
+    logsButton.data('latest-logs', logs);
+
+    // Show close button when processing is complete
+    if (progress === 100 || status === "Completed" || status === "Failed") {
+      setTimeout(() => {
+        $(`#closeBtn-${filename}`).show().off("click").on("click", () => {
+          closeModalWSUpdateTicket(modalId);
+        });
+      }, 500);
+    }
+  }
+
+  function showLogsModal(filename, ori_filename, logs) {
+    let logModalId = `log-modal-${filename}`;
+    let formattedLogs;
+    let dataType = 'unknown';
+    
+    // ✅ CRITICAL FIX: Check if modal is already open to prevent duplicates
+    if ($(`#${logModalId}`).length && $(`#${logModalId}`).hasClass('iziModal-opened')) {
+      console.log('Log modal already open for:', filename);
+      return; // Don't open duplicate modal
+    }
+    
+    // console.log('WebSocket logs - Raw data:', logs);
+    // console.log('WebSocket logs - Type:', typeof logs);
+    
+    // Determine the actual data type and format accordingly
+    if (logs === null || logs === undefined) {
+      dataType = 'null/undefined';
+      formattedLogs = 'No logs available (null/undefined)';
+    } else if (logs === '') {
+      dataType = 'empty string';
+      formattedLogs = 'No logs available (empty)';
+    } else if (typeof logs === 'object' && logs !== null) {
+      if (Array.isArray(logs)) {
+        dataType = 'array';
+        formattedLogs = JSON.stringify(logs, null, 2);
+      } else if (logs.toString() === '[object Object]') {
+        dataType = 'object';
+        formattedLogs = JSON.stringify(logs, null, 2);
+      } else {
+        dataType = 'object (custom toString)';
+        formattedLogs = logs.toString();
+      }
+    } else if (typeof logs === 'string') {
+      const trimmedLogs = logs.trim();
+      
+      if (trimmedLogs === '') {
+        dataType = 'empty string (trimmed)';
+        formattedLogs = 'No logs available (empty after trim)';
+      } else if (trimmedLogs.startsWith('{') && trimmedLogs.endsWith('}')) {
+        // Looks like JSON object
+        try {
+          const parsed = JSON.parse(trimmedLogs);
+          dataType = 'JSON object string';
+          formattedLogs = JSON.stringify(parsed, null, 2);
+        } catch (error) {
+          dataType = 'malformed JSON object string';
+          formattedLogs = `Invalid JSON Object:\n${trimmedLogs}\n\nError: ${error.message}`;
+        }
+      } else if (trimmedLogs.startsWith('[') && trimmedLogs.endsWith(']')) {
+        // Looks like JSON array
+        try {
+          const parsed = JSON.parse(trimmedLogs);
+          dataType = 'JSON array string';
+          formattedLogs = JSON.stringify(parsed, null, 2);
+        } catch (error) {
+          dataType = 'malformed JSON array string';
+          formattedLogs = `Invalid JSON Array:\n${trimmedLogs}\n\nError: ${error.message}`;
+        }
+      } else {
+        // Regular string
+        dataType = 'plain string';
+        formattedLogs = trimmedLogs;
+      }
+    } else if (typeof logs === 'number') {
+      dataType = 'number';
+      formattedLogs = logs.toString();
+    } else if (typeof logs === 'boolean') {
+      dataType = 'boolean';
+      formattedLogs = logs.toString();
+    } else {
+      dataType = typeof logs;
+      formattedLogs = String(logs);
+    }
+    
+    // console.log('WebSocket logs - Detected type:', dataType);
+    // console.log('WebSocket logs - Formatted:', formattedLogs);
+
+    // ✅ IMPROVED: Properly clean up existing modal if it exists
+    if ($(`#${logModalId}`).length) {
+      try {
+        // Close modal first if it's open
+        if ($(`#${logModalId}`).hasClass('iziModal-opened')) {
+          $(`#${logModalId}`).iziModal('close');
+        }
+        // Then destroy and remove
+        $(`#${logModalId}`).iziModal('destroy');
+        $(`#${logModalId}`).remove();
+      } catch (error) {
+        console.error('Error cleaning up modal:', error);
+        // Force remove if destroy fails
+        $(`#${logModalId}`).remove();
+      }
+    }
+
+    $("body").append(`
+      <div id="${logModalId}" class="iziModal" data-iziModal-title="Logs for ${ori_filename}">
+        <div class="p-2 m-2">
+          <div class="mb-2">
+            <small class="text-muted">Data Type: <strong>${dataType}</strong></small>
+          </div>
+          <pre style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;">${formattedLogs}</pre>
+        </div>
+      </div>
+    `);
+    
+    $(`#${logModalId}`).iziModal({
+      width: 600,
+      overlayColor: 'rgba(0, 0, 0, 0.6)',
+      closeButton: true,
+      transitionIn: 'fadeInUp',
+      transitionOut: 'fadeOutDown',
+      zindex: 10000,
+      onOpening: function (modal) {
+        $(modal).attr("aria-hidden", "false");
+      },
+      onClosing: function (modal) {
+        // ✅ FIX: Remove focus from modal elements before hiding
+        // This prevents "aria-hidden on focused element" warnings
+        $(modal).find(':focus').blur();
+        $(document.activeElement).blur();
+        $(modal).attr("aria-hidden", "true");
+      },
+      onClosed: function (modal) {
+        // ✅ CRITICAL FIX: Remove modal from DOM to prevent memory leaks
+        $(modal).remove();
+      }
+    }).iziModal('open');
+  }
+
+  // Throttle function to prevent too many rapid updates
+  function throttle(func, delay) {
+    let timeoutId;
+    let lastExecTime = 0;
+    
+    return function(...args) {
+      const currentTime = Date.now();
+      
+      if (currentTime - lastExecTime > delay) {
+        func.apply(this, args);
+        lastExecTime = currentTime;
+      } else {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          func.apply(this, args);
+          lastExecTime = Date.now();
+        }, delay);
+      }
+    };
+  }
+
+  async function listenForProgress(ws) {
+    // Throttle progress updates to prevent UI freezing from rapid messages
+    const throttledUpdateProgress = throttle((filename, ori_filename, progress, status, logs) => {
+      updateProgress(filename, ori_filename, progress, status, logs);
+    }, 100); // Update at most every 100ms
+    
+    ws.onmessage = async (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        // console.log(`📌 File: ${data.filename} | Progress: ${data.progress}% | Status: ${data.status}`);
+
+        throttledUpdateProgress(data.filename, data.ori_filename, data.progress, data.status, data.logs);
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    };
+  }
+
+  async function startWebSocket() {
+    try {
+      wsConnection = await connectWebSocket();
+      await listenForProgress(wsConnection);
+    } catch (error) {
+      console.error("⚠️ WebSocket Progress failed to connect:", error);
+      
+      // Show user notification
+      if (typeof iziToast !== 'undefined') {
+        showIziToast("warning", "Unable to establish real-time updates. You may need to refresh to see processing status.");
+      }
+    }
+  }
+
+  // Start WebSocket connection
+  startWebSocket();
+
+  // Add page visibility handling to reconnect when page becomes visible
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && (!wsConnection || wsConnection.readyState !== WebSocket.OPEN)) {
+      console.log("🔄 Page became visible, checking WebSocket connection...");
+      startWebSocket();
+    }
+  });
+
+  // Cleanup function to prevent memory leaks
+  window.addEventListener('beforeunload', function() {
+    // Close WebSocket connection
+    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+      wsConnection.close();
+    }
+    
+    // Close all active modals
+    activeModals.forEach((modalId) => {
+      if ($(`#${modalId}`).length) {
+        $(`#${modalId}`).iziModal('destroy');
+        $(`#${modalId}`).remove();
+      }
+    });
+    activeModals.clear();
+    
+    // Destroy DataTable
+    if (historyTable) {
+      historyTable.destroy();
+      historyTable = null;
+    }
+  });
+  /* ---------------------------------------------------------------------- */
+
+  // 🔒 Password Modal Function
+  function showPasswordModal(callback, defaultEmail) {
+    const modalId = 'password-modal-upload';
+    
+    // Remove existing modal if any
+    if ($(`#${modalId}`).length) {
+      $(`#${modalId}`).iziModal('destroy');
+      $(`#${modalId}`).remove();
+    }
+
+    $("body").append(`
+      <div id="${modalId}" class="iziModal" data-iziModal-title="Enter ODOO Credentials">
+        <div class="p-4">
+          <p class="mb-3 text-muted">Please enter your ODOO account credentials to process the uploaded file:</p>
+          
+          <form id="odoo-credentials-form" autocomplete="on">
+            <div class="mb-3">
+              <label for="odoo-email-input" class="form-label">Email</label>
+              <input type="email" id="odoo-email-input" name="email" class="form-control" placeholder="Enter your ODOO email" value="${defaultEmail || ''}" autocomplete="email">
+            </div>
+            
+            <div class="mb-3">
+              <label for="odoo-password-input" class="form-label">Password</label>
+              <div class="input-group">
+                <input type="password" id="odoo-password-input" name="password" class="form-control" placeholder="Enter your password" autocomplete="current-password">
+                <button class="btn btn-outline-secondary" type="button" id="toggle-password-visibility">
+                  <i class="fal fa-eye" id="eye-icon"></i>
+                </button>
+              </div>
+            </div>
+          </form>
+          
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-secondary" id="cancel-password-btn">
+              <i class="fal fa-times me-2"></i> Cancel
+            </button>
+            <button type="button" class="btn btn-primary" id="submit-password-btn">
+              <i class="fal fa-check me-2"></i> Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    `);
+
+    $(`#${modalId}`).iziModal({
+      width: 450,
+      overlayColor: 'rgba(0, 0, 0, 0.6)',
+      closeButton: false,
+      closeOnEscape: false,
+      overlayClose: false,
+      transitionIn: 'fadeInDown',
+      transitionOut: 'fadeOutUp',
+      zindex: 10000,
+      onOpening: function (modal) {
+        $(modal).attr("aria-hidden", "false");
+        
+        // Focus on email input when modal opens
+        setTimeout(() => {
+          $('#odoo-email-input').focus();
+        }, 300);
+      },
+      onClosing: function (modal) {
+        // ✅ FIX: Remove focus before hiding to prevent aria-hidden warning
+        $(modal).find(':focus').blur();
+        $(document.activeElement).blur();
+        $(modal).attr("aria-hidden", "true");
+      },
+      onClosed: function (modal) {
+        $(modal).remove();
+      }
+    }).iziModal('open');
+
+    // Prevent form submission (we handle it manually)
+    $('#odoo-credentials-form').on('submit', function(e) {
+      e.preventDefault();
+      $('#submit-password-btn').click();
+      return false;
+    });
+
+    // Toggle password visibility
+    $('#toggle-password-visibility').on('click', function() {
+      const passwordInput = $('#odoo-password-input');
+      const eyeIcon = $('#eye-icon');
+      
+      if (passwordInput.attr('type') === 'password') {
+        passwordInput.attr('type', 'text');
+        eyeIcon.removeClass('fa-eye').addClass('fa-eye-slash');
+      } else {
+        passwordInput.attr('type', 'password');
+        eyeIcon.removeClass('fa-eye-slash').addClass('fa-eye');
+      }
+    });
+
+    // Handle Enter key press on email field
+    $('#odoo-email-input').on('keypress', function(e) {
+      if (e.which === 13) { // Enter key
+        e.preventDefault();
+        $('#odoo-password-input').focus(); // Move to password field
+      }
+    });
+
+    // Handle Enter key press on password field
+    $('#odoo-password-input').on('keypress', function(e) {
+      if (e.which === 13) { // Enter key
+        e.preventDefault();
+        $('#submit-password-btn').click();
+      }
+    });
+
+    // Cancel button
+    $('#cancel-password-btn').on('click', function() {
+      $(`#${modalId}`).iziModal('close');
+      callback(null);
+    });
+
+    // Submit button
+    $('#submit-password-btn').on('click', function() {
+      const email = $('#odoo-email-input').val().trim();
+      const password = $('#odoo-password-input').val().trim();
+      
+      // Validate email
+      if (!email) {
+        $('#odoo-email-input').addClass('is-invalid');
+        if (!$('#email-error').length) {
+          $('#odoo-email-input').after('<div id="email-error" class="invalid-feedback d-block">Email is required.</div>');
+        }
+        return;
+      }
+      
+      // Basic email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        $('#odoo-email-input').addClass('is-invalid');
+        if (!$('#email-error').length) {
+          $('#odoo-email-input').after('<div id="email-error" class="invalid-feedback d-block">Please enter a valid email address.</div>');
+        }
+        return;
+      }
+      
+      // Validate password
+      if (!password) {
+        $('#odoo-password-input').addClass('is-invalid');
+        if (!$('#password-error').length) {
+          $('#odoo-password-input').after('<div id="password-error" class="invalid-feedback d-block">Password is required.</div>');
+        }
+        return;
+      }
+      
+      $(`#${modalId}`).iziModal('close');
+      callback({ email, password }); // Return both email and password
+    });
+
+    // Remove error feedback on email input
+    $('#odoo-email-input').on('input', function() {
+      $(this).removeClass('is-invalid');
+      $('#email-error').remove();
+    });
+
+    // Remove error feedback on password input
+    $('#odoo-password-input').on('input', function() {
+      $(this).removeClass('is-invalid');
+      $('#password-error').remove();
+    });
+  }
+  /* ---------------------------------------------------------------------- */
+
+  (async () => {
+    const uppyInfoTimeout = 7000;
+    const timeoutSeconds = parseInt('{{.UPLOADED_TIMEOUT_SECONDS}}');
+    const uppyEndpointTimeout = timeoutSeconds * 1000;
+    const maxFileSizeMB = parseInt('{{.UPLOADED_MAX_FILE_SIZE_MB}}');
+    let selectedValue = "";
+    let uploadEndpoints = [
+      "ENDPOINT_1",
+      "ENDPOINT_2",
+      "{{.UPLOAD_NEW_TICKET_ODOO_MS_URL}}",
+      "{{.UPDATE_TICKET_ODOO_MS_URL}}",
+      "{{.UPLOAD_BA_LOST_URL}}",
+      "{{.UPLOAD_TECHNICIAN_PAYROLL_URL}}",
+      "{{.UPDATE_PROJECT_TASK_ODOO_MS_URL}}",
+    ];
+    let endpointOfUploaded = "";
+
+    // Set dynamic label for BA Lost Data option with previous month and year
+    const currentDate = new Date();
+    currentDate.setMonth(currentDate.getMonth() - 1); // Go to previous month
+    const monthYear = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    $('#templateSelect option[value="5"]').text('BA Lost Data ' + monthYear);
+
+    // Detect theme and update dynamically
+    const $html = $("html");
+    const $body = $("body");
+    const $excelButton = $("#excel-template");
+
+    if (selectedValue == "") {
+      $excelButton.addClass("disabled").removeData("url");
+    }
+
+    // Handle template selection
+    $("#templateSelect").change(function () {
+      selectedValue = $(this).val();
+      endpointOfUploaded = uploadEndpoints[selectedValue - 1] || uploadEndpoints[0];
+      
+      // Update Uppy endpoint dynamically
+      const xhrPlugin = uppy.getPlugin('XHRUpload');
+      if (xhrPlugin) {
+        xhrPlugin.setOptions({ endpoint: endpointOfUploaded });
+      }
+      
+      $excelButton.removeClass("disabled").data("url", "/assets/templates/" + selectedValue + ".xlsx");
+    });
+
+    $excelButton.on("click", function () {
+      const url = $(this).data("url");
+      if (url) {
+        window.open(url, "_blank"); // Opens in a new tab
+      }
+    });
+
+    function updateTheme() {
+      setTimeout(() => {
+        if ($html.hasClass("dark-style") || $body.hasClass("dark-style")) {
+          $excelButton.addClass("text-success btn-label-info").removeClass("btn-label-dark");
+        } else {
+          $excelButton.removeClass("text-success").addClass("btn-label-dark");
+        }
+      }, 10); // Small delay to ensure classes apply correctly
+    }
+
+    // Initial check and apply theme
+    updateTheme();
+
+    // Throttle theme updates to prevent excessive processing
+    const throttledUpdateTheme = throttle(updateTheme, 200);
+
+    // Observe theme changes dynamically
+    const observer = new MutationObserver(() => {
+      throttledUpdateTheme(); // Use throttled version
+    });
+
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+
+    // Initialize Uppy
+    const uppy = new Uppy.Uppy({
+      restrictions: {
+        maxFileSize: maxFileSizeMB * 1024 * 1024, // Dynamic limit
+        minNumberOfFiles: 1,
+        maxNumberOfFiles: 1,
+        allowedFileTypes: ['.xlsx', '.xls'],
+      },
+      autoProceed: false,
+      logger: {
+        debug: () => {},
+        warn: console.warn,
+        error: (...args) => {
+          const errorStr = args.join(' ');
+          // Filter out harmless internal Uppy errors during password modal flow
+          if (errorStr.includes("Cannot use 'in' operator") || 
+              errorStr.includes("hasError") ||
+              errorStr.includes("fileFilters.js")) {
+            return;
+          }
+          console.error(...args);
+        }
+      }
+    }).use(Uppy.Dashboard, {
+      theme: $html.hasClass("dark-style") ? "dark" : "light",
+      target: '#uppy',
+      inline: true,
+      note: `Allowed file types: ".xlsx" or ".xls" • Max size: {{.UPLOADED_MAX_FILE_SIZE_MB}}MB • Timeout: {{.UPLOADED_TIMEOUT_SECONDS}} seconds`,
+      width: '100%',
+      proudlyDisplayPoweredByUppy: false,
+      showProgressDetails: true,
+      infoTimeout: uppyInfoTimeout,
+    }).use(Uppy.XHRUpload, {
+      endpoint: endpointOfUploaded || endpointOfUploaded[0],
+      fieldName: 'file',
+      formData: true,
+      method: 'POST',
+      timeout: uppyEndpointTimeout,
+      headers: {
+        "Accept": "application/json"
+      },
+      limit: 1,
+    });
+
+    // Add file size warning when files are added
+    uppy.on('file-added', (file) => {
+      const maxSize = maxFileSizeMB * 1024 * 1024;
+      const warningSize = maxFileSizeMB * 0.75 * 1024 * 1024; // Warn at 75% of max
+      
+      if (file.size > maxSize) {
+        uppy.removeFile(file.id);
+        uppy.info(`File is too large. Maximum allowed size is ${maxFileSizeMB}MB.`, "error", uppyInfoTimeout);
+        return;
+      }
+      
+      if (file.size > warningSize) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        uppy.info(`Large file detected (${sizeMB}MB). Upload may take longer.`, "warning", uppyInfoTimeout);
+      }
+    });
+
+    // Flag to track if password has been entered
+    let passwordEntered = false;
+    let uploadPassword = null;
+
+    uppy.on('upload', (data) => {
+      if (!selectedValue) {
+        uppy.info("Please select a template before uploading.", "error", uppyInfoTimeout);
+        uppy.cancelAll();
+        return;
+      }
+
+      // If password already entered, proceed with upload
+      if (passwordEntered && uploadPassword) {
+        // ✅ Attach template ID & password before upload
+        uppy.getFiles().forEach(file => {
+          uppy.setFileMeta(file.id, {
+            templateId: selectedValue,
+            uploadedBy: adminEmail,
+            password: uploadPassword // � Attach the password
+          });
+        });
+        return; // Let upload proceed
+      }
+
+      // �🔒 Cancel upload and show password modal
+      // Store files before cancelAll removes them
+      const currentFiles = uppy.getFiles().map(f => ({
+        id: f.id,
+        name: f.name,
+        type: f.type,
+        data: f.data,
+        meta: {...f.meta}
+      }));
+      
+      uppy.cancelAll();
+      
+      showPasswordModal(async (result) => {
+        if (!result) {
+          uppy.info("Upload canceled: No credentials entered.", "error", uppyInfoTimeout);
+          passwordEntered = false;
+          uploadPassword = null;
+          return;
+        }
+
+        const { email, password } = result;
+
+        // ✅ Validate ODOO credentials before proceeding
+        uppy.info("Validating ODOO credentials...", "info", uppyInfoTimeout);
+        
+        try {
+          const validateResponse = await fetch("{{.VALIDATE_ODOO_CREDENTIALS_URL}}", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              email: email,
+              password: password
+            })
+          });
+
+          const validateResult = await validateResponse.json();
+
+          if (!validateResponse.ok || validateResult.status !== "success") {
+            // ❌ Invalid credentials
+            uppy.info(validateResult.message || "Invalid ODOO credentials!", "error", uppyInfoTimeout);
+            
+            // Show SweetAlert for invalid credentials
+            Swal.fire({
+              icon: 'error',
+              title: 'Invalid Credentials',
+              html: `<p>${validateResult.message || 'The ODOO email or password is incorrect.'}</p>
+                     <p class="text-muted small">Please check your credentials and try again.</p>`,
+              confirmButtonText: 'OK',
+              customClass: {
+                confirmButton: 'btn btn-danger'
+              }
+            });
+
+            // Reset password flag
+            passwordEntered = false;
+            uploadPassword = null;
+            return;
+          }
+
+          // ✅ Valid credentials - show success message
+          uppy.info("Credentials validated successfully!", "success", uppyInfoTimeout);
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Valid Credentials',
+            text: 'Your ODOO credentials are valid. Processing upload...',
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          // Update adminEmail if user changed it
+          if (email) adminEmail = email;
+
+          // Store password and flag
+          passwordEntered = true;
+          uploadPassword = password;
+
+          // Re-add files with password metadata
+          currentFiles.forEach(fileData => {
+            try {
+              uppy.addFile({
+                name: fileData.name,
+                type: fileData.type,
+                data: fileData.data,
+                meta: {
+                  ...fileData.meta,
+                  templateId: selectedValue,
+                  uploadedBy: adminEmail, // Use updated email
+                  password: password
+                }
+              });
+            } catch (err) {
+              console.error('Error re-adding file:', err);
+            }
+          });
+
+          // Resume upload after credentials are validated
+          setTimeout(() => {
+            uppy.upload();
+          }, 100);
+
+        } catch (error) {
+          console.error('Credential validation error:', error);
+          uppy.info("Failed to validate credentials. Please try again.", "error", uppyInfoTimeout);
+          
+          Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Could not connect to the server. Please check your connection and try again.',
+            confirmButtonText: 'OK',
+            customClass: {
+              confirmButton: 'btn btn-danger'
+            }
+          });
+
+          passwordEntered = false;
+          uploadPassword = null;
+        }
+      }, adminEmail); // Pass default email
+    });
+
+    uppy.on('upload-error', async (file, error, response) => {
+      console.error("Upload failed:", error, response);
+
+      // Reset password flag on error
+      passwordEntered = false;
+      uploadPassword = null;
+
+      let errorMessage = "Upload failed. Please try again.";
+      
+      // Handle specific HTTP status codes
+      if (response) {
+        if (response.status === 413) {
+          errorMessage = `File is too large. Maximum allowed size is ${maxFileSizeMB}MB.`;
+        } else if (response.status === 415) {
+          errorMessage = "Unsupported file type. Please upload only .xlsx or .xls files.";
+        } else if (response.status === 429) {
+          errorMessage = "Too many requests. Please wait a moment and try again.";
+        } else if (response.status >= 500) {
+          errorMessage = "Server error occurred. Please try again later.";
+        } else if (response.responseText) {
+          try {
+            const parsedResponse = JSON.parse(response.responseText);
+            console.log(parsedResponse);
+            if (parsedResponse.message) {
+              errorMessage = `[${response.status}] ` + parsedResponse.message;
+            }
+          } catch (parseError) {
+            console.error("Failed to parse error response:", parseError);
+            // For 413 errors, responseText might not be available
+            if (response.status === 413) {
+              errorMessage = `File is too large. Maximum allowed size is ${maxFileSizeMB}MB.`;
+            } else {
+              errorMessage = `Upload failed with status ${response.status}. Please try again.`;
+            }
+          }
+        } else {
+          // Handle cases where responseText is not available
+          if (response.status === 413) {
+            errorMessage = `File is too large. Maximum allowed size is ${maxFileSizeMB}MB.`;
+          } else {
+            errorMessage = `Upload failed with status ${response.status}. Please try again.`;
+          }
+        }
+      } else if (error) {
+        // Handle network errors or other issues
+        if (error.message && error.message.includes('NetworkError')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (error.message && error.message.includes('timeout')) {
+          errorMessage = "Upload timed out. Please try again.";
+        } else {
+          errorMessage = `Upload error: ${error.message || 'Unknown error'}`;
+        }
+      }
+
+      uppy.info(errorMessage, "error", uppyInfoTimeout);
+    });
+
+    // Handle successful upload - refresh history if on history tab
+    uppy.on('upload-success', (file, response) => {
+      console.log("Upload successful:", file.name);
+      
+      // Reset password flag on success
+      passwordEntered = false;
+      uploadPassword = null;
+      
+      // Refresh history table if it's initialized
+      if (typeof historyTable !== 'undefined' && historyTable) {
+        setTimeout(() => {
+          historyTable.ajax.reload(null, false); // false = stay on current page
+        }, 1000);
+      }
+    });
+
+  })();
+
+  /* ---------------------------------------------------------------------- */
+  /* UPLOAD HISTORY FUNCTIONALITY */
+  /* ---------------------------------------------------------------------- */
+  
+  let historyTable;
+  let adminEmail = "{{.email}}";
+  const historyEndpoint = "{{.UPLOAD_HISTORY_URL}}";
+
+  // Initialize DataTable for upload history
+  function initializeHistoryTable() {
+    // Clean up any existing loading indicators
+    $('#custom-history-loading').remove();
+    $('.dataTables_processing').hide();
+    $('.dt-processing').hide();
+    
+    if ($.fn.DataTable.isDataTable('#historyTable')) {
+      $('#historyTable').DataTable().destroy();
+    }
+
+    historyTable = $('#historyTable').DataTable({
+      processing: false, // Disable default processing indicator
+      serverSide: true,
+      ajax: {
+        url: historyEndpoint,
+        type: 'POST',
+        data: function(d) {
+          d.email = adminEmail;
+          return d;
+        },
+        beforeSend: function() {
+          // Hide any existing global loading indicators that might interfere
+          $('.dataTables_processing').hide();
+          $('.dt-processing').hide();
+          
+          // Show custom loading indicator
+          $('#historyTable_wrapper').addClass('position-relative');
+          if (!$('#custom-history-loading').length) {
+            $('#historyTable_wrapper').append(`
+              <div id="custom-history-loading" class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center" 
+                   style="top: 0; left: 0; background: rgba(255,255,255,0.8); z-index: 1000; border-radius: 8px;">
+                <div class="d-flex flex-column align-items-center">
+                  <div class="spinner-border text-primary mb-2" role="status" style="width: 2rem; height: 2rem;">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <small class="text-muted fw-medium">Loading upload history...</small>
+                </div>
+              </div>
+            `);
+          }
+        },
+        complete: function() {
+          // Hide custom loading indicator
+          $('#custom-history-loading').remove();
+        },
+        error: function(xhr, error, thrown) {
+          console.error('DataTable AJAX error:', error, thrown);
+          $('#custom-history-loading').remove();
+          if (typeof iziToast !== 'undefined') {
+            showIziToast("error", "Failed to load upload history. Please try again.");
+          }
+        }
+      },
+      columns: [
+        { data: 0, orderable: false, searchable: false, width: "50px" }, // #
+        { data: 1, orderable: true }, // Filename
+        { data: 2, orderable: true, width: "80px" }, // Template
+        { data: 3, orderable: true, width: "100px" }, // Status
+        { data: 4, orderable: false, width: "120px" }, // Progress
+        { data: 5, orderable: true, width: "140px" }, // Uploaded At
+        { data: 6, orderable: true, width: "140px" }, // Completed At
+        { data: 7, orderable: false, searchable: false, width: "100px" } // Actions
+      ],
+      order: [[5, 'desc']], // Order by uploaded date (newest first)
+      pageLength: 10,
+      lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+      language: {
+        processing: '', // Empty since we use custom loading indicator
+        emptyTable: "No upload history found",
+        info: "Showing _START_ to _END_ of _TOTAL_ uploads",
+        infoEmpty: "No uploads to show",
+        infoFiltered: "(filtered from _MAX_ total uploads)",
+        lengthMenu: "Show _MENU_ uploads per page",
+        search: "Search uploads:",
+        paginate: {
+          first: "First",
+          last: "Last",
+          next: "Next",
+          previous: "Previous"
+        }
+      },
+      responsive: true,
+      autoWidth: false,
+      initComplete: function(settings, json) {
+        // Initialize event handlers ONCE when table is first loaded
+        initializeHistoryEventHandlers();
+      }
+      // ✅ REMOVED drawCallback to prevent duplicate event handler registration
+    });
+  }
+
+  // Initialize event handlers for history table (called ONCE)
+  function initializeHistoryEventHandlers() {
+    // View logs button - use event delegation to handle dynamically added elements
+    // Event delegation means this will work for all current AND future .view-logs buttons
+    // No need to re-register on every table draw
+    $('#historyTable').off('click', '.view-logs').on('click', '.view-logs', function(e) {
+      e.preventDefault();
+      e.stopPropagation(); // Prevent event bubbling
+      
+      const button = $(this);
+      
+      // Prevent multiple clicks
+      if (button.hasClass('processing')) {
+        return;
+      }
+      button.addClass('processing');
+      
+      const id = button.data('id');
+      const filename = button.data('filename');
+      const logs = button.data('logs');
+      
+      // console.log('View logs clicked:', { id, filename, logs }); // Debug log
+      
+      showHistoryLogsModal(filename, logs);
+      
+      // Remove processing flag after modal opens
+      setTimeout(() => {
+        button.removeClass('processing');
+      }, 500);
+    });
+  }
+
+  // Show logs modal for history items
+  function showHistoryLogsModal(filename, logs) {
+    const modalId = `history-log-modal-${filename.replace(/[^a-zA-Z0-9]/g, '_')}`; // Use filename-based ID instead of timestamp
+    let formattedLogs;
+    let dataType = 'unknown';
+    
+    // Check if modal already exists and is open
+    if ($(`#${modalId}`).length) {
+      if ($(`#${modalId}`).hasClass('iziModal-opened')) {
+        // Modal already open, just return
+        return;
+      } else {
+        // Modal exists but closed, destroy it first
+        $(`#${modalId}`).iziModal('destroy');
+        $(`#${modalId}`).remove();
+      }
+    }
+    
+    // console.log('Raw logs data:', logs); // Debug log
+    // console.log('Type of logs:', typeof logs); // Debug log
+    
+    // First, decode HTML entities if present
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = logs || '';
+    const decodedLogs = tempDiv.textContent || tempDiv.innerText || logs || '';
+    
+    // Determine the actual data type
+    if (logs === null || logs === undefined) {
+      dataType = 'null/undefined';
+      formattedLogs = 'No logs available (null/undefined)';
+    } else if (logs === '') {
+      dataType = 'empty string';
+      formattedLogs = 'No logs available (empty)';
+    } else if (typeof logs === 'object' && logs !== null) {
+      if (Array.isArray(logs)) {
+        dataType = 'array';
+        formattedLogs = JSON.stringify(logs, null, 2);
+      } else if (logs.toString() === '[object Object]') {
+        dataType = 'object';
+        formattedLogs = JSON.stringify(logs, null, 2);
+      } else {
+        dataType = 'object (custom toString)';
+        formattedLogs = logs.toString();
+      }
+    } else if (typeof logs === 'string') {
+      const trimmedLogs = decodedLogs.trim();
+      
+      if (trimmedLogs === '') {
+        dataType = 'empty string (after decoding)';
+        formattedLogs = 'No logs available (empty after HTML decode)';
+      } else if (trimmedLogs.startsWith('{') && trimmedLogs.endsWith('}')) {
+        // Looks like JSON object
+        try {
+          const parsed = JSON.parse(trimmedLogs);
+          dataType = 'JSON object string';
+          formattedLogs = JSON.stringify(parsed, null, 2);
+        } catch (error) {
+          dataType = 'malformed JSON object string';
+          formattedLogs = `Invalid JSON Object:\n${trimmedLogs}\n\nError: ${error.message}`;
+        }
+      } else if (trimmedLogs.startsWith('[') && trimmedLogs.endsWith(']')) {
+        // Looks like JSON array
+        try {
+          const parsed = JSON.parse(trimmedLogs);
+          dataType = 'JSON array string';
+          formattedLogs = JSON.stringify(parsed, null, 2);
+        } catch (error) {
+          dataType = 'malformed JSON array string';
+          formattedLogs = `Invalid JSON Array:\n${trimmedLogs}\n\nError: ${error.message}`;
+        }
+      } else {
+        // Regular string
+        dataType = 'plain string';
+        formattedLogs = trimmedLogs;
+      }
+    } else if (typeof logs === 'number') {
+      dataType = 'number';
+      formattedLogs = logs.toString();
+    } else if (typeof logs === 'boolean') {
+      dataType = 'boolean';
+      formattedLogs = logs.toString();
+    } else {
+      dataType = typeof logs;
+      formattedLogs = String(logs);
+    }
+    
+    // console.log('Detected data type:', dataType);
+    // console.log('Formatted logs:', formattedLogs);
+
+    // Remove existing log modal if any
+    $('.history-log-modal').remove();
+
+    $("body").append(`
+      <div id="${modalId}" class="iziModal history-log-modal" data-iziModal-title="Logs for ${filename}">
+        <div class="p-3">
+          <div class="mb-2">
+            <small class="text-muted">Data Type: <strong>${dataType}</strong></small>
+          </div>
+          <pre class="bg-light p-3 rounded" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto; font-size: 12px;">${formattedLogs}</pre>
+        </div>
+      </div>
+    `);
+    
+    $(`#${modalId}`).iziModal({
+      width: 700,
+      overlayColor: 'rgba(0, 0, 0, 0.6)',
+      closeButton: true,
+      transitionIn: 'fadeInUp',
+      transitionOut: 'fadeOutDown',
+      zindex: 10000,
+      onOpening: function (modal) {
+        $(modal).attr("aria-hidden", "false");
+      },
+      onClosing: function (modal) {
+        // ✅ FIX: Remove focus before hiding to prevent aria-hidden warning
+        $(modal).find(':focus').blur();
+        $(document.activeElement).blur();
+        $(modal).attr("aria-hidden", "true");
+      },
+      onClosed: function (modal) {
+        $(modal).remove();
+      }
+    }).iziModal('open');
+  }
+
+  // Tab switching event handler
+  $('#history-tab').on('shown.bs.tab', function (e) {
+    // Initialize history table when history tab is shown
+    if (!historyTable) {
+      initializeHistoryTable();
+    } else {
+      // Refresh if already initialized
+      historyTable.ajax.reload(null, false);
+    }
+  });
+
+  // Refresh history button
+  $('#refresh-history').on('click', function() {
+    if (historyTable) {
+      historyTable.ajax.reload(null, false);
+      if (typeof iziToast !== 'undefined') {
+        showIziToast("success", "Upload history refreshed!");
+      }
+    }
+  });
+
+  // Initialize history table if history tab is active on page load
+  $(document).ready(function() {
+    if ($('#history-panel').hasClass('active')) {
+      initializeHistoryTable();
+    }
+  });
+
+</script>
+
+<style>
+/* Hide default DataTables processing indicators for history table */
+#historyTable_wrapper .dataTables_processing,
+#historyTable_wrapper .dt-processing {
+  display: none !important;
+}
+
+/* Ensure our custom loading indicator is properly positioned */
+#custom-history-loading {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1000 !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 8px;
+}
+
+/* Dark theme support for loading indicator */
+.dark-style #custom-history-loading {
+  background: rgba(40, 40, 40, 0.9) !important;
+}
+
+.dark-style #custom-history-loading .text-muted {
+  color: #b0b0b0 !important;
+}
+</style>

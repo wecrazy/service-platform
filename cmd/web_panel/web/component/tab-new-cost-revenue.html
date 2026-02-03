@@ -1,0 +1,299 @@
+<!-- ODOO MS Monitoring for Cost vs Revenue -->
+<!DOCTYPE html>
+
+<html lang="id" class="light-style layout-wide" dir="ltr" data-theme="theme-default"
+    data-assets-path="{{.GLOBAL_URL}}assets/" data-template="vertical-menu-template">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+
+    <title>Cost vs Revenue</title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{.APP_LOGO}}" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+        rel="stylesheet" />
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/css/fontawesome5.all.min.css" />
+    <script src="{{.GLOBAL_URL}}assets/vendor/js/fontawesome5.pro.min.js"></script>
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/fonts/flag-icons.css" />
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/css/rtl/core.css" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/css/rtl/theme-default.css"
+        class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/css/demo.css" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/typeahead-js/typeahead.css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/sweetalert2/sweetalert2.css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/css/highcharts.css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/select2/select2.css" />
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="{{.GLOBAL_URL}}assets/vendor/js/helpers.js"></script>
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+    <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
+    <script src="{{.GLOBAL_URL}}assets/vendor/js/template-customizer.js"></script>
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+    <script src="{{.GLOBAL_URL}}assets/js/config.js"></script>
+    <!-- jQuery -->
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/jquery/jquery.js"></script>
+    <!-- Bootstrap -->
+    <script src="{{.GLOBAL_URL}}assets/vendor/js/bootstrap.js"></script>
+    <!-- Global URL -->
+    <script>
+        // Pass globalURL to the JS file
+        window.webGlobalURL = "{{.GLOBAL_URL}}";
+    </script>
+</head>
+
+<body>
+    <!-- Content -->
+    <div class="m-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fad fa-chart-bar me-2"></i>
+                    Cost vs Revenue Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="row mb-3 g-2">
+                    <div class="col-md-2">
+                        <label for="select-year" class="form-label">Year</label>
+                        <select id="select-year" class="form-select">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="select-months" class="form-label">Months</label>
+                        <select id="select-months" class="form-select" multiple>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="select-company" class="form-label">Company</label>
+                        <select id="select-company" class="form-select" multiple>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary me-2" id="btn-apply-filter">
+                            <i class="fad fa-filter me-1"></i> Filter
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="loadYearlyChart()">
+                            <i class="fad fa-sync me-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <figure class="highcharts-figure mb-0">
+                    <div id="container-revenue-cost" class="highcharts-light" style="min-height: 500px;"></div>
+                    
+                    <!-- Collapsible Description -->
+                    <div class="text-center my-3">
+                        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#chartDescription" aria-expanded="false" aria-controls="chartDescription">
+                            <i class="fad fa-info-circle me-1"></i> How This Chart Works
+                        </button>
+                    </div>
+                    
+                    <div class="collapse" id="chartDescription">
+                        <div class="alert alert-info">
+                            <h6><i class="fad fa-info-circle me-2"></i>Chart Information:</h6>
+                            
+                            <p><strong>📊 Waterfall Visualization - Single Stacked Bar:</strong></p>
+                            <p class="mb-2">This chart shows a waterfall-style view from Revenue down to Gross Profit. Each month displays a single stacked bar starting from zero, building upward with revenue and profit, then showing potential gains if issues are resolved.</p>
+                            
+                            <p class="mt-3"><strong>Visual Indicators:</strong></p>
+                            <ul class="mb-2">
+                                <li><strong>Green solid line (left side):</strong> Revenue indicator - shows total revenue from base to top of revenue stack</li>
+                                <li><strong>Blue dashed line (right side):</strong> Gross Profit indicator - shows potential profit from revenue level to total stack height</li>
+                                <li><strong>Side labels:</strong> Revenue and Gross Profit values displayed as text boxes on the sides of each bar for easy reading</li>
+                            </ul>
+                            
+                            <p class="mt-3"><strong>Stack Components (Bottom to Top):</strong></p>
+                            <ol class="mb-2">
+                                <li><strong>Payroll - Cost to Technicians (Beige/Tan solid):</strong> Payments to technicians
+                                    <ul>
+                                        <li>Price: From ODOOMSFSParamPayment (param_type='Price') or default from config</li>
+                                        <li>Tickets: complete_wo IS NOT NULL AND sla_status='On Target Solved' AND (stage IN ('Done', 'Waiting For Verification', 'Closed', 'Solved', 'Solved Pending') OR stage='Pending')</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Profit (Cyan/Light blue solid):</strong> Net profit = Revenue - Payroll
+                                    <ul>
+                                        <li>This is the actual profit from all received work orders</li>
+                                        <li>Revenue is calculated from ALL tickets (no filters), using prices from InventoryProductTemplate</li>
+                                        <li>Represents total potential income from all work orders received</li>
+                                    </ul>
+                                </li>
+                                <li><strong>BA Lost (Red diagonal cross pattern):</strong> Lost revenue from EDC devices without photo proof or notes
+                                    <ul>
+                                        <li>Price: From config DefaultEDCLostFee per device</li>
+                                        <li>Source: BA Lost monthly tables (e.g., odoo_ms_ba_lost_sep2025)</li>
+                                        <li>Count: Distinct serialnumber where (link_foto IS NULL OR empty) AND (note_all IS NULL OR empty)</li>
+                                        <li>💡 Click to drill-down and see detailed device information (serial number, vendor, location, etc.)</li>
+                                        <li>💡 Represents potential revenue loss from unresolved EDC device issues</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Over SLA (Red diagonal pattern):</strong> Potential lost revenue from overdue tickets
+                                    <ul>
+                                        <li>Price: Same as Revenue (from InventoryProductTemplate)</li>
+                                        <li>Tickets: sla_status IN ('Overdue (New)', 'Overdue (Visited)')</li>
+                                        <li>💡 Click to drill-down and see SLA Status breakdown</li>
+                                        <li>💡 If these are completed on time, this improves service quality</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Cost of Penalties (Gray horizontal pattern):</strong> Unvisited tickets that may result in penalties
+                                    <ul>
+                                        <li>Price: Same as Revenue (from InventoryProductTemplate)</li>
+                                        <li>Tickets: stage = 'New' AND sla_status = 'Overdue (New)' AND complete_wo IS NULL</li>
+                                        <li>💡 If these are visited/completed promptly, they contribute to revenue</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                            
+                            <p class="mt-3"><strong>📈 Key Metrics:</strong></p>
+                            <ul class="mb-2">
+                                <li><strong>Revenue (Green line - Left side):</strong> Total potential income from ALL tickets received
+                                    <ul>
+                                        <li>Displayed as green solid vertical line on the left side of each bar</li>
+                                        <li>Shows the total height from base (0) to top of Profit segment</li>
+                                        <li>Includes all work orders regardless of completion status</li>
+                                        <li>Label shows value in Billion (B), Million (M), or Thousand (K) format</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Gross Profit (Blue dashed line - Right side):</strong> Maximum potential profit
+                                    <ul>
+                                        <li>Formula: <code>Profit + BA Lost + Over SLA + Cost of Penalties</code></li>
+                                        <li>Displayed as blue dashed vertical line on the right side of each bar</li>
+                                        <li>Shows potential additional profit if all operational issues are resolved</li>
+                                        <li>The gap between Revenue and Gross Profit represents improvement opportunities</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            
+                            <p class="mt-3"><strong>🎯 Business Interpretation:</strong></p>
+                            <ul class="mb-2">
+                                <li><strong>Current State:</strong> The "Profit" segment (cyan) shows what you're actually earning now from all tickets received minus technician costs</li>
+                                <li><strong>Revenue Context:</strong> Revenue represents ALL tickets received (total potential income), not just completed ones
+                                    <ul>
+                                        <li>This gives a realistic view of total workload and potential income</li>
+                                        <li>Profit = Revenue (all tickets) - Payroll (completed tickets only)</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Opportunity:</strong> The upper segments (BA Lost, Over SLA, Penalties) show potential additional profit if operational issues are fixed:
+                                    <ul>
+                                        <li>Resolve EDC device issues with proper documentation (BA Lost)</li>
+                                        <li>Meet SLA targets (Over SLA)</li>
+                                        <li>Complete new tickets promptly (Penalties)</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Goal:</strong> Minimize the gap between Revenue (green line) and Gross Profit (blue dashed line) through operational excellence</li>
+                                <li><strong>Visual Guide:</strong> Side-positioned lines and labels make it easy to compare Revenue vs Gross Profit across months</li>
+                            </ul>
+                            
+                            <p class="mt-3"><strong>Interactive Features:</strong></p>
+                            <ul class="mb-2">
+                                <li><strong>Tooltips:</strong> Hover over the bar to see complete financial breakdown
+                                    <ul>
+                                        <li>Shows ticket/device counts for each category</li>
+                                        <li>BA Lost shows "devices" count (distinct serial numbers)</li>
+                                        <li>Other categories show "tickets" count</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Drill-down:</strong> Click any segment to see detailed breakdown with exact prices
+                                    <ul>
+                                        <li><strong>BA Lost drill-down:</strong> Shows detailed device information table (Serial Number, Vendor, Location, Merk, EDC Type, Device, Status EDC, Head, SP, Region, Price)</li>
+                                        <li><strong>Over SLA drill-down:</strong> Shows breakdown by company, task type, and SLA Status (Overdue New/Visited)</li>
+                                        <li><strong>Other categories:</strong> Shows breakdown by company and task type with counts and totals</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Pattern Fills:</strong> Visual patterns help distinguish between different cost categories
+                                    <ul>
+                                        <li>Solid colors = actual financial metrics (Payroll tan/beige, Profit cyan/light blue)</li>
+                                        <li>Red diagonal cross pattern = BA Lost (potential device loss revenue)</li>
+                                        <li>Red diagonal pattern = Over SLA (service quality issues)</li>
+                                        <li>Gray horizontal pattern = Cost of Penalties (unvisited tickets)</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Dual Y-Axes:</strong> Left axis for amounts (Rp), Right axis for Gross Profit reference</li>
+                            </ul>
+                            
+                            <p class="mt-3"><strong>Filters:</strong></p>
+                            <ul class="mb-2">
+                                <li><strong>Year:</strong> Select any available year to view historical trends</li>
+                                <li><strong>Months:</strong> Optionally select specific months (if empty, shows all available months)</li>
+                                <li><strong>Company:</strong> Filter by company to analyze specific client performance</li>
+                                <li>Click "Apply Filter" to update the chart with selected criteria</li>
+                            </ul>
+                            
+                            <p class="mt-3 mb-0"><strong>💡 Key Insights:</strong></p>
+                            <ul class="mb-0">
+                                <li>Chart starts from zero and builds upward - Revenue includes ALL tickets received, not just completed</li>
+                                <li>Green line (left) = Revenue indicator showing total potential income from all work orders</li>
+                                <li>Blue dashed line (right) = Gross Profit showing maximum potential if all issues resolved</li>
+                                <li>Solid colors = actual financial status (Payroll cost tan/beige for completed work, Profit earned cyan/light blue from all tickets)</li>
+                                <li>Patterns = operational issues to address (BA Lost red cross, Over SLA red diagonal, Penalties gray horizontal)</li>
+                                <li>Larger gap between green and blue lines = more improvement opportunity</li>
+                                <li>Stack order (bottom→top): Payroll → Profit → BA Lost → Over SLA → Penalties</li>
+                                <li>Revenue counts ALL tickets, Payroll counts only completed tickets - this is why Profit can vary</li>
+                                <li>BA Lost counts distinct EDC devices from BA Lost table, not tickets</li>
+                                <li>Number formatting: B (Billion), M (Million), K (Thousand) for easy reading</li>
+                                <li>Export options: PNG, PDF, CSV, Excel available from menu (top right)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </figure>
+            </div>
+        </div>
+    </div>
+
+    <!-- / Content -->
+
+    <!-- Core JS -->
+    <!-- build:js assets/vendor/js/core.js -->
+
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/popper/popper.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/hammer/hammer.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/i18n/i18n.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/typeahead-js/typeahead.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/js/menu.js"></script>
+
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/highcharts.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/pattern-fill.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/accessibility.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/exporting.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/export-data.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/annotations.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/select2/select2.js"></script>
+
+    <!-- Main JS -->
+    <script src="{{.GLOBAL_URL}}assets/js/main.js"></script>
+
+    <!-- Page JS -->
+    <script src="{{.GLOBAL_URL}}assets/self/odooms_monitoring_new_costrevenue_v2.js?_=lastUpdate12112025_v2.0.0"></script>
+</body>
+
+</html>

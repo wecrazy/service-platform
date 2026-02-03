@@ -1,0 +1,123 @@
+<div class="my-4">
+  <div class="row g-4">
+    <!-- Welcome + Clock + Image Card -->
+    <div class="col-12 col-md-6">
+      <div class="card shadow rounded-3 h-100">
+        <div class="row g-0 align-items-center">
+          <div class="col-7">
+            <div class="card-body">
+              <h5 class="card-title text-primary" id="greeting" class="mt-2"></h5>
+              <div class="mb-2" data-i18n="DASHBOARD_WELCOME">
+                Selamat datang! Kami senang Anda bergabung 😊. Dasbor ini adalah pusat kendali Anda, menyediakan akses mudah ke semua informasi dan layanan yang relevan. Silakan jelajahi berbagai fitur yang kami sediakan untuk mengoptimalkan pengalaman Anda.
+              </div>
+            </div>
+          </div>
+          <div class="col-5 text-center">
+            <div class="p-2 mt-5">
+              <img src="/assets/img/illustrations/man-with-laptop-light.png" class="img-fluid mb-2" height="80"
+                alt="Dashboard Img" data-app-dark-img="/assets/img/illustrations/man-with-laptop-dark.png"
+                data-app-light-img="/assets/img/illustrations/man-with-laptop-light.png" />
+              <div id="jakarta-clock" style="font-size: 2.5rem; font-weight: bold;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weather Card -->
+    <div class="col-12 col-md-6">
+      <div class="card shadow rounded-3 h-100">
+        <div class="card-body text-center">
+          <h6 class="mb-3">Current Weather (Jakarta)</h6>
+          <a class="weatherwidget-io" href="https://forecast7.com/en/n6d21106d85/jakarta/" data-label_1="JAKARTA"
+            data-label_2="WEATHER" data-theme="original">
+            JAKARTA WEATHER
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const { DateTime } = luxon;
+
+  function updateJakartaClock() {
+    const now = DateTime.now().setZone("Asia/Jakarta");
+    document.getElementById("jakarta-clock").textContent =
+      now.toFormat("HH:mm:ss");
+  }
+  // Language map for greetings
+  const greetings = {
+    en: {
+      earlyMorning: "🌄 Good Early Morning,",      // e.g., 0–5
+      morning: "🌅 Good Morning,",                 // 5–11
+      afternoon: "☀️ Good Afternoon,",             // 11–15
+      lateAfternoon: "🌇 Good Late Afternoon,",    // 15–18
+      evening: "🌙 Good Evening,",                 // 18–24
+      welcome: "🎉 Welcome,",
+    },
+    id: {
+      earlyMorning: "🌄 Selamat Dini Hari,",       // 0–5
+      morning: "🌅 Selamat Pagi,",                 // 5–11
+      afternoon: "☀️ Selamat Siang,",              // 11–15
+      lateAfternoon: "🌇 Selamat Sore,",           // 15–18
+      evening: "🌙 Selamat Malam,",                // 18–24
+      welcome: "🎉 Selamat Datang,",
+    },
+    // Add more languages as needed
+  };
+
+  // Set your language and theme here
+  const userLang = document.documentElement.getAttribute('lang') || "en"; // e.g., 'en', 'id'
+
+  function updateGreeting() {
+    const hour = DateTime.now().setZone("Asia/Jakarta").hour;
+    const lang = greetings[userLang] ? userLang : "en";
+
+    let greeting = greetings[lang].welcome;
+
+    if (hour >= 0 && hour < 5) {
+      greeting = greetings[lang].earlyMorning;
+    } else if (hour < 11) {
+      greeting = greetings[lang].morning;
+    } else if (hour < 15) {
+      greeting = greetings[lang].afternoon;
+    } else if (hour < 18) {
+      greeting = greetings[lang].lateAfternoon;
+    } else {
+      greeting = greetings[lang].evening;
+    }
+
+    greeting += " {{.fullname}}";
+
+    document.getElementById("greeting").textContent = greeting;
+  }
+
+  // Set weather widget theme dynamically
+  document.addEventListener("DOMContentLoaded", function () {
+    const isDarkStyle =
+      typeof window.isDarkStyle === "boolean" ? window.isDarkStyle : false;
+    const weatherTheme = isDarkStyle ? "dark" : "original";
+
+    const weatherWidget = document.querySelector(".weatherwidget-io");
+    if (weatherWidget) {
+      weatherWidget.setAttribute("data-theme", weatherTheme);
+    }
+  });
+
+  setInterval(updateJakartaClock, 1000);
+  updateJakartaClock();
+  updateGreeting();
+
+  !(function (d, s, id) {
+    var js,
+      fjs = d.getElementsByTagName(s)[0];
+    if (!d.getElementById(id)) {
+      js = d.createElement(s);
+      js.id = id;
+      js.src = "https://weatherwidget.io/js/widget.min.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }
+  })(document, "script", "weatherwidget-io-js");
+</script>

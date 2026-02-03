@@ -1,0 +1,325 @@
+<!-- Services -->
+<div class="col-12">
+    <div class="card mb-4">
+        <div class="d-flex align-items-center justify-content-between card-header">
+            <h5 class="m-0 p-0">System Services</h5>
+            <div>
+                <button 
+                    class="btn btn-info m-1" 
+                    id="view-log-btn"
+                    type="button"
+                    onclick="getSystemStat()"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalSysLog"><i class='bx bx-server' ></i></button>
+                <button 
+                    class="btn btn-info m-1" 
+                    id="view-log-btn"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#view-log-modal">View Log</button>
+
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="card-datatable table-responsive">
+                <table class="dt_system_services table border-top">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th><i class='bx bx-refresh'></i></th>
+                      <th>unit</th>
+                      <th>load</th>
+                      <th>active</th>
+                      <th>sub-process</th>
+                      <th>description</th>
+                    </tr>
+                  </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /Services -->
+<!-- Modal Center Download LOG -->
+<div class="modal modal-xl fade" id="modalSysLog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSysLogTitle">Server Status</h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body" >
+                <div id="system-log"></div>
+                <div>
+                    <div class="card-datatable table-responsive">
+                        <table class="dt_system_server_status table border-top">
+                          <thead>
+                            <tr>
+                                <th></th>
+                                <th>PID</th>
+                                <th>USER</th>
+                                <th>PR</th>
+                                <th>NI</th>
+                                <th>VIRT</th>
+                                <th>RES</th>
+                                <th>SHR</th>
+                                <th>S</th>
+                                <th>%CPU</th>
+                                <th>%MEM</th>
+                                <th>TIME+</th>
+                                <th>COMMAND</th>
+                            </tr>
+                          </thead>
+                        </table>
+                    </div>
+                </div>
+                <!-- Populated in JS -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+                <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /Modal Center Download LOG -->
+<!-- View LOG File Modal-->
+<div class="modal modal-xl fade" id="view-log-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">View Log</h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="view-log-modal-body">
+                <h5>web_system_log</h5>
+                <div class="card-datatable table-responsive">
+                    <table class="dt_web_system_log table border-top">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          <th></th>
+                          <th>File Name</th>
+                          <th>Size</th>
+                          <th>Modified Time</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-body" id="view-log-modal-body">
+                <h5>FDS_system_log</h5>
+                <div class="card-datatable table-responsive">
+                    <table class="dt_fds_system_log table border-top">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          <th></th>
+                          <th>File Name</th>
+                          <th>Size</th>
+                          <th>Modified Time</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-body" id="view-log-modal-body">
+                <h5>Uplink_system_log</h5>
+                <div class="card-datatable table-responsive">
+                    <table class="dt_uplink_system_log table border-top">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          <th></th>
+                          <th>File Name</th>
+                          <th>Size</th>
+                          <th>Modified Time</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-body" id="view-log-modal-body">
+                <h5>trx_request_system_log</h5>
+                <div class="card-datatable table-responsive">
+                    <table class="dt_trx_request_system_log table border-top">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          <th></th>
+                          <th>File Name</th>
+                          <th>Size</th>
+                          <th>Modified Time</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-body" id="view-log-modal-body">
+                <h5>settlement_system_log</h5>
+                <div class="card-datatable table-responsive">
+                    <table class="dt_settlement_system_log table border-top">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          <th></th>
+                          <th>File Name</th>
+                          <th>Size</th>
+                          <th>Modified Time</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-body" id="view-log-modal-body">
+                <h5>FDS ML SYSTEM LOG</h5>
+                <div class="card-datatable table-responsive">
+                    <table class="dt_fds_ml_system_log table border-top">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          <th></th>
+                          <th>File Name</th>
+                          <th>Size</th>
+                          <th>Modified Time</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+                <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /View LOG File Modal-->
+
+<script>
+    function checkStatus(name)  {
+    var url = "/status/service?service="+name
+    // Performing the GET request using Fetch API
+    fetch(url)
+        .then(response => {
+        // Checking if the response is successful (status code 200)
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        // Parsing the response as JSON
+        return response.json();
+        })
+        .then(data => {
+        // Checking if the 'msg' key exists in the received JSON data
+        if ('msg' in data) {
+            console.log("Message:", data.msg);
+            if (data.msg != "ok") {
+                const spanElement = document.getElementById(name);
+                // console.log("Class list:", spanElement.classList);
+// Change the class from 'badge-bg-success' to 'badge-bg-secondary'
+                spanElement.classList.remove('text-bg-success');
+                spanElement.classList.add('text-bg-secondary');
+                spanElement.innerHTML = 'Service Stopped <i class="bx bx-stop-circle"></i>';
+            } else {
+                const spanElement = document.getElementById(name);
+                spanElement.classList.remove('text-bg-secondary');
+                spanElement.classList.add('text-bg-success');
+                spanElement.innerHTML = "Service Running <i class='bx bx-cog bx-spin' ></i>";
+                
+            }
+            // You can perform further operations with the 'msg' here
+        } else {
+            console.log("No 'msg' key found in the received JSON data");
+        }
+        })
+        .catch(error => {
+        // Handling any errors that occurred during the request
+        console.error('There was a problem with the request:', error);
+        });
+    }
+    function settingService(name , status = null)  {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Do you want to stop this service?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, stop it!'
+        }).then((result) => {
+            // If user confirms
+            if (result.isConfirmed) {
+                var nameInput = name+"Input";
+                const inputnya = document.getElementById(nameInput);
+                
+                const spanElement = document.getElementById(name);
+                spanElement.innerHTML = "Please Wait.... <i class='bx bx-loader-circle bx-spin' ></i>";
+                if(status == null){
+                    if (inputnya.checked) {
+                        var url = "/start/service?service="+name
+                        // Call a function or perform actions when checkbox is checked
+                    } else {
+                        var url = "/stop/service?service="+name
+                        // Call a function or perform actions when checkbox is not checked
+                    }
+                }else{
+                    if (status === 'on') {
+                        var url = "/start/service?service="+name
+                        // Call a function or perform actions when checkbox is checked
+                    } else {
+                        var url = "/stop/service?service="+name
+                        // Call a function or perform actions when checkbox is not checked
+                    }
+
+                }
+                // return;
+            
+                // Performing the GET request using Fetch API
+                fetch(url)
+                .then(response => {
+                // Checking if the response is successful (status code 200)
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                    return response.json();// Parsing the response as JSON
+                })
+                .then(data => {
+                    checkStatus(name);
+                })
+                .catch(error => {
+                    // Handling any errors that occurred during the request
+                    console.error('There was a problem with the request:', error);
+                });
+            }
+        });
+    }
+        // Call checkStatus with the appropriate service name
+        checkStatus("ach_trx");     
+        checkStatus("uplink_as"); 
+</script>
+<script src="../assets/js/tab-settings-forms-sliders.js"></script>
+<script src="../assets/js/tab-settings.js"></script>

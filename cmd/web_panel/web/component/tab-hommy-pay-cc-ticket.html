@@ -1,0 +1,52 @@
+<div id="dataTicket" class="accordion accordion-popout">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-secondary text-white" data-bs-toggle="collapse"
+                    data-bs-target="#dataTicket-1" aria-controls="dataTicket-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                        <i class="fad fa-ballot-check me-2"></i>
+                        Datatable
+                    </div>
+                </button>
+            </div>
+
+            <!-- RIGHT: ..... -->
+            <div class="d-flex align-items-center ms-3 me-3 flex-wrap justify-content-end">
+                <div class="last-update-ticket-data text-muted me-3" style="min-width: 150px;">
+                    <!-- Last Update -->
+                </div>
+
+                <div class="dropdown mb-2 me-3 mt-2">
+                    <button class="btn btn-success excel-report dropdown-toggle disabled" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="far fa-file-spreadsheet me-2"></i>
+                        Report
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"
+                                onclick="downloadExcelReport('{{.userid}}','{{.REPORT_ALL}}', 'ALL')">All
+                                Data</a></li>
+                        <li><a class="dropdown-item" href="#"
+                                onclick="downloadExcelReport('{{.userid}}','{{.REPORT_DATA_FILTERED}}', 'Filtered')">Data
+                                <b>(Filtered)</b></a></li>
+                    </ul>
+                </div>
+
+                <button type="button" class="btn btn-secondary btn-refresh-data-ticket"
+                    onclick="refreshData('{{.REFRESH_TABLE_DATA_TICKET}}', 'last-update-ticket-data', 'dt_data_ticket', 'btn-refresh-data-ticket')">
+                    <i class="far fa-sync-alt me-2"></i>
+                    Refresh
+                </button>
+            </div>
+
+        </div>
+
+        <div id="dataTicket-1" class="accordion-collapse collapse show" data-bs-parent="#dataTicket">
+            <div class="accordion-body mt-3">
+                {{.TABLE_DATA_TICKET}}
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,74 @@
+<script>
+    window.EndpointSendIndividualPayslip = '{{.SEND_INDIVIDUAL_PAYSLIP}}';
+    window.EndpointSendAllPayslip = '{{.SEND_ALL_PAYSLIP}}';
+    window.EndpointGetPayslipWhatsAppConversation = '{{.GET_PAYSLIP_WHATSAPP_CONVERSATION}}';
+    window.EndpointRegeneratePayslipTechnicianEDC = '{{.REGENERATE_PAYSLIP_TECHNICIAN_EDC}}';
+    window.EndpointRegeneratePayslipTechnicianATM = '{{.REGENERATE_PAYSLIP_TECHNICIAN_ATM}}';
+</script>
+<div id="dataSlipGajiTeknisiEDC" class="accordion accordion-popout mb-3">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-success text-white" data-bs-toggle="collapse"
+                    data-bs-target="#dataSlipGajiTeknisiEDC-1" aria-controls="dataSlipGajiTeknisiEDC-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                         <i class="fad fa-mobile-android-alt me-2"></i>
+                        Manage Service - EDC
+                    </div>
+                </button>
+            </div>
+
+            <!-- RIGHT: ..... -->
+            <div class="d-flex align-items-center ms-3 me-3 flex-wrap justify-content-end">
+                <button disabled type="button" class="btn btn-success btn-sent-all-payslip-technician-edc me-2"
+                    onclick="sentAllPayslipTechnicianEDC('{{.SEND_ALL_PAYSLIP}}', 'last_updated_data_slip_gaji_teknisi_edc', 'dt_slip_gaji_teknisi_edc', 'btn-sent-all-payslip-technician-edc')">
+                    <i class="far fa-paper-plane me-2"></i>
+                    Sent All Payslip
+                </button>
+            </div>
+
+        </div>
+
+        <div id="dataSlipGajiTeknisiEDC-1" class="accordion-collapse collapse show" data-bs-parent="#dataSlipGajiTeknisiEDC">
+            <div class="accordion-body mt-3">
+                <div class="last_updated_data_slip_gaji_teknisi_edc mb-3 p-3 bg-light rounded"></div>
+                {{.TABLE_SLIP_GAJI_TEKNISI_EDC}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="dataSlipGajiTeknisiATM" class="accordion accordion-popout mb-3">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-danger text-white" data-bs-toggle="collapse"
+                    data-bs-target="#dataSlipGajiTeknisiATM-1" aria-controls="dataSlipGajiTeknisiATM-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                         <i class="fad fa-quidditch me-2"></i>
+                        Manage Service - ATM
+                    </div>
+                </button>
+            </div>
+
+            <!-- RIGHT: ..... -->
+            <div class="d-flex align-items-center ms-3 me-3 flex-wrap justify-content-end">
+                <button disabled type="button" class="btn btn-danger btn-sent-all-payslip-technician-atm me-2"
+                    onclick="sentAllPayslipTechnicianATM('{{.SEND_ALL_PAYSLIP}}', 'last_updated_data_slip_gaji_teknisi_atm', 'dt_slip_gaji_teknisi_atm', 'btn-sent-all-payslip-technician-atm')">
+                    <i class="far fa-paper-plane me-2"></i>
+                    Sent All Payslip
+                </button>
+            </div>
+
+        </div>
+
+        <div id="dataSlipGajiTeknisiATM-1" class="accordion-collapse collapse show" data-bs-parent="#dataSlipGajiTeknisiATM">
+            <div class="accordion-body mt-3">
+                <div class="last_updated_data_slip_gaji_teknisi_atm mb-3 p-3 bg-light rounded"></div>
+                {{.TABLE_SLIP_GAJI_TEKNISI_ATM}}
+            </div>
+        </div>
+    </div>
+</div>

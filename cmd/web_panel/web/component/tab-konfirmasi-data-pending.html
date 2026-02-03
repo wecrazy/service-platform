@@ -1,0 +1,207 @@
+{{.TABLE_KONFIRMASI_DATA_PENGERJAAN_PENDING}}
+
+<div class="userData" data-user-email="{{.email}}" style="display: none;">
+    <!-- Hidden -->
+</div>
+
+<script>
+    $(document).ready(async function () {
+        await hideUtilsButton();
+    });
+
+    async function hideUtilsButton() {
+        $("button").each(function () {
+            if ($(this).find("i.bx.bx-filter-alt").length) {
+                $(this).hide(); // Hide filter button
+            }
+        });
+
+        // Remove button scrolls
+        $("button.dt-button.btn-dark").each(function () {
+            if ($(this).find("i.bx-collapse-horizontal").length) {
+                $(this).hide();
+            }
+        });
+
+        $("button.dt-button.btn-dark").each(function () {
+            if ($(this).find("i.bx-expand-horizontal").length) {
+                $(this).hide();
+            }
+        });
+
+        $("button.dt-button.btn-label-dark").each(function () {
+            if ($(this).find("i.bx-expand-vertical").length) {
+                $(this).hide();
+            }
+        });
+
+        $("button.dt-button.btn-label-dark").each(function () {
+            if ($(this).find("i.bx-collapse-vertical").length) {
+                $(this).hide();
+            }
+        });
+    }
+
+    // Lock Row Dt
+    $(document).ready(function () {
+        let wsProtocolLockRow = window.location.protocol === "https:" ? "wss:" : "ws:";
+        let socketUrlLockRow = `${wsProtocolLockRow}//${window.location.host}/ws-lock`;
+        let socketLockRow;
+
+        const userID = "{{.userid}}"; // Replace dynamically
+        const userName = "{{.username}}"; // Current logged-in user
+
+        let lockTimeOutTime = 30 * 60 * 1000; // 30 minutes
+        let lockedRows = new Set();
+        let lockTimeouts = new Map();
+        let lockedRowsInfo = new Map();
+
+        // Function to initialize WebSocket with auto-reconnect
+        function initWebSocketLockRow() {
+            socketLockRow = new WebSocket(socketUrlLockRow);
+
+            socketLockRow.onopen = function () {
+                console.log("✅ WebSocket connection established.");
+            };
+
+            socketLockRow.onmessage = function (event) {
+                try {
+                    const msg = JSON.parse(event.data);
+                    console.log("📩 Received WebSocket message:", msg);
+
+                    let table = $('.dt_teknisi_pengerjaan_pending').DataTable(); // Use class selector
+
+                    if (msg.action === "lock") {
+                        lockedRows.add(msg.row_id);
+                        lockedRowsInfo.set(msg.row_id, msg.user_name);
+
+                        $('.dt_teknisi_pengerjaan_pending tbody tr').each(function () {
+                            let rowData = table.row($(this)).data();
+                            if (rowData && rowData.id === msg.row_id) {
+                                $(this).addClass("row-locked");
+                            }
+                        });
+
+                        autoUnlockRow(msg.row_id);
+                    } else if (msg.action === "unlock") {
+                        unlockRow(msg.row_id);
+                    }
+                } catch (error) {
+                    console.error("❌ Error processing WebSocket message:", error);
+                }
+            };
+
+            socketLockRow.onclose = function () {
+                console.warn("⚠️ WebSocket connection closed. Reconnecting...");
+                setTimeout(initWebSocketLockRow, 3000); // Reconnect after 3 seconds
+            };
+
+            socketLockRow.onerror = function (error) {
+                console.error("❌ WebSocket encountered an error:", error);
+            };
+        }
+
+        // Initialize WebSocket on page load
+        initWebSocketLockRow();
+
+        // Function to send lock message
+        function sendLockMessage(rowId) {
+            if (socketLockRow.readyState === WebSocket.OPEN) {
+                socketLockRow.send(JSON.stringify({
+                    action: "lock",
+                    row_id: rowId,
+                    user_id: userID,
+                    user_name: userName,
+                    dt_class: "dt_teknisi_pengerjaan_pending"
+                }));
+            } else {
+                console.error("🚫 WebSocket is not connected.");
+            }
+        }
+
+        // Function to send unlock message
+        function sendUnlockMessage(rowId) {
+            if (socketLockRow.readyState === WebSocket.OPEN) {
+                socketLockRow.send(JSON.stringify({
+                    action: "unlock",
+                    row_id: rowId,
+                    user_id: userID,
+                    user_name: userName,
+                    dt_class: "dt_teknisi_pengerjaan_pending"
+                }));
+            } else {
+                console.error("🚫 WebSocket is not connected.");
+            }
+        }
+
+        // Function to auto-unlock row after timeout
+        function autoUnlockRow(rowId) {
+            if (lockTimeouts.has(rowId)) {
+                clearTimeout(lockTimeouts.get(rowId));
+            }
+
+            let unlockTimer = setTimeout(() => {
+                console.log("🔓 Auto-unlocking row ID:", rowId);
+                sendUnlockMessage(rowId);
+                unlockRow(rowId);
+            }, lockTimeOutTime);
+
+            lockTimeouts.set(rowId, unlockTimer);
+        }
+
+        // Function to unlock a row
+        function unlockRow(rowId) {
+            lockedRows.delete(rowId);
+            lockedRowsInfo.delete(rowId);
+            lockTimeouts.delete(rowId);
+
+            let table = $('.dt_teknisi_pengerjaan_pending').DataTable();
+            $('.dt_teknisi_pengerjaan_pending tbody tr').each(function () {
+                let rowData = table.row($(this)).data();
+                if (rowData && rowData.id === rowId) {
+                    $(this).removeClass("row-locked");
+                }
+            });
+        }
+
+        // Prevent locked row from opening modal
+        $('.dt_teknisi_pengerjaan_pending tbody').on('click', 'td.control', function () {
+            let table = $('.dt_teknisi_pengerjaan_pending').DataTable();
+            let rowData = table.row($(this).closest('tr')).data();
+
+            if (!rowData) return;
+
+            if (lockedRows.has(rowData.id_task)) {
+                let lockedBy = lockedRowsInfo.get(rowData.id_task) || "user lainnya";
+
+                Swal.fire({
+                    icon: "",
+                    title: '<span style="color: red; font-size: 24px; font-weight: bold;">⚠️ PERHATIAN !!</span>',
+                    text: `Data sementara diperiksa oleh ${lockedBy}`,
+                    confirmButtonColor: "#d33",
+                    confirmButtonText: "Baik, Saya Mengerti"
+                });
+
+                return;
+            }
+
+            console.log("🔒 Locking row ID:", rowData.id_task);
+            sendLockMessage(rowData.id_task);
+            $('.dt_teknisi_pengerjaan_pending').data('lockedRowId', rowData.id_task);
+            $('#detailsModal').modal('show');
+        });
+
+        // Detect modal close and unlock row
+        $(document).on('hidden.bs.modal', '.modal', function () {
+            let lockedRowId = $('.dt_teknisi_pengerjaan_pending').data('lockedRowId');
+            if (!lockedRowId) return;
+
+            console.log("🔓 Unlocking row ID:", lockedRowId);
+            sendUnlockMessage(lockedRowId);
+            unlockRow(lockedRowId);
+
+            $('.dt_teknisi_pengerjaan_pending').removeData('lockedRowId');
+        });
+    });
+
+</script>

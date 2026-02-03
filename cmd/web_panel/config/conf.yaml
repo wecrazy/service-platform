@@ -1,0 +1,36 @@
+# In production mode, you just use: 
+# 1) git pull origin main
+#  or
+# 2) git fetch origin main && sudo git reset --hard origin/main => R E C O M M E N D E D ✅
+# then run:
+# go build
+# sudo systemctl restart WebPanel
+
+# If Database being migrated, you need to remove table:
+# - data_ticket_monitoring
+# - wa_phone_users
+# - roles
+# - role_privileges
+# - web_app_config
+# - features
+# - admins => if there are existing data dont delete this tb | If you want to remove this then delete the tb: 
+#     1) wa_contact_infos
+#     2) wa_chat_messages
+#     3) wa_group_participants
+#     4) wa_conversations
+#     5) wa_media_files
+#     6) wa_message_delivery_statuses
+# DROP TABLE roles, role_privileges, web_app_config, features, wa_phone_users;
+
+# Remove All SP !
+# DROP TABLE sp_whatsapp_message, sp_stock_opname_whatsapp_message;
+# DROP TABLE technician_got_sp, spl_got_sp, sac_got_sp;
+
+# VM Internal MW Speaker
+# IP: 10.110.8.22
+# PORT WebPanel: 2220
+
+# VM ODOO Filestore New
+# IP: 192.110.11.21
+
+CONFIG_MODE: "dev" # dev | prod

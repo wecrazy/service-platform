@@ -1,0 +1,26 @@
+<div id="appConfigurationHTML" class="accordion accordion-popout mb-4">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-label-danger" data-bs-toggle="collapse"
+                    data-bs-target="#appConfigurationHTML-1" aria-controls="appConfigurationHTML-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                        <i class="fad fa-cog me-2"></i>
+                        Apps
+                    </div>
+                </button>
+            </div>
+
+            <div class="d-flex align-items-center ms-3 me-3 flex-wrap justify-content-end">
+                <!--  -->
+            </div>
+        </div>
+
+        <div id="appConfigurationHTML-1" class="accordion-collapse collapse show" data-bs-parent="#appConfigurationHTML">
+            <div class="accordion-body mt-3">
+                {{.TABLE_APP_CONFIGURATION}}
+            </div>
+        </div>
+    </div>
+</div>

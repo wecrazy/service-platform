@@ -1,0 +1,205 @@
+<!-- WhatsApp Chat Area Component -->
+{{if .contact_id}}
+<div class="chat-history-header border-bottom p-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex overflow-hidden align-items-center">
+      <i class="bx bx-menu bx-sm cursor-pointer d-lg-none me-2" data-bs-toggle="sidebar" data-overlay
+        data-target="#app-chat-contacts"></i>
+      <div class="flex-shrink-0 avatar {{if .contact.is_online}}avatar-online{{else}}avatar-offline{{end}}">
+        <img src="{{.contact.avatar}}" alt="{{.contact.name}}" class="rounded-circle"
+          data-bs-toggle="sidebar" data-overlay data-target="#app-chat-sidebar-right" />
+      </div>
+      <div class="chat-contact-info flex-grow-1 ms-3">
+        <h6 class="m-0">{{.contact.name}}</h6>
+        <small class="user-status text-muted">
+          {{if .contact.is_online}}
+            <i class="bx bx-circle text-success me-1" style="font-size: 8px;"></i>Online
+          {{else}}
+            {{if .contact.last_seen}}Last seen {{.contact.last_seen}}{{else}}Offline{{end}}
+          {{end}}
+        </small>
+      </div>
+    </div>
+    <div class="d-flex align-items-center">
+      <i class="bx bx-phone-call cursor-pointer d-sm-block d-none me-3" title="Voice call"></i>
+      <i class="bx bx-video cursor-pointer d-sm-block d-none me-3" title="Video call"></i>
+      <i class="bx bx-search cursor-pointer d-sm-block d-none me-3" title="Search messages"></i>
+      <div class="dropdown">
+        <i class="bx bx-dots-vertical-rounded cursor-pointer" id="chat-header-actions" data-bs-toggle="dropdown"
+          aria-haspopup="true" aria-expanded="false">
+        </i>
+        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="chat-header-actions">
+          <a class="dropdown-item" href="javascript:void(0);">View Contact</a>
+          <a class="dropdown-item" href="javascript:void(0);">Mute Notifications</a>
+          <a class="dropdown-item" href="javascript:void(0);">Block Contact</a>
+          <a class="dropdown-item" href="javascript:void(0);">Clear Chat</a>
+          <a class="dropdown-item" href="javascript:void(0);">Export Chat</a>
+          <a class="dropdown-item text-danger" href="javascript:void(0);">Delete Chat</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="chat-history-body bg-body perfect-scrollbar" style="height: calc(100vh - 250px); overflow-y: auto;">
+  <ul class="list-unstyled chat-history mb-0" id="chat-messages">
+    {{range .messages}}
+    <li class="chat-message {{if .is_outgoing}}chat-message-right{{end}}" data-message-id="{{.id}}">
+      <div class="d-flex overflow-hidden">
+        {{if not .is_outgoing}}
+        <div class="user-avatar flex-shrink-0 me-3">
+          <div class="avatar avatar-sm">
+            <img src="{{$.contact.avatar}}" alt="{{$.contact.name}}" class="rounded-circle" />
+          </div>
+        </div>
+        {{end}}
+        <div class="chat-message-wrapper flex-grow-1">
+          <div class="chat-message-text">
+            {{if eq .message_type "text"}}
+              <p class="mb-0">{{.message}}</p>
+            {{else if eq .message_type "image"}}
+              {{if .media_url}}
+              <div class="media-message">
+                <img src="{{.media_url}}" alt="{{.media_filename}}" class="img-fluid rounded" style="max-width: 200px; cursor: pointer;" onclick="showImageModal('{{.media_url}}', '{{.media_filename}}')" />
+                {{if .message}}
+                <p class="mb-0 mt-2">{{.message}}</p>
+                {{end}}
+              </div>
+              {{else}}
+              <p class="mb-0 text-muted"><i class="bx bx-image me-1"></i>Image</p>
+              {{end}}
+            {{else if eq .message_type "video"}}
+              {{if .media_url}}
+              <div class="media-message">
+                <video controls class="img-fluid rounded" style="max-width: 250px;">
+                  <source src="{{.media_url}}" type="{{.media_mime_type}}">
+                  Your browser does not support the video tag.
+                </video>
+                {{if .message}}
+                <p class="mb-0 mt-2">{{.message}}</p>
+                {{end}}
+              </div>
+              {{else}}
+              <p class="mb-0 text-muted"><i class="bx bx-video me-1"></i>Video</p>
+              {{end}}
+            {{else if eq .message_type "audio"}}
+              {{if .media_url}}
+              <div class="media-message">
+                <audio controls class="w-100" style="max-width: 250px;">
+                  <source src="{{.media_url}}" type="{{.media_mime_type}}">
+                  Your browser does not support the audio tag.
+                </audio>
+                {{if .message}}
+                <p class="mb-0 mt-2">{{.message}}</p>
+                {{end}}
+              </div>
+              {{else}}
+              <p class="mb-0 text-muted"><i class="bx bx-volume-full me-1"></i>Audio message</p>
+              {{end}}
+            {{else if eq .message_type "document"}}
+              {{if .media_url}}
+              <div class="media-message">
+                <div class="d-flex align-items-center p-3 border rounded bg-light">
+                  <div class="me-3">
+                    <i class="fal fa-file-alt text-primary fs-3"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">{{if .media_filename}}{{.media_filename}}{{else}}Document{{end}}</h6>
+                    <small class="text-muted">
+                      {{if .media_size}}{{.media_size}} bytes{{end}}
+                      {{if .media_mime_type}}• {{.media_mime_type}}{{end}}
+                    </small>
+                  </div>
+                  <div class="ms-3">
+                    <a href="{{.media_url}}" download="{{.media_filename}}" class="btn btn-sm btn-info">
+                      <i class="fal fa-arrow-to-bottom"></i>
+                    </a>
+                  </div>
+                </div>
+                {{if .message}}
+                <p class="mb-0 mt-2">{{.message}}</p>
+                {{end}}
+              </div>
+              {{else}}
+              <p class="mb-0 text-muted"><i class="bx bx-file me-1"></i>Document</p>
+              {{end}}
+            {{else if eq .message_type "sticker"}}
+              {{if .media_url}}
+              <div class="media-message">
+                <img src="{{.media_url}}" alt="Sticker" class="sticker-image" style="max-width: 150px; max-height: 150px;" />
+              </div>
+              {{else}}
+              <p class="mb-0 text-muted"><i class="bx bx-sticker me-1"></i>Sticker</p>
+              {{end}}
+            {{else}}
+              <p class="mb-0">{{.message}}</p>
+            {{end}}
+          </div>
+          <div class="text-muted mt-1">
+            <small>
+              {{.timestamp}}
+              {{if .is_outgoing}}
+                {{if .is_read}}
+                  <i class="bx bx-check-double text-primary ms-1"></i>
+                {{else if .is_delivered}}
+                  <i class="bx bx-check-double text-muted ms-1"></i>
+                {{else}}
+                  <i class="bx bx-check text-muted ms-1"></i>
+                {{end}}
+              {{end}}
+            </small>
+          </div>
+        </div>
+      </div>
+    </li>
+    {{end}}
+    
+    {{if not .messages}}
+    <li class="chat-message">
+      <div class="d-flex justify-content-center align-items-center h-100">
+        <div class="text-center">
+          <i class="bx bx-message-dots bx-lg text-muted mb-3"></i>
+          <h6 class="text-muted">No messages yet</h6>
+          <p class="text-muted">Start the conversation by sending a message</p>
+        </div>
+      </div>
+    </li>
+    {{end}}
+  </ul>
+</div>
+
+<div class="chat-history-footer shadow-sm p-3">
+  <form class="form-send-message d-flex justify-content-between align-items-center" data-contact-id="{{.contact_id}}">
+    <input class="form-control message-input border-0 me-3 shadow-none" 
+           placeholder="Type your message to {{.contact.name}}..." 
+           name="message" required />
+    <div class="message-actions d-flex align-items-center">
+      <label for="file-upload" class="cursor-pointer me-3 mb-0">
+        <i class="bx bx-paperclip bx-sm text-muted"></i>
+        <input type="file" id="file-upload" class="d-none" accept="image/*,application/pdf,.doc,.docx" />
+      </label>
+      <i class="bx bx-microphone bx-sm cursor-pointer me-3 text-muted" title="Voice message"></i>
+      <button type="submit" class="btn btn-primary d-flex send-msg-btn">
+        <i class="bx bx-paper-plane me-md-1 me-0 text-white"></i>
+      </button>
+    </div>
+  </form>
+</div>
+
+{{else}}
+<!-- No contact selected -->
+<div class="d-flex justify-content-center align-items-center h-100">
+  <div class="text-center">
+    <i class="bx bx-message-dots bx-lg text-muted mb-3"></i>
+    <h5 class="text-muted">Select a conversation</h5>
+    <p class="text-muted">Choose a contact from the list to start messaging</p>
+    {{if not .is_authenticated}}
+    <div class="mt-3">
+      <button class="btn btn-primary" onclick="$('#refresh-qr-btn').click()">
+        <i class="bx bx-qr-scan me-1"></i>Connect WhatsApp First
+      </button>
+    </div>
+    {{end}}
+  </div>
+</div>
+{{end}}

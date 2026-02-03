@@ -1,0 +1,10 @@
+{
+    "instruction": "User: Apa itu WhatsMeow?", 
+    "input": "", 
+    "output": "WhatsMeow adalah pustaka Go untuk WhatsApp."
+}
+{
+    "instruction": "User: Bagaimana cara menggunakannya?", 
+    "input": "", 
+    "output": "Anda bisa menggunakannya dengan Go dan mendaftar session WA."
+}

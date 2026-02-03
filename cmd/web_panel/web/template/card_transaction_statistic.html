@@ -1,0 +1,341 @@
+{{ define "transaction_statistic" }}
+<div class="row row-bordered g-0">
+  <div class="col-md-8">
+    <div class="card-header mb-1">
+      <div class="d-flex flex-row align-items-center mb-2">
+        <h5 class="card-title mb-0 me-2">Statistik Transaksi</h5>
+        <select id="choose" class="select2 form-select filter_chart" data-allow-clear="false" disabled>
+          <option value="all" class="all">ALL</option>
+          <option value="one_month" class="one_month">1M</option>
+          <option value="six_months" class="six_months">6M</option>
+          <option value="one_year" class="one_year">1Y</option>
+          <option value="ytd" class="ytd">YTD</option>
+        </select>
+        <div class="input-group input-daterange" id="bs_date_range_trx_chart">
+          <input id="filter_chart_s_date" type="text" placeholder="DD/MM/YYYY" class="form-control filter_chart" disabled/>
+          <span class="input-group-text">ke</span>
+          <input id="filter_chart_e_date" type="text" placeholder="DD/MM/YYYY" class="form-control filter_chart" disabled/>
+        </div>
+      </div>
+      <!-- <small class="card-subtitle">Yearly report overview</small> -->
+      <div class="col-md-6">
+        <!-- <label class="form-label" for="multicol-country">Country</label> -->
+
+      </div>
+    </div>
+    <div class="card-body">
+      
+      <div id="chart">
+        <div class="toolbar">
+          <!-- <button class="btn btn-primary" id="one_month">1M</button>
+          <button class="btn btn-primary" id="six_months">6M</button>
+          <button class="btn btn-primary active" id="one_year">1Y</button>
+          <button class="btn btn-primary" id="ytd">YTD</button>
+          <button class="btn btn-primary" id="all">ALL</button> -->
+        </div>
+
+        <div id="chart-timeline"></div>
+      </div>
+      <!-- <div id="totalIncomeChart"></div> -->
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card-header d-flex justify-content-between">
+      <div>
+        <h5 class="card-title mb-0">Report</h5>
+        <small class="card-subtitle">Monthly Avg. $45.578k</small>
+      </div>
+      <div class="dropdown">
+        <button
+          class="btn p-0"
+          type="button"
+          id="totalIncome"
+          data-bs-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false">
+          <i class="bx bx-dots-vertical-rounded"></i>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="totalIncome">
+          <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
+          <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+          <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="report-list">
+        <div class="report-list-item rounded-2 mb-3">
+          <div class="d-flex align-items-start">
+            <div class="report-list-icon shadow-sm me-2">
+              <i class="fa-regular fa-circle-check fa-lg text-success"></i>
+            </div>
+            <div class="d-flex justify-content-between align-items-end w-100 flex-wrap gap-2">
+              <div class="d-flex flex-column">
+                <span>Success</span>
+                <h5 class="mb-0">$42,845</h5>
+              </div>
+              <small class="text-success">+2.34k</small>
+            </div>
+          </div>
+        </div>
+        <div class="report-list-item rounded-2 mb-3">
+          <div class="d-flex align-items-start">
+            <div class="report-list-icon shadow-sm me-2">
+              <i class="fa-solid fa-clock-rotate-left fa-flip-horizontal fa-lg text-warning"></i>
+            </div>
+            <div class="d-flex justify-content-between align-items-end w-100 flex-wrap gap-2">
+              <div class="d-flex flex-column">
+                <span>Pending</span>
+                <h5 class="mb-0">$38,658</h5>
+              </div>
+              <small class="text-danger">-1.15k</small>
+            </div>
+          </div>
+        </div>
+        <div class="report-list-item rounded-2">
+          <div class="d-flex align-items-start">
+            <div class="report-list-icon shadow-sm me-2">
+              <i class="fa-solid fa-xmark fa-lg text-danger"></i>
+            </div>
+            <div class="d-flex justify-content-between align-items-end w-100 flex-wrap gap-2">
+              <div class="d-flex flex-column">
+                <span>Failed</span>
+                <h5 class="mb-0">$18,220</h5>
+              </div>
+              <small class="text-success">+1.35k</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function() {
+    
+    var select2 = $('.select2');
+    if (select2.length) {
+      select2.each(function () {
+        var $this = $(this);
+        $this.wrap('<div class="position-relative"></div>').select2({
+          placeholder: 'Select value',
+          dropdownParent: $this.parent()
+        });
+      });
+    }
+    let cardColor, headingColor, legendColor, labelColor, shadeColor, borderColor;
+    if (isDarkStyle) {
+      cardColor = config.colors_dark.cardColor;
+      headingColor = config.colors_dark.headingColor;
+      legendColor = config.colors_dark.bodyColor;
+      labelColor = config.colors_dark.textMuted;
+      borderColor = config.colors_dark.borderColor;
+    } else {
+      cardColor = config.colors.cardColor;
+      headingColor = config.colors.headingColor;
+      legendColor = config.colors.bodyColor;
+      labelColor = config.colors.textMuted;
+      borderColor = config.colors.borderColor;
+    }
+    const theme = {
+      mode: isDarkStyle ? 'dark' : 'light',
+      palette: {
+        enabled: true,
+        color: {
+          // background: cardColor,
+          border: borderColor,
+          primary: config.colors.primary,
+        },
+        foreColor: headingColor,
+      },
+    };
+
+    fetch(`${webPath}tab-dashboards/transaction-chart`)
+      .then(response => {
+        if (!response.ok) {throw new Error(`HTTP error! Status: ${response.status}`);}
+        return response.json();
+      })
+      .then(data => {
+        $('.filter_chart').removeAttr('disabled');
+        let endDate = new Date(); // Now
+        let startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - 1); // One month ago
+
+        // Initialize variables to hold the smallest and biggest dates
+        let smallestDate = Number.MAX_SAFE_INTEGER;
+        data.data.forEach(item => {
+          let timestamp = item[0]; // Assuming the timestamp is the first element in each inner array
+
+          if (timestamp < smallestDate) {
+            smallestDate = timestamp;
+          }
+        });
+        let smallestDateObj = new Date(smallestDate);
+        
+        document.getElementById('filter_chart_s_date').value = formatDate_DD_MM_YYYY(smallestDateObj);
+        document.getElementById('filter_chart_e_date').value = formatDate_DD_MM_YYYY(endDate);
+
+        const options = {
+          series: [data],
+          chart: {
+            id: 'area-datetime',
+            type: 'area',
+            height: 350,
+            zoom: {
+              autoScaleYaxis: true,
+            },
+            toolbar: {
+              show: true, // Keep toolbar visible
+            },
+            background: 'transparent', // Set background color to transparent
+            dropShadow: {
+              enabled: true,
+              top: 14,
+              left: 2,
+              blur: 3,
+              color: config.colors.primary,
+              opacity: 0.15,
+            },
+            events: {
+              mounted: function(chartContext, config) {
+                document.getElementById('filter_chart_s_date').value = formatDate_DD_MM_YYYY(startDate);
+                document.getElementById('filter_chart_e_date').value = formatDate_DD_MM_YYYY(endDate);
+              },
+              zoomed: function(chartContext, { xaxis }) {
+                let newStartDate = (xaxis.min == undefined)?new Date(smallestDate):new Date(xaxis.min);
+                let newEndDate = (xaxis.max == undefined)?new Date():new Date(xaxis.max);
+                document.getElementById('filter_chart_s_date').value = formatDate_DD_MM_YYYY(newStartDate);
+                document.getElementById('filter_chart_e_date').value = formatDate_DD_MM_YYYY(newEndDate);
+              }
+            },
+          },
+          dataLabels: {
+            enabled: false,
+          },
+          markers: {
+            size: 0,
+            style: 'hollow',
+          },
+          stroke: {
+            width: 3,
+            curve: 'straight',
+            colors: [config.colors.primary], // Set line color to pink (Hex code for pink)
+          },
+          xaxis: {
+            type: 'datetime',
+            min: startDate,
+            tickAmount: 6,
+            labels: {
+              style: {
+                colors: labelColor,
+                fontSize: '13px',
+              },
+            },
+          },
+          tooltip: {
+            x: {
+              format: 'dd MMM yyyy',
+            },
+          },
+          fill: {
+            type: 'gradient',
+            gradient: {
+              shadeIntensity: 1,
+              opacityFrom: 0.7,
+              opacityTo: 0.9,
+              stops: [0, 100],
+            },
+          },
+          theme: theme, // Apply the theme configuration
+        };
+
+        // Initialize the chart with options and render it
+        const chart = new ApexCharts(document.querySelector("#chart-timeline"), options);
+        chart.render();
+        const bs_date_range_trx_chart = $('#bs_date_range_trx_chart');
+        if (bs_date_range_trx_chart.length) {
+          bs_date_range_trx_chart.datepicker({
+            todayHighlight: true,
+            format: 'dd/mm/yyyy',
+            orientation: isRtl ? 'auto right' : 'auto left'
+          });
+        }
+        bs_date_range_trx_chart.on('changeDate', function (e) {
+          const startDate = $('#filter_chart_s_date').datepicker('getDate');
+          const endDate = $('#filter_chart_e_date').datepicker('getDate');
+          chart.zoomX(
+            startDate.getTime(),
+            endDate.getTime()
+          );
+        });
+
+        $('#choose').on('select2:select', function(e) {
+          // console.log("Selection changed");
+
+          let selectedOption = e.target.value;
+          endDate = new Date(); // Now
+          startDate = new Date();
+
+          switch(selectedOption) {
+            case 'one_year':
+              startDate.setFullYear(startDate.getFullYear() - 1); // One year ago
+
+              // Set the chart zoom
+              chart.zoomX(
+                startDate.getTime(),
+                endDate.getTime()
+              );
+              break;
+
+            case 'one_month':
+              startDate.setMonth(startDate.getMonth() - 1); // One month ago
+
+              // Set the chart zoom
+              chart.zoomX(
+                startDate.getTime(),
+                endDate.getTime()
+              );
+              break;
+
+            case 'ytd':
+              startDate = new Date(new Date().getFullYear(), 0, 1); // Start of the current year
+
+              // Set the chart zoom
+              chart.zoomX(
+                startDate.getTime(),
+                endDate.getTime()
+              );
+              break;
+
+            case 'six_months':
+              startDate.setMonth(startDate.getMonth() - 6); // Six months ago
+
+              // Set the chart zoom
+              chart.zoomX(
+                startDate.getTime(),
+                endDate.getTime()
+              );
+              break;
+
+            default:
+              let resetIcon = document.querySelector('.apexcharts-reset-icon');
+              if (resetIcon) {
+                resetIcon.click(); // Simulate a click event
+              }
+              
+              document.getElementById('filter_chart_s_date').value = formatDate_DD_MM_YYYY(smallestDateObj);
+              document.getElementById('filter_chart_e_date').value = formatDate_DD_MM_YYYY(endDate);
+              break;
+          }
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching transaction chart data:', error);
+        // Handle errors here
+      }
+    );
+
+  })();
+      
+</script>
+{{ end }}

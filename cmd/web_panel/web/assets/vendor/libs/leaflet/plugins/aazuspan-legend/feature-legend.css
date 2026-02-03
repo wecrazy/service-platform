@@ -1,0 +1,45 @@
+.leaflet-control-feature-legend {
+  background-color: white;
+  max-width: 200px; /* Set the width as needed */
+}
+
+.leaflet-control-feature-legend-title {
+  margin: auto;
+}
+
+.leaflet-control-feature-legend div {
+  display: table;
+}
+
+.leaflet-control-feature-legend span {
+  vertical-align: middle;
+  display: table-cell;
+}
+
+.leaflet-control-feature-legend i {
+  display: inline-block;
+  padding: 0px 3px 0px 4px;
+  position: relative;
+}
+
+.leaflet-control-feature-legend-toggle {
+  background-image: url("legend-icon.png");
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  box-shadow: none;
+}
+
+.leaflet-control-feature-legend-contents {
+  display: none;
+  max-height: 200px; /* Set the max height for scrollable content */
+  overflow-y: auto;  /* Add vertical scroll if content exceeds max height */
+  padding: 6px 10px 6px 6px;
+}
+
+.leaflet-control-feature-legend-expanded .leaflet-control-feature-legend-contents {
+  display: block;
+}
+
+.leaflet-control-feature-legend-contents img {
+  position: absolute;
+}

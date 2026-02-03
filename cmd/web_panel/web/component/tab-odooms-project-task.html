@@ -1,0 +1,786 @@
+<!-- ODOO Manage Service - Project Task Details -->
+<!DOCTYPE html>
+
+<html lang="id" class="light-style layout-wide" dir="ltr" data-theme="theme-default"
+    data-assets-path="{{.GLOBAL_URL}}assets/" data-template="vertical-menu-template">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+
+    <title>{{.WO_NUMBER}} - Details</title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{.APP_LOGO}}" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+        rel="stylesheet" />
+    <!-- Icons -->
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/css/fontawesome5.all.min.css" />
+    <script src="{{.GLOBAL_URL}}assets/vendor/js/fontawesome5.pro.min.js"></script>
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/fonts/flag-icons.css" />
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/css/rtl/core.css" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/css/rtl/theme-default.css"
+        class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/css/demo.css" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/typeahead-js/typeahead.css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/css/highcharts.css" />
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/select2/select2.css" />
+
+    <!-- Small page tweaks -->
+    <style>
+        /* Slightly heavier card visuals similar to screenshot */
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(18, 38, 63, 0.06);
+            border: 0;
+            /* start hidden for entrance animation */
+            opacity: 0;
+            transform: translateY(12px);
+            transition: transform 420ms cubic-bezier(.2, .9, .2, 1), opacity 420ms ease, box-shadow 220ms ease;
+        }
+
+        .card-header {
+            background: transparent;
+            font-weight: 600;
+            color: #263238;
+        }
+
+        .technical-label {
+            display: block;
+            color: #6b7280;
+        }
+
+        .map-actions a {
+            margin-right: .4rem;
+        }
+
+        .meta-value {
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        /* animate-in class toggles to visible */
+        .card.animate-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* hover lift */
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 14px 40px rgba(18, 38, 63, 0.12);
+        }
+
+        /* map actions float on larger screens */
+        @media (min-width: 768px) {
+            .map-actions {
+                float: right;
+            }
+        }
+
+        /* compact copy button */
+        .btn-copy {
+            padding: .18rem .5rem;
+            font-size: .78rem;
+            vertical-align: middle;
+        }
+
+        .badge-pill {
+            padding: .35rem .6rem;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: .8rem;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .task-header .wo-badge {
+            margin-left: .6rem;
+        }
+
+        /* Modal map sizing */
+        #mapModal .modal-dialog {
+            max-width: 900px;
+        }
+
+        #mapModalMap {
+            width: 100%;
+            height: 420px;
+        }
+
+        /* page layout grid for top section */
+        .page-canvas {
+            background: #f6f9fc;
+            padding: 18px;
+            border-radius: 10px;
+        }
+
+        .page-header {
+            padding: 12px 6px 18px 6px;
+            margin-bottom: 12px;
+        }
+
+        .wo-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .wo-number {
+            color: #0ea5a4;
+            margin-left: .4rem;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: .35rem .6rem;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        /* card accent & layout tweaks */
+        .card {
+            position: relative;
+        }
+
+        .card-accent-left {
+            border-left: 4px solid #0ea5a4;
+        }
+
+        .card-header-gradient {
+            background: linear-gradient(90deg, rgba(14, 165, 164, 0.06), rgba(99, 102, 241, 0.03));
+            border-bottom: 0;
+        }
+
+        .meta-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .small-muted {
+            color: #6b7280;
+            font-size: .9rem;
+        }
+
+        /* Problem EDC strikethrough styling */
+        /* #pergantian_no label strong s {
+            text-decoration: line-through;
+            color: #dc3545;
+        }
+
+        #pergantian_yes label strong {
+            color: #198754;
+        } */
+    </style>
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="{{.GLOBAL_URL}}assets/vendor/js/helpers.js"></script>
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+    <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
+    <script src="{{.GLOBAL_URL}}assets/vendor/js/template-customizer.js"></script>
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+    <script src="{{.GLOBAL_URL}}assets/js/config.js"></script>
+    <!-- jQuery -->
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/jquery/jquery.js"></script>
+    <!-- Bootstrap -->
+    <script src="{{.GLOBAL_URL}}assets/vendor/js/bootstrap.js"></script>
+    <!-- Global URL -->
+    <script>
+        // Pass globalURL to the JS file
+        window.webGlobalURL = "{{.GLOBAL_URL}}";
+    </script>
+    <!-- Libs -->
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/sweetalert2/sweetalert2.css" />
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+    <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/leaflet/leaflet.css" />
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/leaflet/leaflet.js"></script>
+</head>
+
+<body>
+    <!-- Content -->
+    <div class="container-xxl flex-grow-1 container-p-y">
+        {{if .ERROR}}
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header d-flex align-items-center"><i class="fas fa-exclamation-circle me-2"></i>
+                        Error</div>
+                    <div class="card-body text-center">
+                        <h5>An error occurred</h5>
+                        <p>{{.ERROR}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{else}}
+        {{if .DATA_RENDER}}
+        {{ $d := index . "DATA_RENDER" 0 }}
+        <div class="card mb-2">
+            <div class="card-header">
+                <div class="d-flex justify-content-between w-100">
+                    <div class="col-auto mx-3">
+                        <img src="{{.ODOO_LOGO}}" alt="Odoo Logo" class="img-fluid" style="width: 180px;"
+                            data-app-light-img="misc/logo_odoo.png" data-app-dark-img="misc/logo_odoo_light.png">
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3 flex-wrap justify-content-end">
+                        <div class="col-auto d-flex align-items-center mb-2">
+                            <div class="text-end me-2">
+                                <h5 class="mb-1 fw-bold">{{index $d "PicPhone"}}</h5>
+                                <h6 class="mb-0">PIC: {{index $d "PicMerchant"}}</h6>
+                            </div>
+                            <span class="bg-info p-2 rounded"><i class="fas fa-user-tie text-white"></i></span>
+                        </div>
+
+                        <div class="col-auto d-flex align-items-center mb-2">
+                            <div class="text-end me-2">
+                                <h5 class="mb-1 fw-bold">MID: {{index $d "Mid"}}</h5>
+                                <h6 class="mb-0">TID: {{index $d "Tid"}}</h6>
+                            </div>
+                            <span class="bg-info p-2 rounded"><i class="fas fa-phone-office text-white"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0 m-0">
+                <!-- Tab Navigation -->
+                <div class="nav-align-top">
+                    <ul class="nav nav-tabs nav-fill border-bottom-0" id="midtidTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active bg-info text-white" id="main-data-tab" data-bs-toggle="tab"
+                                data-bs-target="#main-data" type="button" role="tab" aria-controls="main-data"
+                                aria-selected="true">
+                                Project.Task
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content border p-3 rounded shadow-sm bg-white" id="midtidTabContent">
+                    <div class="tab-pane fade show active" id="main-data" role="tabpanel"
+                        aria-labelledby="main-data-tab">
+                        <div class="row mb-3">
+                            <div class="col-12 display-1 text-center">{{index $d "WoNumber"}}</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <!-- Merchant Info -->
+                            <div class="col-lg-6">
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-body">
+                                        <h5 class="fw-bold text-primary mb-3"><i class="fas fa-store me-2"></i> Merchant
+                                            Info</h5>
+                                        <p class="mb-1"><strong>Merchant Name:</strong> {{index $d "MerchantName"}}</p>
+                                        <p class="mb-1"><strong>Merchant Address:</strong> {{index $d
+                                            "MerchantAddress"}}</p>
+                                        <p class="mb-1"><strong>Merchant City:</strong> {{index $d "MerchantCity"}}</p>
+                                        <p class="mb-1"><strong>Status Terakhir Merchant:</strong>
+                                            {{if eq (index $d "StatusMerchant") "BUKA"}}
+                                            <span class="badge bg-success">{{index $d "StatusMerchant"}}</span>
+                                            {{else}}
+                                            <span class="badge bg-danger">{{index $d "StatusMerchant"}}</span>
+                                            {{end}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Info -->
+                            <div class="col-lg-6">
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-body">
+                                        <h5 class="fw-bold text-primary mb-3"><i class="fas fa-phone me-2"></i> Contact
+                                            Info</h5>
+                                        <p class="mb-1"><strong>PIC:</strong> {{index $d "PicMerchant"}}</p>
+                                        <p class="mb-1"><strong>Nomor Telepon PIC:</strong> {{index $d "PicPhone"}}</p>
+                                        <p class="mb-1"><strong>Description:</strong> {{index $d "Description"}}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Address Section -->
+                            <div class="col-lg-12">
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-body">
+                                        <h5 class="fw-bold text-primary mb-3"><i class="fas fa-map me-2"></i> Address
+                                        </h5>
+                                        <p class="mb-1"><strong>Alamat Merchant:</strong> {{index $d "MerchantAddress"}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Location & Google Maps -->
+                            <div class="col-lg-6">
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-body">
+                                        <h5 class="fw-bold text-primary mb-3"><i class="fas fa-globe me-2"></i> Location
+                                        </h5>
+                                        <p class="mb-1"><strong>Longitude:</strong> {{index $d "Longitude"}}</p>
+                                        <p class="mb-1"><strong>Latitude:</strong> {{index $d "Latitude"}}</p>
+                                        <span class="map-placeholder" data-lat="{{index $d "Latitude"}}"
+                                            data-lon="{{index $d "Longitude"}}"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Device Information -->
+                            <div class="col-lg-6">
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-body">
+                                        <h5 class="fw-bold text-primary mb-3"><i class="fas fa-credit-card me-2"></i>
+                                            Device Info</h5>
+                                        <p class="mb-1"><strong>MID:</strong> {{index $d "Mid"}}</p>
+                                        <p class="mb-1"><strong>TID:</strong> {{index $d "Tid"}}</p>
+                                        <p class="mb-1"><strong>Link Photo:</strong> {{if index $d "LinkPhoto"}}<a
+                                                href="{{index $d "LinkPhoto"}}" target="_blank">View
+                                                Photo</a>{{else}}N/A{{end}}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tanda-tanda EDC RUSAK (EDC Damage Indicators) -->
+                            <div class="col-lg-12">
+                                <div class="card shadow-sm border-0" style="border-left: 4px solid #dc3545;">
+                                    <div class="card-body">
+                                        <h5 class="fw-bold text-danger mb-4"><i class="fas fa-exclamation-triangle me-2"></i>Tanda-tanda EDC RUSAK</h5>
+                                        
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input edc-indicator" type="checkbox" id="check1" {{if index $d "BateraiDrop"}}checked{{end}}>
+                                                    <label class="form-check-label" for="check1">
+                                                        <strong>Baterai Drop</strong><br>
+                                                        <!-- <small class="text-muted">Menggantikan Trx Debit On Us</small> -->
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input edc-indicator" type="checkbox" id="check2" {{if index $d "LayarEDCGaris"}}checked{{end}}>
+                                                    <label class="form-check-label" for="check2">
+                                                        <strong>Layar EDC kedip-kedip/bergaris</strong><br>
+                                                        <!-- <small class="text-muted">Menggantikan Trx Debit Off Us</small> -->
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input edc-indicator" type="checkbox" id="check3" {{if index $d "TombolRusak"}}checked{{end}}>
+                                                    <label class="form-check-label" for="check3">
+                                                        <strong>Tombol rusak/keras/susah ditekan</strong><br>
+                                                        <!-- <small class="text-muted">Menggantikan Trx Credit On Us</small> -->
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input edc-indicator" type="checkbox" id="check4" {{if index $d "PrintKurangJelas"}}checked{{end}}>
+                                                    <label class="form-check-label" for="check4">
+                                                        <strong>Hasil print EDC kurang jelas</strong><br>
+                                                        <!-- <small class="text-muted">Menggantikan Trx Credit Off Us</small> -->
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input edc-indicator" type="checkbox" id="check5" {{if index $d "EDCSeringRestart"}}checked{{end}}>
+                                                    <label class="form-check-label" for="check5">
+                                                        <strong>EDC sering restart</strong><br>
+                                                        <!-- <small class="text-muted">Menggantikan Trx Prepaid</small> -->
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input edc-indicator" type="checkbox" id="check6" {{if index $d "FisikRusak"}}checked{{end}}>
+                                                    <label class="form-check-label" for="check6">
+                                                        <strong>Fisik tidak sempurna/rusak</strong><br>
+                                                        <!-- <small class="text-muted">Menggantikan Trx Contactless</small> -->
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input edc-indicator" type="checkbox" id="check7" {{if index $d "PortChargerRusak"}}checked{{end}}>
+                                                    <label class="form-check-label" for="check7">
+                                                        <strong>Port charger EDC bermasalah</strong><br>
+                                                        <!-- <small class="text-muted">Tidak ada aliran listrik masuk (Trx QR)</small> -->
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input edc-indicator" type="checkbox" id="check8" {{if index $d "CardReaderGagal"}}checked{{end}}>
+                                                    <label class="form-check-label" for="check8">
+                                                        <strong>Card Reader tidak bisa membaca</strong><br>
+                                                        <!-- <small class="text-muted">Sering gagal / no respon (Trx Push To Pay)</small> -->
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {{if eq (index $d "KondisiEDC") "Baik"}}
+                                        <div class="alert alert-success mt-3 mb-0" role="alert">
+                                            <i class="fas fa-check-circle me-2"></i><strong>Kondisi EDC: Baik</strong>
+                                        </div>
+                                        {{else if index $d "KondisiEDC"}}
+                                        <div class="alert alert-info mt-3 mb-0" role="alert">
+                                            <i class="fas fa-info-circle me-2"></i><strong>Status EDC:</strong> {{index $d "KondisiEDC"}}
+                                        </div>
+                                        {{end}}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Problem EDC Section -->
+                            <div class="col-lg-12">
+                                <div class="card shadow-sm border-0" style="border-left: 4px solid #0ea5a4;">
+                                    <div class="card-body">
+                                        <!-- Section 1: Apakah butuh pergantian EDC -->
+                                        <div class="mb-4">
+                                            <h5 class="fw-bold text-info mb-3"><i class="fas fa-tools me-2"></i>Apakah butuh pergantian EDC:</h5>
+                                            {{ $problemEDC := index $d "ProblemEDC" }}
+                                            <div class="btn-group" role="group" style="display: flex; gap: 1rem;">
+                                                <div class="form-check" style="flex: 1;">
+                                                    <input class="form-check-input problem-edc-radio" type="radio" name="pergantian_edc" id="pergantian_yes" {{if index $problemEDC "PergantianEDC"}}checked{{end}} disabled>
+                                                    <label class="form-check-label" for="pergantian_yes">
+                                                        <strong>Yes</strong>
+                                                    </label>
+                                                </div>
+                                                <div class="form-check" style="flex: 1;">
+                                                    <input class="form-check-input problem-edc-radio" type="radio" name="pergantian_edc" id="pergantian_no" {{if not (index $problemEDC "PergantianEDC")}}checked{{end}} disabled>
+                                                    <label class="form-check-label" for="pergantian_no">
+                                                        <!-- <strong><s>No</s></strong> -->
+                                                        <strong>No</strong>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section 2: Problem EDC di lapangan -->
+                                        <div>
+                                            <h5 class="fw-bold text-info mb-3"><i class="fas fa-list-check me-2"></i>Problem EDC di lapangan yang sebenarnya adalah:</h5>
+                                            
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input problem-edc-check" type="checkbox" id="kendala_simcard" {{if index $problemEDC "KendalaSimCard"}}checked{{end}}>
+                                                        <label class="form-check-label" for="kendala_simcard">
+                                                            <strong>Kendala SIMCARD</strong>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input problem-edc-check" type="checkbox" id="kendala_samcard" {{if index $problemEDC "KendalaSamCard"}}checked{{end}}>
+                                                        <label class="form-check-label" for="kendala_samcard">
+                                                            <strong>Kendala SAMCARD</strong>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input problem-edc-check" type="checkbox" id="restart_edc" {{if index $problemEDC "HanyaButuhRestartEDC"}}checked{{end}}>
+                                                        <label class="form-check-label" for="restart_edc">
+                                                            <strong>Hanya butuh restart EDC</strong>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input problem-edc-check" type="checkbox" id="refresh_jaringan" {{if index $problemEDC "HanyaButuhRefreshJaringan"}}checked{{end}}>
+                                                        <label class="form-check-label" for="refresh_jaringan">
+                                                            <strong>Hanya butuh refresh jaringan</strong>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input problem-edc-check" type="checkbox" id="setting_gprs" {{if index $problemEDC "HanyaButuhMerubahSettingGPRS"}}checked{{end}}>
+                                                        <label class="form-check-label" for="setting_gprs">
+                                                            <strong>Hanya butuh merubah setting GPRS(4G Only/AUTO)</strong>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input problem-edc-check" type="checkbox" id="bersihkan_chip" {{if index $problemEDC "HanyaButuhBersihkanChipSimSamCard"}}checked{{end}}>
+                                                        <label class="form-check-label" for="bersihkan_chip">
+                                                            <strong>Hanya butuh bersihkan chip SIM/SAM CARD</strong>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input problem-edc-check" type="checkbox" id="bersihkan_slot" {{if index $problemEDC "HanyaButuhBersihkanSlotCardReader"}}checked{{end}}>
+                                                        <label class="form-check-label" for="bersihkan_slot">
+                                                            <strong>Hanya butuh bersihkan slot card reader EDC</strong>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input problem-edc-check" type="checkbox" id="kendala_aplikasi" {{if index $problemEDC "KendalaAplikasi"}}checked{{end}}>
+                                                        <label class="form-check-label" for="kendala_aplikasi">
+                                                            <strong>Kendala Aplikasi</strong>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input problem-edc-check" type="checkbox" id="others_check" {{if index $problemEDC "Others"}}checked{{end}}>
+                                                        <label class="form-check-label" for="others_check">
+                                                            <strong>Others</strong>
+                                                        </label>
+                                                    </div>
+                                                    {{if or (index $d "ProblemEDCOthersText") (index $problemEDC "Others")}}
+                                                    <textarea class="form-control mt-2" id="others_text" rows="3" placeholder="Masalah lainnya..." readonly>{{index $d "ProblemEDCOthersText"}}</textarea>
+                                                    {{else}}
+                                                    <textarea class="form-control mt-2" id="others_text" rows="3" placeholder="Masalah lainnya..." readonly></textarea>
+                                                    {{end}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+        {{else}}
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header d-flex align-items-center"><i class="fas fa-exclamation-circle me-2"></i> No
+                        Data Available</div>
+                    <div class="card-body text-center">
+                        <h5>No data found for WO {{.WO_NUMBER}}</h5>
+                        <p>Please check the WO number or try again later.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{end}}
+        {{end}}
+    </div>
+    <!-- Debug raw data (visible when debug=1 passed in query) -->
+    {{if eq .DEBUG "1"}}
+    <div class="container-xxl mt-3">
+        <div class="card">
+            <div class="card-header">Raw DATA_RENDER_JSON (debug)</div>
+            <div class="card-body">
+                <pre style="white-space:pre-wrap;word-break:break-word">{{.DATA_RENDER_JSON}}</pre>
+            </div>
+        </div>
+    </div>
+    {{end}}
+    <!-- / Content -->
+
+    <!-- Core JS -->
+    <!-- build:js assets/vendor/js/core.js -->
+
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/popper/popper.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/hammer/hammer.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/i18n/i18n.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/typeahead-js/typeahead.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/js/menu.js"></script>
+
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/highcharts.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/accessibility.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/exporting.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/highcharts-11.4.8/code/modules/export-data.js"></script>
+    <script src="{{.GLOBAL_URL}}assets/vendor/libs/select2/select2.js"></script>
+
+    <!-- Main JS -->
+    <script src="{{.GLOBAL_URL}}assets/js/main.js"></script>
+
+    <!-- Page JS -->
+    <script>
+        (function () {
+            function isValidCoord(v) {
+                if (v === undefined || v === null) return false;
+                var s = String(v).trim();
+                if (s === '' || s === '0' || s === '0.0' || s === '0.000000') return false;
+                return !isNaN(parseFloat(s));
+            }
+
+            // Modal/map helper
+            var mapInstance = null;
+            var mapMarker = null;
+            function openMapModal(lat, lon, title) {
+                var modalEl = document.getElementById('mapModal');
+                if (!modalEl) return;
+                var bsModal = new bootstrap.Modal(modalEl);
+                bsModal.show();
+
+                // initialize map on next tick after modal shown
+                setTimeout(function () {
+                    if (!mapInstance) {
+                        mapInstance = L.map('mapModalMap', { zoomControl: true });
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 19,
+                            attribution: '© OpenStreetMap'
+                        }).addTo(mapInstance);
+                    }
+                    var latF = parseFloat(lat);
+                    var lonF = parseFloat(lon);
+                    mapInstance.setView([latF, lonF], 17);
+                    if (mapMarker) mapInstance.removeLayer(mapMarker);
+                    mapMarker = L.marker([latF, lonF]).addTo(mapInstance).bindPopup(title || ('Location: ' + lat + ',' + lon)).openPopup();
+                    // ensure proper sizing
+                    setTimeout(function () { mapInstance.invalidateSize(); }, 250);
+                }, 200);
+            }
+
+            // jQuery-based attachment for placeholders & copy
+            $(function () {
+                $('.map-placeholder').each(function () {
+                    var $ph = $(this);
+                    var lat = $ph.data('lat');
+                    var lon = $ph.data('lon');
+                    if (!isValidCoord(lat) || !isValidCoord(lon)) return;
+                    lat = parseFloat(lat); lon = parseFloat(lon);
+
+                    // compact buttons for location actions
+                    var $group = $('<div/>', { 'class': 'd-inline-flex align-items-center ms-2' });
+
+                    var $preview = $('<button/>', { type: 'button', 'class': 'btn btn-sm btn-outline-success me-1', title: 'Preview map' })
+                        .html('<i class="fas fa-map-marked-alt me-1"></i>Preview')
+                        .on('click', function () { openMapModal(lat, lon, 'Preview'); });
+
+                    var $google = $('<a/>', { 'class': 'btn btn-sm btn-outline-primary me-1', href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lat + ',' + lon), target: '_blank', rel: 'noopener noreferrer', title: 'Open in Google Maps' })
+                        .html('<i class="fas fa-map-marked-alt me-1"></i>Google');
+
+                    var $osm = $('<a/>', { 'class': 'btn btn-sm btn-outline-secondary', href: 'https://www.openstreetmap.org/?mlat=' + encodeURIComponent(lat) + '&mlon=' + encodeURIComponent(lon) + '#map=18/' + encodeURIComponent(lat) + '/' + encodeURIComponent(lon), target: '_blank', rel: 'noopener noreferrer', title: 'Open in OpenStreetMap' })
+                        .html('<i class="fas fa-globe-americas me-1"></i>OSM');
+
+                    $group.append($preview, $google, $osm);
+                    $ph.parent().append($group);
+                });
+
+                $('.btn-copy').on('click', function () {
+                    var txt = $(this).data('copy') || '';
+                    if (!txt) return;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(txt).then(function () { Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Copied', showConfirmButton: false, timer: 1000 }); });
+                    } else {
+                        var $ta = $('<textarea/>').val(txt).appendTo(document.body).select();
+                        try { document.execCommand('copy'); Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Copied', showConfirmButton: false, timer: 1000 }); } catch (e) { }
+                        $ta.remove();
+                    }
+                });
+            });
+        })();
+    </script>
+
+    <!-- Map preview modal -->
+    <div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Map preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="mapModalMap"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // stagger entrance for cards to make page feel lively
+        document.addEventListener('DOMContentLoaded', function () {
+            var cards = Array.from(document.querySelectorAll('.card'));
+            cards.forEach(function (card, i) {
+                setTimeout(function () {
+                    card.classList.add('animate-in');
+                }, i * 80 + 60);
+            });
+
+            // Prevent any interaction with EDC indicator checkboxes
+            var edcCheckboxes = document.querySelectorAll('.edc-indicator');
+            edcCheckboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function (e) {
+                    e.preventDefault();
+                    return false;
+                });
+                checkbox.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
+                checkbox.addEventListener('keydown', function (e) {
+                    e.preventDefault();
+                    return false;
+                });
+            });
+
+            // Prevent any interaction with Problem EDC checkboxes and radios
+            var problemEDCCheckboxes = document.querySelectorAll('.problem-edc-check');
+            problemEDCCheckboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function (e) {
+                    e.preventDefault();
+                    return false;
+                });
+                checkbox.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
+                checkbox.addEventListener('keydown', function (e) {
+                    e.preventDefault();
+                    return false;
+                });
+            });
+
+            var problemEDCRadios = document.querySelectorAll('.problem-edc-radio');
+            problemEDCRadios.forEach(function (radio) {
+                radio.addEventListener('change', function (e) {
+                    e.preventDefault();
+                    return false;
+                });
+                radio.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
+                radio.addEventListener('keydown', function (e) {
+                    e.preventDefault();
+                    return false;
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

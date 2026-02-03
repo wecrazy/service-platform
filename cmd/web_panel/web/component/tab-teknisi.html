@@ -1,0 +1,437 @@
+
+<div class="row">
+  <div class="col-12 mb-3">
+    <div class="card d-flex flex-row justify-content-between p-3">
+      <h3 class="m-0">
+        Teknisi
+      </h3>
+
+      <div>
+        <button
+          type="button"
+          class="btn btn-outline-info"
+          data-bs-toggle="collapse"
+          data-bs-target="#collapsedKunjungan"
+          aria-expanded="false"
+          aria-controls="collapsedKunjungan"
+          >
+          List Kunjungan 
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-bs-toggle="modal"
+          data-bs-target="#input_data_kunjungan">
+          Input Data Kunjungan 
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="collapse col-12 mb-2 w-100" id="collapsedKunjungan">
+    {{.TABLE_KUNJUNGAN_TEKNISI}}
+  </div>
+  <div class="col-12">
+      {{.TABLE_TEKNISI}}
+  </div>
+</div>
+<div class="modal fade " id="input_data_kunjungan" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen modal-dialog-centered1 ">
+    <div class="modal-content p-3 p-md-5">
+      <div class="modal-body">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="text-center mb-4">
+          <h3>Kunjungan</h3>
+          <p>Masukkan Data Kunjungan Baru</p>
+        </div>
+        <form id="input_data_kunjungan_form" class="row g-3" onsubmit="return false">
+          <div class="col-12 col-sm-12 col-md-6">
+            <label class="form-label" for="nama_teknisi">Teknisi -> id_employee:nama(service_poin) </label>
+            <input type="text" id="nama_teknisi" nama="nama_teknisi" class="form-control typeahead-default-suggestions" placeholder="Namaku" />
+          </div>
+          <div class="col-12 col-sm-6 col-md-3">
+            <label class="form-label" for="spk_number">SPK No</label>
+            <input
+              type="text"
+              id="spk_number"
+              name="spk_number"
+              maxlength="20"
+              class="form-control typeahead-default-suggestions"
+              placeholder="1234567890" />
+          </div>
+          <div class="col-12 col-sm-6 col-md-3">
+            <label class="form-label" for="wo_number">WO No</label>
+            <div class="input-group input-group-merge">
+              <input
+                type="text"
+                id="wo_number"
+                name="wo_number"
+                class="form-control typeahead-default-suggestions"
+                maxlength="20"
+                placeholder="123456789012" />
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="serial_number">SN Terminal</label>
+            <input type="text" id="serial_number"name="serial_number" class="form-control typeahead-default-suggestions" placeholder="Ketik Minimal 1 Angka" />
+          </div>
+          <div class="col-12 col-md-6">
+              <label for="nama_aplikasi" class="form-label">Nama Aplikasi</label>
+              <select id="nama_aplikasi" name="nama_aplikasi" class="select2 form-select form-select-md" data-allow-clear="true"  required>
+                  <option value="">Select Aplikasi</option>
+                  <!-- Options will be fetched from {{.get_nama_aplikasi}} URL -->
+              </select>
+          </div>
+          <div class="col-12 col-md-6">
+              <label for="versi_aplikasi" class="form-label">Versi Aplikasi</label>
+              <select id="versi_aplikasi" name="versi_aplikasi" class="select2 form-select form-select-md" data-allow-clear="true"  required>
+                  <option value="">Select Versi</option>
+                  <!-- This will be populated based on selected Nama Aplikasi -->
+              </select>
+          </div>
+        
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="tid">EDC TID</label>
+            <input
+              type="text"
+              id="tid"
+              name="tid"
+              maxlength="8"
+              class="form-control"
+              placeholder="123456789012" />
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="mid">EDC MID</label>
+            <input
+              type="text"
+              id="mid"
+              name="mid"
+              maxlength="15"
+              class="form-control"
+              placeholder="123456789012" />
+          </div>
+          <div class="col-12">
+            <h5 id="sn-info">
+
+            </h5>
+          </div>
+          <div class="col-12">
+            <label class="form-label text-center w-100" for="remark">Remark (Catatan)</label>
+            <textarea
+              type="text"
+              id="remark"
+              name="remark"
+              class="form-control"
+              placeholder="Remark (Catatan)" ></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="kunci">Input Kode </label>
+            <input
+              type="text"
+              id="kunci"
+              name="kunci"
+              maxlength="20"
+              class="form-control"
+              placeholder="123456789012" />
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary w-100" id="unlock_serial_number">
+              Generate
+            </button>
+          </div>
+          <div class="col-12">
+            <label class="form-label text-center w-100" for="kode_buka">Kode Buka</label>
+            <h1 class="text-center w-100" id="kode_buka"></h1>
+          </div>
+          <div class="col-12 row mb-2 p-0 m-0">
+            <div class="col-3" ></div>
+            <div class="col-6">
+              <button class="btn btn-secondary w-100 d-none" id="save_input_data">
+                Save
+              </button>
+            </div>
+            <div class="col-3" ></div>
+          </div>
+          <div class="col-12 row p-0 m-0" >
+            <div class="col-5" ></div>
+            <div class="col-2" >
+              <button class="btn btn-outline-danger w-100" id="clear_form" type="button">Clear</button>
+            </div>
+            <div class="col-5" ></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // Bloodhound instance for Nama Teknisi (Dynamic Search)
+  var nama_teknisi = new Bloodhound({
+    datumTokenizer: Bloodhound.tokenizers.whitespace,
+    queryTokenizer: Bloodhound.tokenizers.whitespace,
+    remote: {
+      url: '{{.get_nama_teknisi}}?q=%QUERY', // Backend endpoint to search teknisi
+      wildcard: '%QUERY' // Placeholder for the query input
+    }
+  });
+
+  // Bloodhound instance for Serial Number (Dynamic Search)
+  var serial_number = new Bloodhound({
+    datumTokenizer: Bloodhound.tokenizers.whitespace,
+    queryTokenizer: Bloodhound.tokenizers.whitespace,
+    remote: {
+      url: '{{.get_serial_number}}?q=%QUERY', // Backend endpoint to search serial numbers
+      wildcard: '%QUERY'
+    }
+  });
+
+  // Initialize Typeahead for Nama Teknisi with Remote Search
+  $('#nama_teknisi').typeahead(
+    {
+      hint: true,
+      highlight: true,
+      minLength: 0 // Only search when the user types at least 2 characters
+    },
+    {
+      name: 'teknisi',
+      source: nama_teknisi,
+      limit: 15 // Limit the number of suggestions displayed to 15
+    }
+  );
+
+  // Initialize Typeahead for Serial Number with Remote Search
+  $('#serial_number').typeahead(
+    {
+      hint: true,
+      highlight: true,
+      minLength: 1
+    },
+    {
+      name: 'serialnumber',
+      source: serial_number
+    }
+  );
+
+
+    $.get("{{.get_nama_aplikasi}}", function(data) {
+        // Assuming data contains an array of application names
+        // const aplikasiOptions = data.map(app => `<option value="${app}">${app}</option>`).join('');
+            // Generate the option elements
+        var current_app_name = ""
+        var app_cimb_found = false;
+        // const aplikasiOptions = data.map(app => {
+        //   console.log(app)
+        //   console.log(app.includes("CIMB"))
+        //     // Check if the app name contains "CIMB"
+        //     const isSelected = app.includes("CIMB") ? "selected" : "";
+        //     if (app.includes("CIMB")){
+        //       if (!app_cimb_found) {
+        //         current_app_name = app;
+        //       }
+        //       app_cimb_found = true;
+        //     }
+        //     return `<option value="${app}" ${isSelected}>${app}</option>`;
+        // }).join('');
+        const aplikasiOptions = data.map(app => {
+          // Log each app object to the console
+          // console.log(app);
+          // console.log(app.ApplicationName.includes("CIMB"));
+          
+          // Check if the ApplicationName contains "CIMB"
+          const isSelected = app.PackageName.includes("com.pax_cimb_single") ? "selected" : "";
+
+          // Track the first occurrence of the app with "CIMB"
+          if (app.PackageName.includes("com.pax_cimb_single")) {
+              if (!app_cimb_found) {
+                  current_app_name = app.ApplicationName;
+              }
+              app_cimb_found = true;
+          }
+
+          // Return an option element for each app
+          return `<option value="${app.ApplicationName}" ${isSelected}>${app.ApplicationName}</option>`;
+      }).join('');
+
+        $('#nama_aplikasi').append(aplikasiOptions);
+        // console.log("current_app_name")
+        // console.log(current_app_name)
+        $.get(`{{.get_versi_aplikasi}}?app=${current_app_name}`, function(data) {
+            // Assuming `data` contains an array of version strings
+            const versiOptions = data.map(version => `<option value="${version}">${version}</option>`).join('');
+            $('#versi_aplikasi').prop('disabled', false).html(versiOptions).attr('required', true);
+        }).fail(function() {
+            // Handle error
+            alert('Error fetching versions. Please try again.');
+        });
+    }).fail(function() {
+        alert('Error fetching applications. Please try again.');
+    });
+
+    // Handle change event for Nama Aplikasi
+    $('#serial_number').on('change', function() {
+        const sn = $(this).val();
+        console.log("Serial Number: ", sn); // Debugging purpose
+        if (sn) {
+            // Enable the Nama Aplikasi dropdown and fetch the options
+            $('#nama_aplikasi').prop('disabled', false).attr('required', true);
+            $.get("{{.get_nama_aplikasi}}", function(data) {
+                // Assuming data contains an array of application names
+                const aplikasiOptions = data.map(app => `<option value="${app}">${app}</option>`).join('');
+                $('#nama_aplikasi').append(aplikasiOptions);
+            }).fail(function() {
+                alert('Error fetching applications. Please try again.');
+            });
+        } else {
+            // Reset and disable the version input
+            $('#nama_aplikasi').prop('disabled', true).html('').attr('required', false);
+            $('#versi_aplikasi').prop('disabled', true).html('').attr('required', false);
+
+        }
+    });
+    // Handle change event for Nama Aplikasi
+    $('#nama_aplikasi').on('change', function() {
+        const appName = $(this).val();
+        if (appName) {
+            // Fetch the versions from the server
+            $.get(`{{.get_versi_aplikasi}}?app=${appName}`, function(data) {
+                // Assuming `data` contains an array of version strings
+                const versiOptions = data.map(version => `<option value="${version}">${version}</option>`).join('');
+                $('#versi_aplikasi').prop('disabled', false).html(versiOptions).attr('required', true);
+            }).fail(function() {
+                // Handle error
+                alert('Error fetching versions. Please try again.');
+            });
+        } else {
+            // Reset and disable the version input
+            $('#versi_aplikasi').prop('disabled', true).html('').attr('required', false);
+        }
+    });
+    $('#versi_aplikasi').on('change', function() {
+        const appName = $('#nama_aplikasi').val();
+        const verName = $(this).val();
+        const sn = $('#serial_number').val();
+
+        if (verName) {
+            $.get(`{{.get_nama_aplikasi}}/tid_mid?app=${appName}&sn=${sn}`, function(data) {
+                if (data.tid){
+                  $('#tid').val(data.tid);
+                }
+                if (data.mid){
+                  $('#mid').val(data.mid);
+                }
+            }).fail(function() {
+                // Handle error
+                alert('Error fetching versions. Please try again.');
+            });
+            $.get(`{{.get_nama_aplikasi}}/info?app=${appName}&sn=${sn}`, function(data) {
+              $('#sn-info').html(data.info);
+            }).fail(function() {
+                // Handle error
+                alert('Error fetching info. Please try again.');
+            });
+        } else {
+            // Reset and disable the version input
+            $('#versi_aplikasi').prop('disabled', true).html('').attr('required', false);
+        }
+    });
+</script>
+<script>
+   const select2 = $('.select2');
+  if (select2.length) {
+    select2.each(function () {
+      var $this = $(this);
+      $this.wrap('<div class="position-relative"></div>').select2({
+        placeholder: 'Select value',
+        dropdownParent: $this.parent()
+      });
+    });
+  }
+</script>
+
+<script>
+  $('#unlock_serial_number').on('click', function(e) {
+      e.preventDefault();
+      isSaved = false;
+      GenerateCode(isSaved);
+  });
+  $('#save_input_data').on('click', function(e) {
+      e.preventDefault();
+      isSaved = true;
+      GenerateCode(isSaved);
+  });
+  function GenerateCode(isSaved){
+    
+      // Gather form data
+      const formData = {
+          nama_teknisi: $('#nama_teknisi').val(),
+          spk_number: $('#spk_number').val(),
+          wo_number: $('#wo_number').val(),
+          serial_number: $('#serial_number').val(),
+          nama_aplikasi: $('#nama_aplikasi').val(),
+          versi_aplikasi: $('#versi_aplikasi').val(),
+          tid: $('#tid').val(),
+          mid: $('#mid').val(),
+          kunci: $('#kunci').val(),
+          remark: $('#remark').val()
+      };
+
+      // Check if any form field is empty
+      for (const field in formData) {
+          if (!formData[field]) { // If the field is empty or null
+            if (field == "spk_number"|| field == "wo_number"|| field == "tid"|| field == "mid"){
+              continue
+            }
+              Swal.fire({
+                  icon: 'warning',
+                  title: 'Data Kosong',
+                  text: `Data ${field.replace('_', ' ').toUpperCase()} Kosong, Mohon Di isi Terlebih dahulu.`,
+              });
+              return; // Stop form submission
+          }
+      }
+      var save = (isSaved)?1:0;
+      // Send AJAX POST request
+      $.ajax({
+          url: `{{.post_unlock_key}}?save=${save}`,  // Replace with your actual POST URL
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(formData),
+          success: function(response) {
+              // Assuming the response contains the 'kode_buka' value
+              $('#kode_buka').text(response.kode_buka);
+              $('#save_input_data').removeClass('d-none');
+
+              if (save) {
+                  // Show SweetAlert, notify the user that the form was saved
+                  Swal.fire({
+                      icon: 'success',
+                      title: 'Saved',
+                      text: 'Your data has been successfully saved.',
+                      timer: 3000,  // Auto-close after 3 seconds
+                      showConfirmButton: false
+                  }).then(() => {
+                      // Reload the page after 3 seconds
+                      setTimeout(() => {
+                          location.reload();  // Reload the page
+                      }, 300);
+                  });
+              }
+          },
+          error: function() {
+              Swal.fire({
+                  icon: 'warning',
+                  title: 'Error',
+                  text: 'Error submitting the form. Please try again.',
+              });
+          }
+      });
+  }
+</script>
+<script>
+  $('#clear_form').click(function() {
+    // Clear all input fields in the form
+    $('#input_data_kunjungan_form').trigger('reset');
+    
+    // Clear the inner HTML of #sn-info
+    $('#sn-info').html('');
+  });
+</script>

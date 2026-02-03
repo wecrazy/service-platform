@@ -1,0 +1,102 @@
+<!-- Operator List Table -->
+<div class="card">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Search Filter</h3>
+        <div class="d-flex justify-content-between align-items-center row py-3 gap-3 gap-md-0">
+          <div class="col-md-4 merchant_id"></div>
+        </div>
+      </div>
+      <div class="card-datatable table-responsive">
+        <table class="datatables-operators table border-top">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Merchant ID</th>
+              <th>Terminal ID</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<!-- Modal to add new user member START -->
+<div class="modal fade" id="addOperator" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-simple modal-edit-user">
+      <div class="modal-content p-3 p-md-5">
+        <div class="modal-body">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="text-center mb-4">
+            <h3>Member Information</h3>
+            <p>Updating user details will receive a privacy audit.</p>
+          </div>
+          <form id="editOperatorForm" class="row g-3" onsubmit="return false">
+            <div class="col-6">
+              <label class="form-label" for="add-operator-username">UserName</label>
+              <input
+                type="text"
+                id="add-operator-username"
+                name="add-operator-username"
+                class="form-control"
+                placeholder="" />
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="add-operator-email">Email</label>
+              <input
+              type="text"
+              id="add-operator-email"
+              name="add-operator-email"
+              class="form-control"
+              placeholder="" />
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="add-operator-password">Password</label>
+              <input
+                type="password"
+                id="add-operator-password"
+                name="add-operator-password"
+                class="form-control"
+                placeholder="" />
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="add-operator-status">Status</label>
+              <select id="add-operator-status" name="add-operator-status" class="form-select">
+                <option value="">Select</option>
+                <option value="2">Pending</option>
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+              </select>
+            </div>
+            </div>
+            <div class="col-12 text-center">
+              <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit" onclick="addNewOperatorForm()">Submit</button>
+              <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal to add new user member END -->
+  <script src="../assets/js/app-operator-list.js"></script>
+  <script>
+    $.ajax({
+      type: 'GET',
+      url: webPath+'admin/operator',
+      contentType: 'application/json; charset=utf-8',
+      dataType: 'json',
+      // data: JSON.stringify(formData),
+      success: function (response) {
+          console.log('Data sent successfully:', response);
+      },
+      error: function (error) {
+        console.log(error)
+        console.error('Error sending data:', error);
+      },
+  });
+  </script>

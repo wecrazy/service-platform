@@ -1,0 +1,278 @@
+{{ define "issuer_statistic" }}
+<div class="card-header d-flex align-items-center justify-content-between pb-0">
+  <div class="card-title mb-0">
+    <h5 class="m-0 me-2">Statistik Issuer</h5>
+    <div>
+      <small class="text-muted" id="active_transaksi"></small>
+      <small class="text-muted"> | </small>
+      <small class="text-muted" id="done_transaksi"></small>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button
+      class="btn p-0"
+      type="button"
+      id="orederStatistics"
+      data-bs-toggle="dropdown"
+      aria-haspopup="true"
+      aria-expanded="false">
+      <i class="bx bx-dots-vertical-rounded"></i>
+    </button>
+    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="orederStatistics">
+      <button class="dropdown-item" onclick="$('.dt_issuers_total_trx').DataTable().ajax.reload();">Refresh</button>
+      <a class="dropdown-item" href="javascript:void(0);">Share</a>
+    </div>
+  </div>
+</div>
+<div class="card-body pb-1">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex flex-column align-items-center gap-1">
+      <h2 class="mb-2" id="total_transaksi" >0</h2>
+      <span>Total Transaksi</span>
+    </div>
+    <div id="orderStatisticsChart"></div>
+  </div>
+  <table class="dt_issuers_total_trx table border-top">
+    <thead class="d-none">
+      <tr>
+        <th></th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+  </table>
+</div>
+<script>
+  (function() {
+    let cardColor, headingColor, legendColor, labelColor, shadeColor, borderColor;
+
+    if (isDarkStyle) {
+      cardColor = config.colors_dark.cardColor;
+      headingColor = config.colors_dark.headingColor;
+      legendColor = config.colors_dark.bodyColor;
+      labelColor = config.colors_dark.textMuted;
+      borderColor = config.colors_dark.borderColor;
+    } else {
+      cardColor = config.colors.cardColor;
+      headingColor = config.colors.headingColor;
+      legendColor = config.colors.bodyColor;
+      labelColor = config.colors.textMuted;
+      borderColor = config.colors.borderColor;
+    }
+    var dt_issuers_total_trx = $('.dt_issuers_total_trx');
+    // Users List datatable
+    if (dt_issuers_total_trx.length) {
+      dt_issuers_total_trx.DataTable({
+        lengthMenu: [7, 10, 25, 50], 
+        pageLength: 7,
+        ajax: webPath + 'tab-dashboards/card-issuers/table',
+        columns: [
+          // columns according to JSON
+          { data: '' },
+          { data: "name" },
+          { data: "total_trx_active" },
+        ],
+        columnDefs: [
+          {
+            // For Responsive
+            className: 'control m-0 p-0',
+            orderable: false,
+            searchable: false,
+            responsivePriority: 2,
+            targets: 0,
+            render: function (data, type, full, meta) {
+              return '';
+            }
+          },
+          {
+            // User full name and email
+            targets: 1,
+            className: 'mx-0 px-0',
+            responsivePriority: 1,
+            render: function (data, type, full, meta) {
+              var editable = ""
+              if(full["updating"] == "1"){
+                editable = "editable"
+              }
+              var $name = full['name'],
+                $email = full['type'],
+                $image = full['src'];
+              if ($image) {
+                // For Avatar image
+                var $output =
+                  '<img src="'+ $image + '" alt="image" class="avatar-image rounded-circle">';
+              } else {
+                // For Avatar badge
+                var stateNum = Math.floor(Math.random() * 6) + 1;
+                var states = ['success', 'danger', 'warning', 'info', 'dark', 'primary', 'secondary'];
+                var $state = states[stateNum],
+                  $name = full['name'],
+                  $initials = $name.match(/\b\w/g) || [];
+                $initials = (($initials.shift() || '') + ($initials.pop() || '')).toUpperCase();
+                switch ($name.toLowerCase()) {
+                  case "visa":
+                    $initials = `<i class='bx bxl-visa'></i>`;
+                    break;
+                  case "master":
+                    $initials = `<i class='bx bxl-mastercard' ></i>`;
+                    break;
+                  default:
+                    break;
+                }
+                $output = '<span class="avatar-initial rounded-circle bg-label-' + $state + '">' + $initials + '</span>';
+              }
+
+              const parts = meta.settings.ajax.split('/');
+              // Creates full output for row
+              var $row_output =
+                '<div class="d-flex justify-content-left align-items-center">' +
+                '<div class="avatar-wrapper">' +
+                '<div class="avatar me-3">' +
+                $output +
+                '</div>' +
+                '</div>' +
+                '<div class="d-flex flex-column">' +
+                '<p class="'+editable+' mb-0" patch="tab-roles/'+parts[parts.length - 2]+'" field="fullname" point="'+full['id']+'" >'+$name+'</p>'+
+                '<small class="text-muted '+editable+'" patch="tab-roles/'+parts[parts.length - 2]+'" field="email" point="'+full['id']+'" >' +
+                $email +
+                '</small>' +
+                '</div>' +
+                '</div>';
+              return $row_output;
+            }
+          },
+          {
+            targets: 2,
+            responsivePriority: 2,
+            className: 'mx-0 px-0 d-flex justify-content-end',
+            render: function (data, type, full, meta) {
+              var total = full["total_trx_active"] + full["total_trx_done"]
+              return total;
+            }
+          },
+        ],
+        order: [[2, 'desc']],
+        dom:
+          '<"row mx-2"' +
+          '<"col-sm-12 col-md-1 col-lg-1" >' +
+          '<"col-sm-12 col-md-11 col-lg-11"<"dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-md-end justify-content-center align-items-center flex-sm-nowrap flex-wrap me-1"<"me-3"><" w-px-200 pb-3 pb-sm-0">>>'+
+          '>t' +
+          '<"row mx-2"' +
+          '>',
+        language: {
+          sLengthMenu: '_MENU_',
+          search: '',
+          searchPlaceholder: 'Search User..'
+        },
+        createdRow: function(row, data, dataIndex) {
+          $(row).css('border-color','transparent');
+        },
+        initComplete: function (settings, json) {
+          var totalActive = 0;
+          var totalDone = 0;
+
+          json.data.forEach(function (row) {
+            totalActive += row.total_trx_active;
+            totalDone += row.total_trx_done;
+          });
+
+          var total = totalActive + totalDone;
+
+          // Optionally, update the DOM to display the total
+          $('#active_transaksi').text(totalActive + " Trx Aktif"); 
+          $('#done_transaksi').text(totalDone + " Trx Selesai"); 
+          $('#total_transaksi').text(total); 
+
+
+          var seriesData = [];
+          var labels = [];
+
+          json.data.forEach(function (row) {
+            var total_now = row.total_trx_active + row.total_trx_done;
+            seriesData.push(total_now);
+            labels.push(row.name);
+          });
+
+          const chartOrderStatistics = document.querySelector('#orderStatisticsChart');
+          const orderChartConfig = {
+            chart: {
+              height: 165,
+              width: 130,
+              type: 'donut'
+            },
+            labels: labels,
+            series: seriesData,
+            colors: [config.colors.primary, config.colors.secondary, config.colors.info, config.colors.success],
+            stroke: {
+              width: 5,
+              colors: [cardColor]
+            },
+            dataLabels: {
+              enabled: false,
+              formatter: function (val, opt) {
+                return parseInt(val);
+              }
+            },
+            legend: {
+              show: false
+            },
+            grid: {
+              padding: {
+                top: 0,
+                bottom: 0,
+                right: 15
+              }
+            },
+            states: {
+              hover: {
+                filter: { type: 'none' }
+              },
+              active: {
+                filter: { type: 'none' }
+              }
+            },
+            plotOptions: {
+              pie: {
+                donut: {
+                  size: '75%',
+                  labels: {
+                    show: true,
+                    value: {
+                      fontSize: '1.5rem',
+                      fontFamily: 'Public Sans',
+                      color: headingColor,
+                      offsetY: -15,
+                      formatter: function (val) {
+                        return parseInt(val);
+                      }
+                    },
+                    name: {
+                      offsetY: 20,
+                      fontFamily: 'Public Sans'
+                    },
+                    total: {
+                      show: true,
+                      fontSize: '0.8125rem',
+                      color: legendColor,
+                      label: 'Total',
+                      formatter: function (w) {
+                        return seriesData.reduce((a, b) => a + b, 0);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          };
+
+          if (typeof chartOrderStatistics !== undefined && chartOrderStatistics !== null) {
+            const statisticsChart = new ApexCharts(chartOrderStatistics, orderChartConfig);
+            statisticsChart.render();
+          }
+        }
+      });
+    }
+
+  })();
+</script>
+{{ end }}

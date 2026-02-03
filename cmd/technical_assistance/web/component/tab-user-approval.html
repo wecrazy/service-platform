@@ -1,0 +1,141 @@
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="content-left">
+              <label for="total-users">Waiting for Approval</label>
+              <div class="d-flex align-items-end mt-2">
+                <h4 class="mb-0 me-2" id="total-request"></h4>
+                <small class="text-success"></small>
+              </div>
+              <p class="mb-0">Total Requests</p>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="bx bx-user bx-sm"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="content-left">
+              <label for="total-active-users">Approved</label>
+              <div class="d-flex align-items-end mt-2">
+                <h4 class="mb-0 me-2" id="total-approved"></h4>
+                <small class="text-danger"></small>
+              </div>
+              <p class="mb-0">Total Approved Users</p>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-success">
+                <i class="bx bxs-user-check bx-sm"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="content-left">
+              <label for="total-inactive-users">Denied</label>
+              <div class="d-flex align-items-end mt-2">
+                <h4 class="mb-0 me-2" id="total-denied"></h4>
+                <small class="text-danger"></small>
+              </div>
+              <p class="mb-0">Total Denied Users</p>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-danger">
+                <i class="bx bxs-user-x bx-sm"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Approval List Table -->
+<div class="card">
+    <div class="card-header border-bottom">
+      <h5 class="card-title">Search Filter</h5>
+      <div class="d-flex row py-3 gap-3 gap-md-0">
+        <div class="col-md-4 user_status"></div>
+      </div>
+    </div>
+    <div class="card-datatable table-responsive">
+      <table class="datatables-approval table border-top">
+        <thead>
+          <tr>
+            <th></th>
+            <th>User</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+
+<!-- Modal to add new user approval START -->
+<div class="modal fade" id="addApproval" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-simple modal-edit-user">
+    <div class="modal-content p-3 p-md-5">
+      <div class="modal-body">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="text-center mb-4">
+          <h3>Approval Form</h3>
+          <p>Updating new user role and set corporate.</p>
+        </div>
+        <form id="webUserApprovalForm" class="row g-3">
+          <input type="hidden" id="user-admin-approval-id" value="" required>
+          <div class="col-6">
+            <label class="form-label" for="add-approval-role">Role</label>
+            <select id="add-approval-role" name="add-approval-role" class="form-select" required>
+              <option value="">Select</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label" for="add-approval-corporate">Corporate</label>
+            <select id="add-approval-corporate" name="add-approval-corporate" class="form-select" required>
+              <option value="">Select</option>
+            </select>
+          </div>
+          </div>
+          <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit" onclick="webUserApproval()">Submit</button>
+            <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal to add new user approval END -->
+<script src="../assets/js/app-user-approval-list.js"></script>
+<script>
+getRoleListApproval()
+getApprovalInfoValue()
+$.ajax({
+  type: 'GET',
+  url: webPath+'tab-merchant-approval/approval',
+  contentType: 'application/json; charset=utf-8',
+  dataType: 'json',
+  // data: JSON.stringify(formData),
+  success: function (response) {
+      console.log('Data sent successfully:', response);
+  },
+  error: function (error) {
+    console.log(error)  
+    console.error('Error sending data:', error);
+  },
+});
+</script>

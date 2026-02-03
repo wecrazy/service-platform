@@ -1,0 +1,263 @@
+/* .tab-content {
+    display: none;
+} */
+/* Add this CSS in your stylesheet or in the style section of your HTML */
+.smaller-image {
+  width: 150px; /* Adjust the width as needed */
+  height: auto; /* Maintain aspect ratio */
+}
+
+.mygreenbg {
+  background-color: white;
+}
+
+.coverimage {
+  height: 100vh;
+}
+.bp1 {
+  height: 100vh;
+}
+.move-left {
+  /* margin-left: -20px; */
+  position: absolute;
+  left: 17px;
+  top: 15px;
+}
+
+.tab-pane {
+  display: none;
+}
+.tab-pane.active.show {
+  display: block;
+}
+
+/* ---- Upload Area Design START ---- */
+.wrapper-ua {
+  box-shadow: 7px 7px 12px rgba(0, 0, 0, 0.05);
+}
+.wrapper-ua header {
+  /* color: #6990f2; */
+  font-size: 27px;
+  font-weight: 600;
+  text-align: center;
+}
+.wrapper-ua .form-ua {
+  height: 100px;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+/* .form-ua :where(i, p) {
+	color: #6990f2;
+  } */
+.form-ua i {
+  font-size: 50px;
+}
+.form-ua p {
+  margin-top: 15px;
+  font-size: 16px;
+}
+
+.sec-ua .row {
+  margin-bottom: 10px;
+  list-style: none;
+  padding: 15px 20px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sec-ua .row i {
+  font-size: 30px;
+}
+.sec-ua .details span {
+  font-size: 14px;
+}
+.progress-area .row .content {
+  width: 100%;
+  margin-left: 15px;
+}
+.progress-area .details {
+  display: flex;
+  align-items: center;
+  margin-bottom: 7px;
+  justify-content: space-between;
+}
+.progress-area .content .progress-bar {
+  height: 6px;
+  width: 100%;
+  border-radius: 30px;
+}
+.content .progress-bar .progress {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+}
+.uploaded-area {
+  max-height: 232px;
+  overflow-y: scroll;
+}
+.uploaded-area.onprogress {
+  max-height: 150px;
+}
+.uploaded-area::-webkit-scrollbar {
+  width: 0px;
+}
+.uploaded-area .row .content {
+  display: flex;
+  align-items: center;
+}
+.uploaded-area .row .details {
+  display: flex;
+  margin-left: 15px;
+  flex-direction: column;
+}
+.uploaded-area .row .details .size {
+  color: #404040;
+  font-size: 11px;
+}
+.uploaded-area i.fa-check {
+  font-size: 16px;
+}
+/* ---- Upload Area Design END ---- */
+
+/* ---- Glowing Red Background START ---- */
+.glowing-red-background {
+  background-color: red;
+  box-shadow: 0 0 10px red, 0 0 20px red, 0 0 30px red, 0 0 40px red;
+  transition: background-color 0.5s, box-shadow 0.5s;
+}
+/* ---- Glowing Red Background END ---- */
+
+.profile-image-container {
+  position: relative;
+  width: 255px;
+  height: 255px;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  cursor: pointer;
+}
+.profile-image-container img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: translate(-50%, -50%);
+}
+
+.avatar {
+  position: relative;
+  width: 40px; /* Set the container width */
+  height: 40px; /* Set the container height */
+  overflow: hidden; /* Hide any overflow */
+  border-radius: 50%; /* Ensures it's circular */
+  border: 2px solid #ddd; /* Example border */
+  cursor: pointer;
+}
+
+.avatar-image {
+  width: 100%; /* Ensures the image fills the container */
+  height: auto; /* Allows the height to adjust automatically */
+  object-fit: cover; /* Scales the image while maintaining aspect ratio */
+}
+
+/* Archived */
+/* Loading Gradient Animated Backgroud START*/
+/* .loading_background {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(
+    270deg,
+    #ffd7a6,
+    #fc99d5,
+    #b5a7fa,
+    #b3d6fe,
+    #acfde9
+  );
+  background-size: 800% 800%;
+  animation: gradientAnimation 10s ease infinite;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+} */
+/* Loading Gradient Animated Backgroud END*/
+
+.loading_background {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(
+    -45deg,
+    #ffd7a6,
+    #fc99d5,
+    #b5a7fa,
+    #b3d6fe,
+    #acfde9
+  );
+  background-size: 600% 600%;
+  animation: gradientAnimation 20s ease-in-out infinite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+/* Optional: Add a soft fade-in on page load */
+.loading_background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  z-index: -1;
+  animation: fadeIn 1s ease-in-out forwards;
+  opacity: 0;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+#kode_buka {
+  font-size: 6em; /* Increase the size of the text */
+  animation: blink-color 1s infinite; /* Add a blinking color animation */
+}
+
+/* Define the animation */
+@keyframes blink-color {
+  0% {
+    color: red;
+  }
+  50% {
+    color: blue;
+  }
+  100% {
+    color: red;
+  }
+}

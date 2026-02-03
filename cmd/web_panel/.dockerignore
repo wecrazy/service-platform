@@ -1,0 +1,36 @@
+# Exclude large or unnecessary files
+ChatAndCall.7z
+
+# # Exclude directories not needed in container
+#bin/
+#cert/
+#log/
+#uploads/
+#tests/
+#ubuntu/
+#postman/
+#installer/
+#mini_pc/
+#mini_pc_metland/
+#ollama/
+#pkg/
+#shared/
+#ws/
+
+# # Exclude Git and other meta files
+#.git/
+#.gitattributes
+#.gitignore
+#README.md
+#GIT_WORK_FLOW.md
+#package_needed
+#switch-config.sh
+
+# # Exclude IDE files
+#.vscode/
+#.hintrc
+#.prettierrc
+
+# Exclude build artifacts
+web_panel
+*.tar

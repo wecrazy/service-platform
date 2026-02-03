@@ -1,0 +1,87 @@
+# HTTP Proxy
+server {
+    listen 5202;
+    server_name _;
+
+    location / {
+        proxy_pass http://192.101.1.149:1152;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+
+# HTTPS Proxy
+server {
+    listen 1153 ssl;
+    server_name _;
+
+    ssl_certificate /etc/nginx/ssl/cert/server.pem;
+    ssl_certificate_key /etc/nginx/ssl/cert/server.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    location / {
+        proxy_pass http://192.101.1.149:1152;
+        proxy_ssl_verify off;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        # Add timeout settings
+        proxy_connect_timeout 1200s; # Time to establish connection to the upstream server
+        proxy_send_timeout 1200s; # Timeout for sending data to the upstream server
+        proxy_read_timeout 1200s; # Timeout for reading data from the upstream server
+    }
+}
+
+
+# Web Panel
+# IP Public: 146.196.106.202:3420 => from port 2220
+# https://paxstorenewdownload.csna4u.com:3420/
+
+server {
+    listen 2220 ssl;
+    server_name _;
+
+    ssl_certificate /etc/nginx/ssl/cert/server.pem;
+    ssl_certificate_key /etc/nginx/ssl/cert/server.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Custom error page for 502 errors
+    # error_page 502 /error_page/502.html;
+    error_page 502 /error_page/502.html?status=502&upstream_status=$upstream_status&request_uri=$request_uri&server=$server_name&time=$time_iso8601;
+    
+    # Serve error pages from local directory
+    location /error_page/ {
+        alias /home/user/server/service-platform/cmd/web_panel/web/error_page/;
+        internal;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:2221;
+
+        # 🚀 WebSocket support:
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+
+        # Keep your usual headers:
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        # Increase proxy timeouts to 30 minutes
+        proxy_connect_timeout 1800s;
+        proxy_send_timeout 1800s;
+        proxy_read_timeout 1800s;
+
+        # Add this line to allow larger file uploads
+        client_max_body_size 50M;
+
+        # Intercept upstream errors to trigger custom error pages
+        proxy_intercept_errors on;
+    }
+}

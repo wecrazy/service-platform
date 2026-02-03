@@ -1,0 +1,96 @@
+
+#IP Lokal:  10.110.8.22:4426
+#IP Publik: 103.158.126.110:14426
+
+# Golang Service Dashboard BSIM
+#IP Lokal:  10.110.8.22:4425
+#IP Publik: 103.158.126.110:14425
+
+
+# HTTP Proxy
+server {
+    listen 14425;
+    server_name _;
+
+    location / {
+        proxy_pass http://10.110.8.22:4425;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+
+# HTTPS Proxy
+server {
+    listen 4426 ssl;
+    server_name _;
+
+    ssl_certificate /etc/nginx/ssl/_.csna4u.com.pem;
+    ssl_certificate_key /etc/nginx/ssl/_.csna4u.com.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    location / {
+        proxy_pass http://10.110.8.22:4425;
+        proxy_ssl_verify off;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+
+# Web Panel
+server {
+    listen 2221 ssl;
+    server_name _;
+
+    ssl_certificate /etc/nginx/ssl/_.csna4u.com.pem;
+    ssl_certificate_key /etc/nginx/ssl/_.csna4u.com.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Custom error page for 502 errors
+    error_page 502 /error_page/502.html;
+    
+    # Serve error pages from local directory
+    location /error_page/ {
+        alias /home/user/Golang/service-platform/cmd/web_panel/web/error_page/;
+        internal;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:2220;   # or 10.110.8.22:2220 if that's your local IP
+
+        # 🚀 Add these lines for WebSocket support:
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+
+        # Keep your usual headers:
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        # Increase proxy timeouts to 30 minutes
+        proxy_connect_timeout 1800s;
+        proxy_send_timeout 1800s;
+        proxy_read_timeout 1800s;
+
+        # Client timeouts - prevent 504 on slow client connections
+        send_timeout 1800s;
+        client_body_timeout 1800s;
+        keepalive_timeout 1800s;
+
+        # Add this line to allow larger file uploads/downloads
+        client_max_body_size 500M;
+
+        # Buffer settings for large responses (Excel files)
+        proxy_buffering on;
+        proxy_buffer_size 128k;
+        proxy_buffers 8 256k;
+        proxy_busy_buffers_size 512k;
+        proxy_temp_file_write_size 512k;
+        proxy_max_temp_file_size 2048m;
+    }
+}

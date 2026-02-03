@@ -1,0 +1,162 @@
+<div class="container-xxl flex-grow-1 container-p-y">
+  <h2 class="py-3 mb-4"><span class="text-muted fw-light"></span>Corporate</h2>
+    <!-- Corporate List Table -->
+<div class="card">
+  <div class="card-header border-bottom">
+    <h5 class="card-title">Search Filter</h5>
+    <div class="d-flex row py-3 gap-3 gap-md-0">
+      <div class="col-md-4 corporate_name"></div>
+    </div>
+  </div>
+  <div class="card-datatable table-responsive">
+    <table class="datatables-corporate table border-top">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Date</th>
+          <th>Corporate Name</th>
+          <th>Address</th>
+          <th>Deposit</th>
+          <th>Status</th>
+          <th>Action</th>
+      </tr>
+      </thead>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- Modal to add new corporate START -->
+<div class="modal fade" id="addCorporate" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-simple modal-edit-user">
+    <div class="modal-content p-3 p-md-5">
+      <div class="modal-body">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="text-center mb-4">
+          <h3>Corporate Information</h3>
+          <p>Updating user details will receive a privacy audit.</p>
+        </div>
+        <form id="editcorporateForm" class="row g-3" onsubmit="return false">
+          <div class="col-6">
+            <label class="form-label" for="add-corporate-name">Corporate Name</label>
+            <input
+              type="text"
+              id="add-corporate-name"
+              name="add-corporate-name"
+              class="form-control"
+              placeholder="" />
+          </div>
+          <div class="col-6">
+            <label class="form-label" for="add-corporate-address">Address</label>
+            <input
+            type="text"
+            id="add-corporate-address"
+            name="add-corporate-address"
+            class="form-control"
+            placeholder="" />
+          </div>
+          </div>
+          <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit" onclick="addNewCorporateForm()">Submit</button>
+            <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal to add new corporate END -->
+<!-- Form with Image horizontal Modal -->
+<div
+class="modal-onboarding modal fade animate__animated"
+id="corporateBalanceModal"
+tabindex="-1"
+aria-hidden="true">
+<div class="modal-dialog modal-xl" role="document">
+  <div class="modal-content text-center">
+    <div class="modal-header border-0">
+      <!-- <a class="text-muted close-label" href="javascript:void(0);" data-bs-dismiss="modal"
+        >Skip Intro</a
+      > -->
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="modal"
+        aria-label="Close"></button>
+    </div>
+    <div class="modal-body onboarding-horizontal p-0">
+      <div class="onboarding-media">
+        <img
+          src="../assets/img/illustrations/boy-verify-email-light.png"
+          alt="boy-verify-email-light"
+          width="273"
+          class="img-fluid"
+          data-app-dark-img="illustrations/boy-verify-email-dark.png"
+          data-app-light-img="illustrations/boy-verify-email-light.png" />
+      </div>
+      <div class="onboarding-content mb-0">
+        <h4 class="onboarding-title text-body" id="corporate_name" >Corporate Deposit</h4>
+        <h5 class="onboarding-title text-body" id="corporate_deposit"></h5>
+        <div class="onboarding-info">
+          In this example you can see a form where you can request some additional information
+          from the customer when they land on the app page.
+        </div>
+        <form>
+          <div class="row">
+            <div class="col-sm-12">
+
+              <div class="mb-3">
+                <input type="hidden" id="corpid" value="">
+                <label for="nameEx7deposit" class="form-label">Enter Additional Deposit Value</label>
+                <input
+                  class="form-control"
+                  placeholder="10000"
+                  type="number"
+                  value=""
+                  tabindex="0"
+                  id="nameEx7deposit" />
+              </div>
+            </div>
+            
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="modal-footer border-0">
+      <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+        Close
+      </button>
+      <button type="button" id="corporateDepositFormBtn" class="btn btn-primary">Submit</button>
+    </div>
+  </div>
+</div>
+</div>
+<!--/ Form with Image horizontal Modal -->
+<script src="../assets/js/app-corporate-list.js"></script>
+<script>
+$("#corporateDepositFormBtn").on("click", function () {
+  console.log("test");
+  var corpid = $("#corpid").val();
+  var depositValue = $("#nameEx7deposit").val();
+  var formData = {
+    corpid: corpid,
+    depositValue: depositValue,
+  };
+
+  // Perform the AJAX request
+  $.ajax({
+    type: "POST",
+    url: webPath+"admin/corporate",
+    data: formData,
+    success: function (response) {
+      // Handle success response
+      console.log(response);
+      window.location.reload();
+    },
+    error: function (error) {
+      // Handle error response
+      console.error(error);
+    },
+  });
+});
+</script>

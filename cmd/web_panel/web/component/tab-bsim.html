@@ -1,0 +1,30 @@
+<div id="dashboardBSIM" class="accordion accordion-popout">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-info text-white" data-bs-toggle="collapse"
+                    data-bs-target="#dashboardBSIM-1" aria-controls="dashboardBSIM-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                        <i class='bx bx-table me-2'></i>
+                        Datatable
+                    </div>
+                </button>
+            </div>
+
+            <!-- Right side: Refresh button -->
+            <div class="ms-3 me-3">
+                <button type="button" class="btn btn-warning btn-refresh-bsim-task" onclick="refreshBSIMData('{{.REFRESH_TABLE_BSIM}}')">
+                    <i class='bx bx-refresh me-2'></i> Refresh Data
+                </button>
+            </div>
+        </div>
+
+
+        <div id="dashboardBSIM-1" class="accordion-collapse collapse show" data-bs-parent="#dashboardBSIM">
+            <div class="accordion-body mt-3">
+                {{.TABLE_BSIM}}
+            </div>
+        </div>
+    </div>
+</div>

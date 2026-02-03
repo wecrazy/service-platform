@@ -1,0 +1,608 @@
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="text-success mb-0">
+    Bot Whatsapp <i class="fab fa-whatsapp"></i>
+  </h1>
+  <div class="ms-auto d-flex gap-2">
+    <button
+      id="refresh-qr-btn"
+      data-qr="{{.QR_CODE}}"
+      data-endpoint="{{.REFRESH_WHATSAPP_QRCODE}}"
+      class="btn btn-sm btn-outline-success"
+    >
+      Refresh QR Code <i class="fal fa-qrcode ms-2"></i>
+    </button>
+    <button
+      id="end_session_whatsapp"
+      data-endpoint="{{.END_SESSION_WHATSAPP}}"
+      class="btn btn-sm btn-outline-danger"
+    >
+      End Session <i class="fal fa-portal-exit ms-2"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Things to do in Whatsapp -->
+<div class="mt-2">
+  <div class="card shadow-none bg-transparent border border-success mb-3">
+    <div class="card-body">
+      <div class="row justify-content-center">
+        <!-- Ping -->
+        <div class="col-sm-3 col-lg-4 mb-4">
+          <div
+            class="card p-3 d-flex flex-row justify-content-between align-items-center"
+          >
+            <div>
+              <figure class="mb-0">
+                <blockquote class="blockquote mb-1">
+                  <a
+                    onclick="pingBot('{{.userid}}','{{.PING_BOT}}')"
+                    href="#"
+                    data-bs-toggle="tooltip"
+                    data-bs-offset="0,4"
+                    data-bs-placement="bottom"
+                    data-bs-custom-class="tooltip-success"
+                    data-bs-original-title="Try to ping the bot"
+                  >
+                    Ping
+                  </a>
+                </blockquote>
+                <figcaption class="blockquote-footer mb-0 text-muted mt-2">
+                  Try to ping the bot
+                </figcaption>
+              </figure>
+            </div>
+            <div>
+              <i class="fad fa-wifi-2 text-primary fs-1"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Send Text -->
+        <div class="col-sm-3 col-lg-4 mb-4">
+          <div
+            class="card p-3 d-flex flex-row justify-content-between align-items-center"
+          >
+            <div>
+              <figure class="mb-0">
+                <blockquote class="blockquote mb-1">
+                  <a
+                    onclick="sendTextBot('{{.userid}}','{{.SEND_TEXT_BOT}}')"
+                    href="#"
+                    data-bs-toggle="tooltip"
+                    data-bs-offset="0,4"
+                    data-bs-placement="bottom"
+                    data-bs-custom-class="tooltip-success"
+                    data-bs-original-title="Try to send text message to other"
+                  >
+                    Send Message
+                  </a>
+                </blockquote>
+                <figcaption class="blockquote-footer mb-0 text-muted mt-2">
+                  Try to send custom text message to other.
+                </figcaption>
+              </figure>
+            </div>
+            <div>
+              <i class="fad fa-comment-alt-dots text-primary fs-1"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Send Picture -->
+        <div class="col-sm-3 col-lg-4 mb-4">
+          <div
+            class="card p-3 d-flex flex-row justify-content-between align-items-center"
+          >
+            <div>
+              <figure class="mb-0">
+                <blockquote class="blockquote mb-1">
+                  <a
+                    onclick="sendImageBot('{{.userid}}','{{.SEND_IMAGE_BOT}}')"
+                    href="#"
+                    data-bs-toggle="tooltip"
+                    data-bs-offset="0,4"
+                    data-bs-placement="bottom"
+                    data-bs-custom-class="tooltip-success"
+                    data-bs-original-title="Try to send image"
+                  >
+                    Send Picture
+                  </a>
+                </blockquote>
+                <figcaption class="blockquote-footer mb-0 text-muted mt-2">
+                  Try to send image (JPG, JPEG & PNG).
+                </figcaption>
+              </figure>
+            </div>
+            <div>
+              <i class="fad fa-image-polaroid text-primary fs-1"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Send Document -->
+        <div class="col-sm-3 col-lg-4 mb-4">
+          <div
+            class="card p-3 d-flex flex-row justify-content-between align-items-center"
+          >
+            <div>
+              <figure class="mb-0">
+                <blockquote class="blockquote mb-1">
+                  <a
+                    onclick="sendDocumentBot('{{.userid}}','{{.SEND_DOCUMENT_BOT}}')"
+                    href="#"
+                    data-bs-toggle="tooltip"
+                    data-bs-offset="0,4"
+                    data-bs-placement="bottom"
+                    data-bs-custom-class="tooltip-success"
+                    data-bs-original-title="Try to send document"
+                  >
+                    Send Document
+                  </a>
+                </blockquote>
+                <figcaption class="blockquote-footer mb-0 text-muted mt-2">
+                  Try to send document (PDF, DOC, DOC, & TXT).
+                </figcaption>
+              </figure>
+            </div>
+            <div>
+              <i class="fad fa-file-alt text-primary fs-1"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Send Location -->
+        <div class="col-sm-3 col-lg-4 mb-4">
+          <div
+            class="card p-3 d-flex flex-row justify-content-between align-items-center"
+          >
+            <div>
+              <figure class="mb-0">
+                <blockquote class="blockquote mb-1">
+                  <a
+                    onclick="sendLocationBot('{{.userid}}','{{.SEND_LOCATION_BOT}}')"
+                    href="#"
+                    data-bs-toggle="tooltip"
+                    data-bs-offset="0,4"
+                    data-bs-placement="bottom"
+                    data-bs-custom-class="tooltip-success"
+                    data-bs-original-title="Try to send location"
+                  >
+                    Send Location
+                  </a>
+                </blockquote>
+                <figcaption class="blockquote-footer mb-0 text-muted mt-2">
+                  Try to send Location (Custom / Live Location).
+                </figcaption>
+              </figure>
+            </div>
+            <div>
+              <i class="fad fa-map-marked-alt text-primary fs-1"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Send Polling -->
+        <div class="col-sm-3 col-lg-4 mb-4">
+          <div
+            class="card p-3 d-flex flex-row justify-content-between align-items-center"
+          >
+            <div>
+              <figure class="mb-0">
+                <blockquote class="blockquote mb-1">
+                  <a
+                    onclick="sendPollingBot('{{.userid}}','{{.SEND_POLLING_BOT}}')"
+                    href="#"
+                    data-bs-toggle="tooltip"
+                    data-bs-offset="0,4"
+                    data-bs-placement="bottom"
+                    data-bs-custom-class="tooltip-success"
+                    data-bs-original-title="Try to send polling"
+                  >
+                    Send Polling
+                  </a>
+                </blockquote>
+                <figcaption class="blockquote-footer mb-0 text-muted mt-2">
+                  Try to send Polling (1 or more selection).
+                </figcaption>
+              </figure>
+            </div>
+            <div>
+              <i class="fad fa-poll-people text-primary fs-1"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- ... more blocks here ... -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Whatsapp Reply Text -->
+<div class="mt-2">{{.TABLE_WHATSAPP_BOT_MESSAGE_REPLY}}</div>
+
+<!-- WAG & Language -->
+<div class="col-md">
+  <small class="text-light fw-medium"></small>
+  <div id="accordionPopoutIcon" class="accordion mt-3 accordion-popout">
+    <div class="accordion-item card">
+      <h2
+        class="accordion-header text-body d-flex justify-content-between"
+        id="accordionPopoutIconOne"
+      >
+        <button
+          type="button"
+          class="accordion-button collapsed"
+          data-bs-toggle="collapse"
+          data-bs-target="#accordionPopoutIcon-1"
+          aria-controls="accordionPopoutIcon-1"
+          aria-expanded="false"
+        >
+          <i class="fad fa-users-class me-2"></i>
+          Whatsapp Group
+        </button>
+      </h2>
+
+      <div
+        id="accordionPopoutIcon-1"
+        class="accordion-collapse collapse"
+        data-bs-parent="#accordionPopoutIcon"
+      >
+        <div class="accordion-body">
+          <div class="mt-2">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="card-title"></h5>
+              </div>
+              <div class="card-body">
+                <table
+                  id="whatsapp_group"
+                  class="table border-tio dataTable no-footer dtr-column-collapsed"
+                  data-url="{{.WAG_JSON}}"
+                >
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Group JID</th>
+                      <th>Group Name</th>
+                      <th>Owner</th>
+                      <th>Created On</th>
+                      <th>Participants</th>
+                    </tr>
+                  </thead>
+                </table>
+                <p class="card-text">
+                  <small class="text-muted">Detail of Whatsapp Group</small>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item card">
+      <h2
+        class="accordion-header text-body d-flex justify-content-between"
+        id="accordionPopoutIconTwo"
+      >
+        <button
+          type="button"
+          class="accordion-button collapsed"
+          data-bs-toggle="collapse"
+          data-bs-target="#accordionPopoutIcon-2"
+          aria-controls="accordionPopoutIcon-2"
+          aria-expanded="false"
+        >
+          <i class="fad fa-language me-2"></i>
+          Language for Bot
+        </button>
+      </h2>
+      <div
+        id="accordionPopoutIcon-2"
+        class="accordion-collapse collapse"
+        data-bs-parent="#accordionPopoutIcon"
+      >
+        <div class="accordion-body">{{.TABLE_WHATSAPP_BOT_LANGUAGE}}</div>
+      </div>
+    </div>
+
+    <div class="accordion-item card">
+      <h2
+        class="accordion-header text-body d-flex justify-content-between"
+        id="accordionPopoutIconThree"
+      >
+      <button
+          type="button"
+          class="accordion-button collapsed"
+          data-bs-toggle="collapse"
+          data-bs-target="#accordionPopoutIcon-3"
+          aria-controls="accordionPopoutIcon-3"
+          aria-expanded="false"
+        >
+          <i class="fad fa-envelope me-2"></i>
+          Whatsapp Message Received Log
+        </button>
+      </h2>
+      <div
+        id="accordionPopoutIcon-3"
+        class="accordion-collapse collapse"
+        data-bs-parent="#accordionPopoutIcon"
+      >
+        <div id="endpointWaLogMsgReceived" data-endpoint="{{.ENDPOINT_TABLE_WHATSAPP_BOT_LOG_MSG_RECEIVED}}"></div>
+        <div class="accordion-body">{{.TABLE_WHATSAPP_BOT_LOG_MSG_RECEIVED}}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $("#refresh-qr-btn").click(function () {
+    let endpoint = $(this).data("endpoint");
+    let qrCodeFileUrl = $(this).data("qr"); // fallback QR code file url
+
+    if (!endpoint) {
+      Swal.fire("Error", "No endpoint provided.", "error");
+      return;
+    }
+
+    Swal.fire({
+      title: "Fetching QR Code...",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+
+        $.ajax({
+          url: endpoint,
+          method: "GET",
+          success: function (response) {
+            if (response.qrcode) {
+              // Render fresh QR code as image
+              QRCode.toDataURL(response.qrcode, function (error, url) {
+                if (error) {
+                  Swal.fire(
+                    "Error",
+                    "Failed to generate QR Code image.",
+                    "error"
+                  );
+                } else {
+                  Swal.fire({
+                    title: "Scan this QR Code with WhatsApp",
+                    imageUrl: url,
+                    imageAlt: "QR Code",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonText: "Close",
+                  });
+                }
+              });
+            } else {
+              // fallback to load saved QR code text file
+              if (!qrCodeFileUrl) {
+                Swal.fire(
+                  "Info",
+                  response.message || "No QR code available",
+                  "info"
+                );
+                return;
+              }
+              $.get(qrCodeFileUrl, function (qrText) {
+                QRCode.toDataURL(qrText, function (error, url) {
+                  if (error) {
+                    Swal.fire(
+                      "Error",
+                      "Failed to generate fallback QR Code image.",
+                      "error"
+                    );
+                  } else {
+                    Swal.fire({
+                      title: response.message || "Use this QR Code",
+                      imageUrl: url,
+                      imageAlt: "Fallback QR Code",
+                      allowOutsideClick: false,
+                      allowEscapeKey: false,
+                      confirmButtonText: "Close",
+                    });
+                  }
+                });
+              }).fail(function () {
+                Swal.fire(
+                  "Error",
+                  "Failed to load fallback QR code file.",
+                  "error"
+                );
+              });
+            }
+          },
+          error: function () {
+            Swal.fire("Error", "Failed to fetch QR code.", "error");
+          },
+        });
+      },
+    });
+  });
+
+  $("#end_session_whatsapp").click(function () {
+    let endpoint = $(this).data("endpoint");
+
+    if (!endpoint) {
+      Swal.fire("Error", "No endpoint provided.", "error");
+      return;
+    }
+
+    Swal.fire({
+      title: "End WhatsApp Session",
+      text: "Are you sure you want to end the WhatsApp session?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, end it!",
+      cancelButtonText: "No, keep it",
+      customClass: {
+        confirmButton: "btn btn-danger me-2",
+        cancelButton: "btn btn-primary",
+      },
+      buttonsStyling: false,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          url: endpoint,
+          method: "GET",
+          success: function (response) {
+            Swal.fire(
+              "Success",
+              response.message || "Session ended.",
+              "success"
+            );
+            // location.reload(); // optionally reload
+          },
+          error: function (error) {
+            const res = error.responseJSON || {};
+            const message =
+              res.message ||
+              `End Session Failed: [${error.status}] ${error.responseText}`;
+            const detail = Array.isArray(res.detail)
+              ? res.detail
+                  .map((d) => `<div class="text-danger">${d}</div>`)
+                  .join("")
+              : "";
+
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              html: `<div>${message}</div>${detail}`,
+            });
+          },
+        });
+      }
+    });
+  });
+
+  $(function () {
+    $('[data-bs-toggle="tooltip"]').each(function () {
+      const $el = $(this);
+      // Check if tooltip is already initialized
+      if (!$el.data("bs.tooltip")) {
+        $el.tooltip();
+        // $el.tooltip('show');
+      }
+    });
+  });
+
+  $(document).ready(function () {
+    const $table = $("#whatsapp_group");
+    const dataUrl = $table.data("url");
+
+    $table.DataTable({
+      ajax: {
+        url: dataUrl,
+        type: "GET",
+        dataSrc: "", // because we're returning an array directly
+        beforeSend: function () {
+          // Show DataTables built-in processing indicator
+          $table
+            .closest(".dataTables_wrapper")
+            .find(".dataTables_processing")
+            .show();
+        },
+        complete: function () {
+          // Hide DataTables built-in processing indicator
+          $table
+            .closest(".dataTables_wrapper")
+            .find(".dataTables_processing")
+            .hide();
+        },
+        error: function (error) {
+          const res = error.responseJSON || {};
+          const message =
+            res.message ||
+            `Get Data WAG Failed: [${error.status}] ${error.responseText}`;
+          const detail = Array.isArray(res.detail)
+            ? res.detail
+                .map((d) => `<div class="text-danger">${d}</div>`)
+                .join("")
+            : "";
+
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            html: `<div>${message}</div>${detail}`,
+          });
+        },
+      },
+      processing: true, // enable built-in processing indicator
+      columns: [
+        { data: null }, // for responsive control
+        { data: "JID" },
+        { data: "Name" },
+        {
+          data: null,
+          render: function (data, type, row) {
+            const avatarUrl = row.OwnerAvatar || "/assets/self/img/no-img.jpg";
+            const ownerJID = row.OwnerJID || "N/A";
+            const ownerName = row.OwnerName || "No Verified Business Name";
+
+            return `
+                    <div class="d-flex justify-content-start align-items-center user-name">
+                        <div class="avatar-wrapper">
+                        <div class="avatar me-2" style="cursor:pointer;" onclick="showAvatarModal('${avatarUrl}')">
+                        <img src="${avatarUrl}" alt="Owner Avatar" class="rounded-circle" style="width:40px; height:40px;">
+                        </div>
+                        </div>
+                        <div class="d-flex flex-column">
+                        <span class="emp_jid text-truncate" style="font-weight:600;">${ownerJID}</span>
+                        <small class="emp_name text-truncate text-muted">${ownerName}</small>
+                        </div>
+                    </div>
+                    `;
+          },
+          orderable: false,
+        },
+        { data: "GroupCreated" },
+        {
+          data: "Participants",
+          render: (participants) => {
+            if (!Array.isArray(participants)) return "";
+            return participants
+              .map(
+                (p) => `
+                    <div style="display:flex; align-items:center; margin-bottom:3px;">
+                        <img 
+                        src="${p.Avatar || "/assets/self/img/no-img.jpg"}" 
+                        alt="Participant Avatar" 
+                        style="width:24px; height:24px; border-radius:50%; margin-right:6px; cursor:pointer;"
+                        onclick="showAvatarModal('${
+                          p.Avatar || "/assets/self/img/no-img.jpg"
+                        }')"
+                        >
+                        <span>${p.Name || p.JID}</span>
+                    </div>
+                    `
+              )
+              .join("");
+          },
+        },
+      ],
+      columnDefs: [
+        {
+          className: "control",
+          orderable: false,
+          searchable: false,
+          responsivePriority: 1,
+          targets: 0,
+          render: function () {
+            return "";
+          },
+        },
+      ],
+      responsive: {
+        details: {
+          type: "column",
+          target: 0,
+        },
+      },
+      order: [[1, "asc"]],
+      pageLength: 10,
+    });
+  });
+</script>

@@ -1,0 +1,1009 @@
+APP:
+  HOST: "localhost"
+  GIN_MODE: "release"   # debug | release | test
+  NAME: "Web Panel"
+  LOGO: "/assets/self/img/logo_web.png"
+  PORT: "2220"
+  LOG_LEVEL: DEBUG"   # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
+  LOG_FORMAT: "CSV"      # TEXT | JSON | => default CSV
+  WEB_PUBLIC_URL: "https://dashboardms.csna4u.com:14427"
+  VERSION: "Release"
+  VERSION_NO: 1
+  VERSION_CODE: "0.0.0.1.2025.08.05"
+  VERSION_NAME: "wp_prod_gl"
+  STATIC_DIR: "./web"
+  PUBLISHED_DIR: "assets" #|dist|fonts|js|libs|scss|tasks|uploads #|page|log
+  LOG_DIR: "./log"
+  UPLOAD_DIR: "./uploads"
+  LOGIN_TIME_M: "300" # minutes
+  COOKIE_LOGIN_DOMAIN: ""
+  COOKIE_LOGIN_SECURE: false
+  MAX_DISCONNECTION_TIME: "12"
+  AES_KEY: "w4GwYyADnBa91vph1vCLRghvfkTmaWRF"
+  AES_KEY_IV: "xu1HErEpSpaf87D7"
+  MAX_RETRY_LOGIN: 5 # attempts
+  LOGIN_LOCK_UNTIL: 30 # minutes
+  APP_LOG_FILENAME: "apps.log"
+  SYSTEM_LOG_FILENAME: "sys.log"
+  MEMORY_PROFILE_PATH: "mem.prof"
+
+DEFAULT:
+  TIMEZONE: "Asia/Jakarta" # Asia/Makassar | Asia/Jakarta | Asia/Jayapura
+  DELIMITER: "|"
+
+  PT: "PT. Cyber Smart Network Asia"
+  PT_ADDRESS: "Jl. Puri Utama Blok H1 No. 19 - 22, Kel. Petir, Kec. Cipondoh"
+  PT_CITY: "Tangerang"
+
+  PT_HRD:
+    - NUMBER: 1
+      NAME: "Gilly Ayawaila"
+      EMAIL: "hrd@csna4u.com"
+      PHONE_NUMBER: "6281380291190"     # Make sure inputted phone number in clean format start with 628xxxx
+      TTD_PATH: "ttd_gilly.png"
+    # - NUMBER: 2
+    #   NAME: "Daniella Caroline Sanaky"
+    #   EMAIL: "daniellasanaky@csna4u.com"
+    #   PHONE_NUMBER: "6281802066490"
+    #   TTD_PATH: "ttd_daniella.png"
+
+  ODOO_DASHBOARD_REPORTING_SERVER: https://paxstorenewdownload.csna4u.com
+  ODOO_DASHBOARD_REPORTING_PORT: 8083
+  ODOO_DASHBOARD_GOLANG_REPORTING_PORT: 5232
+
+  COMPANY_ID: 1 # PT. Cyber Smart Network Asia
+  MIN_LENGTH_PHONE_NUMBER: 9
+  MAX_MESSAGE_CHAR: 2000 # Chars
+  MAX_IMAGE_SIZE: 2 # MB
+  XAMPP_MYSQL_PATH: "C:/xampp/mysql_start.bat"
+  NSSM_FULLPATH: "bin/nssm-2.24/win64/nssm.exe"
+  MAGICK_FULLPATH: "/usr/bin/convert"
+  CONCURRENCY_LIMIT: 3 # Max concurrent requests
+  API_KEY_API_ANALYTICS_DEV: "563e06b5-2e7d-41d5-b450-7543424bd656"
+  WELCOME_ID: |
+    👋🏼 Halo dan selamat datang! 🌟
+    Salam kenal, saya Bot yang siap membantu Anda. 🤖✨
+    
+    🚀 Anda dapat menggunakan saya untuk mencari data, membuat laporan, atau sekadar bertanya apa saja.
+    Jika ada kendala atau pertanyaan lebih lanjut, jangan ragu untuk bertanya. Saya di sini 24/7! 🕒😊
+
+    📞 Apabila ada kendala teknis atau hal lain yang memerlukan bantuan lebih lanjut,
+    Anda dapat menghubungi Layanan Bantuan Teknis di: +62 878-8350-7445 👷🏽‍♂️
+
+    Untuk mengubah bahasa ke Indonesia bisa input '*id*' dan ke bahasa Inggris '*en*'.
+  WELCOME_EN: |
+    👋🏼 Hello and welcome! 🌟
+    Nice to meet you — I'm the Bot here to help you out. 🤖✨
+    
+    🚀 You can use me to search for data, generate reports, or simply ask anything you need.
+    If you have any issues or further questions, feel free to ask anytime. I'm here 24/7! 🕒😊
+
+    📞 If you experience technical issues or need additional help,
+    you can contact our Technical Support at: +62 878-8350-7445 👷🏽‍♂️
+
+    Type *id* for Bahasa Indonesia or *en* for English to switch languages.
+  
+EMAIL:
+  HOST: "smtp.gmail.com"
+  PORT: 587 # 463
+  USERNAME: "service4@csna4u.com"
+  PASSWORD: "jkzz dfdt flpj vxkl" # App Name: Service Report
+  SENDER: "Service Report"
+  MAX_RETRY: 60
+  RETRY_DELAY: 30
+  MAX_ATTACHMENT_SIZE: 24 # MB
+  # Yahoo Mail Listener ===========================================
+  LISTENER_HOST: "imap.mail.yahoo.com"
+  LISTENER_PORT: 993
+  LISTENER_EMAIL: "wegirandol@smartwebindonesia.com"
+  LISTENER_PASSWORD: "bnelwrlowhmnjrxd" # App Password => GolangApp
+
+REDIS:
+  HOST: "127.0.0.1"
+  PORT: 6379
+  PASSWORD: ""
+  DB: 2
+  MAX_RETRY: 5 # attempts
+  RETRY_DELAY: 10 # s
+
+DATABASE:
+  TYPE: "MySQL" # MySQL || PostgreSQL
+  HOST: "127.0.0.1"
+  PORT: "3306"
+  USERNAME: "swi"
+  PASSWORD: "Takasitau"
+  NAME: "db_web_panel_gl"
+  MAX_RETRY_CONNECT: 3
+  RETRY_DELAY: 3 # seconds
+  MAX_IDLE_CONNECTION: 10
+  MAX_OPEN_CONNECTION: 10
+  MAX_LIFETIME_CONNECTION: 1 # hour
+  DB_CONFIG_PATH: "database/dbconfig.yaml"
+  DB_BACKUP_DESTINATION_DIR: "database"
+  PURGE_LOG_OLDER_THAN_DAYS: 2 # days
+
+  # MAIN TABLE
+  TB_ADMIN: "admins"
+  TB_ADMIN_PWD_CHANGELOG: "admin_password_changelog"
+  TB_ADMIN_STATUS: "admin_statuses"
+  TB_FEATURE: "features"
+  TB_LOG_ACTIVITY: "log_activities"
+  TB_ROLE: "roles"
+  TB_ROLE_PRIVILEGE: "role_privileges"
+  TB_LANGUAGE: "languages"
+  TB_BAD_WORD: "bad_words"
+  TB_WEB_APP_CONFIG: "web_app_config"
+  TB_INDONESIA_REGION: "indonesia_region"
+
+  TB_TICKET_HOMMYPAY_CC: "tb_ticket_hommypay_cc"
+  TB_TICKET_TYPE: "tb_ticket_type_hommypay_cc"
+  TB_TICKET_STAGE: "tb_ticket_stage_hommypay_cc"
+  TB_MERCHANT: "tb_merchant_hommypay_cc"
+  TB_WA_MSG: "wa_message"
+  TB_WA_MSG_REPLY: "wa_message_reply"
+  TB_WA_PHONE_USER: "wa_phone_users"
+  TB_MAIL: "mails"
+  TB_TRUSTED_CLIENT: "trusted_client"
+  DEFAULT_VALUES:
+    # Default values for new ticket
+    STAGE: "New"
+    PRIORITY: "0"
+    KETERANGAN: "New Ticket Created"
+    STATUS_IN_ODOO: "Draft"
+    SLA_DEADLINE: "1d" # 7s, 7m, 7h, 7d, etc
+
+   # Fastlink => # REMOVE it coz not use anymore?
+  HOST_FASTLINK: "127.0.0.1"
+  PORT_FASTLINK: "3306"
+  USERNAME_FASTLINK: "swi"
+  PASSWORD_FASTLINK: "Takasitau"
+  NAME_FASTLINK: "db_web_panel_gl"
+  TB_MERCHANT_FASTLINK: "merchants"
+  
+  # Kresek Bag
+  TB_MERCHANT_KRESEKBAG: "merchant_kresekbag"
+
+  # VM Odoo Filestore New ########################################################
+  # Technical Assistance
+  HOST_TA: "192.110.11.21"
+  PORT_TA: "3306"
+  USERNAME_TA: "swi"
+  PASSWORD_TA: "Takasitau"
+  NAME_TA: "odoo_pending"
+
+  HOST_WEB_TA: "192.110.11.21"
+  PORT_WEB_TA: "3306"
+  USERNAME_WEB_TA: "swi"
+  PASSWORD_WEB_TA: "Takasitau"
+  NAME_WEB_TA: "web_technical_assistance"
+
+  TB_TA_ERROR: "error"
+  TB_TA_PENDING: "pending"
+  TB_TA_LOGACT: "log_act"
+  TB_TA_TEMPSUBMISSION: "temp_submission"
+  TB_TA_ADMIN: "admins"
+  TB_TA_HANDLEDDATA: "ta_handled_data"
+  #################################################################################
+
+  # Report
+  TB_REPORT_SCHEDULED: "report_scheduled"
+  TB_REPORT_ENGINEERS_PRODUCTIVITY: "data_ticket_engineers_productivity"
+  TB_REPORT_COMPARED: "data_task_compared_based_on_received_spk"
+  TB_REPORT_MONITORING_TICKET: "data_ticket_monitoring"
+  TB_REPORT_SLA: "sla_report"
+
+  # ODOO Manage Service
+  TB_UPLOADED_EXCEL: "odoo_ms_uploaded_excel"
+  TB_TICKET_FIELD: "odoo_ms_ticket_fields"
+  TB_TASK_FIELD: "odoo_ms_task_fields"
+  TB_JOB_GROUP: "odoo_ms_job_groups"
+  TB_DATA_TECHNICIAN: "odoo_ms_technicians"
+  TB_FS_PARAMS: "odoo_ms_fs_params"
+  TB_FS_PARAMS_PAYMENT: "odoo_ms_fs_params_payment"
+  TB_PRODUCT_TEMPLATE: "odoo_ms_product_template"
+  TB_COMPANY: "odoo_ms_companies"
+  TB_TICKET_TYPE_ODOOMS: "odoo_ms_ticket_types"
+  TB_BA_LOST: "odoo_ms_ba_lost"
+  TB_MS_TECHNICIAN_PAYROLL: "odoo_ms_technician_payroll"
+  TB_MS_TECHNICIAN_PAYROLL_TICKETS_REGULAR_EDC: "odoo_ms_technician_payroll_tickets_regular_edc"
+  TB_MS_TECHNICIAN_PAYROLL_TICKETS_BP: "odoo_ms_technician_payroll_tickets_bp"
+  TB_MS_TECHNICIAN_PAYROLL_TICKETS_UNWORKED_EDC: "odoo_ms_technician_payroll_tickets_unworked_edc"
+  TB_MS_TECHNICIAN_PAYROLL_TICKETS_REGULAR_ATM: "odoo_ms_technician_payroll_tickets_regular_atm"
+  TB_MS_TECHNICIAN_PAYROLL_TICKETS_UNWORKED_ATM: "odoo_ms_technician_payroll_tickets_unworked_atm"
+  TB_MS_TECHNICIAN_PAYROLL_DEDICATED_ATM: "odoo_ms_technician_payroll_dedicated_atm"
+
+  DUMPED_INDONESIA_REGION_SQL: "database/db_region_indonesia.sql"
+
+ODOO_API:
+  JSONRPC: "2.0"
+  # ODOO Manage Service ##################################################################
+  LOGIN: desta@smartwebindonesia.com
+  PASSWORD: Makan198
+  DB: gsa_db
+  URL_SESSION: https://192.168.110.48:8069/web/session/authenticate
+  URL_GETDATA: https://192.168.110.48:8069/api/getdata
+  URL_UPDATEDATA: https://192.168.110.48:8069/api/updatedata
+  URL_CREATEDATA: https://192.168.110.48:8069/api/createdata
+  
+  # Hommy Pay ############################################################################
+  LOGIN_HOMMYPAY: wegirandol@smartwebindonesia.com
+  PASSWORD_HOMMYPAY: Odoo12345
+  # DB_HOMMYPAY: csna_erp_test_db # DB Debug
+  DB_HOMMYPAY: csna_rss_db # DB Debug
+  URL_SESSION_HOMMYPAY: http://146.196.106.203:58069/web/session/authenticate
+  URL_GETDATA_HOMMYPAY: http://146.196.106.203:58069/api/getdata
+  URL_UPDATEDATA_HOMMYPAY: http://146.196.106.203:58069/api/updatedata
+  URL_CREATEDATA_HOMMYPAY: http://146.196.106.203:58069/api/createdata
+  
+  # Kresek Bag ###########################################################################
+  #            - KleverPays as Development
+  #            - AIPOS as Production
+  LOGIN_KRESEK_BAG: wegirandol@smartwebindonesia.com
+  PASSWORD_KRESEK_BAG: Odoo12345
+  # Development
+  DB_KRESEK_BAG: db_kresekbag_web_odoo
+  URL_SESSION_KRESEK_BAG: https://kleverpays.com/web/session/authenticate
+  URL_GETDATA_KRESEK_BAG: https://kleverpays.com/api/getdata
+  URL_UPDATEDATA_KRESEK_BAG: https://kleverpays.com/api/updatedata
+  URL_CREATEDATA_KRESEK_BAG: https://kleverpays.com/api/createdata
+  ########################################################################################
+  MAX_RETRY: 50
+  RETRY_DELAY: 3
+  SESSION_TIMEOUT: "90s"
+  GETDATA_TIMEOUT: "15m"
+  COMPANY_ALLOWED:
+    - 13  # ARTAJASA
+    - 21  # DANA
+    - 19  # DKI
+    - 20  # MANDIRI
+    - 15  # MTI
+    - 12  # NDP
+    - 3   # OVO
+    - 26  # SINARMAS
+    - 23  # DSP
+    # - 17  # Hausjo
+  COMPANY_EXCLUDED: 
+    - 1   # PT. Global Smartweb Asia
+    - 2   # CIMB NIAGA
+    - 4   # MAP
+    - 5   # bRI
+    - 6   # test
+    - 7   # bNi Syariah
+    - 8   # ARRANET
+    - 9   # ovo CM
+    - 14  # MCPAY
+    - 16  # _export_.stock .............
+    - 17  # HAUSJO
+    - 18  # BCA
+    - 24  # bandu
+    - 25  # boleh
+
+WHATSMEOW:
+  SQL_DRIVER: "sqlite3"
+  QR_CODE: "log/qrcode.txt"
+  QR_EXPIRED: 30 #seconds
+  SQL_SOURCE: "whatsmeow/whatsmeow.db"
+  WA_GROUP_SOURCE: "whatsmeow/wa_group.json"
+  DB_SQLITE_MODEL:
+    TB_APP_STATE_MUTATION_MACS: "whatsmeow_app_state_mutation_macs"
+    TB_APP_STATE_SYNC_KEYS: "whatsmeow_app_state_sync_keys"
+    TB_APP_STATE_VERSIONS: "whatsmeow_app_state_version"
+    TB_CHAT_SETTINGS: "whatsmeow_chat_settings"
+    TB_CONTACTS: "whatsmeow_contacts"
+    TB_DEVICE: "whatsmeow_device"
+    TB_EVENT_BUFFER: "whatsmeow_event_buffer"
+    TB_IDENTITY_KEYS: "whatsmeow_identity_keys"
+    TB_LID_MAP: "whatsmeow_lid_map"
+    TB_MESSAGE_SECRETS: "whatsmeow_message_secrets"
+    TB_PRE_KEYS: "whatsmeow_pre_keys"
+    TB_PRIVACY_TOKENS: "whatsmeow_privacy_tokens"
+    TB_SENDER_KEYS: "whatsmeow_sender_keys"
+    TB_SESSIONS: "whatsmeow_sessions"
+    TB_VERSION: "whatsmeow_version"
+  WA_SU: "6285173207755"
+  WA_SUPPORT: "6287718545247"
+  WA_TECHNICAL_SUPPORT: "6287883507445"
+  WA_BOT_USED: 
+    - "6287718545247" # Bot Developments
+    - "628174893423" # Bot Productions
+  WAG_ALLOWED_PROMPT:
+    # Use Whatsapp group JID
+    - "120363201154381780" # Tes API    => Production
+    - "120363414108461722" # Tes API 2  => Development
+  WAG_TEST_JID: "120363201154381780"
+  WAG_TA_JID: "120363381254498709" # Whatsapp Group TA TEAM
+  WAG_REGION_TECHNICIAN:
+    1: "120363402562020523"
+    2: "120363419304845202"
+    3: "120363399219567398"
+    4: "120363402521438358"
+    5: "120363400343789905"
+  INITIAL_LANGUAGE_PROMPT: |
+    Please choose your language:
+    🇬🇧 English (en)
+    🇮🇩 Bahasa Indonesia (id)
+                  
+    Reply with *en* to switch to English
+    Balas dengan *id* untuk beralih ke Bahasa Indonesia
+    
+    _(Default: *English*)_
+    
+  WA_REPLY_PUBLIC_URL: "https://dashboardms.csna4u.com:14427/wa_reply"
+  OLLAMA_URL: "http://127.0.0.1:11434/api/generate"
+  OLLAMA_MODEL: "gemma2:2b"
+  USE_API_RAFY: true
+  KEYWORD_SEPARATOR: "|||"
+  MESSAGE_RECEIVED_LOG_FILE: "log/wa_msg_received.log"
+  WHATSMEOW_CLIENT_LOG: "log/whatsmeow_client.log"
+  WHATSMEOW_CLIENT_LOG_LEVEL: "ERROR"           # DEBUG | ERROR | WARN | INFO
+  WHATSMEOW_DB_LOG: "log/whatsmeow_db.log"
+  WHATSMEOW_DB_LOG_LEVEL: "ERROR"               # DEBUG | ERROR | WARN | INFO
+  OPEN_WEATHER_MAP_API: "c53557e9b041b43f3a707504bfb813f4"
+  WHATSAPP_MAX_DAILY_QUOTA: 250
+  WHATSAPP_MAX_BAD_WORD_STRIKE: 3
+  REDIS_EXPIRY: 24 # Hours
+  MAX_UPLOADED_DOCUMENT_SIZE: 15 # MB
+  MAX_UPLOADED_IMAGE_SIZE: 3 # MB
+  MAX_UPLOADED_AUDIO_SIZE: 5 # MB
+  MAX_UPLOADED_VIDEO_SIZE: 10 # MB
+  DOCUMENT_ALLOWED_EXTENSIONS: [".pdf", ".docx", ".xlsx", ".xls", ".pptx", ".txt"]
+  DOCUMENT_ALLOWED_MIME_TYPES: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.ms-powerpoint", "text/plain"]
+  IMAGE_ALLOWED_EXTENSIONS: [".jpg", ".jpeg", ".png", ".gif", ".webp"]
+  IMAGE_ALLOWED_MIME_TYPES: ["image/jpeg", "image/png", "image/gif", "image/webp"]
+  AUDIO_ALLOWED_EXTENSIONS: [".mp3", ".wav", ".ogg"]
+  AUDIO_ALLOWED_MIME_TYPES: ["audio/mpeg", "audio/wav", "audio/ogg"]
+  VIDEO_ALLOWED_EXTENSIONS: [".mp4", ".avi", ".mov", ".mkv"]
+  VIDEO_ALLOWED_MIME_TYPES: ["video/mp4", "video/x-msvideo", "video/quicktime", "video/x-matroska"]
+  WA_ERROR_MESSAGE:
+    ID:
+      PHONE_NUMBER_NOT_REGISTERED: "Nomor telepon belum terdaftar di sistem"
+      PHONE_NUMBER_IS_BANNED: "⛔ Nomor telepon ini diblokir ⛔"
+      INVALID_CHAT: "Maaf, Anda tidak memiliki izin untuk berinteraksi"
+      MESSAGE_TYPE_DENIED: "Maaf, jenis pesan yang Anda kirim tidak diperbolehkan"
+      UNKNOWN_PROMPT: "❌ Perintah tidak dikenali atau izin tidak cukup."
+      ACCOUNT_BANNED_COZ_BAD_WORD: "🚫 Akun Anda telah diblokir karena penggunaan kata kasar berulang kali."
+    EN:
+      PHONE_NUMBER_NOT_REGISTERED: "Phone number is not registered in system"
+      PHONE_NUMBER_IS_BANNED: "⛔ This phone number is banned ⛔"
+      INVALID_CHAT: "Sorry, you don't have permission to interact"
+      MESSAGE_TYPE_DENIED: "Sorry, this message type is not allowed"
+      UNKNOWN_PROMPT: "❌ Unknown command or permission rule missing."
+      ACCOUNT_BANNED_COZ_BAD_WORD: "🚫 Your account has been banned for repeated use of bad words."
+  WELCOMING_USER_ID: |
+    👋🏼 *Halo*,
+
+    Akun WhatsApp Anda sudah berhasil didaftarkan di sistem kami ☺.
+    Sekarang Anda dapat menggunakan akun ini untuk mengakses semua layanan kami.
+
+    Jika ada pertanyaan atau memerlukan bantuan, silakan hubungi tim dukungan teknis kami di: +6287883507445.
+
+    Terima kasih telah bergabung, dan selamat menggunakan layanan kami!
+    
+    Untuk mengubah bahasa ke Indonesia bisa input '*id*' dan ke bahasa Inggris '*en*'.
+  WELCOMING_USER_EN: |
+    👋🏼 *Hello*,
+
+    Your WhatsApp account has been successfully registered in our system ☺.
+    You can now use this account to access all of our services.
+
+    If you have any questions or need assistance, please contact our technical support team at: +6287883507445.
+
+    Thank you for joining us, and enjoy using our services!
+    
+    Type *id* for Bahasa Indonesia or *en* for English to switch languages.
+  WHATSAPP_MODEL:
+    TB_WA_CONVERSATION: "wa_conversations"
+    TB_WA_CHAT_MESSAGE: "wa_chat_messages"
+    TB_WA_GROUP_PARTICIPANT: "wa_group_participants"
+    TB_WA_CONTACT_INFO: "wa_contact_infos"
+    TB_WA_MESSAGE_DELIVERY_STATUS: "wa_message_delivery_statuses"
+    TB_WA_MEDIA_FILE: "wa_media_files"
+
+TELEGRAM_SERVICE:
+  GRPC_HOST: "localhost"
+  GRPC_PORT: 50044
+  CONNECTION_TIMEOUT: 5  # seconds
+  REQUEST_TIMEOUT: 30    # seconds
+
+HOMMYPAY_CC_DATA:
+  EMAIL_LISTENER_CREATE_NEW_TICKET_IN_ODOO: false
+  KET_FROM_ODOO: "Data fetched from ODOO"
+  START_TICKET_ID: 10000000
+  WELCOME_ID: |
+    👋🏼 Halo dan selamat datang di _Call Center Hommy Pay_!
+    Anda sekarang terhubung dengan tim dukungan kami.
+
+    💳 *Hommy Pay* menyediakan layanan Merchant & Acquirer terbaik,
+    dengan pengalaman pembayaran yang mulus dan menarik untuk bisnis Anda.
+
+    😉 Butuh bantuan? Kami siap membantu Anda!
+    🌐 Website: https://hommypay.csna4u.com/
+    📧 Email: info@csna4u.com
+    📱 WhatsApp: +62 877-1854-5247
+    📞 Telepon: +62 822-4253-3773
+    👷🏽‍♂️ Layanan Bantuan Teknis: +62 878-8350-7445
+    🕒 Jam Layanan: Senin – Jumat
+          • 09:00 – 12:00 WIB
+          • 13:00 – 18:00 WIB
+
+    Untuk mengubah bahasa ke Indonesia bisa input '*id*' dan ke bahasa Inggris '*en*'.
+  WELCOME_EN: |
+    👋🏼 Hello and welcome to the _Hommy Pay Call Center_!
+    You're now connected to our support team.
+
+    💳 *Hommy Pay* provides the best Merchant & Acquirer services,
+    offering smooth and engaging payment experiences for your business.
+
+    😉 Need assistance? We're here to help!
+    🌐 Website: https://hommypay.csna4u.com/
+    📧 Email: info@csna4u.com
+    📱 WhatsApp: +62 877-1854-5247
+    📞 Phone: +62 822-4253-3773
+    👷🏽‍♂️ Technical Support: +62 878-8350-7445
+    🕒 Support Hours: Monday – Friday
+          • 09:00 AM – 12:00 PM (WIB)
+          • 01:00 PM – 06:00 PM (WIB)
+
+    Type *id* for Bahasa Indonesia or *en* for English to switch languages.
+
+FASTLINK_DATA:
+  PUBLIC_URL_MERCHANT_IMAGE: "https://rm.klevertms.com/api/pub-img"
+
+# Asia/Jakarta timezone (UTC +7) for cron jobs
+SCHEDULES:
+  # ======================= Priority 1 =======================
+  - NAME: "RemoveOldFilesDirectory"
+    AT: 
+      - "01:00"
+  - NAME: "CleanupUploadedExcelFiles"
+    AT: 
+      - "01:00"
+  - NAME: "PurgeOldDatabaseLogs"
+    WEEKLY: "Monday@04:00" # Runs every Monday at 04:00
+  - NAME: "PurgeOldDatabaseLogs"
+    WEEKLY: "Thursday@04:00" # Runs every Thursday at 04:00
+  - NAME: "PurgeOldDatabaseLogs"
+    WEEKLY: "Saturday@04:00" # Runs every Saturday at 04:00
+  - NAME: "GetTechnicianODOOMSData"
+    EVERY: "3h"
+  - NAME: "PrepareStockOpnameData"
+    AT: 
+      - "22:00"
+  # ==========================================================
+
+  # Hommy Pay Data
+  - NAME: "CheckTechnicianExistsODOOMS"
+    EVERY: "3h"
+  - NAME: "GetTicketTypeHommyPayCC"
+    EVERY: "3h"
+  - NAME: "GetTicketStageHommyPayCC"
+    EVERY: "3h"
+  - NAME: "GetListTicketHommypayCC"
+    EVERY: "3h"
+  - NAME: "GetMerchantKresekBag"
+    EVERY: "3h"
+
+  # VM ODOO Dashboard
+  - NAME: "ShowStatusVMODOODashboard"
+    EVERY: "5h"
+  - NAME: "MrOliverReportStatus"
+    EVERY: "5h"
+
+  # ODOO Manage Service
+  - NAME: "GetODOOMSJobGroups"
+    AT:
+      - "03:00"
+      - "08:00"
+      - "12:00"
+      - "17:00"
+  - NAME: "GetODOOMSFSParams"
+    EVERY: "24h"
+  - NAME: "GetODOOMSFSParamPayment"
+    EVERY: "24h"
+  - NAME: "GetODOOMSInventoryProducts"
+    EVERY: "24h"
+  - NAME: "GetODOOMSCompany"
+    EVERY: "96h"
+  - NAME: "GetODOOMSTicketType"
+    EVERY: "96h"
+  
+  - NAME: "ReportAIError"
+    AT:
+      - "01:00"
+  - NAME: "ReportAIError"
+    MONTHLY: "last@21:00"
+  - NAME: "ReportAIError"
+    MONTHLY: "last@23:00"
+
+  - NAME: "GenerateMonitoringReportData"
+    AT:
+      - "01:00"
+      - "08:00"
+      - "17:00"
+      - "23:00"
+  - NAME: "BackupTableMonitoringTicket"
+    MONTHLY: "last@23:58" # Runs every last day of the month at 23:58
+
+  - NAME: "BackupTableBALostPrevMonth"
+    MONTHLY: "last@22:30" # Runs every last day of the month at 22:30 to backup Table BA Lost
+
+  - NAME: "SLAReportODOOMS"
+    AT:
+      - "02:00"
+  - NAME: "SLAReportODOOMS"
+    MONTHLY: "last@22:30"
+
+  # - NAME: "ContractTechnicianODOO"
+  #   AT: 
+  #     - "08:00"
+  - NAME: "NotifyHRDBeforeContractExpired"
+    MONTHLY: "01@07:30"
+
+  # Deprecated: not used pivot image anymore coz it took too long to process. Now using web-based report
+  # - NAME: "MonitoringReport"
+  #   AT:
+  #     - "01:00"
+
+  - NAME: "SendScheduledReportMTI"
+    AT: 
+      - "18:00"
+      - "22:00"
+
+  - NAME: "GetHelpdeskTicketFields"
+    EVERY: "24h"
+  - NAME: "GetProjectTaskFields"
+    EVERY: "24h"
+  - NAME: "RegistODOOMSHeadAndSPLToChatbot"
+    AT: 
+      - "19:00"
+      - "23:00"
+      - "01:00"
+  - NAME: "RegistODOOMSTechnicianToChatbot"
+    AT: 
+      - "19:00"
+      - "23:00"
+      - "01:00"
+
+  # SP Technician ODOO MS
+  - NAME: "ResetNomorSuratSP"
+    YEARLY: "01@05:00"  # Runs every January 1st at 05:00 AM
+
+  - NAME: "StatusSPTechnicianODOO"
+    AT: 
+      - "12:05"
+      
+  # DKI
+  - NAME: "GetTicketDKI"
+    EVERY: "1h"
+
+  # MTI  
+  - NAME: "GetTaskODOOMSMTI"
+    AT:
+      - "01:00"
+      - "08:00"
+      - "15:00"  
+      - "22:00"
+
+  # DSP
+  - NAME: "GetTicketDSP"
+    EVERY: "1h"
+
+USER_TA:
+  wegirandol@smartwebindonesia.com:
+    NAME: "Dev RM"
+    PHONE: "+6285173207755"
+  admin@swi.com:
+    NAME: "Admin RM"
+    PHONE: "+6287883507445"
+  testmfjr@gmail.com:
+    NAME: "Tes Dev Mfjr"
+    PHONE: "+6287883507445"
+  desta@smartwebindonesia.com:
+    NAME: "Admin RM Dev Ipal"
+    PHONE: "+6287883507445"
+  ramaadelins@csna4u.com:
+    NAME: "Technical Assistance 1 - Rama Adelins"
+    PHONE: "+6287711151802"
+  naominaomiyns@gmail.com:
+    NAME: "Technical Assistance 2 - Naomi"
+    PHONE: "+6287711151803"
+  thessalonica_a@smartwebindonesia.com:
+    NAME: "Technical Assistance 3 - Thessa"
+    PHONE: "+6287711151801"
+  ta_assistant1@csna4u.com:
+    NAME: "Technical Assistance 3 - Thessa"
+    PHONE: "+6287711151801"
+  suhendrik.180189@gmail.com:
+    NAME: "Technical Assistance 4 - Suhendrik Zakaria"
+    PHONE: "+6287711151804 "
+  mukti@csnams.com:
+    NAME: "Technical Assistance 5 - Arif Arya M."
+    PHONE: "+6282113191066"
+  abdu@csnams.com:
+    NAME: "SAC ODOO ATM"
+    PHONE: "+628170772551"
+  triyanawirda910@gmail.com:
+    NAME: "Technical Assistance 6 - Wiwi"
+    PHONE: "+628174893401"
+  iin_inayah@smartwebindonesia.com:
+    NAME: "Technical Assistance 7 - Iin"
+    PHONE: "+6287871734931"
+  ta_assistant3@csna4u.com:
+    NAME: "Technical Assistance 7 - Iin"
+    PHONE: "+6287871734931"
+  tetty@csnams.com:
+    NAME: "SAC 4 - Tetty Manurung"
+    PHONE: "+6281290306350"
+  callcenter@gmail.com:
+    NAME: "Team Call Center"
+    PHONE: "+6287883507445"
+  sri_t@smartwebindonesia.com:
+    NAME: "Assistant - Sri"
+    PHONE: "+6287883507445"
+
+TECHNICAL_ASSISTANCE_DATA:
+  DASHBOARD_TA_PUBLIC_URL: "http://manageserviceai.csna4u.com:22425"
+  ALLOWED_TO_ACCESS_REPORT_PHONE_NUMBERS:
+    - "+62 812-9030-6350" # SAC Tetty
+    - "+62 851-7320-7755" # Dev RM
+    - "+62 878-4119-1559" # TA 1 Adel
+    - "+62 877-2256-0508" # TA 2 Naomi
+    - "+62 877-7600-0308" # TA 3 Thessa
+    - "+62 877-2256-3104" # TA 3 Thessa
+    - "+62 858-9362-8372" # TA 3 Thessa
+    - "+62 818-0206-6488" # TA 4 Suhendrik
+    - "+62 821-1319-1066" # TA 5 Arif
+    - "+62 857-7318-1795" # TA 6 Wiwi
+    - "+62 877-7600-0306" # TA 6 Wiwi
+    - "+62 819-3204-5460" # TA 7 Iin
+    # New XL Numbers for TA (23 October 2025)
+    - "+62 877-1115-1802" # TA 1 Adel
+    - "+62 877-1115-1803" # TA 2 Naomi
+    - "+62 877-1115-1801" # TA 3 Thessa
+    - "+62 877-1115-1804" # TA 4 Suhendrik
+    - "+62 821-1319-1066" # TA 5 Arif
+    - "+62 817-489-3401"  # TA 6 Wiwi
+    - "+62 817-489-3400"  # TA 7 Iin
+  REPORT_TA_MENTIONS:
+    - "+62 812-9030-6350"
+  PUBLIC_URL_REPORT_TA: "http://192.110.11.21:2425/ta_report"
+  PUBLIC_URL_REPORT_TECH_ERROR: "http://192.110.11.21:2425/tech_error_report"
+  PUBLIC_URL_REPORT_COMPARED: "http://192.110.11.21:2425/compared_report"
+  LOG_EXPORT_PIVOT_DEBUG_PATH: "log/export_pivot.log"
+
+REPORT:
+  AI_ERROR:
+    TO:
+      - "cindychang@cybersoft.com.tw"  
+      - "nadia.kristina@csna4u.com"
+    CC:
+      - "oliver@csna4u.com"
+      - "made@smartwebindonesia.com"
+    BCC:
+    ACTIVE_DEBUG: false
+    START_PARAM: "2025-07-01 10:00:00"
+    END_PARAM: "2025-07-01 13:59:59"
+    WHATSAPP_SEND_TO_IF_GOT_ERROR:
+      - "62816836777"
+  COMPARED:
+    ACTIVE_DEBUG: false
+    START_PARAM: "2025-07-31 10:00:00"
+    END_PARAM: "2025-08-01 13:59:59"
+  MTI:
+    PENARIKAN:
+      TO:
+        - "projectmanagermti@csna4u.com"
+      CC:
+        - "made@smartwebindonesia.com"
+      BCC:
+    PEMASANGAN:
+      TO:
+        - "projectmanagermti@csna4u.com"
+      CC:
+        - "made@smartwebindonesia.com"
+      BCC:
+    VTR:
+      TO:
+        - "projectmanagermti@csna4u.com"
+      CC:
+        - "made@smartwebindonesia.com"
+      BCC:
+  TECHNICIAN_LOGIN:
+    TO:
+      - "wegirandol@smartwebindonesia.com"
+    CC:
+      - "lanitahinari570@gmail.com"
+    BCC:
+  MONITORING_TICKET_ODOOMS:
+    TO:
+      - "lanitahinari570@gmail.com"
+      # - "nickenb@csna4u.com"
+      # - "daniellasanaky@csna4u.com"
+    CC:
+      - "wegirandol@smartwebindonesia.com"
+      # - "cindychang@cybersoft.com.tw"
+      # - "oliver@csna4u.com"
+      # - "made@smartwebindonesia.com"
+      # - "filandow@smartwebindonesia.com"
+    BCC:
+    ACTIVE_DEBUG: false
+    START_PARAM: "2025-08-01 10:00:00"
+    END_PARAM: "2025-08-02 23:59:59"
+    CHART_WIDTH: 1400
+    CHART_HEIGHT: 900
+    WHATSAPP_SEND_TO_IF_GOT_ERROR:
+      - "6285173207755"
+      # - "62816836777"
+      # - "62816765987"
+    LOG_EXPORT_CHART_DEBUG_PATH: "log/export_chart_monitoring_ticket.log"
+  MONITORING_VISIT_LOGIN_TECHNICIAN_ODOOMS:
+    TO:
+      - "lanitahinari570@gmail.com"
+      # - "nickenb@csna4u.com"
+      # - "daniellasanaky@csna4u.com"
+    CC:
+      - "wegirandol@smartwebindonesia.com"
+      # - "cindychang@cybersoft.com.tw"
+      # - "oliver@csna4u.com"
+      # - "made@smartwebindonesia.com"
+      # - "filandow@smartwebindonesia.com"
+    BCC:
+    ACTIVE_DEBUG: false
+    CHART_WIDTH: 1400
+    CHART_HEIGHT: 900
+    WHATSAPP_SEND_TO_IF_GOT_ERROR:
+      - "6285173207755"
+      # - "62816836777"
+      # - "62816765987"
+    LOG_EXPORT_CHART_DEBUG_PATH: "log/export_chart_monitoring_visit_login_technician.log"
+  SLA:
+    TO:
+      - "fauziab@csna4u.com"
+      # - "wegirandol@smartwebindonesia.com"
+    CC:
+      # - "lanitahinari570@gmail.com"
+      - "made@smartwebindonesia.com"
+      - "oliver@csna4u.com"
+      - "cindychang@cybersoft.com.tw"
+      - "nadia.kristina@csna4u.com"
+      - "nickenb@csna4u.com"
+      - "budi.sumantri@csna4u.com"
+      - "heriandi@csna4u.com"
+      - "budi.sumantri@csna4u.com"
+      - "tetty_m@csna4u.com"
+      - "tetty.sintauli@smartwebindonesia.com"
+      - "osvaldomdonaldo@csna4u.com"
+      - "tomibustami@csna4u.com"
+      - "burhan@csna4u.com"
+      - "muchammadanggayudha@csna4u.com"
+    BCC:
+    GENERATED_TYPES:
+      - "PM"
+      - "Non-PM"
+      # - "CM"
+      # - "Solved Pending"
+      # - "Master"
+    ACTIVE_DEBUG: false
+    START_PARAM: "2025-10-01 10:00:00"
+    END_PARAM: "2025-10-02 13:00:00"
+    WHATSAPP_SEND_TO_IF_GOT_ERROR:
+      - "6285173207755"
+
+VM_ODOO_DASHBOARD:
+  SSH_USER: "Administrator"
+  SSH_PWD: "Abcd#1234"
+  SSH_ADDR: "146.196.106.202:2213"
+  
+REPORT_MTI:
+  REPORT_DIR: "web/file/report_mti"
+  DB_TABLE_PEMASANGAN: "mti_report_pemasangan"
+  DB_TABLE_PENARIKAN: "mti_report_penarikan"
+  DB_TABLE_VTR: "mti_report_vtr"
+
+UPLOADED_EXCEL_FOR_ODOO_MS:
+  ACTIVE_DEBUG: false
+  EMAIL_PARAM: "desta@smartwebindonesia.com"
+  PWD_PARAM: "Makan198"
+  TIMEOUT: 300 # seconds
+  MAX_FILE_SIZE: 35 # MB
+  THRESHOLD_RANGE_PURGE_FILE: "-3days"
+
+SP_TECHNICIAN:
+  TB_JO_PLANNED_ODOO_MS: "jo_planned_for_technician_odooms"
+  TB_JO_PLANNED_ODOO_ATM: "jo_planned_for_technician_odooatm"
+  TB_TECH_GOT_SP: "technician_got_sp"
+  TB_SPL_GOT_SP: "spl_got_sp"
+  TB_SAC_GOT_SP: "sac_got_sp"
+  TB_NOMOR_SURAT_SP: "nomor_surat_sp"
+  TB_SP_WHATSAPP_MESSAGE: "sp_whatsapp_message"
+  LAST_NOMOR_SURAT_SP1_GENERATED: 285
+  LAST_NOMOR_SURAT_SP2_GENERATED: 108
+  LAST_NOMOR_SURAT_SP3_GENERATED: 100
+  ACTIVE_DEBUG: false
+  PHONE_NUMBER_USED_FOR_TEST: "6285173207755"
+  EMAIL_USED_FOR_TEST: "lanitahinari570@gmail.com"
+  MIN_RESPONSE_SP_AT_HOUR: 11  # 24 hours format => 11 AM *See your scheduler for its time running
+  MAX_RESPONSE_SP_AT_HOUR: 20 # 24 hours format => 8 PM
+  RUN_ON_WEEKENDS: false
+  RUN_ON_HOLIDAYS: false
+  EXCLUDE_STAGES:
+    - "Cancel"
+    - "Verified"
+    - "Done"
+  UNCHECK_LINK_PHOTO: false
+  ATM_DEDICATED_TECHNICIAN:
+    - "1.3 Depok Ade Arif Maulana"
+    - "2.3 Bekasi Ade Susanto"
+    - "2.4 Tangerang Agung"
+    - "5.2 Yogya Garin Yusa"
+    - "3.7 Gorontalo Rasyid"
+  MINIMUM_JO_VISITED: 2
+
+STOCK_OPNAME:
+  # Stock Opname
+  TB_LIST_SP_SO: "list_sp_stock_opname"
+  TB_SP_SO_WA_MSG: "sp_stock_opname_whatsapp_message"
+  PHONE_NUMBER_USED_FOR_TEST_SP_SO: "6285173207755"
+  SO_ACTIVE_DEBUG: false
+  SO_RUN_ON_WEEKENDS: true
+  SO_RUN_ON_HOLIDAYS: true
+  NUMBER_OF_DAYS_JO_NOT_SO_YET: 7
+  MAX_RESPONSE_SP_SO_AT_HOUR: 19 # 24H format
+  # Data SO
+  TB_LIST_PRODUCT_EDC: "list_product_edc_csna"
+  SO_REPORT_SEND_TO:
+    - "6283863611100" # Mas Eddie Invent
+    - "6287881823212" # Mas Budi Invent
+    - "6287776565444"
+    - "6281388700593"
+    - "628889778898"
+    - "6281290306350"
+    - "6283898911740"
+  SO_REPORT_SEND_TO_EMAIL:
+    - "lanitahinari570@gmail.com"
+
+FOLDER_FILE_NEEDS:
+  - "ai_error"
+  - "pivot"
+  - "report_mti"
+  - "sounding_sp_technician"
+  - "sounding_sp_spl"
+  - "sounding_sp_sac"
+  - "sounding_sp_so"
+  - "sp_technician"
+  - "sp_spl"
+  - "sp_sac"
+  - "sp_so"
+  - "ta_report"
+  - "technician_report"
+  - "template_file_uploaded"
+  - "uploaded_excel_to_odoo_ms"
+  - "wa_reply"
+  - "template_sp"
+  - "contract_technician"
+  - "monitoring_ticket"
+  - "excel_report"
+  - "sla_report"
+  - "payslip_technician"
+
+ODOOMS_SAC:
+  "Angga Yuda":
+    USERNAME: "SAC 5 Angga"
+    FULLNAME: "Angga Yudha"
+    PHONE: "6287776565444"
+    EMAIL: "yudha@csnams.com"
+    TTD_PATH: "ttd_angga.png"
+    REGION: 5
+  "Osvaldo":
+    USERNAME: "SAC 3 Aldo"
+    FULLNAME: "Osvaldo Donaldo Mario"
+    PHONE: "6281388700593"
+    EMAIL: "osvaldomdonaldo@csna4u.com"
+    TTD_PATH: "ttd_osvaldo.png"
+    REGION: 3
+  "Burhanudin":
+    USERNAME: "SAC 1 Burhan"
+    FULLNAME: "Burhanuddin"
+    PHONE: "628889778898"
+    EMAIL: "bur@csnams.com"
+    TTD_PATH: "ttd_burhan.png"
+    REGION: 1
+  "Tetty Sintauli":
+    USERNAME: "SAC 4 Tetty"
+    FULLNAME: "Tetty Sintauli Manurung"
+    PHONE: "6281290306350"
+    EMAIL: "tetty@csnams.com"
+    TTD_PATH: "ttd_tetty.png"
+    REGION: 4
+  "Tomi Bustami":
+    USERNAME: "SAC 2 Tomy"
+    FULLNAME: "Tomi Bustami"
+    PHONE: "6283898911740"
+    EMAIL: "tomibustami@gmail.com"
+    TTD_PATH: "ttd_tomi.png"
+    REGION: 2
+
+CONTRACT_TECHNICIAN_ODOO:
+  TB_CONTRACT_TECHNICIAN: "contract_technician"
+  TB_NOMOR_SURAT_CONTRACT: "nomor_surat_contract"
+  LAST_NOMOR_SURAT_CONTRACT_GENERATED: 700
+  ACTIVE_DEBUG: false
+  EMAIL_USED_FOR_TEST: "lanitahinari570@gmail.com"
+  CC_CONTRACT_EMAIL:
+    - "wegirandol@smartwebindonesia.com"
+  PHONE_NUMBER_USED_FOR_TEST: "6285173207755"
+  MUST_JOINED_AFTER: 7 # days
+  TECHNICIAN_SKIPPED:
+    - "inhouse"
+    - "tes dev mfjr"
+    - "admin"
+    - "teknisi pameran"
+    - "vendor"
+    - "edi purwanto"
+  EXCLUDED_JSON_KEYS_FOR_TABLE:
+    - ""
+    - " "
+    - "-"
+    - "id"
+    - "regenerate_contract"
+    - "send_contract"
+    - "whatsapp_conversation"
+  NOTIFY_HRD_BEFORE_CONTRACT_EXPIRED_DAYS: 30
+
+API:
+  INDONESIAN_PUBLIC_HOLIDAY: "https://libur.deno.dev"
+  RAFY_FAQ_ODOOMS: "http://146.196.106.202:3429/FAQ/Odoo-MS"
+  RAFY_FAQ_ODOOMS_SOP: "http://146.196.106.202:3429/FAQ/Odoo-SOP"
+  RAFY_FAQ_NUSACITA: "http://146.196.106.202:3429/FAQ/Odoo-Nusa"
+  API_RAFY_TIMEOUT: 180 # seconds
+  LIBRE_TRANSLATE: "http://127.0.0.1:5000"
+  KUKUH_FILESTORE: "http://192.110.11.21:22441"
+
+MTI:
+  TB_DATA_ODOOMS: "data_odooms_mti"
+  TB_DATA_PM: "data_pm_mti"
+  COMPANY_ID_IN_ODOOMS: 15
+  ACTIVE_DEBUG: false
+  START_PARAM: "2025-10-01 10:00:00"
+  END_PARAM: "2025-10-01 13:00:00"
+
+DKI:
+  TB_DATA_ODOOMS: "data_odooms_dki"
+  COMPANY_ID_IN_ODOOMS: 19
+
+DSP:
+  TB_DATA_ODOOMS: "data_odooms_dsp"
+  COMPANY_ID_IN_ODOOMS: 23
+
+BNI:
+  TB_DATA_ODOOMS: "data_odooms_bni"
+  TB_DATA_PM: "data_pm_bni"
+  COMPANY_ID_IN_ODOOMS: 17
+  ACTIVE_DEBUG: false
+  START_PARAM: "2025-08-01 00:00:00"
+  END_PARAM: "2025-08-01 13:59:59"
+
+INDONESIA:
+  COMPLETED_CITY:
+    jaktim: "Jakarta Timur"
+    jakpus: "Jakarta Pusat"
+    jakbar: "Jakarta Barat"
+    jaksel: "Jakarta Selatan"
+    jakut: "Jakarta Utara"
+    tangsel: "Tangerang Selatan"
+    # ADD: more if needed
+
+ODOOMS_PARAM:
+  DEFAULT_PRICE: 12000.0 # IDR (Rp.) for each technician visit
+  DEFAULT_PENALTY: 7000.0 # IDR (Rp.) for each technician unvisit
+  DEFAULT_EDC_LOST_FEE: 2000000.0 # IDR (Rp.) for each lost EDC device
+  DEFAULT_ATM_PRICE: 12000.0 # IDR (Rp.) for each ATM technician visit
+  PAYSLIP_TECHNICIAN_SIGNATURE_NAME: "Riko Elisa"
+  PAYSLIP_TECHNICIAN_SIGNATURE_IMG: "stempel_csna_pak_riko.png"
+  PAYSLIP_TECHNICIAN_CC_EMAIL:
+    - "hrd@csna4u.com"
+    # - "made@smartwebindonesia.com"
+  PAYSLIP_TECHNICIAN_DEBUG:
+    ACTIVE: false
+    PHONE_NUMBER_USED_FOR_TEST: "6287883507445"
+    EMAIL_USED_FOR_TEST: "rifaldi@smartwebindonesia.com"

@@ -1,0 +1,76 @@
+<!-- WhatsApp Contact List Component -->
+<li class="chat-contact-list-item chat-list-item-0">
+  <h6 class="text-muted mb-0">Recent Chats</h6>
+</li>
+
+{{if .is_authenticated}}
+  {{range .contacts}}
+  <li class="chat-contact-list-item" data-contact-id="{{.id}}">
+    <a class="d-flex align-items-center">
+      <div class="flex-shrink-0 avatar {{if .is_online}}avatar-online{{else}}avatar-offline{{end}}">
+        <img src="{{.avatar}}" alt="{{.name}}" class="rounded-circle" />
+      </div>
+      <div class="chat-contact-info flex-grow-1 ms-3">
+        <h6 class="chat-contact-name text-truncate m-0">{{.name}}</h6>
+        <p class="chat-contact-status text-muted text-truncate mb-0">
+          {{if .last_message}}{{.last_message}}{{else}}No messages yet{{end}}
+        </p>
+      </div>
+      <div class="chat-contact-info flex-shrink-0">
+        {{if .last_message_time}}
+        <small class="text-muted mb-1">{{.last_message_time}}</small>
+        {{end}}
+        {{if .unread_count}}
+        <div class="badge bg-danger rounded-pill ms-1">{{.unread_count}}</div>
+        {{end}}
+      </div>
+    </a>
+  </li>
+  {{end}}
+  
+  {{if not .contacts}}
+  <li class="chat-contact-list-item">
+    <div class="d-flex justify-content-center align-items-center p-3">
+      <div class="text-center">
+        <i class="bx bx-message-square-dots bx-lg text-muted mb-2"></i>
+        <p class="text-muted mb-0">No conversations yet</p>
+        <small class="text-muted">Start a new conversation</small>
+      </div>
+    </div>
+  </li>
+  {{end}}
+{{else}}
+  <li class="chat-contact-list-item">
+    <div class="d-flex justify-content-center align-items-center p-3">
+      <div class="text-center">
+        <i class="bx bx-error-circle bx-lg text-warning mb-2"></i>
+        <p class="text-muted mb-0">WhatsApp not connected</p>
+        <small class="text-muted">Please scan QR code first</small>
+      </div>
+    </div>
+  </li>
+{{end}}
+
+<!-- Contacts Section -->
+<li class="chat-contact-list-item chat-contact-list-item-title mt-3">
+  <h6 class="text-muted mb-0">All Contacts</h6>
+</li>
+
+{{if .is_authenticated}}
+  {{range .all_contacts}}
+  <li class="chat-contact-list-item" data-contact-id="{{.id}}">
+    <a class="d-flex align-items-center">
+      <div class="flex-shrink-0 avatar {{if .is_online}}avatar-online{{else}}avatar-offline{{end}}">
+        <img src="{{.avatar}}" alt="{{.name}}" class="rounded-circle" />
+      </div>
+      <div class="chat-contact-info flex-grow-1 ms-3">
+        <h6 class="chat-contact-name text-truncate m-0">{{.name}}</h6>
+        <p class="chat-contact-status text-muted text-truncate mb-0">{{.phone}}</p>
+      </div>
+      <div class="chat-contact-info flex-shrink-0">
+        <i class="bx bx-message-alt-add text-muted cursor-pointer" title="Start conversation"></i>
+      </div>
+    </a>
+  </li>
+  {{end}}
+{{end}}

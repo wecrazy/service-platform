@@ -1,0 +1,99 @@
+<div id="merchantKresekBag" class="accordion accordion-popout mb-4">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-info text-white" data-bs-toggle="collapse"
+                    data-bs-target="#merchantKresekBag-1" aria-controls="merchantKresekBag-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                        <i class="fad fa-store-alt me-2"></i>
+                        Datatable
+                    </div>
+                </button>
+            </div>
+
+            <div class="d-flex align-items-center ms-3 me-3 flex-wrap justify-content-end">
+                <div class="last-update-merchant-kresek-bag text-muted me-3" style="min-width: 150px;">
+                    <!-- Last Update -->
+                </div>
+
+                <div data-endpoint-photos-merchant-kresekbag="{{.PHOTOS_MERCHANT_KRESEKBAG}}">
+
+                </div>
+
+                <button type="button" class="btn btn-info btn-refresh-data-merchant-kresek-bag"
+                    onclick="refreshData('{{.REFRESH_TABLE_MERCHANT_KRESEKBAG}}', 'last-update-merchant-kresek-bag', 'dt_merchant_kresek_bag', 'btn-refresh-data-merchant-kresek-bag')">
+                    <i class="far fa-sync-alt me-2"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <div id="merchantKresekBag-1" class="accordion-collapse collapse show" data-bs-parent="#merchantKresekBag">
+            <div class="accordion-body mt-3">
+                {{.TABLE_MERCHANT_KRESEKBAG}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <div id="merchantHommyPayCC" class="accordion accordion-popout mb-4">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-info text-white" data-bs-toggle="collapse"
+                    data-bs-target="#merchantHommyPayCC-1" aria-controls="merchantHommyPayCC-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                        <i class='bx bxs-data me-2'></i>
+                        Datatable
+                    </div>
+                </button>
+            </div>
+
+            <div class="d-flex align-items-center ms-3 me-3 flex-wrap justify-content-end">
+                <div class="last-update-merchant-hommypay-cc text-muted me-3" style="min-width: 150px;">
+                </div>
+
+                <button type="button" class="btn btn-info btn-refresh-data-merchant-hommypay-cc"
+                    onclick="refreshData('{{.REFRESH_TABLE_MERCHANT}}', 'last-update-merchant-hommypay-cc', 'dt_merchant_hommypay_cc', 'btn-refresh-data-merchant-hommypay-cc')">
+                    <i class='bx bx-refresh me-1'></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <div id="merchantHommyPayCC-1" class="accordion-collapse collapse show" data-bs-parent="#merchantHommyPayCC">
+            <div class="accordion-body mt-3">
+                {{.TABLE_MERCHANT}}
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<!--
+<div id="merchantFastlink" class="accordion accordion-popout">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-secondary text-white" data-bs-toggle="collapse"
+                    data-bs-target="#merchantFastlink-1" aria-controls="merchantFastlink-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                        <img src="https://rm.klevertms.com/assets/self/img/fast_link.png" alt="Data Icon" class="me-2" style="width: 1em; height: 1em;" />
+                        FastLink
+                    </div>
+                </button>
+            </div>
+
+            <div class="d-flex align-items-center ms-3 me-3 flex-wrap justify-content-end">
+            </div>
+        </div>
+
+        <div id="merchantFastlink-1" class="accordion-collapse collapse show" data-bs-parent="#merchantFastlink">
+            <div class="accordion-body mt-3">
+                {{.TABLE_MERCHANT_FASTLINK}}
+            </div>
+        </div>
+    </div>
+</div>
+-->

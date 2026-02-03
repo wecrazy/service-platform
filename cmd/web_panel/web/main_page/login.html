@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html lang="id" class="light-style layout-wide customizer-hide" dir="ltr" data-theme="theme-default"
+  data-assets-path="{{.GLOBAL_URL}}assets/" data-template="vertical-menu-template">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+
+  <title>Login</title>
+
+  <meta name="description" content="" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{{.APP_LOGO}}" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+    rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/fonts/boxicons.css" />
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/fonts/fontawesome.css" />
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/fonts/flag-icons.css" />
+
+  <!-- Core CSS -->
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/css/rtl/core.css" class="template-customizer-core-css" />
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/css/rtl/theme-default.css"
+    class="template-customizer-theme-css" />
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/css/demo.css" />
+
+  <!-- Vendors CSS -->
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/typeahead-js/typeahead.css" />
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/sweetalert2/sweetalert2.css" />
+
+  <!-- Vendor -->
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/libs/@form-validation/umd/styles/index.min.css" />
+
+  <!-- Page CSS -->
+  <!-- Page -->
+  <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/css/pages/page-auth.css" />
+
+  <!-- <link rel="stylesheet" href="{{.GLOBAL_URL}}assets/self/style.css" /> -->
+
+  <style>
+    /* Define the glowing-border class */
+    .glowing-border {
+      border: 2px solid transparent;
+      /* Initial transparent border */
+      border-radius: 3px;
+      /* Add some border radius for a rounded appearance */
+      transition: border-color 0.5s ease;
+      /* Smooth transition for border color change */
+    }
+
+    /* Define the glow animation */
+    @keyframes glow {
+      0% {
+        border-color: transparent;
+        /* Initial border color */
+        box-shadow: none;
+        /* Initial box-shadow */
+      }
+
+      50% {
+        border-color: paleturquoise;
+        /* Midpoint border color */
+        box-shadow: 0 0 10px paleturquoise;
+        /* Midpoint box-shadow */
+      }
+
+      100% {
+        border-color: transparent;
+        /* Final border color */
+        box-shadow: none;
+        /* Final box-shadow */
+      }
+    }
+
+    /* Apply the glow animation to elements with the glowing-border class that are not hovered or focused */
+    .glowing-border:not(:hover):not(:focus) {
+      animation: glow 2.5s infinite alternate;
+      /* Apply the glow animation */
+    }
+
+    .glow-border {
+      border: 2px solid transparent;
+      /* Initial transparent border */
+      border-radius: 3px;
+      /* Add some border radius for a rounded appearance */
+      border-color: skyblue;
+      /* Midpoint border color */
+      box-shadow: 0 0 10px skyblue;
+      /* Midpoint box-shadow */
+    }
+  </style>
+  <!-- Helpers -->
+  <script src="{{.GLOBAL_URL}}assets/vendor/js/helpers.js"></script>
+  <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+  <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
+  <script src="{{.GLOBAL_URL}}assets/vendor/js/template-customizer.js"></script>
+  <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+  <script src="{{.GLOBAL_URL}}assets/js/config.js"></script>
+</head>
+
+<body>
+  <!-- Content -->
+
+  <div class="container-xxl">
+    <div class="authentication-wrapper authentication-basic container-p-y">
+      <div class="authentication-inner">
+        <!-- Register -->
+        <div class="card">
+          <div class="card-body">
+            <!-- Logo -->
+            <div class="app-brand justify-content-center">
+              <a href="#" class="app-brand-link gap-2 d-flex align-items-center">
+                <span class="app-brand-logo demo">
+                  <img src="{{.APP_LOGO}}" width="50px" height="auto" class="move-left rounded" alt="Logo1" />
+                </span>
+                <span class="app-brand-text text-body fs-3 fw-bold ">{{.APP_NAME}}</span>
+              </a>
+            </div>
+            <!-- /Logo -->
+            <div class="inline d-flex flex-row">
+              <h4 class="mb-2 me-1" data-i18n="Welcome to">Welcome to </h4>
+              <h4>{{.APP_NAME}}</h4>
+            </div>
+            <p class="mb-4" data-i18n="Please sign-in to your account">Please sign-in to your account</p>
+
+            <form id="formLoginAuthentication" class="mb-3">
+              <div class="mb-3">
+                <label for="email" class="form-label" data-i18n="Email">Email</label>
+                <input type="text" class="form-control glowing-border" id="email" name="email-username"
+                  placeholder="user@email.com" autofocus />
+                <h5 class="text-danger" id="delay_timer"></h5>
+              </div>
+              <div class="mb-3 form-password-toggle">
+                <div class="d-flex justify-content-between">
+                  <label class="form-label" for="password" data-i18n="Password">Password</label>
+                  <p class="text-center">
+                    <a href="/forgot-password">
+                      <small data-i18n="Forgot Password">Forgot Password</small>
+                    </a>
+                  </p>
+                  <!-- <h6 class="text-primary" >
+                      <small>Forgot Password?</small>
+                    </h6> -->
+                </div>
+                <div id="password-container" class="input-group input-group-merge glowing-border">
+                  <input type="password" id="password" class="form-control" name="password"
+                    placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
+                    aria-describedby="password" />
+                  <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+                </div>
+              </div>
+              <!-- <div class="mb-3">
+                  <img src="{{.GLOBAL_URL}}captcha?_t=123" width="240" height="80" alt="CAPTCHA">
+                  <a onclick="refreshCaptcha()" ><i style="font-size: 4em;" class='bx bx-rotate-right bx-spin-hover ' ></i></a>
+                </div> -->
+              <div class="mb-3">
+                <!-- <label for="text" class="form-label" data-i18n="Captcha">Captcha</label> -->
+                <input type="hidden" class="form-control glowing-border" id="captcha" name="captcha"
+                  placeholder="Captcha" value="123456" autofocus />
+              </div>
+              <div class="mb-3 d-flex" id="submitContainer">
+                <button class="btn btn-primary d-grid w-100" id="signInBtn" type="submit" data-i18n="Sign in"
+                  disabled>Sign in</button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+        <!-- /Register -->
+      </div>
+    </div>
+  </div>
+
+  <!-- / Content -->
+
+  <!-- Core JS -->
+  <!-- build:js assets/vendor/js/core.js -->
+
+  <script src="{{.GLOBAL_URL}}assets/vendor/libs/jquery/jquery.js"></script>
+  <script src="{{.GLOBAL_URL}}assets/vendor/libs/popper/popper.js"></script>
+  <script src="{{.GLOBAL_URL}}assets/vendor/js/bootstrap.js"></script>
+  <script src="{{.GLOBAL_URL}}assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="{{.GLOBAL_URL}}assets/vendor/libs/hammer/hammer.js"></script>
+  <script src="{{.GLOBAL_URL}}assets/vendor/libs/i18n/i18n.js"></script>
+  <script src="{{.GLOBAL_URL}}assets/vendor/libs/typeahead-js/typeahead.js"></script>
+  <script src="{{.GLOBAL_URL}}assets/vendor/js/menu.js"></script>
+  <script src="{{.GLOBAL_URL}}assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+
+  <!-- endbuild -->
+
+  <!-- Vendors JS -->
+  <script src="{{.GLOBAL_URL}}assets/vendor/libs/@form-validation/umd/bundle/popular.min.js"></script>
+  <script src="{{.GLOBAL_URL}}assets/vendor/libs/@form-validation/umd/plugin-bootstrap5/index.min.js"></script>
+  <script src="{{.GLOBAL_URL}}assets/vendor/libs/@form-validation/umd/plugin-auto-focus/index.min.js"></script>
+
+  <!-- Main JS -->
+  <script src="{{.GLOBAL_URL}}assets/js/main.js"></script>
+
+  <!-- Page JS -->
+  <script src="{{.GLOBAL_URL}}assets/js/pages-auth.js"></script>
+
+  <!-- Page JS -->
+  <script src="{{.GLOBAL_URL}}assets/self/script.js?_=last_update31072025"></script>
+
+  <script>
+    function refreshCaptcha() {
+      // Generate a random number to append as a query parameter
+      var random = Math.floor(Math.random() * 1000);
+      // Get the CAPTCHA image element
+      var captchaImage = document.querySelector('img[alt="CAPTCHA"]');
+      // Update the image source with the new random query parameter
+      captchaImage.src = "{{.GLOBAL_URL}}captcha?_t=" + random;
+      document.getElementById("captcha").value = "";
+      timeEvents = [];
+      captchaEvents = [];
+    }
+
+    // Get the container element
+    var container = document.getElementById("submitContainer");
+
+    // Add mousemove event listener to the container
+    container.addEventListener("mousemove", function (event) {
+      var signInBtn = document.getElementById("signInBtn");
+      // Get the width of the container
+      var containerWidth = container.offsetWidth;
+
+      // Get the x-coordinate of the mouse relative to the container
+      var mouseX = event.offsetX;
+
+      // Calculate the position of the mouse relative to the center of the container
+      var positionFromCenter = mouseX - (containerWidth / 2);
+
+      // Determine if the mouse is on the left or right side of the container
+      var email = $('#email').val();
+      var password = $('#password').val();
+      // Removed captcha requirement since we use math captcha modal
+
+      // Enable or disable sign-in button based on conditions
+      if (email.trim() == '' || password.trim() == '') {
+        if (positionFromCenter < 0) {
+          signInBtn.classList.remove("w-100");
+          container.classList.remove('flex-row')
+          container.classList.add('flex-row-reverse')
+        } else {
+          signInBtn.classList.remove("w-100");
+          container.classList.add('flex-row')
+          container.classList.remove('flex-row-reverse')
+        }
+      }
+    });
+    
+    // Removed the captcha refresh interval since we use math captcha modal
+    // setInterval(function () {
+    //   captcha.val("");
+    //   timeEvents = [];
+    //   captchaEvents = [];
+    //   refreshCaptcha(); // Implement this function to refresh the captcha
+    // }, 10 * 60 * 1000); // 10 minutes
+  </script>
+</body>
+
+</html>

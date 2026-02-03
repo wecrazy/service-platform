@@ -1,0 +1,56 @@
+<div id="dkiTicket" class="accordion accordion-popout">
+    <div class="accordion-item card">
+        <div class="accordion-header text-body d-flex justify-content-between align-items-center"
+            id="accordionPopoutIconOne">
+            <div class="d-flex align-items-center">
+                <button type="button" class="accordion-button bg-danger text-white" data-bs-toggle="collapse"
+                    data-bs-target="#dkiTicket-1" aria-controls="dkiTicket-1" aria-expanded="true">
+                    <div class="display-5 me-4">
+                        <i class="fad fa-database me-2"></i>
+                        Datatable
+                    </div>
+                </button>
+            </div>
+
+            <!-- RIGHT: ..... -->
+            <div class="d-flex align-items-center ms-3 me-3 flex-wrap justify-content-end">
+                <div class="last-update-ticket-dki text-muted me-3" style="min-width: 150px;">
+                    <!-- Last Update -->
+                </div>
+
+                <div class="dropdown mb-2 me-3 mt-2">
+                    <button class="btn btn-success excel-report dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="fal fa-file-spreadsheet me-2"></i>
+                        Report
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"
+                                onclick="downloadExcelReportAllDKITicket('{{.userid}}','{{.REPORT_ALL_TICKET_DKI}}', 'ALL')">All
+                                Data</a></li>
+                        <li><a class="dropdown-item" href="#"
+                                onclick="downloadExcelReportAllDKITicket('{{.userid}}','{{.REPORT_DATA_FILTERED_TICKET_DKI}}', 'Filtered')">Data
+                                <b>(Filtered)</b></a></li>
+                    </ul>
+                </div>
+
+                <button type="button" class="btn btn-info btn-refresh-data-ticket-dki"
+                    onclick="refreshDataTicketDKI(
+                        '{{.REFRESH_TABLE_TICKET_DKI}}', 
+                        'btn-refresh-data-ticket-dki',
+                        'dt_data_ticket_dki',
+                        'last-update-ticket-dki'
+                        )">
+                    Refresh
+                    <i class="fal fa-sync ms-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="dkiTicket-1" class="accordion-collapse collapse show" data-bs-parent="#dkiTicket">
+            <div class="accordion-body mt-3">
+                {{.TABLE_TICKET_DKI}}
+            </div>
+        </div>
+    </div>
+</div>

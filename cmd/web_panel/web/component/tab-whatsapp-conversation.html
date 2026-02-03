@@ -1,0 +1,336 @@
+<script src="{{.GLOBAL_URL}}assets/js/tab-whatsapp-conversation.js?_=test1111111"></script>
+
+<!-- For Whatsapp -->
+<link rel="stylesheet" href="{{.GLOBAL_URL}}assets/vendor/css/pages/app-chat.css" />
+<!-- Chat Sidebar Fix -->
+<link rel="stylesheet" href="{{.GLOBAL_URL}}assets/css/chat-sidebar-fix.css" />
+<!-- WhatsApp Conversation Custom Styles -->
+<link rel="stylesheet" href="{{.GLOBAL_URL}}assets/css/whatsapp-conversation.css?_=test1111111" />
+
+<script>
+  $(function () {
+    // Global configuration accessible to all components
+    window.waConfig = {
+      userId: "{{.userid}}",
+      endpoints: {
+        checkStatus: "{{.CheckUserWAStatusEndpoint}}",
+        getDetailedStatus: "{{.GetDetailedUserWAStatusEndpoint}}",
+        connect: "{{.ConnectUserWAEndpoint}}",
+        getQR: "{{.GetUserWAQREndpoint}}",
+        refreshQR: "{{.RefreshUserWAQREndpoint}}",
+        disconnect: "{{.DisconnectUserWAEndpoint}}",
+        common: "{{.CommonWAEndpoint}}",
+      }
+    };
+
+    // Local reference for this scope
+    const config = window.waConfig;
+
+    // State management
+    let state = {
+      isChecking: false,
+      statusInterval: null,
+      mutationObserver: null
+    };
+
+    // Main status check function
+    async function checkStatus() {
+      if (state.isChecking) return;
+      state.isChecking = true;
+
+      try {
+        const status = await getDetailedUserWhatsAppStatus(config.userId, config.endpoints.getDetailedStatus);
+
+        if (status?.is_authenticated) {
+          await showWhatsappChatAndMessages(state.statusInterval, status, config.userId, config.endpoints.common);
+        } else {
+          showLoginState();
+        }
+      } catch (error) {
+        console.error("Status check failed:", error);
+      } finally {
+        state.isChecking = false;
+      }
+    }
+
+    // Show login state  
+    function showLoginState() {
+      $("#whatsapp-login-container").show();
+      $("#whatsapp-connected-container").hide();
+      
+      // Hide WhatsApp interface if it's showing
+      $("#whatsapp-main-container .app-chat").remove();
+
+      // Only reset QR state if no QR is currently displayed
+      // This preserves QR code while waiting for authentication
+      if ($("#qr-canvas").hasClass("d-none")) {
+        resetQRState();
+      }
+    }
+
+    // Reset QR code section to initial state
+    function resetQRState() {
+      $("#qr-loading").addClass("d-none");
+      $("#qr-canvas").addClass("d-none");
+      $("#qr-placeholder").removeClass("d-none");
+      $("#refresh-qr-btn").prop("disabled", false).html('<i class="fas fa-qrcode me-2"></i>Generate QR Code');
+      $("#connection-info").hide();
+    }
+
+    // Start status monitoring
+    function startStatusCheck() {
+      if (state.statusInterval) clearInterval(state.statusInterval);
+
+      // Use longer interval when QR is displayed to avoid interference
+      const interval = $("#qr-canvas").is(":visible") ? 8000 : 5000; // 8s if QR shown, 5s otherwise
+      state.statusInterval = setInterval(checkStatus, interval);
+    }
+
+    // Initialize
+    checkStatus().then(() => {
+      startStatusCheck();
+
+      // Monitor QR canvas visibility changes to adjust status check interval
+      const qrCanvas = document.getElementById("qr-canvas");
+      if (qrCanvas) {
+        state.mutationObserver = new MutationObserver(() => {
+          startStatusCheck(); // Restart with appropriate interval
+        });
+        state.mutationObserver.observe(qrCanvas, {
+          attributes: true,
+          attributeFilter: ["class"]
+        });
+      }
+    });
+
+    // QR Code Generation Handler
+    $("#refresh-qr-btn").click(async function () {
+      const $btn = $(this);
+      const isFirstGeneration = $("#qr-placeholder").is(":visible");
+
+      try {
+        $btn.prop("disabled", true).html('<i class="fad fa-spinner fa-spin me-2"></i>Generating...');
+        $("#qr-loading").removeClass("d-none");
+        $("#qr-canvas, #qr-placeholder").addClass("d-none");
+
+        let qrCode;
+        if (isFirstGeneration) {
+          await connectUserWhatsApp(config.userId, config.endpoints.connect);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          qrCode = await getUserWhatsAppQR(config.userId, config.endpoints.getQR);
+        } else {
+          qrCode = await refreshUserWhatsAppQR(config.userId, config.endpoints.refreshQR);
+        }
+
+        if (qrCode?.trim()) {
+          generateQRCode(qrCode, "qr-canvas");
+          $("#qr-loading").addClass("d-none");
+          $("#qr-canvas").removeClass("d-none");
+          $btn.prop("disabled", false).html('<i class="fas fa-sync me-2"></i>Refresh QR Code');
+
+          // Restart status checking with QR-appropriate interval
+          startStatusCheck();
+        } else {
+          throw new Error("Failed to generate QR code");
+        }
+      } catch (error) {
+        console.error("QR generation failed:", error);
+        resetQRState();
+        Swal.fire({
+          icon: "error",
+          title: "QR Generation Failed",
+          text: error.message,
+          timer: 3000,
+          showConfirmButton: false
+        });
+      }
+    });
+
+    // Disconnect Handler
+    $(document).on("click", "#disconnect-wa-btn", async function () {
+      const result = await Swal.fire({
+        title: "Disconnect WhatsApp?",
+        text: "Are you sure you want to disconnect?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc3545",
+        confirmButtonText: "Yes, disconnect",
+        footer: 'Remember to logout from linked devices in <b class="me-2 ms-2">whatsmeow</b> too.'
+      });
+
+      if (!result.isConfirmed) return;
+
+      try {
+        $(this).prop("disabled", true).html('<i class="fas fa-spinner fa-spin me-1"></i>Disconnecting...');
+
+        await disconnectUserWhatsApp(config.userId, config.endpoints.disconnect);
+
+        // Reset everything to initial state
+        if (state.statusInterval) {
+          clearInterval(state.statusInterval);
+          state.statusInterval = null;
+        }
+
+        showLoginState();
+
+        Swal.fire({
+          icon: "success",
+          title: "Disconnected",
+          text: "WhatsApp disconnected successfully",
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        console.error("Disconnect failed:", error);
+        $(this).prop("disabled", false).html('<i class="fas fa-sign-out-alt me-1"></i>Disconnect');
+        Swal.fire({
+          icon: "error",
+          title: "Disconnect Failed",
+          text: error.message
+        });
+      }
+    });
+
+    // Refresh Status Handler
+    $(document).on("click", "#refresh-connection-btn", async function () {
+      const $btn = $(this);
+      const originalText = $btn.html();
+
+      try {
+        $btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...');
+        const status = await getDetailedUserWhatsAppStatus(config.userId, config.endpoints.getDetailedStatus);
+        updateConnectionDetails(status);
+
+        Swal.fire({
+          icon: "success",
+          title: "Status Refreshed",
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Refresh Failed",
+          text: error.message
+        });
+      } finally {
+        $btn.prop("disabled", false).html(originalText);
+      }
+    });
+
+    // Cleanup on page unload
+    $(window).on("beforeunload", function () {
+      if (state.statusInterval) clearInterval(state.statusInterval);
+      if (state.mutationObserver) state.mutationObserver.disconnect();
+    });
+  });
+</script>
+
+<div id="whatsapp-main-container">
+  <div id="whatsapp-login-container">
+    <div class="container my-4">
+      <div class="row g-4">
+        <div class="col-md-7 fs-4">
+          <div class="bg-white p-4 rounded shadow-sm">
+            <h3 class="mb-4 text-dark fw-normal">Steps to log in</h3>
+            <div class="d-flex align-items-start mb-3">
+              <span class="badge bg-success rounded-circle me-3"
+                style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">1</span>
+              <span class="text-secondary">Open WhatsApp
+                <span class="fab fa-whatsapp text-success"></span>
+                on your phone</span>
+            </div>
+            <div class="d-flex align-items-start mb-3">
+              <span class="badge bg-success rounded-circle me-3"
+                style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">2</span>
+              <span class="text-secondary">
+                On Android tap Menu
+                <i class="fal fa-ellipsis-v-alt me-2 ms-2"></i>
+                On iPhone tap Settings
+                <i class="fal fa-cog me-2 ms-2"></i>
+              </span>
+            </div>
+            <div class="d-flex align-items-start mb-3">
+              <span class="badge bg-success rounded-circle me-3"
+                style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">3</span>
+              <span class="text-secondary">Tap Linked devices, then Link device</span>
+            </div>
+            <div class="d-flex align-items-start mb-3">
+              <span class="badge bg-success rounded-circle me-3"
+                style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">4</span>
+              <span class="text-secondary">Scan the QR code to confirm</span>
+            </div>
+
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="bg-white p-4 rounded shadow-sm text-center">
+            <div id="qr-code-section">
+              <div class="position-relative d-inline-block mb-3">
+                <div id="qr-code-container"
+                  class="border rounded bg-light d-flex align-items-center justify-content-center"
+                  style="width:280px;height:280px;">
+                  <div id="qr-code-content">
+                    <div id="qr-loading" class="text-center d-none">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                      <div class="mt-2 text-muted">Generating QR Code...</div>
+                    </div>
+                    <div id="qr-placeholder" class="text-muted">
+                      <div class="mb-3">
+                        <i class="far fa-qrcode" style="font-size: 48px; color: #ccc;"></i>
+                      </div>
+                      <p>Click "Generate QR Code" to start</p>
+                    </div>
+                    <canvas id="qr-canvas" class="d-none" width="260" height="260"
+                      style="max-width: 100%; height: auto;"></canvas>
+                  </div>
+                </div>
+                <div class="position-absolute bottom-0 end-0" style="transform: translate(50%, 50%);">
+                  <div class="bg-white rounded-circle p-2 shadow">
+                    <i class="fab fa-whatsapp text-success" style="font-size: 20px;"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Connection Status Display - Below QR Code -->
+              <div id="connection-info" class="mb-3" style="display: none;">
+                <div class="alert alert-info border-0 py-2">
+                  <div class="d-flex align-items-center justify-content-center">
+                    <div id="status-indicator" class="me-2">
+                      <i class="fas fa-circle text-success" style="font-size: 8px;"></i>
+                    </div>
+                    <div class="text-start">
+                      <div id="status-message" class="fw-bold mb-1">Connected</div>
+                      <div id="connection-details" class="small text-muted">
+                        <div id="phone-number-display"></div>
+                        <div id="connection-time"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <button id="refresh-qr-btn" class="btn btn-primary">
+                  <i class="fas fa-qrcode me-2"></i>Generate QR Code
+                </button>
+              </div>
+
+              <div class="form-check d-flex align-items-center justify-content-center">
+                <input class="form-check-input me-2" type="checkbox" id="stayLoggedIn" checked>
+                <label class="form-check-label text-muted" for="stayLoggedIn">
+                  Stay logged in
+                  <i class="fas fa-info-circle ms-1" title="Keep session active"></i>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connected state will be dynamically created here -->
+</div>

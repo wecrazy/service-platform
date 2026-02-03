@@ -1,0 +1,96 @@
+
+<!-- Users List Table -->
+<div class="card">
+  <div class="card-header border-bottom">
+    <h5 class="card-title">Search Filter</h5>
+    <div class="d-flex row py-3 gap-3 gap-md-0">
+    </div>
+  </div>
+  <div class="card-datatable table-responsive">
+    <table class="datatables-terminal-list table border-top">
+      <thead>
+        <tr>
+          <th></th>
+          <th>terminal_id</th>
+          <th>merchant_id</th>
+          <th>email</th>
+          <th>status</th>
+          <th>serial_number</th>
+          <th>imei</th>
+          <th><i class='bx bx-message-square-edit bx-tada-hover' ></i></th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+<!-- Form with Image horizontal Modal -->
+<div
+class="modal-onboarding modal fade animate__animated"
+id="onboardHorizontalMemberModal1"
+tabindex="-1"
+aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content text-center">
+      <div class="modal-header border-0">
+        <!-- <a class="text-muted close-label" href="javascript:void(0);" data-bs-dismiss="modal"
+          >Skip Intro</a
+        > -->
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"></button>
+      </div>
+      <div class="modal-body onboarding-horizontal p-0">
+        <div class="onboarding-media">
+          <img
+            src="../assets/img/illustrations/boy-verify-email-light.png"
+            alt="boy-verify-email-light"
+            width="273"
+            class="img-fluid"
+            data-app-dark-img="illustrations/boy-verify-email-dark.png"
+            data-app-light-img="illustrations/boy-verify-email-light.png" />
+        </div>
+        <div class="onboarding-content mb-0">
+          <h4 class="onboarding-title text-body" id="username" >Set Member Balance</h4>
+          <h5 class="onboarding-title text-body" id="balance"></h5>
+          <div class="onboarding-info">
+            In this example you can see a form where you can request some additional information
+            from the customer when they land on the app page.
+          </div>
+          <form>
+            <div class="row">
+              <div class="col-sm-12">
+
+                <div class="mb-3">
+                  <input type="hidden" id="memberid" value="">
+                  <label for="nameEx7depositMember" class="form-label">Enter Additional Balance</label>
+                  <div class="d-flex flex-row">
+                    <input
+                      class="form-control"
+                      placeholder="10000"
+                      type="number"
+                      value=""
+                      tabindex="0"
+                      id="nameEx7depositMember" />
+                    <button type="button" id="memberRemoveFormBtn" style="width:200px; margin-left:10px" class="btn btn-danger ml-1" onclick="removeMemberBalance()">Remove Balance</button>
+
+                  </div>
+
+                </div>
+              </div>
+              
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <button type="button" id="memberDepositFormBtn" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--/ Form with Image horizontal Modal -->
+<script src="../assets/js/tab-all-terminals.js?_=1"></script>
