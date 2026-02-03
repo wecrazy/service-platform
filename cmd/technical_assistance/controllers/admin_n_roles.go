@@ -947,7 +947,7 @@ func PatchRole(db *gorm.DB) gin.HandlerFunc {
 		if credentialsCookie == nil || len(credentialsCookie.Value) == 0 {
 			c.Redirect(302, "/login")
 			return
-		} else if credentialsCookie != nil && credentialsCookie.Value == "" {
+		} else if credentialsCookie.Value == "" {
 			credentialsCookie.Expires = time.Now().AddDate(0, 0, -1)
 			http.SetCookie(c.Writer, credentialsCookie)
 			c.Redirect(302, "/login")
@@ -1083,7 +1083,7 @@ func ModalTabRoles(db *gorm.DB) gin.HandlerFunc {
 		if credentialsCookie == nil || len(credentialsCookie.Value) == 0 {
 			c.Redirect(302, "/login")
 			return
-		} else if credentialsCookie != nil && credentialsCookie.Value == "" {
+		} else if credentialsCookie.Value == "" {
 			credentialsCookie.Expires = time.Now().AddDate(0, 0, -1)
 			http.SetCookie(c.Writer, credentialsCookie)
 			c.Redirect(302, "/login")
