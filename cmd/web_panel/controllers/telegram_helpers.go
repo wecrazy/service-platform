@@ -12,7 +12,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	pb "service-platform/cmd/web_panel/proto"
+	pb "service-platform/proto"
 )
 
 // SendSPDocumentViaTelegram sends an SP document via Telegram

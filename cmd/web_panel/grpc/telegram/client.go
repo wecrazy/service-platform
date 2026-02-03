@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	pb "service-platform/cmd/web_panel/proto"
+	pb "service-platform/proto"
 )
 
 // Global gRPC connection for Telegram service

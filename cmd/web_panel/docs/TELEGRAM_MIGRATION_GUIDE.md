@@ -54,11 +54,11 @@ Tracks all SP documents sent via Telegram with:
 Copy the Telegram proto files from service-platform to web_panel:
 
 ```bash
-# From service-platform directory
-cp -r proto /home/user/server/service-platform/cmd/web_panel/
-
-# Or create a symlink
-ln -s /home/user/server/service-platform/proto /home/user/server/service-platform/cmd/web_panel/proto
+# Proto files are already at the root level
+# service-platform/proto/ contains:
+# - telegram.pb.go
+# - telegram_grpc.pb.go
+# No copying needed - just import service-platform/proto in your code
 ```
 
 ### Step 2: Update go.mod Dependencies

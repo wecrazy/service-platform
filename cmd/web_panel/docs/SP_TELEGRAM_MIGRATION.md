@@ -24,7 +24,7 @@ TELEGRAM_SERVICE:
 Added `TelegramService` struct to parse YAML config.
 
 ### 3. Proto Files Copied
-**Directory:** `/home/user/server/service-platform/cmd/web_panel/proto/`
+**Directory:** `/home/user/server/service-platform/proto/`
 
 Copied from service-platform:
 - `telegram.pb.go` - Proto message definitions
