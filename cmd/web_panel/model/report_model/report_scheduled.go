@@ -1,7 +1,7 @@
 package reportmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -18,5 +18,5 @@ type ReportScheduled struct {
 }
 
 func (ReportScheduled) TableName() string {
-	return config.GetConfig().Database.TbReportScheduled
+	return config.WebPanel.Get().Database.TbReportScheduled
 }

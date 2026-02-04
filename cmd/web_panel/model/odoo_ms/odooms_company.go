@@ -1,7 +1,7 @@
 package odooms
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -13,5 +13,5 @@ type ODOOMSCompany struct {
 }
 
 func (ODOOMSCompany) TableName() string {
-	return config.GetConfig().Database.TbCompany
+	return config.WebPanel.Get().Database.TbCompany
 }

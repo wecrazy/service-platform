@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"service-platform/internal/config"
 	"strings"
 	"time"
-	"service-platform/cmd/web_panel/config"
 
 	"github.com/Boostport/mjml-go"
 	"github.com/sirupsen/logrus"
@@ -22,16 +22,16 @@ type EmailAttachment struct {
 
 func Sendmail(to, body string) error {
 	mailer := gomail.NewMessage()
-	mailer.SetHeader("From", "Email Verificator  <"+config.GetConfig().Email.Sender+">")
+	mailer.SetHeader("From", "Email Verificator  <"+config.WebPanel.Get().Email.Sender+">")
 	mailer.SetHeader("To", to)
 	mailer.SetHeader("Subject", "[noreply] Here Reset Password link")
 	mailer.SetBody("text/html", body)
 
 	dialer := gomail.NewDialer(
-		config.GetConfig().Email.Host,
-		config.GetConfig().Email.Port,
-		config.GetConfig().Email.Username,
-		config.GetConfig().Email.Password,
+		config.WebPanel.Get().Email.Host,
+		config.WebPanel.Get().Email.Port,
+		config.WebPanel.Get().Email.Username,
+		config.WebPanel.Get().Email.Password,
 	)
 
 	return dialer.DialAndSend(mailer)
@@ -79,7 +79,7 @@ func TrySendEmail(to, cc, bcc []string, subject string, mjmlBody string, attachm
 		return err
 	}
 
-	config := config.GetConfig().Email
+	config := config.WebPanel.Get().Email
 
 	d := gomail.NewDialer(config.Host, config.Port, config.Username, config.Password)
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}

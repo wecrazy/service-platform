@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"net/http"
 	"os"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -38,13 +38,13 @@ func GetSystemLog(db *gorm.DB) gin.HandlerFunc {
 
 		fileToRead := c.Query("v")
 		if fileToRead == "" {
-			fileToRead = config.GetConfig().App.AppLogFilename
+			fileToRead = config.WebPanel.Get().App.AppLogFilename
 		}
 		fileToRead = strings.ReplaceAll(fileToRead, "/", "")
 		fileToRead = strings.ReplaceAll(fileToRead, "..", "")
 		fileToRead = strings.ReplaceAll(fileToRead, "\\", "")
 
-		file, err := os.Open(config.GetConfig().App.LogDir + "/" + fileToRead)
+		file, err := os.Open(config.WebPanel.Get().App.LogDir + "/" + fileToRead)
 		if err != nil {
 			logrus.Fatal(err)
 			c.JSON(http.StatusOK, gin.H{

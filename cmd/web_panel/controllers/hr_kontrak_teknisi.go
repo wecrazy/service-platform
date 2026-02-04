@@ -8,12 +8,12 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	contracttechnicianmodel "service-platform/cmd/web_panel/model/contract_technician_model"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -52,7 +52,7 @@ func TableContractTechnicianForHR() gin.HandlerFunc {
 		// Initialize the map
 		columnMap := make(map[int]string)
 
-		excludedJsonKeys := config.GetConfig().ContractTechnicianODOO.ExcludedJSONKeysForTable
+		excludedJsonKeys := config.WebPanel.Get().ContractTechnicianODOO.ExcludedJSONKeysForTable
 
 		// Loop through the fields of the struct
 		colNum := 0
@@ -286,7 +286,7 @@ func TableContractTechnicianForHR() gin.HandlerFunc {
 					newData[theKey] = filePath
 
 				case "wo_number", "ticket_subject", "wo_number_already_visit", "ticket_subject_already_visit":
-					woDetailURL := config.GetConfig().App.WebPublicURL + "/odooms-project-task/detailWO"
+					woDetailURL := config.WebPanel.Get().App.WebPublicURL + "/odooms-project-task/detailWO"
 					t := fieldValue.Interface().(datatypes.JSON)
 					var arr []interface{}
 					if err := json.Unmarshal(t, &arr); err != nil {
@@ -712,7 +712,7 @@ func RegeneratePDFContractTechnician() gin.HandlerFunc {
 func GeneratePDFContractTechnician(record *contracttechnicianmodel.ContractTechnicianODOO, outputPath string) error {
 	dbWeb := gormdb.Databases.Web
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	noSurat, err := IncrementNomorSuratContract(dbWeb, "LAST_NOMOR_SURAT_CONTRACT_GENERATED")
@@ -742,7 +742,7 @@ func GeneratePDFContractTechnician(record *contracttechnicianmodel.ContractTechn
 		tanggal.Tahun,     // 2025
 	})
 
-	ODOOMSSAC := config.GetConfig().ODOOMSSAC
+	ODOOMSSAC := config.WebPanel.Get().ODOOMSSAC
 	SACData, ok := ODOOMSSAC[record.SAC]
 	if !ok {
 		return fmt.Errorf("SAC data not found for SAC code: %s", record.SAC)
@@ -859,8 +859,8 @@ func GeneratePDFContractTechnician(record *contracttechnicianmodel.ContractTechn
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Kontrak Kerja", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("kontrak, surat kontrak, teknisi", true)
 	pdf.SetSubject("Surat Kontrak Kerja - Atas bergabungnya karyawan ke perusahaan", true)
 	pdf.SetCreationDate(time.Now())
@@ -897,7 +897,7 @@ func GeneratePDFContractTechnician(record *contracttechnicianmodel.ContractTechn
 		pdf.SetTextColor(100, 100, 100)
 
 		// Move to right corner with specific positioning
-		companyName := config.GetConfig().Default.PT
+		companyName := config.WebPanel.Get().Default.PT
 		textWidth := pdf.GetStringWidth(companyName)
 		pageWidth, _ := pdf.GetPageSize()
 		rightMargin := 4.0 // Adjust this value to control distance from right edge
@@ -978,9 +978,9 @@ func GeneratePDFContractTechnician(record *contracttechnicianmodel.ContractTechn
 	pdf.SetY(currentY)
 	// define fields
 	pihakPertamaFields := []pdfField{
-		{"Nama Perusahaan", config.GetConfig().Default.PT},
-		{"Alamat", config.GetConfig().Default.PTAddress},
-		{"Kota", config.GetConfig().Default.PTCity},
+		{"Nama Perusahaan", config.WebPanel.Get().Default.PT},
+		{"Alamat", config.WebPanel.Get().Default.PTAddress},
+		{"Kota", config.WebPanel.Get().Default.PTCity},
 	}
 
 	// loop
@@ -1711,7 +1711,7 @@ func SendIndividualContractTechnician() gin.HandlerFunc {
 }
 
 func sendContractToTechnician(sendOption string, record *contracttechnicianmodel.ContractTechnicianODOO) (bool, error) {
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	hour := now.Hour()
 	// Greeting logic (ensuring correct 24-hour format)
@@ -1791,10 +1791,10 @@ func sendContractToTechnician(sendOption string, record *contracttechnicianmodel
 			return false, errors.New("email cannot be empty")
 		}
 
-		CCEmails := config.GetConfig().ContractTechnicianODOO.CCContractEmail
+		CCEmails := config.WebPanel.Get().ContractTechnicianODOO.CCContractEmail
 
-		if config.GetConfig().ContractTechnicianODOO.ActiveDebug {
-			emailTeknisi = config.GetConfig().ContractTechnicianODOO.EmailTest
+		if config.WebPanel.Get().ContractTechnicianODOO.ActiveDebug {
+			emailTeknisi = config.WebPanel.Get().ContractTechnicianODOO.EmailTest
 		}
 
 		emailTemplate := createTemplateEmailForContractTechnician(greetingID, namaTeknisi, kontrakTerkirimFormatted)
@@ -1839,8 +1839,8 @@ func sendContractToTechnician(sendOption string, record *contracttechnicianmodel
 			if err != nil {
 				return false, err
 			} else {
-				if config.GetConfig().ContractTechnicianODOO.ActiveDebug {
-					noHPTeknisi = config.GetConfig().ContractTechnicianODOO.PhoneNumberTest
+				if config.WebPanel.Get().ContractTechnicianODOO.ActiveDebug {
+					noHPTeknisi = config.WebPanel.Get().ContractTechnicianODOO.PhoneNumberTest
 				} else {
 					noHPTeknisi = "62" + sanitizedPhone
 				}
@@ -1853,11 +1853,11 @@ func sendContractToTechnician(sendOption string, record *contracttechnicianmodel
 		var sbID, sbEN strings.Builder
 		sbID.WriteString(fmt.Sprintf("%s Bapak/Ibu %s, berikut kami lampirkan surat kontrak Anda per %s.\n\n", greetingID, namaTeknisi, kontrakTerkirimFormatted))
 		sbID.WriteString("_Best Regards,_\n")
-		sbID.WriteString(fmt.Sprintf("HR - *%s*", config.GetConfig().Default.PT))
+		sbID.WriteString(fmt.Sprintf("HR - *%s*", config.WebPanel.Get().Default.PT))
 
 		sbEN.WriteString(fmt.Sprintf("%s Mr/Mrs %s, please find attached your contract letter as of %s.\n\n", greetingEN, namaTeknisi, kontrakTerkirimFormatted))
 		sbEN.WriteString("_Best Regards,_\n")
-		sbEN.WriteString(fmt.Sprintf("HR - *%s*", config.GetConfig().Default.PT))
+		sbEN.WriteString(fmt.Sprintf("HR - *%s*", config.WebPanel.Get().Default.PT))
 		msgID := sbID.String()
 		msgEN := sbEN.String()
 
@@ -1958,8 +1958,8 @@ func createTemplateEmailForContractTechnician(greeting, namaTeknisi, kontrakTerk
 		strings.ToUpper(namaTeknisi),
 		greeting,
 		kontrakTerkirimFormatted,
-		config.GetConfig().Default.PTHRD[0].Name,
-		config.GetConfig().Default.PT,
+		config.WebPanel.Get().Default.PTHRD[0].Name,
+		config.WebPanel.Get().Default.PT,
 		"+6287883507445",
 	))
 	sb.WriteString("</mjml>")
@@ -2238,7 +2238,7 @@ func NotifyHRDBeforeContractExpired(expiredDaysIn int) error {
 		// sbEN.WriteString("No expired contracts that are not updated.\n")
 	}
 
-	jidStrHRD := fmt.Sprintf("%s@s.whatsapp.net", config.GetConfig().Default.PTHRD[0].PhoneNumber)
+	jidStrHRD := fmt.Sprintf("%s@s.whatsapp.net", config.WebPanel.Get().Default.PTHRD[0].PhoneNumber)
 	originalSenderJID := NormalizeSenderJID(jidStrHRD)
 
 	msgID := sbID.String()

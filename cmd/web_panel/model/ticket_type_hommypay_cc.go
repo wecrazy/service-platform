@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -13,5 +13,5 @@ type TicketType struct {
 }
 
 func (TicketType) TableName() string {
-	return config.GetConfig().Database.TbTicketType
+	return config.WebPanel.Get().Database.TbTicketType
 }

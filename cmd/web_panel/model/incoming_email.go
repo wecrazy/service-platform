@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -28,5 +28,5 @@ type IncomingEmail struct {
 }
 
 func (IncomingEmail) TableName() string {
-	return config.GetConfig().Database.TbMail
+	return config.WebPanel.Get().Database.TbMail
 }

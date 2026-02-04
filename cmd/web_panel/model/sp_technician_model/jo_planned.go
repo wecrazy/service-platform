@@ -1,7 +1,7 @@
 package sptechnicianmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/datatypes"
@@ -29,7 +29,7 @@ type JOPlannedForTechnicianODOOMS struct {
 }
 
 func (JOPlannedForTechnicianODOOMS) TableName() string {
-	return config.GetConfig().SPTechnician.TBJoPlannedOdooMS
+	return config.WebPanel.Get().SPTechnician.TBJoPlannedOdooMS
 }
 
 type JOPlannedForTechnicianODOOATM struct {
@@ -37,5 +37,5 @@ type JOPlannedForTechnicianODOOATM struct {
 }
 
 func (JOPlannedForTechnicianODOOATM) TableName() string {
-	return config.GetConfig().SPTechnician.TBJoPlannedOdooATM
+	return config.WebPanel.Get().SPTechnician.TBJoPlannedOdooATM
 }

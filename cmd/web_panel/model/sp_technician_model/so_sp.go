@@ -1,7 +1,7 @@
 package sptechnicianmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -54,5 +54,5 @@ type SPofStockOpname struct {
 }
 
 func (SPofStockOpname) TableName() string {
-	return config.GetConfig().StockOpname.TbListSPSO
+	return config.WebPanel.Get().StockOpname.TbListSPSO
 }

@@ -1,6 +1,6 @@
 package model
 
-import "service-platform/cmd/web_panel/config"
+import "service-platform/internal/config"
 
 type AdminStatus struct {
 	ID        uint   `json:"id" gorm:"column:id;primarykey"`
@@ -9,5 +9,5 @@ type AdminStatus struct {
 }
 
 func (AdminStatus) TableName() string {
-	return config.GetConfig().Database.TbAdminStatus
+	return config.WebPanel.Get().Database.TbAdminStatus
 }

@@ -1,6 +1,6 @@
 package model
 
-import "service-platform/cmd/web_panel/config"
+import "service-platform/internal/config"
 
 type Feature struct {
 	ID        uint   `json:"id" gorm:"column:id;primary_key;autoincrement"`
@@ -14,5 +14,5 @@ type Feature struct {
 }
 
 func (Feature) TableName() string {
-	return config.GetConfig().Database.TbFeature
+	return config.WebPanel.Get().Database.TbFeature
 }

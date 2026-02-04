@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	reportmodel "service-platform/cmd/web_panel/model/report_model"
+	"service-platform/internal/config"
 	"sync"
 	"time"
 
@@ -29,7 +29,7 @@ func GetDataSLAReportODOOMS() error {
 	}
 	defer getDataODOOMSSLAReportMutex.Unlock()
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, loc)
 	endOfMonth := time.Date(now.Year(), now.Month()+1, 0, 23, 59, 59, 999999999, loc)
@@ -38,13 +38,13 @@ func GetDataSLAReportODOOMS() error {
 	startDateParam := startOfMonth.Format("2006-01-02 15:04:05")
 	endDateParam := endOfMonth.Format("2006-01-02 15:04:05")
 
-	if config.GetConfig().Report.SLA.ActiveDebug {
-		startDateParam = config.GetConfig().Report.SLA.StartParam
-		endDateParam = config.GetConfig().Report.SLA.EndParam
+	if config.WebPanel.Get().Report.SLA.ActiveDebug {
+		startDateParam = config.WebPanel.Get().Report.SLA.StartParam
+		endDateParam = config.WebPanel.Get().Report.SLA.EndParam
 	}
 
 	ODOOModel := "helpdesk.ticket"
-	excludedCompanies := config.GetConfig().ApiODOO.CompanyExcluded
+	excludedCompanies := config.WebPanel.Get().ApiODOO.CompanyExcluded
 	excludedTechnicians := []string{
 		"Tes Dev Mfjr",
 		"Asset Edi Purwanto",
@@ -103,7 +103,7 @@ func GetDataSLAReportODOOMS() error {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -178,7 +178,7 @@ func GetDataSLAReportODOOMS() error {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -385,7 +385,7 @@ func GenerateSLAReportODOOMS() ([]string, error) {
 	}
 
 	var generatedFiles []string
-	reportTypes := config.GetConfig().Report.SLA.GeneratedTypes
+	reportTypes := config.WebPanel.Get().Report.SLA.GeneratedTypes
 
 	for _, reportType := range reportTypes {
 		filePath, err := GenerateExcelSLAReportODOOMS(reportType)
@@ -416,7 +416,7 @@ func GenerateExcelSLAReportODOOMS(excelRequest string) (string, error) {
 		excelNameNew = excelRequest
 	}
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	excelFileName := fmt.Sprintf("(%v)SLAReport_%v.xlsx", time.Now().Format("02Jan2006"), excelNameNew)
@@ -538,7 +538,7 @@ func GenerateExcelSLAReportODOOMS(excelRequest string) (string, error) {
 		"order":  order,
 	}
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 	payloadBytes, err := json.Marshal(payload)

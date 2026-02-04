@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -111,7 +111,7 @@ type MerchantFastlink struct {
 }
 
 func (MerchantFastlink) TableName() string {
-	return config.GetConfig().Database.TbMerchantFastlink
+	return config.WebPanel.Get().Database.TbMerchantFastlink
 }
 
 // var MerchantStatuses = map[string]int16{

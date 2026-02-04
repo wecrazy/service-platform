@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"service-platform/cmd/technical_assistance/model/op_model"
+	"service-platform/internal/config"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -240,7 +241,7 @@ func GenerateTechErrorReport(db *gorm.DB, dbWeb *gorm.DB) (string, string, error
 		f.SetCellStyle(masterSheet, cell, cell, style)
 	}
 
-	woDetailURL := os.Getenv("WO_DETAIL_URL")
+	woDetailURL := config.TechnicalAssistance.Get().WO_DETAIL_URL
 
 	rowIndex := 2
 	for _, record := range taActivityData {

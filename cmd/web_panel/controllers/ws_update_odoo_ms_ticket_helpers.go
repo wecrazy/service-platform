@@ -11,11 +11,11 @@ import (
 	"reflect"
 	"runtime"
 	"runtime/debug"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
+	"service-platform/internal/config"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -253,8 +253,8 @@ func sendNotificationMessage(
 	}
 
 	var jidString string
-	if config.GetConfig().UploadedExcelForODOOMS.ActiveDebug {
-		jidString = config.GetConfig().Whatsmeow.WaSuperUser + "@s.whatsapp.net"
+	if config.WebPanel.Get().UploadedExcelForODOOMS.ActiveDebug {
+		jidString = config.WebPanel.Get().Whatsmeow.WaSuperUser + "@s.whatsapp.net"
 	} else {
 		jidString = "62" + sanitizedPhoneNumber + "@s.whatsapp.net"
 	}
@@ -386,7 +386,7 @@ type SheetProcessingConfig struct {
 
 // sendODOORequest is UNIVERSAL function that replaces both updateDataExceltoTicketODOOMS and createDataExceltoNewTicketODOOMS
 func sendODOORequest(cookieODOO []*http.Cookie, req string, operationType string) (string, error) {
-	odooConfig := config.GetConfig().ApiODOO
+	odooConfig := config.WebPanel.Get().ApiODOO
 
 	// Select URL based on operation type
 	var url string
@@ -925,9 +925,9 @@ func processUploadedExcelWorker(db *gorm.DB, opConfig OperationConfig) {
 
 					// Get session cookies for Odoo login
 					var emailUploadedBy, decryptedPwd string
-					if config.GetConfig().UploadedExcelForODOOMS.ActiveDebug {
-						emailUploadedBy = config.GetConfig().UploadedExcelForODOOMS.EmailParam
-						decryptedPwd = config.GetConfig().UploadedExcelForODOOMS.PwdParam
+					if config.WebPanel.Get().UploadedExcelForODOOMS.ActiveDebug {
+						emailUploadedBy = config.WebPanel.Get().UploadedExcelForODOOMS.EmailParam
+						decryptedPwd = config.WebPanel.Get().UploadedExcelForODOOMS.PwdParam
 					} else {
 						emailUploadedBy = uploadedExcel.Email
 						decryptedPwd = string(decPwd)
@@ -1059,7 +1059,7 @@ func validateMIDTIDExists(midtid string) (bool, *uint, error) {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -1139,7 +1139,7 @@ func parseExcelBoolean(value string) (bool, error) {
 
 func BackupTableBALostPrevMonth() error {
 	dbWeb := gormdb.Databases.Web
-	table := config.GetConfig().Database.TbBALost
+	table := config.WebPanel.Get().Database.TbBALost
 
 	now := time.Now()
 	prevMonth := now.AddDate(0, -1, 0)
@@ -1330,7 +1330,7 @@ func getIDValueOfMany2OneField(model, fieldName string, fieldValue any) (uint, e
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 

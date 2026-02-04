@@ -1,7 +1,7 @@
 package contracttechnicianmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -13,5 +13,5 @@ type NomorSuratContract struct {
 }
 
 func (NomorSuratContract) TableName() string {
-	return config.GetConfig().ContractTechnicianODOO.TBNomorSuratContract
+	return config.WebPanel.Get().ContractTechnicianODOO.TBNomorSuratContract
 }

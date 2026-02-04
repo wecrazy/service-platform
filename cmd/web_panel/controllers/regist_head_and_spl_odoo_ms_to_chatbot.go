@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 
@@ -28,7 +28,7 @@ func RegistODOOMSHeadAndSPLToChatbot() error {
 	defer registODOOMSHeadAndSPLToChatBotMutex.Unlock()
 
 	dbWeb := gormdb.Databases.Web
-	ODOOMSSAC := config.GetConfig().ODOOMSSAC
+	ODOOMSSAC := config.WebPanel.Get().ODOOMSSAC
 
 	allowedTypes := model.AllWAMessageTypes
 	jsonBytes, err := json.Marshal(allowedTypes)

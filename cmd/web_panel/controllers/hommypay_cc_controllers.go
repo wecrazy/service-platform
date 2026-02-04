@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime/debug"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"sync"
@@ -404,7 +404,7 @@ func PostNewTicketHommyPayCC(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		table := config.GetConfig().Database.TbTicketHommyPayCC
+		table := config.WebPanel.Get().Database.TbTicketHommyPayCC
 		// Check if the table exists
 		if !db.Migrator().HasTable(table) {
 			fmt.Printf("Table %s does not exist.\n", table)
@@ -461,10 +461,10 @@ func PostNewTicketHommyPayCC(db *gorm.DB) gin.HandlerFunc {
 
 		// Default values for fields that are not provided
 		defaultParam := map[string]interface{}{
-			"stage":          config.GetConfig().Database.DefaultValues.Stage,
-			"priority":       config.GetConfig().Database.DefaultValues.Priority,
-			"keterangan":     config.GetConfig().Database.DefaultValues.Keterangan,
-			"status_in_odoo": config.GetConfig().Database.DefaultValues.StatusInOdoo,
+			"stage":          config.WebPanel.Get().Database.DefaultValues.Stage,
+			"priority":       config.WebPanel.Get().Database.DefaultValues.Priority,
+			"keterangan":     config.WebPanel.Get().Database.DefaultValues.Keterangan,
+			"status_in_odoo": config.WebPanel.Get().Database.DefaultValues.StatusInOdoo,
 			"admin_id":       claims["id"].(float64),
 			"created_at":     now,
 			"updated_at":     now,
@@ -545,7 +545,7 @@ func LastUpdateTicketHommyPayCC(db *gorm.DB) gin.HandlerFunc {
 func PutDataTicketHommyPayCC(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		table := config.GetConfig().Database.TbTicketHommyPayCC
+		table := config.WebPanel.Get().Database.TbTicketHommyPayCC
 		// Check if the table exists
 		if !db.Migrator().HasTable(table) {
 			fmt.Printf("Table %s does not exist.\n", table)
@@ -1099,11 +1099,11 @@ func UpdateDatatoODOOFromInsertedTicketHommyPayCC() {
 
 func insertNewTicketInODOO(data InsertedDataTriggerItem) {
 	logrus.Infof("Inserting new Ticket Hommy Pay CC into Odoo for ID: %d", data.IDinDB)
-	table := config.GetConfig().Database.TbTicketHommyPayCC
+	table := config.WebPanel.Get().Database.TbTicketHommyPayCC
 
 	var modelData model.TicketHommyPayCC
 	var keteranganMsg string
-	if err := data.Database.Table(table).Where("id = ? AND status_in_odoo = ?", data.IDinDB, config.GetConfig().Database.DefaultValues.StatusInOdoo).First(&modelData).Error; err != nil {
+	if err := data.Database.Table(table).Where("id = ? AND status_in_odoo = ?", data.IDinDB, config.WebPanel.Get().Database.DefaultValues.StatusInOdoo).First(&modelData).Error; err != nil {
 		keteranganMsg = "Failed to find data in DB for Odoo insert: " + err.Error()
 		logrus.Error(keteranganMsg)
 		_ = data.Database.Table(table).Where("id = ?", data.IDinDB).Update("keterangan", keteranganMsg).Error
@@ -1112,7 +1112,7 @@ func insertNewTicketInODOO(data InsertedDataTriggerItem) {
 
 	odooModel := "helpdesk.ticket"
 	odooParams := map[string]interface{}{
-		"company_id": config.GetConfig().Default.CompanyId,
+		"company_id": config.WebPanel.Get().Default.CompanyId,
 		"active":     true,
 	}
 	odooParams["model"] = odooModel
@@ -1172,7 +1172,7 @@ func insertNewTicketInODOO(data InsertedDataTriggerItem) {
 	// }
 
 	// if slaDeadlinetimeTime == nil || slaDeadlinetimeTime.IsZero() {
-	// 	slaDeadlineStr := config.GetConfig().Database.DefaultValues.SLADeadline
+	// 	slaDeadlineStr := config.WebPanel.Get().Database.DefaultValues.SLADeadline
 	// 	duration, err := fun.ParseFlexibleDuration(slaDeadlineStr)
 	// 	if err != nil {
 	// 		logrus.Errorf("error while parsing default sla deadline: %v", err)
@@ -1191,7 +1191,7 @@ func insertNewTicketInODOO(data InsertedDataTriggerItem) {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -1203,7 +1203,7 @@ func insertNewTicketInODOO(data InsertedDataTriggerItem) {
 		return
 	}
 
-	url := config.GetConfig().ApiODOO.UrlCreateDataHommyPay
+	url := config.WebPanel.Get().ApiODOO.UrlCreateDataHommyPay
 	method := "POST"
 
 	body, err := FetchODOOHommyPay(url, method, string(payloadBytes))
@@ -1332,7 +1332,7 @@ func GetTicketTypeHommyPayCC(db *gorm.DB) {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -1341,7 +1341,7 @@ func GetTicketTypeHommyPayCC(db *gorm.DB) {
 		logrus.Errorf("error marshalling payload: %v", err)
 		return
 	}
-	url := config.GetConfig().ApiODOO.UrlGetDataHommyPay
+	url := config.WebPanel.Get().ApiODOO.UrlGetDataHommyPay
 	method := "POST"
 
 	body, err := FetchODOOHommyPay(url, method, string(payloadBytes))
@@ -1476,7 +1476,7 @@ func GetTicketStageHommyPayCC(db *gorm.DB) {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -1485,7 +1485,7 @@ func GetTicketStageHommyPayCC(db *gorm.DB) {
 		logrus.Errorf("error marshalling payload: %v", err)
 		return
 	}
-	url := config.GetConfig().ApiODOO.UrlGetDataHommyPay
+	url := config.WebPanel.Get().ApiODOO.UrlGetDataHommyPay
 	method := "POST"
 
 	body, err := FetchODOOHommyPay(url, method, string(payloadBytes))
@@ -1617,7 +1617,7 @@ func GetMerchantHommyPayCC(db *gorm.DB) (string, error) {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -1625,7 +1625,7 @@ func GetMerchantHommyPayCC(db *gorm.DB) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error marshalling payload: %v", err)
 	}
-	url := config.GetConfig().ApiODOO.UrlGetDataHommyPay
+	url := config.WebPanel.Get().ApiODOO.UrlGetDataHommyPay
 	method := "POST"
 
 	body, err := FetchODOOHommyPay(url, method, string(payloadBytes))
@@ -1782,7 +1782,7 @@ func GetListTicketHommyPayCC(db *gorm.DB) (string, error) {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -1790,7 +1790,7 @@ func GetListTicketHommyPayCC(db *gorm.DB) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error marshalling payload: %v", err)
 	}
-	url := config.GetConfig().ApiODOO.UrlGetDataHommyPay
+	url := config.WebPanel.Get().ApiODOO.UrlGetDataHommyPay
 	method := "POST"
 
 	body, err := FetchODOOHommyPay(url, method, string(payloadBytes))
@@ -1920,7 +1920,7 @@ func GetListTicketHommyPayCC(db *gorm.DB) (string, error) {
 					Product:      odooData.Product.String,
 					Description:  odooData.Description.String,
 					AdminId:      1, // default by System
-					Keterangan:   config.GetConfig().HommyPayCCData.KetFromOdoo,
+					Keterangan:   config.WebPanel.Get().HommyPayCCData.KetFromOdoo,
 					StatusInOdoo: stage, // FIX this coz Odoo Stage is the same as StatusInOdoo
 				}
 				if err := db.Create(&newData).Error; err != nil {
@@ -1956,7 +1956,7 @@ func GetListTicketHommyPayCC(db *gorm.DB) (string, error) {
 				"product":      odooData.Product.String,
 				"description":  odooData.Description.String,
 				// "admin_id":    1, // default by System
-				"keterangan":     config.GetConfig().HommyPayCCData.KetFromOdoo,
+				"keterangan":     config.WebPanel.Get().HommyPayCCData.KetFromOdoo,
 				"status_in_odoo": stage, // FIX this coz Odoo Stage is the same as StatusInOdoo
 			}).Error; err != nil {
 				logrus.Errorf("Failed to update Ticket Hommy Pay CC with ID %d: %v", odooData.ID, err)

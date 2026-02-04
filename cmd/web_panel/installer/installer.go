@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"strings"
 )
 
@@ -31,7 +31,7 @@ func EnsureAdminPrivileges() {
 	}
 }
 
-func WindowsService(yamlCfg *config.YamlConfig) {
+func WindowsService(yamlCfg *config.TypeWebPanel) {
 	fmt.Println("🪟  Windows detected — running Windows install steps...")
 	execPath, err := os.Executable()
 	if err != nil {
@@ -89,7 +89,7 @@ func WindowsService(yamlCfg *config.YamlConfig) {
 	fmt.Printf("✅ Service: %s started successfully.\n", serviceName)
 }
 
-func LinuxService(yamlCfg *config.YamlConfig) {
+func LinuxService(yamlCfg *config.TypeWebPanel) {
 	fmt.Println("🐧 Linux detected — running Linux install steps...")
 
 	execPath, err := os.Executable()

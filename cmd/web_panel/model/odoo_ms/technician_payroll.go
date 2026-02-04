@@ -1,7 +1,7 @@
 package odooms
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -91,7 +91,7 @@ type MSTechnicianPayroll struct {
 }
 
 func (MSTechnicianPayroll) TableName() string {
-	return config.GetConfig().Database.TbMSTechnicianPayroll
+	return config.WebPanel.Get().Database.TbMSTechnicianPayroll
 }
 
 type MSTechnicianPayrollTicketsRegularEDC struct {
@@ -119,7 +119,7 @@ type MSTechnicianPayrollTicketsRegularEDC struct {
 }
 
 func (MSTechnicianPayrollTicketsRegularEDC) TableName() string {
-	return config.GetConfig().Database.TbMSTechnicianPayrollTicketsRegularEDC
+	return config.WebPanel.Get().Database.TbMSTechnicianPayrollTicketsRegularEDC
 }
 
 type MSTechnicianPayrollTicketsBP struct {
@@ -146,7 +146,7 @@ type MSTechnicianPayrollTicketsBP struct {
 }
 
 func (MSTechnicianPayrollTicketsBP) TableName() string {
-	return config.GetConfig().Database.TbMSTechnicianPayrollTicketsBP
+	return config.WebPanel.Get().Database.TbMSTechnicianPayrollTicketsBP
 }
 
 type MSTechnicianPayrollTicketsUnworkedEDC struct {
@@ -163,7 +163,7 @@ type MSTechnicianPayrollTicketsUnworkedEDC struct {
 }
 
 func (MSTechnicianPayrollTicketsUnworkedEDC) TableName() string {
-	return config.GetConfig().Database.TbMSTechnicianPayrollTicketsUnworkedEDC
+	return config.WebPanel.Get().Database.TbMSTechnicianPayrollTicketsUnworkedEDC
 }
 
 type MSTechnicianPayrollTicketsRegularATM struct {
@@ -191,7 +191,7 @@ type MSTechnicianPayrollTicketsRegularATM struct {
 }
 
 func (MSTechnicianPayrollTicketsRegularATM) TableName() string {
-	return config.GetConfig().Database.TbMSTechnicianPayrollTicketsRegularATM
+	return config.WebPanel.Get().Database.TbMSTechnicianPayrollTicketsRegularATM
 }
 
 type MSTechnicianPayrollTicketsUnworkedATM struct {
@@ -209,7 +209,7 @@ type MSTechnicianPayrollTicketsUnworkedATM struct {
 }
 
 func (MSTechnicianPayrollTicketsUnworkedATM) TableName() string {
-	return config.GetConfig().Database.TbMSTechnicianPayrollTicketsUnworkedATM
+	return config.WebPanel.Get().Database.TbMSTechnicianPayrollTicketsUnworkedATM
 }
 
 type MSTechnicianPayrollDedicatedATM struct {
@@ -287,5 +287,5 @@ type MSTechnicianPayrollDedicatedATM struct {
 }
 
 func (MSTechnicianPayrollDedicatedATM) TableName() string {
-	return config.GetConfig().Database.TbMSTechnicianPayrollDedicatedATM
+	return config.WebPanel.Get().Database.TbMSTechnicianPayrollDedicatedATM
 }

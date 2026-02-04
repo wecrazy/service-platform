@@ -1,7 +1,7 @@
 package mtimodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -47,7 +47,7 @@ type MTIOdooMSData struct { // Field service / project.task data
 }
 
 func (MTIOdooMSData) TableName() string {
-	return config.GetConfig().MTI.TBDataODOOMS
+	return config.WebPanel.Get().MTI.TBDataODOOMS
 }
 
 // type MTIPMData struct {
@@ -63,5 +63,5 @@ func (MTIOdooMSData) TableName() string {
 // }
 
 // func (MTIPMData) TableName() string {
-// 	return config.GetConfig().MTI.TBDataPM
+// 	return config.WebPanel.Get().MTI.TBDataPM
 // }

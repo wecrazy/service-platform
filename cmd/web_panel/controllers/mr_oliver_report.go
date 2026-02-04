@@ -10,11 +10,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	reportmodel "service-platform/cmd/web_panel/model/report_model"
 	tamodel "service-platform/cmd/web_panel/model/ta_model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"sync"
@@ -196,7 +196,7 @@ func CheckMrOliverReportAvailability(v *events.Message, userLang string) {
 
 func StatusReportMrOliver() ([]MrOliverReport, error) {
 	// Handle timezone loading
-	loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	if err != nil {
 		return nil, err
 	}
@@ -205,8 +205,8 @@ func StatusReportMrOliver() ([]MrOliverReport, error) {
 
 	var yesterdayHistoryJOPlannedForTechniciansLink string
 	testURLyesterdayHistoryJOPlannedForTechniciansLink := fmt.Sprintf("%v:%v/task_schedule/DAILY_TECHNICIAN_REPORT/file/HistoryJOTechnicians_%v_xx_xx_.xlsx",
-		config.GetConfig().Default.OdooDashboardReportingPHPServer,
-		config.GetConfig().Default.OdooDashboardReportingPHPPort,
+		config.WebPanel.Get().Default.OdooDashboardReportingPHPServer,
+		config.WebPanel.Get().Default.OdooDashboardReportingPHPPort,
 		strings.ToUpper(now.AddDate(0, 0, -1).Format("02_Jan_2006")),
 	)
 
@@ -219,24 +219,24 @@ func StatusReportMrOliver() ([]MrOliverReport, error) {
 
 	// oldTemplateEngProd := `%v:%v/task_schedule/ENGINEER_PRODUCTIVITY_OLD/log/%v/_Old_Template__%s_EngineerProductivityReport_%v.xlsx`
 	// oldTemplateEngProdAllTaskURL := fmt.Sprintf(oldTemplateEngProd,
-	// 	config.GetConfig().Default.OdooDashboardReportingPHPServer,
-	// 	config.GetConfig().Default.OdooDashboardReportingPHPPort,
+	// 	config.WebPanel.Get().Default.OdooDashboardReportingPHPServer,
+	// 	config.WebPanel.Get().Default.OdooDashboardReportingPHPPort,
 	// 	now.Format("2006-01-02"),
 	// 	"All_Task_Type",
 	// 	now.Format("02Jan2006"),
 	// )
 
 	// oldTemplateEngProdPMOnlyURL := fmt.Sprintf(oldTemplateEngProd,
-	// 	config.GetConfig().Default.OdooDashboardReportingPHPServer,
-	// 	config.GetConfig().Default.OdooDashboardReportingPHPPort,
+	// 	config.WebPanel.Get().Default.OdooDashboardReportingPHPServer,
+	// 	config.WebPanel.Get().Default.OdooDashboardReportingPHPPort,
 	// 	now.Format("2006-01-02"),
 	// 	"PM_Only",
 	// 	now.Format("02Jan2006"),
 	// )
 
 	technicianLoginReportDirURL := fmt.Sprintf("%v:%v/webview_odoo/public/files/%v/",
-		config.GetConfig().Default.OdooDashboardReportingPHPServer,
-		config.GetConfig().Default.OdooDashboardReportingPHPPort,
+		config.WebPanel.Get().Default.OdooDashboardReportingPHPServer,
+		config.WebPanel.Get().Default.OdooDashboardReportingPHPPort,
 		now.Format("2006-01-02"),
 	)
 
@@ -268,14 +268,14 @@ func StatusReportMrOliver() ([]MrOliverReport, error) {
 		// 	ReportType: fmt.Sprintf("Engineers Productivity Report %v", now.Format("02 JAN 2006")),
 		// 	Links: []string{
 		// 		fmt.Sprintf("%v:%v/task_schedule/ENGINEER_PRODUCTIVITY/log/%v/_%v_AllTicketType_Report.xlsx",
-		// 			config.GetConfig().Default.OdooDashboardReportingPHPServer,
-		// 			config.GetConfig().Default.OdooDashboardReportingPHPPort,
+		// 			config.WebPanel.Get().Default.OdooDashboardReportingPHPServer,
+		// 			config.WebPanel.Get().Default.OdooDashboardReportingPHPPort,
 		// 			now.Format("2006-01-02"),
 		// 			now.Format("02January2006"),
 		// 		),
 		// 		fmt.Sprintf("%v:%v/task_schedule/ENGINEER_PRODUCTIVITY/log/%v/_%v_PMOnly_Report.xlsx",
-		// 			config.GetConfig().Default.OdooDashboardReportingPHPServer,
-		// 			config.GetConfig().Default.OdooDashboardReportingPHPPort,
+		// 			config.WebPanel.Get().Default.OdooDashboardReportingPHPServer,
+		// 			config.WebPanel.Get().Default.OdooDashboardReportingPHPPort,
 		// 			now.Format("2006-01-02"),
 		// 			now.Format("02January2006"),
 		// 		),
@@ -294,32 +294,32 @@ func StatusReportMrOliver() ([]MrOliverReport, error) {
 			ReportType: fmt.Sprintf("SLA Report @%v", time.Now().Format("02 Jan 2006")),
 			Links: []string{
 				// fmt.Sprintf("%v:%v/report/file/sla_report/%v/(%v)SLAReport_Master.xlsx",
-				// 	config.GetConfig().Default.OdooDashboardReportingPHPServer,
-				// 	config.GetConfig().Default.OdooDashboardReportingGolangPort,
+				// 	config.WebPanel.Get().Default.OdooDashboardReportingPHPServer,
+				// 	config.WebPanel.Get().Default.OdooDashboardReportingGolangPort,
 				// 	now.Format("2006-01-02"),
 				// 	now.Format("02Jan2006"),
 				// ),
 				// fmt.Sprintf("%v:%v/report/file/sla_report/%v/(%v)SLAReport_CM.xlsx",
-				// 	config.GetConfig().Default.OdooDashboardReportingPHPServer,
-				// 	config.GetConfig().Default.OdooDashboardReportingGolangPort,
+				// 	config.WebPanel.Get().Default.OdooDashboardReportingPHPServer,
+				// 	config.WebPanel.Get().Default.OdooDashboardReportingGolangPort,
 				// 	now.Format("2006-01-02"),
 				// 	now.Format("02Jan2006"),
 				// ),
 				fmt.Sprintf("%v:%v/report/file/sla_report/%v/(%v)SLAReport_PM.xlsx",
-					strings.ReplaceAll(config.GetConfig().Default.OdooDashboardReportingPHPServer, "https", "http"),
-					config.GetConfig().Default.OdooDashboardReportingGolangPort,
+					strings.ReplaceAll(config.WebPanel.Get().Default.OdooDashboardReportingPHPServer, "https", "http"),
+					config.WebPanel.Get().Default.OdooDashboardReportingGolangPort,
 					now.Format("2006-01-02"),
 					now.Format("02Jan2006"),
 				),
 				fmt.Sprintf("%v:%v/report/file/sla_report/%v/(%v)SLAReport_NonPM.xlsx",
-					strings.ReplaceAll(config.GetConfig().Default.OdooDashboardReportingPHPServer, "https", "http"),
-					config.GetConfig().Default.OdooDashboardReportingGolangPort,
+					strings.ReplaceAll(config.WebPanel.Get().Default.OdooDashboardReportingPHPServer, "https", "http"),
+					config.WebPanel.Get().Default.OdooDashboardReportingGolangPort,
 					now.Format("2006-01-02"),
 					now.Format("02Jan2006"),
 				),
 				// fmt.Sprintf("%v:%v/report/file/sla_report/%v/(%v)SLAReport_SolvedPending.xlsx",
-				// 	config.GetConfig().Default.OdooDashboardReportingPHPServer,
-				// 	config.GetConfig().Default.OdooDashboardReportingGolangPort,
+				// 	config.WebPanel.Get().Default.OdooDashboardReportingPHPServer,
+				// 	config.WebPanel.Get().Default.OdooDashboardReportingGolangPort,
 				// 	now.Format("2006-01-02"),
 				// 	now.Format("02Jan2006"),
 				// ),
@@ -330,8 +330,8 @@ func StatusReportMrOliver() ([]MrOliverReport, error) {
 			ReportType: fmt.Sprintf("Artajasa ATM Task Data Report @%v", time.Now().Format("02 Jan 2006")),
 			Links: []string{
 				fmt.Sprintf("%v:%v/report/file/odoo_atm_task_report/%v/(%v)ArtajasaATMReport_Master.xlsx",
-					strings.ReplaceAll(config.GetConfig().Default.OdooDashboardReportingPHPServer, "https", "http"),
-					config.GetConfig().Default.OdooDashboardReportingGolangPort,
+					strings.ReplaceAll(config.WebPanel.Get().Default.OdooDashboardReportingPHPServer, "https", "http"),
+					config.WebPanel.Get().Default.OdooDashboardReportingGolangPort,
 					now.Format("2006-01-02"),
 					now.Format("02Jan2006"),
 				),
@@ -342,8 +342,8 @@ func StatusReportMrOliver() ([]MrOliverReport, error) {
 			ReportType: fmt.Sprintf("Engineers Productivity Report @%v", time.Now().Format("02 Jan 2006")),
 			Links: []string{
 				fmt.Sprintf("%v:%v/report/file/engineers_productivity/%v/(%v)EngineersProductivityReport_Master.xlsx",
-					strings.ReplaceAll(config.GetConfig().Default.OdooDashboardReportingPHPServer, "https", "http"),
-					config.GetConfig().Default.OdooDashboardReportingGolangPort,
+					strings.ReplaceAll(config.WebPanel.Get().Default.OdooDashboardReportingPHPServer, "https", "http"),
+					config.WebPanel.Get().Default.OdooDashboardReportingGolangPort,
 					now.Format("2006-01-02"),
 					now.Format("02Jan2006"),
 				),
@@ -502,10 +502,10 @@ func ReportAIError(v *events.Message, userLang string) {
 	}
 
 	// Create Excel Report
-	loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	if err != nil {
-		id := "⚠ Gagal memuat zona waktu " + config.GetConfig().Default.Timezone
-		en := "⚠ Failed to load timezone " + config.GetConfig().Default.Timezone
+		id := "⚠ Gagal memuat zona waktu " + config.WebPanel.Get().Default.Timezone
+		en := "⚠ Failed to load timezone " + config.WebPanel.Get().Default.Timezone
 		sendLangMessageWithStanza(v, stanzaID, originalSenderJID, id, en, userLang)
 		return
 	}
@@ -585,7 +585,7 @@ func GetDataTicketEngineersProductivity() error {
 	}
 	defer getDataTicketEngineersProductivityMutex.Unlock()
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, loc)
@@ -596,13 +596,13 @@ func GetDataTicketEngineersProductivity() error {
 	startDateParam := startOfMonth.Format("2006-01-02 15:04:05")
 	endDateParam := endOfMonth.Format("2006-01-02 15:04:05")
 
-	if config.GetConfig().Report.AIError.ActiveDebug {
-		startDateParam = config.GetConfig().Report.AIError.StartParam
-		endDateParam = config.GetConfig().Report.AIError.EndParam
+	if config.WebPanel.Get().Report.AIError.ActiveDebug {
+		startDateParam = config.WebPanel.Get().Report.AIError.StartParam
+		endDateParam = config.WebPanel.Get().Report.AIError.EndParam
 	}
 
 	ODOOModel := "helpdesk.ticket"
-	allowedCompany := config.GetConfig().ApiODOO.CompanyAllowed
+	allowedCompany := config.WebPanel.Get().ApiODOO.CompanyAllowed
 	excludedTechnicians := []string{
 		"Tes Dev Mfjr",
 	}
@@ -672,7 +672,7 @@ func GetDataTicketEngineersProductivity() error {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -689,7 +689,7 @@ func GetDataTicketEngineersProductivity() error {
 	}
 
 	payloadNew := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooNewParams,
 	}
 
@@ -757,7 +757,7 @@ func GetDataTicketEngineersProductivity() error {
 		// logrus.Debugf("Odoo params: %+v", odooParams)
 
 		payload := map[string]interface{}{
-			"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+			"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 			"params":  odooParams,
 		}
 
@@ -1268,7 +1268,7 @@ func GenerateExcelForReportAIError(fileReportDir, reportName string) (string, st
 		"order":  order,
 	}
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -1379,11 +1379,11 @@ func GenerateExcelForReportAIError(fileReportDir, reportName string) (string, st
 	filterRangeMaster := fmt.Sprintf("A1:%s1", lastColMaster)
 	f.AutoFilter(sheetMaster, filterRangeMaster, []excelize.AutoFilterOptions{})
 
-	location, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+	location, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	if err != nil {
 		return "",
-			fmt.Sprintf("⚠ Gagal memuat zona %s : %v", config.GetConfig().Default.Timezone, err),
-			fmt.Sprintf("⚠ Failed to load timezone %s : %v", config.GetConfig().Default.Timezone, err)
+			fmt.Sprintf("⚠ Gagal memuat zona %s : %v", config.WebPanel.Get().Default.Timezone, err),
+			fmt.Sprintf("⚠ Failed to load timezone %s : %v", config.WebPanel.Get().Default.Timezone, err)
 	}
 
 	now := time.Now().In(location)
@@ -1414,7 +1414,7 @@ func GenerateExcelForReportAIError(fileReportDir, reportName string) (string, st
 	}
 
 	rowIndex := 2
-	UserTA := config.GetConfig().UserTA
+	UserTA := config.WebPanel.Get().UserTA
 
 	for _, record := range taActivityData {
 		for _, column := range columnsMaster {

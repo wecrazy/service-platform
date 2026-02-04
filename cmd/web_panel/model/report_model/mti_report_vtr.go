@@ -1,7 +1,7 @@
 package reportmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -73,5 +73,5 @@ type MTIReportVTR struct {
 }
 
 func (MTIReportVTR) TableName() string {
-	return config.GetConfig().ReportMTI.DBTableVTR
+	return config.WebPanel.Get().ReportMTI.DBTableVTR
 }

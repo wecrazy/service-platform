@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"service-platform/cmd/technical_assistance/model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"sync"
@@ -108,7 +108,7 @@ func CloseWebsocketConnection(clientID string) {
 }
 
 func checkForReconnection(clientID string, db *gorm.DB) {
-	disconectionTimeStr := os.Getenv("MAX_DISCONECTION_TIME_S") // Parse the disconection time as an integer
+	disconectionTimeStr := config.TechnicalAssistance.Get().MAX_DISCONECTION_TIME_S // Parse the disconection time as an integer
 	disconectionExpiredSeconds, err := strconv.Atoi(disconectionTimeStr)
 	if err != nil {
 		disconectionExpiredSeconds = 30

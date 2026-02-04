@@ -3,10 +3,10 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"reflect"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model/op_model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -58,7 +58,7 @@ func TabelPengerjaanLogActivity(db *gorm.DB) gin.HandlerFunc {
 
 		// Initial query for filtering
 		filteredQuery := db.Model(&op_model.LogAct{})
-		woDetailURL := os.Getenv("WO_DETAIL_URL")
+		woDetailURL := config.TechnicalAssistance.Get().WO_DETAIL_URL
 
 		// // Apply filters
 		if request.Search != "" {
@@ -286,7 +286,7 @@ func TabelPengerjaanLogActivity(db *gorm.DB) gin.HandlerFunc {
 						var image_view strings.Builder
 						image_view.WriteString(fmt.Sprintf(`<div id="%s__%d" class="d-flex" style="width:400px;overflow:auto;">`, id_task, i))
 						for i, id := range id_foto {
-							// image := os.Getenv("FILESTORE_URL") +
+							// image := config.TechnicalAssistance.Get().FILESTORE_URL +
 							image_view.WriteString(fmt.Sprintf(
 								`<div class="my-1 p-1" style="width:210px;display:flex;flex-direction:column;justify-content:space-between;">
 									<img src="/here/file/%s@%s" style="width:200px;height:auto;" class="card-img-top" alt="%s" onclick="window.open(this.src, '_blank');"/>
@@ -606,7 +606,7 @@ func TabelDataFotoError(db *gorm.DB) gin.HandlerFunc {
 			"Foto Selfie Video Call", "Foto Selfie Teknisi dan Merchant",
 		}
 
-		woDetailURL := os.Getenv("WO_DETAIL_URL")
+		woDetailURL := config.TechnicalAssistance.Get().WO_DETAIL_URL
 
 		var data []gin.H
 		for _, dataInDB := range DbData {
@@ -665,7 +665,7 @@ func TabelDataFotoError(db *gorm.DB) gin.HandlerFunc {
 					var image_view strings.Builder
 					image_view.WriteString(fmt.Sprintf(`<div id="%s__%d" class="d-flex" style="width:400px;overflow:auto;">`, id_task, i))
 					for i, id := range id_foto {
-						// image := os.Getenv("FILESTORE_URL") +
+						// image := config.TechnicalAssistance.Get().FILESTORE_URL +
 						image_view.WriteString(fmt.Sprintf(
 							`<div class="my-1 p-1" style="width:310px;display:flex;flex-direction:column;justify-content:space-between;">
 								<img src="/here/file/%s@%s" style="width:300px;height:auto;" class="card-img-top" alt="%s" onclick="window.open(this.src, '_blank');"/>
@@ -923,7 +923,7 @@ func TabelDataPending(db *gorm.DB) gin.HandlerFunc {
 			"Foto Kontak Stiker PIC",
 		}
 
-		woDetailURL := os.Getenv("WO_DETAIL_URL")
+		woDetailURL := config.TechnicalAssistance.Get().WO_DETAIL_URL
 
 		var data []gin.H
 		for _, dataInDB := range DbData {
@@ -982,7 +982,7 @@ func TabelDataPending(db *gorm.DB) gin.HandlerFunc {
 					var image_view strings.Builder
 					image_view.WriteString(fmt.Sprintf(`<div id="%s__%d" class="d-flex" style="width:400px;overflow:auto;">`, id_task, i))
 					for i, id := range id_foto {
-						// image := os.Getenv("FILESTORE_URL") +
+						// image := config.TechnicalAssistance.Get().FILESTORE_URL +
 						image_view.WriteString(fmt.Sprintf(
 							`<div class="my-1 p-1" style="width:310px;display:flex;flex-direction:column;justify-content:space-between;">
 								<img src="/here/file/%s@%s" style="width:300px;height:auto;" class="card-img-top" alt="%s" onclick="window.open(this.src, '_blank');"/>

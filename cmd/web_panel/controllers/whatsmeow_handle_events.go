@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -132,9 +132,9 @@ func HandleWhatsappEvent(evt interface{}) {
 
 			// Send message to user who called
 			idText := fmt.Sprintf("📞❌ Maaf, nomor %s tidak diizinkan untuk melakukan panggilan ke WhatsApp ini.\n\nApabila ada kendala, Anda bisa menghubungi layanan bantuan teknis kami di nomor berikut: +%s. Terima kasih. 🙏",
-				callerPhoneNumber, config.GetConfig().Whatsmeow.WaTechnicalSupport)
+				callerPhoneNumber, config.WebPanel.Get().Whatsmeow.WaTechnicalSupport)
 			enText := fmt.Sprintf("📞❌ Sorry, the number %s is not allowed to make calls to this WhatsApp.\n\nIf you have any issues, you can contact our technical support service at the following number: +%s. Thank you. 🙏",
-				callerPhoneNumber, config.GetConfig().Whatsmeow.WaTechnicalSupport)
+				callerPhoneNumber, config.WebPanel.Get().Whatsmeow.WaTechnicalSupport)
 			jidStr := callerPhoneNumber + "@s.whatsapp.net"
 			userLang, err := GetUserLang(jidStr)
 			if err != nil {
@@ -223,7 +223,7 @@ func HandleWhatsappEvent(evt interface{}) {
 		// ✅ Handle replies
 		if ctxInfo != nil && ctxInfo.QuotedMessage != nil && ctxInfo.StanzaID != nil && *ctxInfo.StanzaID != "" {
 			var replyText string
-			waReplyPublicURL := config.GetConfig().Whatsmeow.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
+			waReplyPublicURL := config.WebPanel.Get().Whatsmeow.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
 
 			switch {
 

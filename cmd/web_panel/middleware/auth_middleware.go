@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -61,7 +61,7 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			return
 		}
 
-		loginTimeStr := config.GetConfig().App.LoginTimeM
+		loginTimeStr := config.WebPanel.Get().App.LoginTimeM
 		loginExpiredMinutes, errConv := strconv.ParseInt(loginTimeStr, 10, 64)
 		if errConv != nil {
 			loginExpiredMinutes = 15 // Default to 15 minutes if parsing or env is not set

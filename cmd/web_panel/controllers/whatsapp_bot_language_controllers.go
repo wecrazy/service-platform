@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -232,7 +232,7 @@ func TableWhatsappBotLanguage() gin.HandlerFunc {
 func PutDataWhatsappBotLanguage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		table := config.GetConfig().Database.TbLanguage
+		table := config.WebPanel.Get().Database.TbLanguage
 		// Check if the table exists
 		if !dbWeb.Migrator().HasTable(table) {
 			fmt.Printf("Table %s does not exist.\n", table)
@@ -441,7 +441,7 @@ func PostNewWhatsappBotLanguage() gin.HandlerFunc {
 			return
 		}
 
-		table := config.GetConfig().Database.TbLanguage
+		table := config.WebPanel.Get().Database.TbLanguage
 		// Check if the table exists
 		if !dbWeb.Migrator().HasTable(table) {
 			fmt.Printf("Table %s does not exist.\n", table)

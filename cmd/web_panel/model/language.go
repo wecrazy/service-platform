@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -15,5 +15,5 @@ type Language struct {
 }
 
 func (Language) TableName() string {
-	return config.GetConfig().Database.TbLanguage
+	return config.WebPanel.Get().Database.TbLanguage
 }

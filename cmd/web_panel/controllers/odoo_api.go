@@ -10,8 +10,8 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"regexp"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
+	"service-platform/internal/config"
 	"sort"
 	"strconv"
 	"strings"
@@ -62,7 +62,7 @@ type DataTechnicianODOOMSBasedOnName struct {
 }
 
 func GetODOOMSCookies(email string, password string) ([]*http.Cookie, error) {
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.WebPanel.Get()
 
 	odooConfig := yamlCfg.ApiODOO
 
@@ -199,7 +199,7 @@ func getODOOSessionCookiesOptimized(email, password string) ([]*http.Cookie, err
 }
 
 func GetODOOMSData(req string) (interface{}, error) {
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.WebPanel.Get()
 
 	urlGetData := yamlCfg.ApiODOO.UrlGetData
 
@@ -345,7 +345,7 @@ func GetODOOSessionCacheStats() map[string]interface{} {
 }
 
 func GetODOOHommyPayCookies(email string, password string) ([]*http.Cookie, error) {
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.WebPanel.Get()
 
 	odooConfig := yamlCfg.ApiODOO
 
@@ -445,7 +445,7 @@ func GetODOOHommyPayCookies(email string, password string) ([]*http.Cookie, erro
 }
 
 func FetchODOOMS(url, method, req string) ([]byte, error) {
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.WebPanel.Get()
 
 	maxRetries := yamlCfg.ApiODOO.MaxRetry
 	if maxRetries <= 0 {
@@ -523,7 +523,7 @@ func FetchODOOMS(url, method, req string) ([]byte, error) {
 }
 
 func FetchODOOHommyPay(url, method, req string) ([]byte, error) {
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.WebPanel.Get()
 
 	maxRetries := yamlCfg.ApiODOO.MaxRetry
 	if maxRetries <= 0 {
@@ -601,7 +601,7 @@ func FetchODOOHommyPay(url, method, req string) ([]byte, error) {
 }
 
 func FetchODOOKresekBag(url, method, req string) ([]byte, error) {
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.WebPanel.Get()
 
 	maxRetries := yamlCfg.ApiODOO.MaxRetry
 	if maxRetries <= 0 {
@@ -679,7 +679,7 @@ func FetchODOOKresekBag(url, method, req string) ([]byte, error) {
 }
 
 func GetODOOKresekBagCookies(email string, password string) ([]*http.Cookie, error) {
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.WebPanel.Get()
 
 	odooConfig := yamlCfg.ApiODOO
 
@@ -798,7 +798,7 @@ func CheckSNExistinginODOOMS(serialNumber string) (bool, error) {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -857,7 +857,7 @@ func InsertDataTicketInODOOHommyPay() {
 	odooParams["priority"] = strconv.Itoa(int(random0until3))
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -867,7 +867,7 @@ func InsertDataTicketInODOOHommyPay() {
 		return
 	}
 
-	url := config.GetConfig().ApiODOO.UrlCreateDataHommyPay
+	url := config.WebPanel.Get().ApiODOO.UrlCreateDataHommyPay
 	method := "POST"
 
 	body, err := FetchODOOHommyPay(url, method, string(payloadBytes))
@@ -976,7 +976,7 @@ func setSLAStatus(
 	WoRemark, taskType nullAbleString) (string, time.Time, string, string) {
 	// Special handling for Preventive Maintenance
 	if taskType.Valid && strings.ToLower(taskType.String) == "preventive maintenance" {
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 
 		// If SLA deadline is valid and in the current month and <= 15th
@@ -1189,7 +1189,7 @@ func SLAExpired(slaDeadline nullAbleTime) string {
 		return "SLA Not Found!"
 	}
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	slaTime := slaDeadline.Time.In(loc) // Convert SLA time to local timezone
 
@@ -1223,7 +1223,7 @@ func parseWoRemark(remark string) ([]WoRemarkEntry, error) {
 	matches := re.FindAllStringSubmatch(remark, -1)
 
 	var results []WoRemarkEntry
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone) // Change to your local timezone
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone) // Change to your local timezone
 
 	for _, match := range matches {
 		if len(match) == 4 {
@@ -1374,7 +1374,7 @@ func ParsedDataTechnicianODOOMS(technician string) *DataTechnicianODOOMSBasedOnN
 // 	WoRemark, taskType nullAbleString) (string, time.Time, string, string) {
 // 	// Special handling for Preventive Maintenance
 // 	if taskType.Valid && strings.ToLower(taskType.String) == "preventive maintenance" {
-// 		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+// 		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 // 		now := time.Now().In(loc)
 
 // 		// Check if SLA deadline is valid and in the current month and <= 15th

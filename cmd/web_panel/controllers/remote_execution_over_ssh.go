@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"sort"
 	"strconv"
 	"strings"
@@ -199,9 +199,9 @@ func ShowStatusVMODOODashboard(v *events.Message, userLang string) {
 	id, en := informUserRequestReceived(eventToDo)
 	sendLangMessageWithStanza(v, stanzaID, originalSenderJID, id, en, userLang)
 
-	sshUser := config.GetConfig().VMOdooDashboard.SSHUser
-	sshPassword := config.GetConfig().VMOdooDashboard.SSHPwd
-	sshAddr := config.GetConfig().VMOdooDashboard.SSHAddr
+	sshUser := config.WebPanel.Get().VMOdooDashboard.SSHUser
+	sshPassword := config.WebPanel.Get().VMOdooDashboard.SSHPwd
+	sshAddr := config.WebPanel.Get().VMOdooDashboard.SSHAddr
 
 	client, err := ConnectSSH(sshUser, sshPassword, sshAddr)
 	if err != nil {
@@ -306,9 +306,9 @@ func RestartMySQLVMODOODashboard(v *events.Message, userLang string) {
 	id, en := informUserRequestReceived(eventToDo)
 	sendLangMessageWithStanza(v, stanzaID, originalSenderJID, id, en, userLang)
 
-	sshUser := config.GetConfig().VMOdooDashboard.SSHUser
-	sshPassword := config.GetConfig().VMOdooDashboard.SSHPwd
-	sshAddr := config.GetConfig().VMOdooDashboard.SSHAddr
+	sshUser := config.WebPanel.Get().VMOdooDashboard.SSHUser
+	sshPassword := config.WebPanel.Get().VMOdooDashboard.SSHPwd
+	sshAddr := config.WebPanel.Get().VMOdooDashboard.SSHAddr
 
 	client, err := ConnectSSH(sshUser, sshPassword, sshAddr)
 	if err != nil {

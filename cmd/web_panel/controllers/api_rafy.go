@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -91,7 +91,7 @@ func GetRafyAPIResponse(url string, reqBody APIRafyRequest) (resp *RafyAPIRespon
 	}
 
 	// Create custom HTTP client with %d timeout and skip SSL verification
-	timeout := config.GetConfig().API.APIRafyTimeout
+	timeout := config.WebPanel.Get().API.APIRafyTimeout
 	if timeout <= 0 {
 		timeout = 120 // default to 120 seconds if not set or invalid
 	}

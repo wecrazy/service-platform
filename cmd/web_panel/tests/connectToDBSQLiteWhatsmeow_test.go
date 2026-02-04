@@ -2,8 +2,8 @@ package tests
 
 import (
 	"fmt"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/controllers"
+	"service-platform/internal/config"
 	"testing"
 )
 

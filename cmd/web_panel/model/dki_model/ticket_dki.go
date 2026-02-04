@@ -1,7 +1,7 @@
 package dkimodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -49,5 +49,5 @@ type TicketDKI struct {
 }
 
 func (TicketDKI) TableName() string {
-	return config.GetConfig().DKI.TBDataTicketODOOMS
+	return config.WebPanel.Get().DKI.TBDataTicketODOOMS
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"service-platform/cmd/technical_assistance/model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -43,7 +44,7 @@ func GetSystemLog(db *gorm.DB) gin.HandlerFunc {
 		fileToRead = strings.ReplaceAll(fileToRead, "..", "")
 		fileToRead = strings.ReplaceAll(fileToRead, "\\", "")
 
-		file, err := os.Open(os.Getenv("APP_LOG_DIR") + "/" + fileToRead)
+		file, err := os.Open(config.TechnicalAssistance.Get().APP_LOG_DIR + "/" + fileToRead)
 		if err != nil {
 			log.Fatal(err)
 			c.JSON(http.StatusOK, gin.H{

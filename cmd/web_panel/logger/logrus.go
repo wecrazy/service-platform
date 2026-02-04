@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 
@@ -74,7 +74,7 @@ func getOrCreateFileLogger(logFileName string) *lumberjack.Logger {
 		return logger
 	}
 
-	appLogDir := config.GetConfig().App.LogDir
+	appLogDir := config.WebPanel.Get().App.LogDir
 	if err := os.MkdirAll(appLogDir, os.ModePerm); err != nil {
 		log.Printf("Failed to create log directory: %v", err)
 		return nil
@@ -149,7 +149,7 @@ func (f *CSVFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 // Logs from each file automatically go to their own log file
 // Example: logs from scheduler.go → scheduler.log, main.go → main.log
 func InitLogrus() {
-	logLevel := config.GetConfig().App.LogLevel
+	logLevel := config.WebPanel.Get().App.LogLevel
 	switch strings.ToLower(logLevel) {
 	case "panic":
 		logrus.SetLevel(logrus.PanicLevel)
@@ -211,7 +211,7 @@ func GetLoggerForFile(logFileName string) *logrus.Logger {
 
 	logger := logrus.New()
 
-	appLogDir := config.GetConfig().App.LogDir
+	appLogDir := config.WebPanel.Get().App.LogDir
 	if err := os.MkdirAll(appLogDir, os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
@@ -219,7 +219,7 @@ func GetLoggerForFile(logFileName string) *logrus.Logger {
 	logPath := filepath.Join(appLogDir, logFileName)
 
 	// Apply same configuration as main logger
-	logLevel := config.GetConfig().App.LogLevel
+	logLevel := config.WebPanel.Get().App.LogLevel
 	switch strings.ToLower(logLevel) {
 	case "panic":
 		logger.SetLevel(logrus.PanicLevel)
@@ -239,7 +239,7 @@ func GetLoggerForFile(logFileName string) *logrus.Logger {
 		logger.SetLevel(logrus.TraceLevel)
 	}
 
-	logFormat := config.GetConfig().App.LogFormat
+	logFormat := config.WebPanel.Get().App.LogFormat
 	switch strings.ToLower(logFormat) {
 	case "text":
 		logger.SetFormatter(&logrus.TextFormatter{
@@ -272,7 +272,7 @@ func GetLoggerForFile(logFileName string) *logrus.Logger {
 // Example: GetLogger("main") returns logger writing to main.log
 func GetLogger(name string) *logrus.Logger {
 	if name == "" {
-		name = strings.TrimSuffix(config.GetConfig().App.SystemLogFilename, ".log")
+		name = strings.TrimSuffix(config.WebPanel.Get().App.SystemLogFilename, ".log")
 	}
 
 	logFileName := name

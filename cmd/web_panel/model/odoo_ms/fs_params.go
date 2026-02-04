@@ -1,7 +1,7 @@
 package odooms
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -16,5 +16,5 @@ type ODOOMSFSParams struct {
 }
 
 func (ODOOMSFSParams) TableName() string {
-	return config.GetConfig().Database.TbFSParams
+	return config.WebPanel.Get().Database.TbFSParams
 }

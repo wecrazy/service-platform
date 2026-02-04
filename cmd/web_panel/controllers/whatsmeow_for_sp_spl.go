@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	sptechnicianmodel "service-platform/cmd/web_panel/model/sp_technician_model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -32,7 +32,7 @@ func handleRepliesReactionsAndEditedMsgForSPSPL(forProject string) {
 	e := WhatsappEventsMsgForSPSPL
 	dbWeb := gormdb.Databases.Web
 
-	dataHRD := config.GetConfig().Default.PTHRD
+	dataHRD := config.WebPanel.Get().Default.PTHRD
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -46,7 +46,7 @@ func handleRepliesReactionsAndEditedMsgForSPSPL(forProject string) {
 		return
 	}
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	today := now.Format("2006-01-02")
@@ -84,7 +84,7 @@ func handleRepliesReactionsAndEditedMsgForSPSPL(forProject string) {
 	// ✅ Handle replies
 	if ctxInfo != nil && ctxInfo.QuotedMessage != nil && ctxInfo.StanzaID != nil && *ctxInfo.StanzaID != "" {
 		var replyText string
-		waReplyPublicURL := config.GetConfig().Whatsmeow.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
+		waReplyPublicURL := config.WebPanel.Get().Whatsmeow.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
 
 		switch {
 

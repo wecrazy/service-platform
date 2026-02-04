@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -30,12 +30,12 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		}
 
 		parameters := gin.H{
-			"APP_NAME":         config.GetConfig().App.Name,
-			"APP_LOGO":         config.GetConfig().App.Logo,
-			"APP_VERSION":      config.GetConfig().App.Version,
-			"APP_VERSION_NO":   config.GetConfig().App.VersionNo,
-			"APP_VERSION_CODE": config.GetConfig().App.VersionCode,
-			"APP_VERSION_NAME": config.GetConfig().App.VersionName,
+			"APP_NAME":         config.WebPanel.Get().App.Name,
+			"APP_LOGO":         config.WebPanel.Get().App.Logo,
+			"APP_VERSION":      config.WebPanel.Get().App.Version,
+			"APP_VERSION_NO":   config.WebPanel.Get().App.VersionNo,
+			"APP_VERSION_CODE": config.WebPanel.Get().App.VersionCode,
+			"APP_VERSION_NAME": config.WebPanel.Get().App.VersionName,
 			"MSG_HEADER":       "Please, Contact Admin",
 			"EMAIL_DOMAIN":     "",
 			"EMAIL":            email,
@@ -83,10 +83,10 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		// Now you can send the email with the verification link.
 		htmlMailTemplate := `<body style="font-family: Arial, sans-serif; text-align: center;">
 			<div style="background-color: #f4f4f4; padding: 20px;">
-				<img src="` + config.GetConfig().App.WebPublicURL + config.GetConfig().App.Logo + `" alt="logo" width="180" height="101" style="display: block; margin: 0 auto;">
-				<h1 style="color: #4287f5;">` + config.GetConfig().App.Name + ` Reset Password</h1>
+				<img src="` + config.WebPanel.Get().App.WebPublicURL + config.WebPanel.Get().App.Logo + `" alt="logo" width="180" height="101" style="display: block; margin: 0 auto;">
+				<h1 style="color: #4287f5;">` + config.WebPanel.Get().App.Name + ` Reset Password</h1>
 				<p>Please click the button below to verify your email address:</p>
-				<a href="` + config.GetConfig().App.WebPublicURL + `/reset-password/` + admin.Email + "/" + randomAccessToken + `" style="text-decoration: none;">
+				<a href="` + config.WebPanel.Get().App.WebPublicURL + `/reset-password/` + admin.Email + "/" + randomAccessToken + `" style="text-decoration: none;">
 					<button style="background-color: #4287f5; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
 						Reset Password
 					</button>
@@ -95,16 +95,16 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		</body>`
 
 		mailer := gomail.NewMessage()
-		mailer.SetHeader("From", fmt.Sprintf("Email Verificator  <%s>", config.GetConfig().Email.Username))
+		mailer.SetHeader("From", fmt.Sprintf("Email Verificator  <%s>", config.WebPanel.Get().Email.Username))
 		mailer.SetHeader("To", admin.Email)
 		mailer.SetHeader("Subject", "[noreply] Here Reset Password link")
 		mailer.SetBody("text/html", htmlMailTemplate)
 
 		dialer := gomail.NewDialer(
-			config.GetConfig().Email.Host,
-			config.GetConfig().Email.Port,
-			config.GetConfig().Email.Username,
-			config.GetConfig().Email.Password,
+			config.WebPanel.Get().Email.Host,
+			config.WebPanel.Get().Email.Port,
+			config.WebPanel.Get().Email.Username,
+			config.WebPanel.Get().Email.Password,
 		)
 
 		errMailDialer := dialer.DialAndSend(mailer)

@@ -1,7 +1,7 @@
 package sptechnicianmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -59,5 +59,5 @@ type SPLGotSP struct {
 }
 
 func (SPLGotSP) TableName() string {
-	return config.GetConfig().SPTechnician.TBSPLGotSP
+	return config.WebPanel.Get().SPTechnician.TBSPLGotSP
 }

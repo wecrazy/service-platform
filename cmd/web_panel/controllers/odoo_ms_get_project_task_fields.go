@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"service-platform/cmd/web_panel/config"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
+	"service-platform/internal/config"
 	"sync"
 
 	"gorm.io/gorm"
@@ -41,7 +41,7 @@ func GetProjectTaskFields() error {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 

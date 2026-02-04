@@ -1,7 +1,7 @@
 package odooms
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -23,5 +23,5 @@ type UploadedExcelToODOOMS struct {
 }
 
 func (UploadedExcelToODOOMS) TableName() string {
-	return config.GetConfig().Database.TbODOOMSUploadedExcel
+	return config.WebPanel.Get().Database.TbODOOMSUploadedExcel
 }

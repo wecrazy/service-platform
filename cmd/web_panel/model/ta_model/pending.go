@@ -1,7 +1,7 @@
 package tamodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 )
 
@@ -40,5 +40,5 @@ type Pending struct {
 }
 
 func (Pending) TableName() string {
-	return config.GetConfig().Database.TbTAPending
+	return config.WebPanel.Get().Database.TbTAPending
 }

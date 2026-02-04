@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/database"
 	reportmodel "service-platform/cmd/web_panel/model/report_model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"testing"
@@ -58,7 +58,7 @@ func setSLAStatus(
 	// Special handling for Preventive Maintenance
 	// Special handling for Preventive Maintenance
 	if taskType.Valid && strings.ToLower(taskType.String) == "preventive maintenance" {
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 
 		// If SLA deadline is valid and in the current month and <= 15th
@@ -196,7 +196,7 @@ func parseWoRemark(remark string) ([]WoRemarkEntry, error) {
 	matches := re.FindAllStringSubmatch(remark, -1)
 
 	var results []WoRemarkEntry
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone) // Change to your local timezone
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone) // Change to your local timezone
 
 	for _, match := range matches {
 		if len(match) == 4 {
@@ -258,11 +258,11 @@ func TestChangeSLAStatusOldMonitoringTicket(t *testing.T) {
 	}
 
 	dbWeb, err := database.InitAndCheckDB(
-		config.GetConfig().Database.Username,
-		config.GetConfig().Database.Password,
-		config.GetConfig().Database.Host,
-		config.GetConfig().Database.Port,
-		config.GetConfig().Database.Name,
+		config.WebPanel.Get().Database.Username,
+		config.WebPanel.Get().Database.Password,
+		config.WebPanel.Get().Database.Host,
+		config.WebPanel.Get().Database.Port,
+		config.WebPanel.Get().Database.Name,
 	)
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
@@ -273,7 +273,7 @@ func TestChangeSLAStatusOldMonitoringTicket(t *testing.T) {
 	}
 
 	tableToGet := "_sep2025"
-	tableName := config.GetConfig().Database.TbReportMonitoringTicket + tableToGet
+	tableName := config.WebPanel.Get().Database.TbReportMonitoringTicket + tableToGet
 
 	var dbData []reportmodel.MonitoringTicketODOOMS
 	err = dbWeb.Table(tableName).Find(&dbData).Error
@@ -338,11 +338,11 @@ func TestChangeIdsDataForDebugMonitoringTicket(t *testing.T) {
 	}
 
 	dbWeb, err := database.InitAndCheckDB(
-		config.GetConfig().Database.Username,
-		config.GetConfig().Database.Password,
-		config.GetConfig().Database.Host,
-		config.GetConfig().Database.Port,
-		config.GetConfig().Database.Name,
+		config.WebPanel.Get().Database.Username,
+		config.WebPanel.Get().Database.Password,
+		config.WebPanel.Get().Database.Host,
+		config.WebPanel.Get().Database.Port,
+		config.WebPanel.Get().Database.Name,
 	)
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
@@ -352,7 +352,7 @@ func TestChangeIdsDataForDebugMonitoringTicket(t *testing.T) {
 		t.Fatal("Database connection is nil")
 	}
 
-	tableName := config.GetConfig().Database.TbReportMonitoringTicket
+	tableName := config.WebPanel.Get().Database.TbReportMonitoringTicket
 
 	var dbData []reportmodel.MonitoringTicketODOOMS
 	ids := []uint{
@@ -369,7 +369,7 @@ func TestChangeIdsDataForDebugMonitoringTicket(t *testing.T) {
 	}
 
 	for _, record := range dbData {
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		slaDeadlineTime, err := time.ParseInLocation("2006-01-02 15:04:05", "2025-10-08 15:33:00", loc)
 		if err != nil {
 			t.Fatalf("Failed to parse time: %v", err)

@@ -6,11 +6,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
 	contracttechnicianmodel "service-platform/cmd/web_panel/model/contract_technician_model"
 	sptechnicianmodel "service-platform/cmd/web_panel/model/sp_technician_model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -110,7 +110,7 @@ func seedAdmin(db *gorm.DB) {
 		{
 			Fullname:     "RM Developer",
 			Username:     "rm_dev",
-			Phone:        config.GetConfig().Whatsmeow.WaSuperUser,
+			Phone:        config.WebPanel.Get().Whatsmeow.WaSuperUser,
 			Email:        "admin@webpanel.com",
 			Password:     fun.GenerateSaltedPassword("Ro224171222#"),
 			Type:         0,
@@ -124,7 +124,7 @@ func seedAdmin(db *gorm.DB) {
 		{
 			Fullname:  "admin2",
 			Username:  "admin2",
-			Phone:     config.GetConfig().Whatsmeow.WaSupport,
+			Phone:     config.WebPanel.Get().Whatsmeow.WaSupport,
 			Email:     "admin2@swi.com",
 			Password:  fun.GenerateSaltedPassword("Ro224171222#"),
 			Type:      0,
@@ -165,7 +165,7 @@ func seedAdmin(db *gorm.DB) {
 		{
 			Fullname:     "Admin Rawamangun Test",
 			Username:     "ipal",
-			Phone:        config.GetConfig().Whatsmeow.WaTechnicalSupport,
+			Phone:        config.WebPanel.Get().Whatsmeow.WaTechnicalSupport,
 			Email:        "desta@smartwebindonesia.com",
 			Password:     fun.GenerateSaltedPassword("OdooMSStaff123#"),
 			Type:         0,
@@ -962,7 +962,7 @@ func seedWhatsappPhoneUser(db *gorm.DB) {
 			{
 				FullName:      "Wegirandol Histara Littu",
 				Email:         "wegirandol@smartwebindonesia.com",
-				PhoneNumber:   config.GetConfig().Whatsmeow.WaSuperUser,
+				PhoneNumber:   config.WebPanel.Get().Whatsmeow.WaSuperUser,
 				IsRegistered:  true,
 				AllowedChats:  model.BothChat,
 				AllowedTypes:  datatypes.JSON(jsonBytes),
@@ -1072,9 +1072,9 @@ func seedWhatsappPhoneUser(db *gorm.DB) {
 				UserOf:        model.UserOfCSNA,
 			},
 			{
-				FullName:      config.GetConfig().Default.PTHRD[0].Name,
-				Email:         config.GetConfig().Default.PTHRD[0].Email,
-				PhoneNumber:   config.GetConfig().Default.PTHRD[0].PhoneNumber,
+				FullName:      config.WebPanel.Get().Default.PTHRD[0].Name,
+				Email:         config.WebPanel.Get().Default.PTHRD[0].Email,
+				PhoneNumber:   config.WebPanel.Get().Default.PTHRD[0].PhoneNumber,
 				IsRegistered:  true,
 				AllowedChats:  model.DirectChat,
 				AllowedTypes:  datatypes.JSON(jsonBytes),
@@ -1086,9 +1086,9 @@ func seedWhatsappPhoneUser(db *gorm.DB) {
 				UserOf:        model.UserOfCSNA,
 			},
 			// {
-			// 	FullName:      config.GetConfig().Default.PTHRD[1].Name,
-			// 	Email:         config.GetConfig().Default.PTHRD[1].Email,
-			// 	PhoneNumber:   config.GetConfig().Default.PTHRD[1].PhoneNumber,
+			// 	FullName:      config.WebPanel.Get().Default.PTHRD[1].Name,
+			// 	Email:         config.WebPanel.Get().Default.PTHRD[1].Email,
+			// 	PhoneNumber:   config.WebPanel.Get().Default.PTHRD[1].PhoneNumber,
 			// 	IsRegistered:  true,
 			// 	AllowedChats:  model.DirectChat,
 			// 	AllowedTypes:  datatypes.JSON(jsonBytes),
@@ -1114,7 +1114,7 @@ func seedWhatsappPhoneUser(db *gorm.DB) {
 				UserOf:        model.UserOfCSNA,
 			},
 		}
-		botUsedPhoneNumber := config.GetConfig().Whatsmeow.WaBotUsed
+		botUsedPhoneNumber := config.WebPanel.Get().Whatsmeow.WaBotUsed
 		for i, phone := range botUsedPhoneNumber {
 			fullName := ""
 			switch i {
@@ -1400,9 +1400,9 @@ func seedAppConfig(db *gorm.DB) {
 
 func seedNomorSuratSP(db *gorm.DB) {
 	var SuratSPCounter = map[string]int{
-		"LAST_NOMOR_SURAT_SP1_GENERATED": config.GetConfig().SPTechnician.LastNomorSuratSP1Generated,
-		"LAST_NOMOR_SURAT_SP2_GENERATED": config.GetConfig().SPTechnician.LastNomorSuratSP2Generated,
-		"LAST_NOMOR_SURAT_SP3_GENERATED": config.GetConfig().SPTechnician.LastNomorSuratSP3Generated,
+		"LAST_NOMOR_SURAT_SP1_GENERATED": config.WebPanel.Get().SPTechnician.LastNomorSuratSP1Generated,
+		"LAST_NOMOR_SURAT_SP2_GENERATED": config.WebPanel.Get().SPTechnician.LastNomorSuratSP2Generated,
+		"LAST_NOMOR_SURAT_SP3_GENERATED": config.WebPanel.Get().SPTechnician.LastNomorSuratSP3Generated,
 	}
 
 	for key, value := range SuratSPCounter {
@@ -1428,7 +1428,7 @@ func seedNomorSuratSP(db *gorm.DB) {
 
 func seedNomorSuratContract(db *gorm.DB) {
 	var SuratContractCounter = map[string]int{
-		"LAST_NOMOR_SURAT_CONTRACT_GENERATED": config.GetConfig().ContractTechnicianODOO.LastNomorSuratGenerated,
+		"LAST_NOMOR_SURAT_CONTRACT_GENERATED": config.WebPanel.Get().ContractTechnicianODOO.LastNomorSuratGenerated,
 	}
 
 	for key, value := range SuratContractCounter {
@@ -1453,7 +1453,7 @@ func seedNomorSuratContract(db *gorm.DB) {
 
 func seedIndonesiaRegion(db *gorm.DB) {
 	// Get the table name from config
-	tableName := config.GetConfig().Database.TbIndonesiaRegion
+	tableName := config.WebPanel.Get().Database.TbIndonesiaRegion
 
 	// Check if table exists
 	if !tableExists(db, tableName) {
@@ -1477,7 +1477,7 @@ func seedIndonesiaRegion(db *gorm.DB) {
 		if count == 0 {
 			logrus.Infof("Importing data from SQL file into table '%s'...", tableName)
 			// Step 3: Import data from SQL file (only INSERT statements)
-			if err := importIndonesiaRegionData(db, config.GetConfig().Database.DumpedIndonesiaRegionSQL); err != nil {
+			if err := importIndonesiaRegionData(db, config.WebPanel.Get().Database.DumpedIndonesiaRegionSQL); err != nil {
 				logrus.Errorf("Failed to import data for indonesia region: %v", err)
 				return
 			}
@@ -1491,7 +1491,7 @@ func seedIndonesiaRegion(db *gorm.DB) {
 // createIndonesiaRegionTable creates the indonesia_region table structure using GORM AutoMigrate
 func createIndonesiaRegionTable(db *gorm.DB) error {
 	// Create the table with custom table name from config
-	tableName := config.GetConfig().Database.TbIndonesiaRegion
+	tableName := config.WebPanel.Get().Database.TbIndonesiaRegion
 
 	// Set custom table name for migration
 	err := db.Table(tableName).AutoMigrate(&model.IndonesiaRegion{})
@@ -1529,7 +1529,7 @@ func importIndonesiaRegionData(db *gorm.DB, filePath string) error {
 	}
 
 	// Get table name from config
-	tableName := config.GetConfig().Database.TbIndonesiaRegion
+	tableName := config.WebPanel.Get().Database.TbIndonesiaRegion
 
 	// Split the content by semicolons to get individual SQL statements
 	sqlStatements := strings.Split(string(content), ";")

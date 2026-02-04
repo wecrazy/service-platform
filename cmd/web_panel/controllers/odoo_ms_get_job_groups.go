@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
+	"service-platform/internal/config"
 	"sync"
 
 	"gorm.io/gorm"
@@ -43,7 +43,7 @@ func GetJobGroupsODOOMS() error {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 

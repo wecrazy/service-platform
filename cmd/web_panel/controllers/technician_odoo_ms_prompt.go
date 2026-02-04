@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	tamodel "service-platform/cmd/web_panel/model/ta_model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -77,7 +77,7 @@ func checkExistingTechnicianInODOOMS(name, email, phoneNumber string) (bool, err
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -86,7 +86,7 @@ func checkExistingTechnicianInODOOMS(name, email, phoneNumber string) (bool, err
 		return false, err
 	}
 
-	url := config.GetConfig().ApiODOO.UrlGetData
+	url := config.WebPanel.Get().ApiODOO.UrlGetData
 	method := "POST"
 
 	body, err := FetchODOOMS(url, method, string(payloadBytes))
@@ -178,7 +178,7 @@ func getDataExistingTechnicianInODOOMS(name, email, phoneNumber, woNumber string
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -187,7 +187,7 @@ func getDataExistingTechnicianInODOOMS(name, email, phoneNumber, woNumber string
 		return nil, "Gagal membuat payload JSON", "Failed to create JSON payload"
 	}
 
-	url := config.GetConfig().ApiODOO.UrlGetData
+	url := config.WebPanel.Get().ApiODOO.UrlGetData
 	method := "POST"
 
 	body, err := FetchODOOMS(url, method, string(payloadBytes))
@@ -289,7 +289,7 @@ func processSingleWONumber(v *events.Message, stanzaID, originalSenderJID, woNum
 		sbEN.WriteString(fmt.Sprintf("📌 Details for WO Number: *%s*\n", woNumber))
 
 		if taLog.Email != "" && whatTADoID != "" {
-			DataTA := config.GetConfig().UserTA
+			DataTA := config.WebPanel.Get().UserTA
 			ta, ok := DataTA[taLog.Email]
 			if !ok {
 				id := fmt.Sprintf("❗️Data TA dengan email %s tidak ditemukan di konfigurasi.", taLog.Email)
@@ -495,7 +495,7 @@ func checkWONumberStatusInODOO(v *events.Message, stanzaID, originalSenderJID, w
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -748,7 +748,7 @@ func getTAInfoForTID(tid string) (sbID string, sbEN string, found bool, collecte
 	var woList []string
 
 	DBDataTA := gormdb.Databases.TA
-	DataTA := config.GetConfig().UserTA
+	DataTA := config.WebPanel.Get().UserTA
 
 	// 1. LogAct
 	var taLogs []tamodel.LogAct
@@ -1145,7 +1145,7 @@ func processInfoTIDs(v *events.Message, stanzaID, originalSenderJID, userLang st
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  params,
 	}
 

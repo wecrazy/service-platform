@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -51,7 +51,7 @@ func (f *WhatsappMsgReceivedCSVFormatter) Format(entry *logrus.Entry) ([]byte, e
 }
 
 func LogIncomingWhatsAppMessage(e *events.Message, uploadDir string) {
-	logPath := config.GetConfig().Whatsmeow.MsgReceivedLogFile
+	logPath := config.WebPanel.Get().Whatsmeow.MsgReceivedLogFile
 	if logPath == "" {
 		logrus.Warn("WhatsApp message log path is empty")
 		return
@@ -120,7 +120,7 @@ func LogIncomingWhatsAppMessage(e *events.Message, uploadDir string) {
 
 func extractMessageContent(e *events.Message, uploadDir string) string {
 	var msgReceived string
-	waReplyPublicURL := config.GetConfig().Whatsmeow.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
+	waReplyPublicURL := config.WebPanel.Get().Whatsmeow.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
 
 	switch {
 

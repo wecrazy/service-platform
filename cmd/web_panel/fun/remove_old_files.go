@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"service-platform/internal/config"
 	"strings"
 	"time"
-	"service-platform/cmd/web_panel/config"
 
 	"github.com/sirupsen/logrus"
 )
@@ -30,7 +30,7 @@ import (
 //	err := RemoveOldFiles("/path/to/web/file/uploaded_excel_to_odoo_ms", "-2days")
 func RemoveOldFiles(dirPath, dateRange string) error {
 	// Load timezone
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	threshold := now
 
@@ -159,7 +159,7 @@ func RemoveOldFiles(dirPath, dateRange string) error {
 //	err := RemoveOldFilesRecursive("/path/to/uploads", "-1week")
 func RemoveOldFilesRecursive(dirPath, dateRange string) error {
 	// Load timezone
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	threshold := now
 

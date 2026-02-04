@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -18,5 +18,5 @@ type WAMessageReply struct {
 }
 
 func (WAMessageReply) TableName() string {
-	return config.GetConfig().Database.TbWAMsgReply
+	return config.WebPanel.Get().Database.TbWAMsgReply
 }

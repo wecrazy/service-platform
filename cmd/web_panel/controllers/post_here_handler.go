@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +21,7 @@ func PostHere() gin.HandlerFunc {
 		c.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 
 		// Ambil path dari request
-		targetURL := config.GetConfig().API.KukuhFilestoreURL + "/here" + c.Param("path")
+		targetURL := config.WebPanel.Get().API.KukuhFilestoreURL + "/here" + c.Param("path")
 
 		// Buat request baru ke target server
 		req, err := http.NewRequest(c.Request.Method, targetURL, bytes.NewBuffer(bodyBytes))

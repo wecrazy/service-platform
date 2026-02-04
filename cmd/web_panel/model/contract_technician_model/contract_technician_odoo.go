@@ -1,7 +1,7 @@
 package contracttechnicianmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/datatypes"
@@ -75,5 +75,5 @@ type ContractTechnicianODOO struct {
 }
 
 func (ContractTechnicianODOO) TableName() string {
-	return config.GetConfig().ContractTechnicianODOO.TBContractTechnician
+	return config.WebPanel.Get().ContractTechnicianODOO.TBContractTechnician
 }

@@ -12,11 +12,11 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	sptechnicianmodel "service-platform/cmd/web_panel/model/sp_technician_model"
+	"service-platform/internal/config"
 	"sort"
 	"strconv"
 	"strings"
@@ -248,10 +248,10 @@ func CheckSPStockOpname() error {
 	}
 	defer checkSPStockOpnameMutex.Unlock()
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	timeNow := time.Now().In(loc)
 
-	startDayScheduled := config.GetConfig().StockOpname.NumberOfDaysJONotSOYet
+	startDayScheduled := config.WebPanel.Get().StockOpname.NumberOfDaysJONotSOYet
 	startOfDay := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), 0, 0, 0, 0, loc)
 	if startDayScheduled > 0 {
 		startOfDay = startOfDay.AddDate(0, 0, -startDayScheduled)
@@ -301,7 +301,7 @@ func CheckSPStockOpname() error {
 	}
 
 	payload := map[string]any{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -376,7 +376,7 @@ func CheckSPStockOpname() error {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -572,7 +572,7 @@ func CheckSPStockOpname() error {
 	}
 
 	dbWeb := gormdb.Databases.Web
-	maxResponseSPAtHour := config.GetConfig().StockOpname.MaxResponseSPStockOpnameAtHour
+	maxResponseSPAtHour := config.WebPanel.Get().StockOpname.MaxResponseSPStockOpnameAtHour
 
 	technicianListCannotGetSP := []ReasonSPSOCannotBeSend{}
 
@@ -630,7 +630,7 @@ func CheckSPStockOpname() error {
 
 		// Get SAC data from config
 		var jidStrSAC, jidStrSPL, namaSPL string
-		ODOOMSSAC := config.GetConfig().ODOOMSSAC
+		ODOOMSSAC := config.WebPanel.Get().ODOOMSSAC
 		SACData, ok := ODOOMSSAC[techData.SAC]
 		if !ok {
 			logrus.Errorf("SAC data not found for SAC %s of technician %s", techData.SAC, techData.TechnicianName)
@@ -763,7 +763,7 @@ func CheckSPStockOpname() error {
 				"$pelanggaran_karyawan":   pelanggaranID,
 				"$nama_teknisi":           namaSPL,
 				"$tanggal_sp_diterbitkan": tglSP1Diterbitkan,
-				"$personalia_name":        config.GetConfig().Default.PTHRD[0].Name, // Assuming the 1st HRD is Personalia
+				"$personalia_name":        config.WebPanel.Get().Default.PTHRD[0].Name, // Assuming the 1st HRD is Personalia
 				"$sac_name":               SACData.FullName,
 				"$sac_ttd":                SACData.TTDPath,
 				"$record_technician":      techData.TechnicianName,
@@ -877,7 +877,7 @@ func CheckSPStockOpname() error {
 				"$pelanggaran_karyawan":   pelanggaranID,
 				"$nama_teknisi":           namaSPL,
 				"$tanggal_sp_diterbitkan": tglSP2Diterbitkan,
-				"$personalia_name":        config.GetConfig().Default.PTHRD[0].Name, // Assuming the 1st HRD is Personalia
+				"$personalia_name":        config.WebPanel.Get().Default.PTHRD[0].Name, // Assuming the 1st HRD is Personalia
 				"$sac_name":               SACData.FullName,
 				"$sac_ttd":                SACData.TTDPath,
 				"$record_technician":      techData.TechnicianName,
@@ -946,7 +946,7 @@ func CheckSPStockOpname() error {
 				"$pelanggaran_karyawan":   pelanggaranID,
 				"$nama_teknisi":           namaSPL,
 				"$tanggal_sp_diterbitkan": tglSP3Diterbitkan,
-				"$personalia_name":        config.GetConfig().Default.PTHRD[0].Name, // Assuming the 1st HRD is Personalia
+				"$personalia_name":        config.WebPanel.Get().Default.PTHRD[0].Name, // Assuming the 1st HRD is Personalia
 				"$sac_name":               SACData.FullName,
 				"$sac_ttd":                SACData.TTDPath,
 				"$record_technician":      techData.TechnicianName,
@@ -1157,7 +1157,7 @@ func CreateNotifSoundForSPStockOpname(techName string, spNumber int) (error, str
 		return err, ""
 	}
 
-	maxResponseSPAtHour := config.GetConfig().StockOpname.MaxResponseSPStockOpnameAtHour
+	maxResponseSPAtHour := config.WebPanel.Get().StockOpname.MaxResponseSPStockOpnameAtHour
 	now := time.Now()
 	t := time.Date(
 		now.Year(),
@@ -1255,8 +1255,8 @@ func GeneratePDFForSPStockOpname(spNumber int, placeholders map[string]string) (
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle(fmt.Sprintf("Surat Peringatan %d", spNumber), true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords(fmt.Sprintf("SP%d, surat peringatan, teknisi, login", spNumber), true)
 	pdf.SetSubject(fmt.Sprintf("Surat Peringatan %d - Pemberitahuan untuk Teknisi", spNumber), true)
 	pdf.SetCreationDate(time.Now())
@@ -1294,7 +1294,7 @@ func GeneratePDFForSPStockOpname(spNumber int, placeholders map[string]string) (
 		FontSize float64
 		Bold     bool
 	}{
-		{config.GetConfig().Default.PT, 10.5, true}, // bold
+		{config.WebPanel.Get().Default.PT, 10.5, true}, // bold
 		{"Rukan Crown Blok J No. 008, Green Lake City", 7, false},
 		{"Kel. Petir Kec. Cipondoh, Tangerang, Banten - Indonesia 15146", 7, false},
 		{"Tel.: (021) 22521101 / 5504722 / 5504723", 7, false},
@@ -1957,7 +1957,7 @@ func sendDocumentViaBotForSPStockOpname(
 func handleRepliesReactionsAndEditedMsgForSPStockOpname() {
 	e := WhatsappEventMsgForSPStockOpname
 	dbWeb := gormdb.Databases.Web
-	dataHRD := config.GetConfig().Default.PTHRD
+	dataHRD := config.WebPanel.Get().Default.PTHRD
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -1971,7 +1971,7 @@ func handleRepliesReactionsAndEditedMsgForSPStockOpname() {
 		return
 	}
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	today := now.Format("2006-01-02")
@@ -2007,7 +2007,7 @@ func handleRepliesReactionsAndEditedMsgForSPStockOpname() {
 	// ✅ Handle replies
 	if ctxInfo != nil && ctxInfo.QuotedMessage != nil && ctxInfo.StanzaID != nil && *ctxInfo.StanzaID != "" {
 		var replyText string
-		waReplyPublicURL := config.GetConfig().Whatsmeow.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
+		waReplyPublicURL := config.WebPanel.Get().Whatsmeow.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
 
 		switch {
 

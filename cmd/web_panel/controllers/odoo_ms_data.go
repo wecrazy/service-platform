@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	bnimodel "service-platform/cmd/web_panel/model/bni_model"
 	mtimodel "service-platform/cmd/web_panel/model/mti_model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -307,7 +307,7 @@ func (l *OdooTechnicianLoginItem) UnmarshalJSON(data []byte) error {
 				return nullAbleTime{Time: time.Time{}, Valid: false}, nil
 			}
 			// Parse time in Jakarta timezone to avoid UTC conversion issues
-			loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+			loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 			parsedTime, err := time.ParseInLocation("02-01-2006 15:04:05", v, loc)
 			if err != nil {
 				return nullAbleTime{}, fmt.Errorf("failed to parse time: %v", err)
@@ -386,7 +386,7 @@ func (d *OdooTechnicianDownloadItem) UnmarshalJSON(data []byte) error {
 				return nullAbleTime{Time: time.Time{}, Valid: false}, nil
 			}
 			// Parse time in Jakarta timezone to avoid UTC conversion issues for download time
-			loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+			loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 			parsedTime, err := time.ParseInLocation("02-01-2006 15:04:05", v, loc)
 			if err != nil {
 				return nullAbleTime{}, fmt.Errorf("failed to parse time: %v", err)
@@ -558,7 +558,7 @@ func (d *ODOOMSFSParams) UnmarshalJSON(data []byte) error {
 				return nullAbleTime{Time: time.Time{}, Valid: false}, nil
 			}
 			// Parse time in Jakarta timezone to avoid UTC conversion issues for download time
-			loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+			loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 			parsedTime, err := time.ParseInLocation("2006-01-02 15:04:05", v, loc)
 			if err != nil {
 				return nullAbleTime{}, fmt.Errorf("failed to parse time: %v", err)
@@ -634,7 +634,7 @@ func (d *ODOOMSFSParamPayment) UnmarshalJSON(data []byte) error {
 				return nullAbleTime{Time: time.Time{}, Valid: false}, nil
 			}
 			// Parse time in Jakarta timezone to avoid UTC conversion issues for download time
-			loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+			loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 			parsedTime, err := time.ParseInLocation("2006-01-02 15:04:05", v, loc)
 			if err != nil {
 				return nullAbleTime{}, fmt.Errorf("failed to parse time: %v", err)
@@ -815,7 +815,7 @@ func (p *ODOOMSProductTemplate) UnmarshalJSON(data []byte) error {
 				return nullAbleTime{Time: time.Time{}, Valid: false}, nil
 			}
 			// Parse time in Jakarta timezone to avoid UTC conversion issues for
-			loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+			loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 			parsedTime, err := time.ParseInLocation("2006-01-02 15:04:05", v, loc)
 			if err != nil {
 				return nullAbleTime{}, fmt.Errorf("failed to parse time: %v", err)
@@ -958,9 +958,9 @@ func GetPhotosOfTaskODOOMS() gin.HandlerFunc {
 
 		switch strings.ToLower(table) {
 		case "task-mti":
-			tableName = config.GetConfig().MTI.TBDataODOOMS
+			tableName = config.WebPanel.Get().MTI.TBDataODOOMS
 		case "task-bni":
-			tableName = config.GetConfig().BNI.TBDataODOOMS
+			tableName = config.WebPanel.Get().BNI.TBDataODOOMS
 		default:
 			c.JSON(http.StatusNotFound, gin.H{"message": "table not found"})
 			return

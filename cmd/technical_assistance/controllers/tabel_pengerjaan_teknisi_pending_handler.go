@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"os"
 	"reflect"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model"
 	"service-platform/cmd/technical_assistance/model/op_model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -234,7 +234,7 @@ func TablePengerjaanTeknisiPending(db *gorm.DB, dbWeb *gorm.DB) gin.HandlerFunc 
 		// 	"Foto Kontak Stiker PIC",
 		// }
 
-		woDetailURL := os.Getenv("WO_DETAIL_URL")
+		woDetailURL := config.TechnicalAssistance.Get().WO_DETAIL_URL
 
 		for _, dbData := range Teknisis {
 			newData := make(map[string]interface{})
@@ -329,7 +329,7 @@ func TablePengerjaanTeknisiPending(db *gorm.DB, dbWeb *gorm.DB) gin.HandlerFunc 
 					// var image_view strings.Builder
 					// image_view.WriteString(fmt.Sprintf(`<div id="%s__%d" class="d-flex" style="width:400px;overflow:auto;">`, id_task, i))
 					// for i, id := range id_foto {
-					// 	// image := os.Getenv("FILESTORE_URL") +
+					// 	// image := config.TechnicalAssistance.Get().FILESTORE_URL +
 					// 	// image_view.WriteString(fmt.Sprintf(
 					// 	// 	`<div class="my-1 p-1" style="width:210px;display:flex;flex-direction:column;justify-content:space-between;">
 					// 	// 		<img src="/here/file/%s@%s" style="width:200px;height:auto;" class="card-img-top" alt="%s" onclick="window.open(this.src, '_blank');"/>

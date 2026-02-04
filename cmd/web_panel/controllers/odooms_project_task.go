@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
+	"service-platform/internal/config"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -88,7 +88,7 @@ func GetODOOMSProjectTaskDetail() gin.HandlerFunc {
 				"https://192.168.110.48:8069",
 			}
 			for _, link := range prodODOOLinks {
-				if strings.Contains(strings.ToLower(config.GetConfig().ApiODOO.UrlGetData), link) {
+				if strings.Contains(strings.ToLower(config.WebPanel.Get().ApiODOO.UrlGetData), link) {
 					fields = append(fields, "x_link_photo")
 					break
 				}
@@ -104,7 +104,7 @@ func GetODOOMSProjectTaskDetail() gin.HandlerFunc {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -134,7 +134,7 @@ func GetODOOMSProjectTaskDetail() gin.HandlerFunc {
 			}
 		}
 
-		importPath := config.GetConfig().App.Logo
+		importPath := config.WebPanel.Get().App.Logo
 		newLogoPath := importPath[:len(importPath)-len(filepath.Base(importPath))] + "csna.png"
 		odooLogoPath := importPath[:len(importPath)-len(filepath.Base(importPath))] + "logo_odoo.png"
 		odooLogoDark := importPath[:len(importPath)-len(filepath.Base(importPath))] + "logo_odoo_light.png"

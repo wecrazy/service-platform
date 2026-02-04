@@ -1,7 +1,7 @@
 package tamodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -16,5 +16,5 @@ type TAHandledData struct {
 }
 
 func (TAHandledData) TableName() string {
-	return config.GetConfig().Database.TbTAHandledData
+	return config.WebPanel.Get().Database.TbTAHandledData
 }

@@ -1,7 +1,7 @@
 package odooms
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -21,5 +21,5 @@ type ODOOMSTicketType struct {
 }
 
 func (ODOOMSTicketType) TableName() string {
-	return config.GetConfig().Database.TbTicketTypeODOOMS
+	return config.WebPanel.Get().Database.TbTicketTypeODOOMS
 }

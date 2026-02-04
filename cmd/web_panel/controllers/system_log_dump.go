@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -21,14 +21,14 @@ func GetSystemLogFileDump(db *gorm.DB) gin.HandlerFunc {
 		// Get the file name from the query parameters
 		fileToRead := c.Query("v")
 		if fileToRead == "" {
-			fileToRead = config.GetConfig().App.AppLogFilename
+			fileToRead = config.WebPanel.Get().App.AppLogFilename
 		}
 		fileToRead = strings.ReplaceAll(fileToRead, "/", "")
 		fileToRead = strings.ReplaceAll(fileToRead, "..", "")
 		fileToRead = strings.ReplaceAll(fileToRead, "\\", "")
 
 		// Construct the file path
-		filePath := config.GetConfig().App.LogDir + "/" + fileToRead
+		filePath := config.WebPanel.Get().App.LogDir + "/" + fileToRead
 
 		// Open the file
 		file, err := os.Open(filePath)

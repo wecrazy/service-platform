@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -132,7 +132,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 			// Lock the account if over the retry limit
 			if admin.LoginAttempts >= admin.MaxRetry {
-				lockUntil := now.Add(time.Duration(config.GetConfig().App.LoginLockUntil) * time.Minute)
+				lockUntil := now.Add(time.Duration(config.WebPanel.Get().App.LoginLockUntil) * time.Minute)
 				admin.LockUntil = &lockUntil
 			}
 
@@ -172,7 +172,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		for _, adminStatus := range adminStatuses {
 			if adminStatus.ID == uint(admin.Status) {
 				if adminStatus.Title != "ACTIVE" {
-					c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Please Contact Admin / Technical Support To Activate your Account @+%s", config.GetConfig().Whatsmeow.WaTechnicalSupport)})
+					c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Please Contact Admin / Technical Support To Activate your Account @+%s", config.WebPanel.Get().Whatsmeow.WaTechnicalSupport)})
 					return
 				}
 			}
@@ -288,7 +288,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			return
 		}
 
-		loginTimeStr := config.GetConfig().App.LoginTimeM
+		loginTimeStr := config.WebPanel.Get().App.LoginTimeM
 
 		// Parse the login time as an integer
 		loginExpiredMinutes, err := strconv.Atoi(loginTimeStr)
@@ -304,9 +304,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    authToken,
 			Expires:  expiration,
 			Path:     fun.GLOBAL_URL,
-			Domain:   config.GetConfig().App.CookieLoginDomain,
+			Domain:   config.WebPanel.Get().App.CookieLoginDomain,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   config.GetConfig().App.CookieLoginSecure,
+			Secure:   config.WebPanel.Get().App.CookieLoginSecure,
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, auth)
@@ -317,9 +317,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    randomToken,
 			Expires:  expiration,
 			Path:     fun.GLOBAL_URL,
-			Domain:   config.GetConfig().App.CookieLoginDomain,
+			Domain:   config.WebPanel.Get().App.CookieLoginDomain,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   config.GetConfig().App.CookieLoginSecure,
+			Secure:   config.WebPanel.Get().App.CookieLoginSecure,
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, random)
@@ -330,9 +330,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    tokenString,
 			Expires:  expiration,
 			Path:     fun.GLOBAL_URL,
-			Domain:   config.GetConfig().App.CookieLoginDomain,
+			Domain:   config.WebPanel.Get().App.CookieLoginDomain,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   config.GetConfig().App.CookieLoginSecure,
+			Secure:   config.WebPanel.Get().App.CookieLoginSecure,
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, tokenCookie)
@@ -343,9 +343,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    url.QueryEscape(admin.Session),
 			Expires:  expiration,
 			Path:     fun.GLOBAL_URL,
-			Domain:   config.GetConfig().App.CookieLoginDomain,
+			Domain:   config.WebPanel.Get().App.CookieLoginDomain,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   config.GetConfig().App.CookieLoginSecure,
+			Secure:   config.WebPanel.Get().App.CookieLoginSecure,
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, credentialsCookie)
@@ -355,9 +355,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		// 	Value:    url.QueryEscape(admin.Session),
 		// 	Expires:  expiration,
 		// 	Path:     fun.GLOBAL_URL,
-		// 	Domain:   config.GetConfig().App.CookieLoginDomain,
+		// 	Domain:   config.WebPanel.Get().App.CookieLoginDomain,
 		// 	SameSite: http.SameSiteLaxMode,
-		// 	Secure:   config.GetConfig().App.CookieLoginSecure,
+		// 	Secure:   config.WebPanel.Get().App.CookieLoginSecure,
 		// 	HttpOnly: false,
 		// }
 		// http.SetCookie(c.Writer, syncCookie)

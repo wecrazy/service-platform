@@ -8,12 +8,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	contracttechnicianmodel "service-platform/cmd/web_panel/model/contract_technician_model"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
+	"service-platform/internal/config"
 	"sort"
 	"strings"
 	"sync"
@@ -75,7 +75,7 @@ type ListItem struct {
 
 // Deprecated: Use GetDataTechnicianForContractInODOO instead
 func ContractTechnicianODOO() error {
-	mustJoinedDays := config.GetConfig().ContractTechnicianODOO.MustJoinedAfter
+	mustJoinedDays := config.WebPanel.Get().ContractTechnicianODOO.MustJoinedAfter
 	if mustJoinedDays <= 0 {
 		return errors.New("MUST_JOINED_AFTER config must be greater than 0")
 	}
@@ -89,7 +89,7 @@ func ContractTechnicianODOO() error {
 
 	forProject := "ODOO MS"
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	dateJoined := now.AddDate(0, 0, -mustJoinedDays)
@@ -132,7 +132,7 @@ func ContractTechnicianODOO() error {
 		"order":  order,
 	}
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -351,7 +351,7 @@ func ContractTechnicianODOO() error {
 			Number++
 		}
 
-		jidStrHRD := fmt.Sprintf("%s@%s", config.GetConfig().Default.PTHRD[0].PhoneNumber, "s.whatsapp.net")
+		jidStrHRD := fmt.Sprintf("%s@%s", config.WebPanel.Get().Default.PTHRD[0].PhoneNumber, "s.whatsapp.net")
 		originalSenderJID := NormalizeSenderJID(jidStrHRD)
 		SendLangMessage(originalSenderJID, sbID.String(), sbEN.String(), "id")
 	}
@@ -391,7 +391,7 @@ func ContractTechnicianODOO() error {
 			Number++
 		}
 
-		jidStrHRD := fmt.Sprintf("%s@%s", config.GetConfig().Default.PTHRD[0].PhoneNumber, "s.whatsapp.net")
+		jidStrHRD := fmt.Sprintf("%s@%s", config.WebPanel.Get().Default.PTHRD[0].PhoneNumber, "s.whatsapp.net")
 		originalSenderJID := NormalizeSenderJID(jidStrHRD)
 		SendLangMessage(originalSenderJID, sbID.String(), sbEN.String(), "id")
 	}
@@ -430,7 +430,7 @@ func ContractTechnicianODOO() error {
 	}
 
 	payload = map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -507,7 +507,7 @@ func ContractTechnicianODOO() error {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -668,13 +668,13 @@ func ContractTechnicianODOO() error {
 
 // groupDataByTechnicianForContract groups the ODOO data by technician and creates aggregated records
 func groupDataByTechnicianForContract(forProject string, listOfData []OdooTaskDataRequestItem) []contracttechnicianmodel.ContractTechnicianODOO {
-	mustJoinedDays := config.GetConfig().ContractTechnicianODOO.MustJoinedAfter
+	mustJoinedDays := config.WebPanel.Get().ContractTechnicianODOO.MustJoinedAfter
 	if mustJoinedDays <= 0 {
 		logrus.Errorf("MUST_JOINED_AFTER config must be greater than 0")
 		return nil
 	}
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	dateJoined := now.AddDate(0, 0, -mustJoinedDays)
 
@@ -690,7 +690,7 @@ func groupDataByTechnicianForContract(forProject string, listOfData []OdooTaskDa
 			continue // skip records without technician
 		}
 
-		skippedTechnicians := config.GetConfig().ContractTechnicianODOO.SkippedTechnician
+		skippedTechnicians := config.WebPanel.Get().ContractTechnicianODOO.SkippedTechnician
 		if len(skippedTechnicians) > 0 {
 			for _, skippedName := range skippedTechnicians {
 				if strings.Contains(strings.ToLower(technicianName), skippedName) {
@@ -860,7 +860,7 @@ func groupDataByTechnicianForContract(forProject string, listOfData []OdooTaskDa
 				Number++
 			}
 
-			jidStrHRD := fmt.Sprintf("%s@%s", config.GetConfig().Default.PTHRD[0].PhoneNumber, "s.whatsapp.net")
+			jidStrHRD := fmt.Sprintf("%s@%s", config.WebPanel.Get().Default.PTHRD[0].PhoneNumber, "s.whatsapp.net")
 			originalSenderJID := NormalizeSenderJID(jidStrHRD)
 			SendLangMessage(originalSenderJID, sbID.String(), sbEN.String(), "id")
 		}
@@ -944,7 +944,7 @@ func updateTechnicianFirstUploadFromBatchContract(forProject string, listOfData 
 }
 
 func clearOldTechnicianDataContract(forProject string) error {
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
@@ -977,7 +977,7 @@ func CheckAvailableForContractTechnicianODOO() error {
 		return fmt.Errorf("error in ContractTechnicianODOO: %v", err)
 	}
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	hour := now.Hour()
@@ -1004,7 +1004,7 @@ func CheckAvailableForContractTechnicianODOO() error {
 		greetingEN = "Good Night"
 	}
 
-	mustJoinedDays := config.GetConfig().ContractTechnicianODOO.MustJoinedAfter
+	mustJoinedDays := config.WebPanel.Get().ContractTechnicianODOO.MustJoinedAfter
 	if mustJoinedDays <= 0 {
 		return fmt.Errorf("MUST_JOINED_AFTER config must be greater than 0")
 	}
@@ -1044,7 +1044,7 @@ func CheckAvailableForContractTechnicianODOO() error {
 			continue // Skip if contract already sent
 		}
 
-		skippedTechnicians := config.GetConfig().ContractTechnicianODOO.SkippedTechnician
+		skippedTechnicians := config.WebPanel.Get().ContractTechnicianODOO.SkippedTechnician
 
 		if len(skippedTechnicians) > 0 {
 			for _, skippedName := range skippedTechnicians {
@@ -1091,8 +1091,8 @@ func CheckAvailableForContractTechnicianODOO() error {
 
 		var phoneNumberUsed string
 		var jidStr string
-		if config.GetConfig().ContractTechnicianODOO.ActiveDebug {
-			phoneNumberUsed = config.GetConfig().ContractTechnicianODOO.PhoneNumberTest
+		if config.WebPanel.Get().ContractTechnicianODOO.ActiveDebug {
+			phoneNumberUsed = config.WebPanel.Get().ContractTechnicianODOO.PhoneNumberTest
 			jidStr = fmt.Sprintf("%s@%s", phoneNumberUsed, "s.whatsapp.net")
 		} else {
 			phoneNumberUsed = tech.Phone
@@ -1127,7 +1127,7 @@ func CheckAvailableForContractTechnicianODOO() error {
 			noSuratStr = fmt.Sprintf("%d", noSurat)
 		}
 
-		ODOOMSSAC := config.GetConfig().ODOOMSSAC
+		ODOOMSSAC := config.WebPanel.Get().ODOOMSSAC
 		SACData, ok := ODOOMSSAC[tech.SAC]
 		if !ok {
 			logrus.Errorf("SAC %s not found in configuration for technician %s", tech.SAC, tech.Technician)
@@ -1279,17 +1279,17 @@ func CheckAvailableForContractTechnicianODOO() error {
 		sbID.WriteString("Mohon untuk menyimpan baik-baik surat kontrak tersebut sebagai arsip pribadi.\n\n")
 		sbID.WriteString("Terima kasih atas perhatian dan kerjasama Bapak.\n\n")
 		sbID.WriteString("Hormat kami,\n")
-		sbID.WriteString(fmt.Sprintf("*HRD %s*", config.GetConfig().Default.PT))
+		sbID.WriteString(fmt.Sprintf("*HRD %s*", config.WebPanel.Get().Default.PT))
 
 		sbEN.WriteString(fmt.Sprintf("Hello, %s Mr. %s.\n\n", greetingEN, namaTeknisi))
 		sbEN.WriteString("Attached is the Technician Work Contract Letter for your review and understanding.\n\n")
 		sbEN.WriteString("Please keep the contract letter safe as a personal archive.\n\n")
 		sbEN.WriteString("Thank you for your attention and cooperation.\n\n")
 		sbEN.WriteString("Sincerely,\n")
-		sbEN.WriteString(fmt.Sprintf("*HRD %s*", config.GetConfig().Default.PT))
+		sbEN.WriteString(fmt.Sprintf("*HRD %s*", config.WebPanel.Get().Default.PT))
 
 		// Register to chatbot if not exists
-		if !config.GetConfig().ContractTechnicianODOO.ActiveDebug {
+		if !config.WebPanel.Get().ContractTechnicianODOO.ActiveDebug {
 			go func() {
 				allowedTypes := model.AllWAMessageTypes
 				jsonBytes, err := json.Marshal(allowedTypes)
@@ -1358,8 +1358,8 @@ func CreatePDFForContractTechnician(placeholders map[string]string, outputPath s
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Kontrak Kerja", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("kontrak, surat kontrak, teknisi", true)
 	pdf.SetSubject("Surat Kontrak Kerja - Atas bergabungnya karyawan ke perusahaan", true)
 	pdf.SetCreationDate(time.Now())
@@ -1396,7 +1396,7 @@ func CreatePDFForContractTechnician(placeholders map[string]string, outputPath s
 		pdf.SetTextColor(100, 100, 100)
 
 		// Move to right corner with specific positioning
-		companyName := config.GetConfig().Default.PT
+		companyName := config.WebPanel.Get().Default.PT
 		textWidth := pdf.GetStringWidth(companyName)
 		pageWidth, _ := pdf.GetPageSize()
 		rightMargin := 4.0 // Adjust this value to control distance from right edge
@@ -1477,9 +1477,9 @@ func CreatePDFForContractTechnician(placeholders map[string]string, outputPath s
 	pdf.SetY(currentY)
 	// define fields
 	pihakPertamaFields := []pdfField{
-		{"Nama Perusahaan", config.GetConfig().Default.PT},
-		{"Alamat", config.GetConfig().Default.PTAddress},
-		{"Kota", config.GetConfig().Default.PTCity},
+		{"Nama Perusahaan", config.WebPanel.Get().Default.PT},
+		{"Alamat", config.WebPanel.Get().Default.PTAddress},
+		{"Kota", config.WebPanel.Get().Default.PTCity},
 	}
 
 	// loop
@@ -2181,7 +2181,7 @@ func GetDataTechnicianForContractInODOO() error {
 	}
 	defer getDataFSTechnicianInODOOForKontrakTeknisiMutex.Unlock()
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	startTime := now
 	nowEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, loc)
@@ -2226,7 +2226,7 @@ func GetDataTechnicianForContractInODOO() error {
 		"order":  order,
 	}
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -2274,7 +2274,7 @@ func GetDataTechnicianForContractInODOO() error {
 			continue
 		}
 
-		technicianSkipped := config.GetConfig().ContractTechnicianODOO.SkippedTechnician
+		technicianSkipped := config.WebPanel.Get().ContractTechnicianODOO.SkippedTechnician
 		if len(technicianSkipped) > 0 {
 			for _, skippedName := range technicianSkipped {
 				if strings.Contains(strings.ToLower(technicianName), skippedName) {
@@ -2457,7 +2457,7 @@ func GetDataTechnicianForContractInODOO() error {
 			Number++
 		}
 
-		jidStrHRD := fmt.Sprintf("%s@%s", config.GetConfig().Default.PTHRD[0].PhoneNumber, "s.whatsapp.net")
+		jidStrHRD := fmt.Sprintf("%s@%s", config.WebPanel.Get().Default.PTHRD[0].PhoneNumber, "s.whatsapp.net")
 		originalSenderJID := NormalizeSenderJID(jidStrHRD)
 		SendLangMessage(originalSenderJID, sbID.String(), sbEN.String(), "id")
 	}
@@ -2496,13 +2496,13 @@ func GetDataTechnicianForContractInODOO() error {
 			Number++
 		}
 
-		jidStrHRD := fmt.Sprintf("%s@%s", config.GetConfig().Default.PTHRD[0].PhoneNumber, "s.whatsapp.net")
+		jidStrHRD := fmt.Sprintf("%s@%s", config.WebPanel.Get().Default.PTHRD[0].PhoneNumber, "s.whatsapp.net")
 		originalSenderJID := NormalizeSenderJID(jidStrHRD)
 		SendLangMessage(originalSenderJID, sbID.String(), sbEN.String(), "id")
 	}
 
 	// Trace JO technicians by must joinedDays
-	mustJoinedDays := config.GetConfig().ContractTechnicianODOO.MustJoinedAfter
+	mustJoinedDays := config.WebPanel.Get().ContractTechnicianODOO.MustJoinedAfter
 	if mustJoinedDays <= 0 {
 		return errors.New("MUST_JOINED_AFTER config must be greater than 0")
 	}
@@ -2542,7 +2542,7 @@ func GetDataTechnicianForContractInODOO() error {
 	}
 
 	payload = map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -2619,7 +2619,7 @@ func GetDataTechnicianForContractInODOO() error {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 

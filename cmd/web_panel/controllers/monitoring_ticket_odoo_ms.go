@@ -9,10 +9,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	reportmodel "service-platform/cmd/web_panel/model/report_model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"time"
@@ -40,7 +40,7 @@ func MonitoringTicketODOOMS() (string, error) {
 	}
 	defer getMonitoringTicketODOOMSMutex.Unlock()
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	numDays := time.Date(now.Year(), now.Month()+1, 0, 0, 0, 0, 0, loc).Day()
 
@@ -52,17 +52,17 @@ func MonitoringTicketODOOMS() (string, error) {
 	startDateParam := startOfMonth.Format("2006-01-02 15:04:05")
 	endDateParam := endOfMonth.Format("2006-01-02 15:04:05")
 
-	if config.GetConfig().Report.MonitoringTicketODOOMS.ActiveDebug {
-		if config.GetConfig().Report.MonitoringTicketODOOMS.StartParam != "" {
-			startDateParam = config.GetConfig().Report.MonitoringTicketODOOMS.StartParam
+	if config.WebPanel.Get().Report.MonitoringTicketODOOMS.ActiveDebug {
+		if config.WebPanel.Get().Report.MonitoringTicketODOOMS.StartParam != "" {
+			startDateParam = config.WebPanel.Get().Report.MonitoringTicketODOOMS.StartParam
 		}
-		if config.GetConfig().Report.MonitoringTicketODOOMS.EndParam != "" {
-			endDateParam = config.GetConfig().Report.MonitoringTicketODOOMS.EndParam
+		if config.WebPanel.Get().Report.MonitoringTicketODOOMS.EndParam != "" {
+			endDateParam = config.WebPanel.Get().Report.MonitoringTicketODOOMS.EndParam
 		}
 	}
 
 	ODOOModel := "helpdesk.ticket"
-	excludedCompany := config.GetConfig().ApiODOO.CompanyExcluded
+	excludedCompany := config.WebPanel.Get().ApiODOO.CompanyExcluded
 	domain := []interface{}{
 		[]interface{}{"active", "=", true},
 		[]interface{}{"x_received_datetime_spk", ">=", startDateParam},
@@ -116,7 +116,7 @@ func MonitoringTicketODOOMS() (string, error) {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -191,7 +191,7 @@ func MonitoringTicketODOOMS() (string, error) {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -836,7 +836,7 @@ func MonitoringTicketODOOMS() (string, error) {
 		"order":  order,
 	}
 	payload = map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 	payloadBytes, err = json.Marshal(payload)
@@ -2325,8 +2325,8 @@ func MonitoringTicketODOOMS() (string, error) {
 	// 	},
 	// 	ShowBlanksAs: "zero",
 	// 	Dimension: excelize.ChartDimension{
-	// 		Width:  config.GetConfig().Report.MonitoringTicketODOOMS.ChartWidth,
-	// 		Height: config.GetConfig().Report.MonitoringTicketODOOMS.ChartHeight,
+	// 		Width:  config.WebPanel.Get().Report.MonitoringTicketODOOMS.ChartWidth,
+	// 		Height: config.WebPanel.Get().Report.MonitoringTicketODOOMS.ChartHeight,
 	// 	},
 	// 	Legend: excelize.ChartLegend{
 	// 		Position:      "top",
@@ -2487,7 +2487,7 @@ func GenerateChartMonitoringTicketPerformanceODOOMSInBackground(excelFilePath st
 	}
 	imgOutput := filepath.Join(fileReportDir, fmt.Sprintf("chartReportSummaryTicketAchievement_%s.png", time.Now().Format("02Jan2006")))
 
-	logFile, _ := os.Create(config.GetConfig().Report.MonitoringTicketODOOMS.LogExportChartDebugPath)
+	logFile, _ := os.Create(config.WebPanel.Get().Report.MonitoringTicketODOOMS.LogExportChartDebugPath)
 	if logFile != nil {
 		defer logFile.Close()
 	}
@@ -2608,7 +2608,7 @@ func GenerateChartMonitoringTicketPerformanceODOOMSInBackground(excelFilePath st
 	absImg, _ := filepath.Abs(imgOutput)
 	magickPath, err := exec.LookPath("convert")
 	if err != nil {
-		magickPath = config.GetConfig().Default.MagickFullPath
+		magickPath = config.WebPanel.Get().Default.MagickFullPath
 		if _, statErr := os.Stat(magickPath); os.IsNotExist(statErr) {
 			logExport("❌ ImageMagick 'convert' not found in PATH or at configured location")
 			return
@@ -2681,7 +2681,7 @@ func GenerateExcelChartMonitoringTicketPerformanceODOOMSInBackground(excelFilePa
 		return
 	}
 
-	logFile, _ := os.Create(config.GetConfig().Report.MonitoringTicketODOOMS.LogExportChartDebugPath)
+	logFile, _ := os.Create(config.WebPanel.Get().Report.MonitoringTicketODOOMS.LogExportChartDebugPath)
 	if logFile != nil {
 		defer logFile.Close()
 	}
@@ -2788,7 +2788,7 @@ func GenerateExcelChartMonitoringTicketPerformanceODOOMSInBackground(excelFilePa
 
 func BackupTableMonitoringTicket() error {
 	dbWeb := gormdb.Databases.Web
-	table := config.GetConfig().Database.TbReportMonitoringTicket
+	table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 
 	// Get current month and year
 	now := time.Now()

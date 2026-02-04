@@ -12,11 +12,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	tamodel "service-platform/cmd/web_panel/model/ta_model"
+	"service-platform/internal/config"
 	"sort"
 	"strconv"
 	"strings"
@@ -108,8 +108,8 @@ func CheckValidWhatsappPhoneNumber(phoneNumber string) (string, error) {
 	}
 
 	// Check minimum length
-	if len(phoneNumber) < config.GetConfig().Default.MinLengthPhoneNumber {
-		return "", fmt.Errorf("%s is too short, min. %d digits", phoneNumber, config.GetConfig().Default.MinLengthPhoneNumber)
+	if len(phoneNumber) < config.WebPanel.Get().Default.MinLengthPhoneNumber {
+		return "", fmt.Errorf("%s is too short, min. %d digits", phoneNumber, config.WebPanel.Get().Default.MinLengthPhoneNumber)
 	}
 
 	// Sanitize the number (e.g., remove +, spaces, etc.)
@@ -142,7 +142,7 @@ func CheckValidWhatsappPhoneNumber(phoneNumber string) (string, error) {
 
 // GetWhatsappGroup retrieves the list of WhatsApp groups that the client has joined using the WhatsappClient.
 // It serializes the group data into a formatted JSON structure and writes it to a file specified in the configuration
-// (config.GetConfig().Whatsmeow.WaGroupSource). If an error occurs during group retrieval or file writing, it logs the error
+// (config.WebPanel.Get().Whatsmeow.WaGroupSource). If an error occurs during group retrieval or file writing, it logs the error
 // to the standard output. This function is useful for exporting or backing up group metadata for further processing or inspection.
 //
 // Details:
@@ -179,7 +179,7 @@ func GetWhatsappGroup() {
 
 	jsonData, _ := json.MarshalIndent(data, "", "  ")
 
-	err = os.WriteFile(config.GetConfig().Whatsmeow.WaGroupSource, jsonData, 0644)
+	err = os.WriteFile(config.WebPanel.Get().Whatsmeow.WaGroupSource, jsonData, 0644)
 	if err != nil {
 		logrus.Errorf("Failed to write group data to file: %v\n", err)
 		return
@@ -419,15 +419,15 @@ func SendTextWhatsapp() gin.HandlerFunc {
 			return
 		}
 
-		if len(message) > config.GetConfig().Default.MaxMessageCharacters {
-			c.JSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("max chars of message cannot more than %d characters", config.GetConfig().Default.MaxMessageCharacters)})
+		if len(message) > config.WebPanel.Get().Default.MaxMessageCharacters {
+			c.JSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("max chars of message cannot more than %d characters", config.WebPanel.Get().Default.MaxMessageCharacters)})
 			return
 		}
 
 		var sb strings.Builder
 		sb.WriteString(message)
 		if useFooter == "true" {
-			sb.WriteString(fmt.Sprintf("\n\n~Regards, *%v*", config.GetConfig().Default.PT))
+			sb.WriteString(fmt.Sprintf("\n\n~Regards, *%v*", config.WebPanel.Get().Default.PT))
 		}
 		textToSend := sb.String()
 
@@ -534,10 +534,10 @@ func SendImageWhatsapp() gin.HandlerFunc {
 		}
 
 		// ✅ Check file size
-		if fileHeader.Size > config.GetConfig().Default.MaxImageSize*1024*1024 {
+		if fileHeader.Size > config.WebPanel.Get().Default.MaxImageSize*1024*1024 {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "File too large",
-				"detail":  fmt.Sprintf("Maximum allowed size is %d MB", config.GetConfig().Default.MaxImageSize),
+				"detail":  fmt.Sprintf("Maximum allowed size is %d MB", config.WebPanel.Get().Default.MaxImageSize),
 			})
 			return
 		}
@@ -610,15 +610,15 @@ func SendImageWhatsapp() gin.HandlerFunc {
 
 		var sb strings.Builder
 		if message != "" {
-			if len(message) > config.GetConfig().Default.MaxMessageCharacters {
-				c.JSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("max chars of message cannot more than %d characters", config.GetConfig().Default.MaxMessageCharacters)})
+			if len(message) > config.WebPanel.Get().Default.MaxMessageCharacters {
+				c.JSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("max chars of message cannot more than %d characters", config.WebPanel.Get().Default.MaxMessageCharacters)})
 				return
 			}
 
 			sb.WriteString(message)
 		}
 		if useFooter == "true" {
-			sb.WriteString(fmt.Sprintf("\n\n~Regards, *%s*", config.GetConfig().Default.PT))
+			sb.WriteString(fmt.Sprintf("\n\n~Regards, *%s*", config.WebPanel.Get().Default.PT))
 		}
 		textToSend := sb.String()
 
@@ -780,11 +780,11 @@ func SendDocumentWhatsapp() gin.HandlerFunc {
 		}
 
 		// Validate type
-		allowedMimeTypes := config.GetConfig().Whatsmeow.DocumentAllowedMimeTypes
+		allowedMimeTypes := config.WebPanel.Get().Whatsmeow.DocumentAllowedMimeTypes
 
 		// Extract file extension as fallback validation
 		ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
-		allowedExtensions := config.GetConfig().Whatsmeow.DocumentAllowedExtensions
+		allowedExtensions := config.WebPanel.Get().Whatsmeow.DocumentAllowedExtensions
 
 		if !contains(allowedMimeTypes, contentType) && !contains(allowedExtensions, ext) {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -810,15 +810,15 @@ func SendDocumentWhatsapp() gin.HandlerFunc {
 
 		var sb strings.Builder
 		if message != "" {
-			if len(message) > config.GetConfig().Default.MaxMessageCharacters {
-				c.JSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("max chars of message cannot more than %d characters", config.GetConfig().Default.MaxMessageCharacters)})
+			if len(message) > config.WebPanel.Get().Default.MaxMessageCharacters {
+				c.JSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("max chars of message cannot more than %d characters", config.WebPanel.Get().Default.MaxMessageCharacters)})
 				return
 			}
 
 			sb.WriteString(message)
 		}
 		if useFooter == "true" {
-			sb.WriteString(fmt.Sprintf("\n\n~Regards, *%s*", config.GetConfig().Default.PT))
+			sb.WriteString(fmt.Sprintf("\n\n~Regards, *%s*", config.WebPanel.Get().Default.PT))
 		}
 		textToSend := sb.String()
 
@@ -999,8 +999,8 @@ func SendLocationWhatsapp() gin.HandlerFunc {
 		}
 
 		if locAddress != "" {
-			if len(locAddress) > config.GetConfig().Default.MaxMessageCharacters {
-				c.JSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("max chars of detail address cannot more than %d characters", config.GetConfig().Default.MaxMessageCharacters)})
+			if len(locAddress) > config.WebPanel.Get().Default.MaxMessageCharacters {
+				c.JSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("max chars of detail address cannot more than %d characters", config.WebPanel.Get().Default.MaxMessageCharacters)})
 				return
 			}
 		}
@@ -1279,7 +1279,7 @@ func GetTbLogMsgReceived() gin.HandlerFunc {
 		}
 
 		// Open log file
-		logFile := config.GetConfig().Whatsmeow.MsgReceivedLogFile
+		logFile := config.WebPanel.Get().Whatsmeow.MsgReceivedLogFile
 		file, err := os.Open(logFile)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open log file"})
@@ -1395,7 +1395,7 @@ func haloFromBot(v *events.Message, stanzaID, originalSenderJID string) {
 
 	sb.WriteString(fmt.Sprintf(" %v\n", senderName))
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	tgl, err := tanggal.Papar(now, "Jakarta", tanggal.WIB)
@@ -1417,7 +1417,7 @@ func haloFromBot(v *events.Message, stanzaID, originalSenderJID string) {
 	message := fmt.Sprintf("Sekarang pukul %s dan hari ini adalah %s. \n", formattedTime, formattedDate)
 	sb.WriteString(message)
 
-	weatherApiKey := config.GetConfig().Whatsmeow.OpenWeatherMapAPIKey
+	weatherApiKey := config.WebPanel.Get().Whatsmeow.OpenWeatherMapAPIKey
 	w, err := openweathermap.NewCurrent("C", "EN", weatherApiKey)
 	if err != nil {
 		log.Print(err)
@@ -1800,7 +1800,7 @@ func SendWhatsappMessageWithMentionsbyTA(jid types.JID, mentions []string, messa
 
 	// No mentions: send simple message
 	if len(mentions) == 0 {
-		taggedMessage := fmt.Sprintf("%s\n\n~ Regards, Technical Assistance Team *%v*", message, config.GetConfig().Default.PT)
+		taggedMessage := fmt.Sprintf("%s\n\n~ Regards, Technical Assistance Team *%v*", message, config.WebPanel.Get().Default.PT)
 		resp, err := WhatsappClient.SendMessage(context.Background(), jid, &waE2E.Message{
 			Conversation: &taggedMessage,
 		})
@@ -1843,7 +1843,7 @@ func SendWhatsappMessageWithMentionsbyTA(jid types.JID, mentions []string, messa
 		mentionedJIDs = append(mentionedJIDs, jid)
 		mentionTags = append(mentionTags, "@"+num)
 	}
-	taggedMessage := fmt.Sprintf("%s\n\nCc: %s\n\n~ Regards, Technical Assistance Team *%v*", message, strings.Join(mentionTags, " "), config.GetConfig().Default.PT)
+	taggedMessage := fmt.Sprintf("%s\n\nCc: %s\n\n~ Regards, Technical Assistance Team *%v*", message, strings.Join(mentionTags, " "), config.WebPanel.Get().Default.PT)
 
 	resp, err := WhatsappClient.SendMessage(context.Background(), jid, &waE2E.Message{
 		ExtendedTextMessage: &waE2E.ExtendedTextMessage{

@@ -1,7 +1,7 @@
 package stockopnamemodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -26,5 +26,5 @@ type ProductEDCCSNA struct {
 }
 
 func (ProductEDCCSNA) TableName() string {
-	return config.GetConfig().StockOpname.TbListProductEDC
+	return config.WebPanel.Get().StockOpname.TbListProductEDC
 }

@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"reflect"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	bnimodel "service-platform/cmd/web_panel/model/bni_model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"time"
@@ -86,7 +86,7 @@ func getProvinceFromCityBNI(city string) string {
 	}
 
 	// Try partial matching for common abbreviations
-	completedCity := config.GetConfig().Indonesia.CompletedCity
+	completedCity := config.WebPanel.Get().Indonesia.CompletedCity
 
 	if fullCity, exists := completedCity[cityLower]; exists {
 		if province, exists := regionCacheBNI[strings.ToLower(fullCity)]; exists {
@@ -124,18 +124,18 @@ func GetTaskODOOMSBNI() error {
 
 	ODOOModel := "project.task"
 	domain := []interface{}{
-		[]interface{}{"company_id", "=", config.GetConfig().BNI.CompanyIDInODOOMS},
+		[]interface{}{"company_id", "=", config.WebPanel.Get().BNI.CompanyIDInODOOMS},
 	}
-	if config.GetConfig().BNI.ActiveDebug {
-		startParam := config.GetConfig().BNI.StartParam
-		endParam := config.GetConfig().BNI.EndParam
+	if config.WebPanel.Get().BNI.ActiveDebug {
+		startParam := config.WebPanel.Get().BNI.StartParam
+		endParam := config.WebPanel.Get().BNI.EndParam
 		if startParam != "" && endParam != "" {
 			domain = append(domain, []interface{}{"x_received_datetime_spk", ">=", startParam})
 			domain = append(domain, []interface{}{"x_received_datetime_spk", "<=", endParam})
 		}
 	} else {
 		// Get current year from January 1st until date now
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		startOfYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, loc)
 
@@ -192,7 +192,7 @@ func GetTaskODOOMSBNI() error {
 		"order":  order,
 	}
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  ODOOParams,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -274,7 +274,7 @@ func GetTaskODOOMSBNI() error {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -1021,7 +1021,7 @@ func PivotPMBNI() gin.HandlerFunc {
 				COUNT(DISTINCT CASE WHEN stage = 'Cancel' THEN tid END) as gagal_terkunjungi_count,
 				COUNT(DISTINCT CASE WHEN stage = 'New' THEN tid END) as belum_kunjungan_count,
 				COUNT(DISTINCT tid) as total_count
-			FROM ` + config.GetConfig().BNI.TBDataODOOMS + `
+			FROM ` + config.WebPanel.Get().BNI.TBDataODOOMS + `
 			WHERE ` + whereClause + `
 			GROUP BY source
 			ORDER BY source
@@ -1260,7 +1260,7 @@ func ReportAllPMBNI() gin.HandlerFunc {
 		logrus.Infof("Excel file creation completed in %v", excelDuration)
 
 		// Generate filename
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		filename := fmt.Sprintf("PM_BNI_All_Data_%s.xlsx", now.Format("02Jan2006_150405"))
 
@@ -1395,7 +1395,7 @@ func generatePivotDataPMBNI(dbWeb *gorm.DB, searchValue string) ([]map[string]in
 		}
 	}
 
-	tableBNI := config.GetConfig().BNI.TBDataODOOMS
+	tableBNI := config.WebPanel.Get().BNI.TBDataODOOMS
 
 	// Raw SQL query to aggregate the data
 	query := fmt.Sprintf(`
@@ -1774,7 +1774,7 @@ func ReportDataFilteredPMBNI() gin.HandlerFunc {
 		defer excelFile.Close()
 
 		// Generate filename
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		filename := fmt.Sprintf("PM_BNI_Filtered_Data_%s.xlsx", now.Format("02Jan2006_150405"))
 
@@ -2501,7 +2501,7 @@ func PivotNonPMBNI() gin.HandlerFunc {
 			}
 
 			// Count priorities based on SLA deadlines and task status
-			loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+			loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 			now := time.Now().In(loc)
 
 			// Only count if timesheet_last_stop is null (not yet completed)
@@ -2696,7 +2696,7 @@ func ReportAllNonPMBNI() gin.HandlerFunc {
 		defer excelFile.Close()
 
 		// Generate filename
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		filename := fmt.Sprintf("Non_PM_BNI_All_Data_%s.xlsx", now.Format("02Jan2006_150405"))
 
@@ -3198,7 +3198,7 @@ func ReportDataFilteredNonPMBNI() gin.HandlerFunc {
 		defer excelFile.Close()
 
 		// Generate filename
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		filename := fmt.Sprintf("Non_PM_BNI_Filtered_Data_%s.xlsx", now.Format("02Jan2006_150405"))
 

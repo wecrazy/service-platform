@@ -1,7 +1,7 @@
 package reportmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -45,5 +45,5 @@ type TaskComparedData struct {
 }
 
 func (TaskComparedData) TableName() string {
-	return config.GetConfig().Database.TbReportCompared
+	return config.WebPanel.Get().Database.TbReportCompared
 }

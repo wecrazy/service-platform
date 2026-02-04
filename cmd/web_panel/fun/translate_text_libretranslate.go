@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"service-platform/internal/config"
 	"time"
-	"service-platform/cmd/web_panel/config"
 )
 
 type LibreTranslateRequest struct {
@@ -42,7 +42,7 @@ func TranslateTextUseLibreTranslate(input, sourceLang, targetLang string) (strin
 		Transport: tr,
 	}
 	resp, err := client.Post(
-		config.GetConfig().API.LibreTranslate+"/translate",
+		config.WebPanel.Get().API.LibreTranslate+"/translate",
 		"application/json",
 		bytes.NewBuffer(body),
 	)

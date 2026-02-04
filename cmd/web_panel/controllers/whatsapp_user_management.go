@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"path/filepath"
 	"reflect"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -319,7 +319,7 @@ func TableWhatsappUserManagement() gin.HandlerFunc {
 					var htmlRendered string
 					switch t {
 					case model.UserOfCSNA:
-						htmlRendered = config.GetConfig().Default.PT
+						htmlRendered = config.WebPanel.Get().Default.PT
 					case model.UserOfHommyPay:
 						htmlRendered = "Hommy Pay"
 					}
@@ -461,7 +461,7 @@ func CreateNewDataTableWhatsappUserManagement() gin.HandlerFunc {
 			return
 		}
 
-		table := config.GetConfig().Database.TbWAPhoneUser
+		table := config.WebPanel.Get().Database.TbWAPhoneUser
 		// Check if the table exists
 		if !dbWeb.Migrator().HasTable(table) {
 			logrus.Errorf("Table %s does not exist.\n", table)
@@ -555,8 +555,8 @@ func CreateNewDataTableWhatsappUserManagement() gin.HandlerFunc {
 
 		// Try send message to New User Registered
 		if dbData.IsRegistered {
-			indonesianMsg := config.GetConfig().Whatsmeow.WelcomingUserID
-			englishMsg := config.GetConfig().Whatsmeow.WelcomingUserEN
+			indonesianMsg := config.WebPanel.Get().Whatsmeow.WelcomingUserID
+			englishMsg := config.WebPanel.Get().Whatsmeow.WelcomingUserEN
 			jid := "62" + dbData.PhoneNumber + "@s.whatsapp.net"
 			SendLangMessage(jid, indonesianMsg, englishMsg, "id")
 		}
@@ -610,8 +610,8 @@ func sanitizeAndValidateInputWAUserManagement(data map[string]interface{}) (map[
 		switch v := maxDailyQuotaRaw.(type) {
 		case string:
 			if quota, err := strconv.Atoi(v); err == nil && quota > 0 {
-				if quota > config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota {
-					return nil, fmt.Errorf("max daily quota cannot more than %d", config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota)
+				if quota > config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota {
+					return nil, fmt.Errorf("max daily quota cannot more than %d", config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota)
 				}
 				data["max_daily_quota"] = quota
 			} else {
@@ -619,8 +619,8 @@ func sanitizeAndValidateInputWAUserManagement(data map[string]interface{}) (map[
 			}
 		case float64:
 			if int(v) > 0 {
-				if int(v) > config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota {
-					return nil, fmt.Errorf("max daily quota cannot more than %d", config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota)
+				if int(v) > config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota {
+					return nil, fmt.Errorf("max daily quota cannot more than %d", config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota)
 				}
 				data["max_daily_quota"] = int(v)
 			} else {
@@ -628,8 +628,8 @@ func sanitizeAndValidateInputWAUserManagement(data map[string]interface{}) (map[
 			}
 		case int:
 			if v > 0 {
-				if v > config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota {
-					return nil, fmt.Errorf("max daily quota cannot more than %d", config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota)
+				if v > config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota {
+					return nil, fmt.Errorf("max daily quota cannot more than %d", config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota)
 				}
 				data["max_daily_quota"] = v
 			} else {
@@ -774,7 +774,7 @@ func isValidWAUserType(userType string) bool {
 func PutUpdatedWhatsappUserManagement() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		table := config.GetConfig().Database.TbWAPhoneUser
+		table := config.WebPanel.Get().Database.TbWAPhoneUser
 		// Check if the table exists
 		if !dbWeb.Migrator().HasTable(table) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid table name, no table named " + table})
@@ -936,8 +936,8 @@ func sanitizeAndValidateEditedWAUserManagement(data map[string]interface{}) (map
 		switch v := maxDailyQuotaRaw.(type) {
 		case string:
 			if quota, err := strconv.Atoi(v); err == nil && quota > 0 {
-				if quota > config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota {
-					return nil, fmt.Errorf("max daily quota cannot more than %d", config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota)
+				if quota > config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota {
+					return nil, fmt.Errorf("max daily quota cannot more than %d", config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota)
 				}
 				data["max_daily_quota"] = quota
 			} else {
@@ -945,8 +945,8 @@ func sanitizeAndValidateEditedWAUserManagement(data map[string]interface{}) (map
 			}
 		case float64:
 			if int(v) > 0 {
-				if int(v) > config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota {
-					return nil, fmt.Errorf("max daily quota cannot more than %d", config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota)
+				if int(v) > config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota {
+					return nil, fmt.Errorf("max daily quota cannot more than %d", config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota)
 				}
 				data["max_daily_quota"] = int(v)
 			} else {
@@ -954,8 +954,8 @@ func sanitizeAndValidateEditedWAUserManagement(data map[string]interface{}) (map
 			}
 		case int:
 			if v > 0 {
-				if v > config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota {
-					return nil, fmt.Errorf("max daily quota cannot more than %d", config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota)
+				if v > config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota {
+					return nil, fmt.Errorf("max daily quota cannot more than %d", config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota)
 				}
 				data["max_daily_quota"] = v
 			} else {
@@ -1128,10 +1128,10 @@ func GetBatchTemplateWhatsappUserManagement[T any]() gin.HandlerFunc {
 		f.SetCellValue(sheetName, "A1", strings.ToUpper(structName))
 		f.SetCellStyle(sheetName, "A1", "A1", titleTextStyle)
 		// Notes
-		f.SetCellValue(sheetName, "B1", fmt.Sprintf("*separator for allowed types must: %s", config.GetConfig().Whatsmeow.KeywordSeparator))
+		f.SetCellValue(sheetName, "B1", fmt.Sprintf("*separator for allowed types must: %s", config.WebPanel.Get().Whatsmeow.KeywordSeparator))
 
 		// Dummy data values in rows (each inner slice is a row)
-		dataSeparator := config.GetConfig().Whatsmeow.KeywordSeparator
+		dataSeparator := config.WebPanel.Get().Whatsmeow.KeywordSeparator
 		// Prepare list of allowed values
 		messageTypes := model.AllWAMessageTypes
 		userTypes := model.AllWAUserTypes
@@ -1182,7 +1182,7 @@ func GetBatchTemplateWhatsappUserManagement[T any]() gin.HandlerFunc {
 			{
 				"Teknisi Jakarta",
 				"teknisi@jakarta.odooms",
-				config.GetConfig().Whatsmeow.WaSupport,
+				config.WebPanel.Get().Whatsmeow.WaSupport,
 				string(model.DirectChat),
 				string(model.TextMessage),
 				"false",
@@ -1194,7 +1194,7 @@ func GetBatchTemplateWhatsappUserManagement[T any]() gin.HandlerFunc {
 			{
 				"User Biasa",
 				"biasa@aja.com",
-				config.GetConfig().Whatsmeow.WaTechnicalSupport,
+				config.WebPanel.Get().Whatsmeow.WaTechnicalSupport,
 				string(model.BothChat),
 				string(model.TextMessage),
 				"false",
@@ -1398,7 +1398,7 @@ func parseAndProcessExcelFromTemplateWhatsappUserManagement[T any](file *multipa
 			switch field.Type {
 			case reflect.TypeOf(datatypes.JSON{}):
 				if cell != "" {
-					items := strings.Split(cell, config.GetConfig().Whatsmeow.KeywordSeparator)
+					items := strings.Split(cell, config.WebPanel.Get().Whatsmeow.KeywordSeparator)
 					for k := range items {
 						items[k] = strings.TrimSpace(items[k])
 					}
@@ -1542,8 +1542,8 @@ func parseAndProcessExcelFromTemplateWhatsappUserManagement[T any](file *multipa
 				warnings = append(warnings, fmt.Sprintf("Row %d: Invalid number in max_daily_quota: %s", i+1, maxDailyQuota))
 				skip = true
 			} else {
-				if quota > config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota {
-					warnings = append(warnings, fmt.Sprintf("Row %d: Max daily quota cannot more than: %d", i+1, config.GetConfig().Whatsmeow.WhatsappMaxDailyQuota))
+				if quota > config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota {
+					warnings = append(warnings, fmt.Sprintf("Row %d: Max daily quota cannot more than: %d", i+1, config.WebPanel.Get().Whatsmeow.WhatsappMaxDailyQuota))
 					skip = true
 				}
 				record["max_daily_quota"] = quota
@@ -1628,8 +1628,8 @@ func parseAndProcessExcelFromTemplateWhatsappUserManagement[T any](file *multipa
 				continue
 			}
 
-			indonesianMsg := config.GetConfig().Whatsmeow.WelcomingUserID
-			englishMsg := config.GetConfig().Whatsmeow.WelcomingUserEN
+			indonesianMsg := config.WebPanel.Get().Whatsmeow.WelcomingUserID
+			englishMsg := config.WebPanel.Get().Whatsmeow.WelcomingUserEN
 
 			jid := "62" + sanitizedPhoneNumber + "@s.whatsapp.net"
 			SendLangMessage(jid, indonesianMsg, englishMsg, "id")

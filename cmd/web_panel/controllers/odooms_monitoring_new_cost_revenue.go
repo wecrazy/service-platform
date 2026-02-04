@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
+	"service-platform/internal/config"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +17,7 @@ import (
 // GetNewCostRevenueODOOMSChart renders the HTML page for Cost vs Revenue chart
 func GetNewCostRevenueODOOMSChart() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		importPath := config.GetConfig().App.Logo
+		importPath := config.WebPanel.Get().App.Logo
 		lastSlash := strings.LastIndex(importPath, "/")
 		var newLogoPath string
 		if lastSlash >= 0 {
@@ -37,7 +37,7 @@ func GetNewCostRevenueODOOMSChart() gin.HandlerFunc {
 func GetAvailableYears() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dbWeb := gormdb.Databases.Web
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 
 		yearsMap := make(map[int]bool)
 		currentYear := time.Now().Year()
@@ -85,7 +85,7 @@ func GetAvailableYears() gin.HandlerFunc {
 func GetAvailableMonths() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dbWeb := gormdb.Databases.Web
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 
 		yearParam := c.Query("year")
 		var selectedYear int
@@ -139,7 +139,7 @@ func GetAvailableMonths() gin.HandlerFunc {
 func GetAvailableCompanies() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dbWeb := gormdb.Databases.Web
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 
 		yearParam := c.Query("year")
 		var selectedYear int
@@ -202,8 +202,8 @@ func GetAvailableCompanies() gin.HandlerFunc {
 func GetDataNewCostRevenueYearly() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dbWeb := gormdb.Databases.Web
-		table := config.GetConfig().Database.TbReportMonitoringTicket
-		tableBALost := config.GetConfig().Database.TbBALost
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
+		tableBALost := config.WebPanel.Get().Database.TbBALost
 
 		// Get year from query parameter, default to current year
 		yearParam := c.Query("year")
@@ -267,8 +267,8 @@ func GetDataNewCostRevenueYearly() gin.HandlerFunc {
 		var yearlyData []MonthData
 
 		// Default prices
-		defaultTechnicianVisitsPrice := config.GetConfig().ODOOMSParam.DefaultPrice
-		defaultBALostPrice := config.GetConfig().ODOOMSParam.DefaultEDCLostFee
+		defaultTechnicianVisitsPrice := config.WebPanel.Get().ODOOMSParam.DefaultPrice
+		defaultBALostPrice := config.WebPanel.Get().ODOOMSParam.DefaultEDCLostFee
 
 		// Build price maps
 		revenuePriceMap := make(map[string]float64) // key: "company|task_type" - from InventoryProductTemplate
@@ -441,7 +441,7 @@ func GetDataNewCostRevenueYearly() gin.HandlerFunc {
 func GetDrillDownData() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dbWeb := gormdb.Databases.Web
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 		currentYear := time.Now().Year()
 
 		var requestBody struct {
@@ -489,7 +489,7 @@ func GetDrillDownData() gin.HandlerFunc {
 		// Handle BA Lost separately as it uses different table
 		if requestBody.Category == "ba_lost" {
 			// Get tableBALost
-			tableBALost := config.GetConfig().Database.TbBALost
+			tableBALost := config.WebPanel.Get().Database.TbBALost
 			var baLostTableName string
 			if monthNum == currentMonth {
 				baLostTableName = tableBALost
@@ -519,7 +519,7 @@ func GetDrillDownData() gin.HandlerFunc {
 				return
 			}
 
-			defaultBALostPrice := config.GetConfig().ODOOMSParam.DefaultEDCLostFee
+			defaultBALostPrice := config.WebPanel.Get().ODOOMSParam.DefaultEDCLostFee
 
 			// Return detailed BA Lost data
 			type BALostDetail struct {
@@ -613,8 +613,8 @@ func GetDrillDownData() gin.HandlerFunc {
 			})
 			return
 		} // Get price maps
-		defaultTechnicianVisitsPrice := config.GetConfig().ODOOMSParam.DefaultPrice
-		defaultBALostPrice := config.GetConfig().ODOOMSParam.DefaultEDCLostFee
+		defaultTechnicianVisitsPrice := config.WebPanel.Get().ODOOMSParam.DefaultPrice
+		defaultBALostPrice := config.WebPanel.Get().ODOOMSParam.DefaultEDCLostFee
 
 		revenuePriceMap := make(map[string]float64)
 		payrollPriceMap := make(map[string]float64)

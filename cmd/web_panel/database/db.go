@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/driver/mysql"
@@ -22,8 +22,8 @@ func InitAndCheckDB(dbUser, dbPass, dbHost, dbPort, dbName string) (*gorm.DB, er
 	var err error
 
 	config.LoadConfig()
-	maxRetries := config.GetConfig().Database.MaxRetryConnect
-	retryDelay := config.GetConfig().Database.RetryDelay
+	maxRetries := config.WebPanel.Get().Database.MaxRetryConnect
+	retryDelay := config.WebPanel.Get().Database.RetryDelay
 
 	// Retry connection up to maxRetries with retryDelay seconds
 	for attempt := 1; attempt <= maxRetries; attempt++ {
@@ -88,9 +88,9 @@ func InitAndCheckDB(dbUser, dbPass, dbHost, dbPort, dbName string) (*gorm.DB, er
 		return nil, fmt.Errorf("failed to get db instance: %v", err)
 	}
 
-	sqlDB.SetMaxIdleConns(config.GetConfig().Database.MaxIdleConns)
-	sqlDB.SetMaxOpenConns(config.GetConfig().Database.MaxOpenConns)
-	sqlDB.SetConnMaxLifetime(time.Duration(config.GetConfig().Database.MaxLifetimeConns) * time.Hour)
+	sqlDB.SetMaxIdleConns(config.WebPanel.Get().Database.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(config.WebPanel.Get().Database.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(time.Duration(config.WebPanel.Get().Database.MaxLifetimeConns) * time.Hour)
 
 	fmt.Printf("✅ Connected to database: %s\n", dbName)
 
@@ -110,8 +110,8 @@ func TryConnectDB(dbUser, dbPass, dbHost, dbPort, dbName string) (*gorm.DB, erro
 	var err error
 
 	config.LoadConfig()
-	maxRetries := config.GetConfig().Database.MaxRetryConnect
-	retryDelay := config.GetConfig().Database.RetryDelay
+	maxRetries := config.WebPanel.Get().Database.MaxRetryConnect
+	retryDelay := config.WebPanel.Get().Database.RetryDelay
 
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		infoSchemaDB, err = gorm.Open(mysql.Open(infoSchemaURI), &gorm.Config{
@@ -164,9 +164,9 @@ func TryConnectDB(dbUser, dbPass, dbHost, dbPort, dbName string) (*gorm.DB, erro
 		return nil, fmt.Errorf("failed to get db instance: %v", err)
 	}
 
-	sqlDB.SetMaxIdleConns(config.GetConfig().Database.MaxIdleConns)
-	sqlDB.SetMaxOpenConns(config.GetConfig().Database.MaxOpenConns)
-	sqlDB.SetConnMaxLifetime(time.Duration(config.GetConfig().Database.MaxLifetimeConns) * time.Hour)
+	sqlDB.SetMaxIdleConns(config.WebPanel.Get().Database.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(config.WebPanel.Get().Database.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(time.Duration(config.WebPanel.Get().Database.MaxLifetimeConns) * time.Hour)
 
 	fmt.Printf("✅ Connected to database: %s\n", dbName)
 

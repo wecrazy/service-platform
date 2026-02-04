@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -558,7 +558,7 @@ func renderVersionCode(fieldValue reflect.Value) string {
 				</div>
 			</div>`,
 			htmlEscape(versionCode),
-			strings.ToUpper(config.GetConfig().App.Version),
+			strings.ToUpper(config.WebPanel.Get().App.Version),
 		)
 	}
 	return `<div class="d-flex align-items-center gap-2 p-3 rounded-3 border bg-light opacity-75">

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -24,5 +24,5 @@ type AppConfig struct {
 }
 
 func (AppConfig) TableName() string {
-	return config.GetConfig().Database.TbWebAppConfig
+	return config.WebPanel.Get().Database.TbWebAppConfig
 }

@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/logger"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"sync"
 	"time"
 
@@ -164,8 +164,8 @@ func (ucm *UserClientManager) createNewClient(userID uint, phoneNumber string) (
 	clientLogPath := fmt.Sprintf("log/whatsapp_client_%d.log", userID)
 	dbLogPath := fmt.Sprintf("log/whatsapp_db_%d.log", userID)
 
-	dbLevelStr := config.GetConfig().Whatsmeow.WhatsmeowDBLogLevel
-	clientLevelStr := config.GetConfig().Whatsmeow.WhatsmeowClientLogLevel
+	dbLevelStr := config.WebPanel.Get().Whatsmeow.WhatsmeowDBLogLevel
+	clientLevelStr := config.WebPanel.Get().Whatsmeow.WhatsmeowClientLogLevel
 
 	dbLevel := logger.ParseWhatsmeowLogLevel(dbLevelStr)
 	clientLevel := logger.ParseWhatsmeowLogLevel(clientLevelStr)
@@ -177,7 +177,7 @@ func (ucm *UserClientManager) createNewClient(userID uint, phoneNumber string) (
 	containerPath := fmt.Sprintf("whatsmeow/whatsapp_user_%d.db", userID)
 	container, err := sqlstore.New(
 		context.Background(),
-		config.GetConfig().Whatsmeow.SqlDriver,
+		config.WebPanel.Get().Whatsmeow.SqlDriver,
 		fmt.Sprintf("file:%s?_foreign_keys=on", containerPath),
 		dbLog,
 	)

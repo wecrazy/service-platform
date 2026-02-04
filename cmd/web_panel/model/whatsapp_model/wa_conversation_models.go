@@ -1,8 +1,8 @@
 package whatsappmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -164,25 +164,25 @@ type WAMediaFile struct {
 
 // Table name methods
 func (WAConversation) TableName() string {
-	return config.GetConfig().Whatsmeow.WhatsappModel.TBConversation
+	return config.WebPanel.Get().Whatsmeow.WhatsappModel.TBConversation
 }
 
 func (WAChatMessage) TableName() string {
-	return config.GetConfig().Whatsmeow.WhatsappModel.TBChatMessage
+	return config.WebPanel.Get().Whatsmeow.WhatsappModel.TBChatMessage
 }
 
 func (WAGroupParticipant) TableName() string {
-	return config.GetConfig().Whatsmeow.WhatsappModel.TBGroupParticipant
+	return config.WebPanel.Get().Whatsmeow.WhatsappModel.TBGroupParticipant
 }
 
 func (WAContactInfo) TableName() string {
-	return config.GetConfig().Whatsmeow.WhatsappModel.TBContactInfo
+	return config.WebPanel.Get().Whatsmeow.WhatsappModel.TBContactInfo
 }
 
 func (WAMessageDeliveryStatus) TableName() string {
-	return config.GetConfig().Whatsmeow.WhatsappModel.TBMessageDeliveryStatus
+	return config.WebPanel.Get().Whatsmeow.WhatsappModel.TBMessageDeliveryStatus
 }
 
 func (WAMediaFile) TableName() string {
-	return config.GetConfig().Whatsmeow.WhatsappModel.TBMediaFile
+	return config.WebPanel.Get().Whatsmeow.WhatsappModel.TBMediaFile
 }

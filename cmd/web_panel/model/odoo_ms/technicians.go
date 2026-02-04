@@ -1,7 +1,7 @@
 package odooms
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/datatypes"
@@ -46,5 +46,5 @@ type ODOOMSTechnicianData struct {
 }
 
 func (ODOOMSTechnicianData) TableName() string {
-	return config.GetConfig().Database.TbODOOMSDataTech
+	return config.WebPanel.Get().Database.TbODOOMSDataTech
 }

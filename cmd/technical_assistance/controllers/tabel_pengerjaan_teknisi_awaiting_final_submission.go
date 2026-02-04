@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"os"
 	"reflect"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model"
 	"service-platform/cmd/technical_assistance/model/op_model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -186,7 +186,7 @@ func TablePengerjaanTeknisiSubmission(db *gorm.DB, dbWeb *gorm.DB) gin.HandlerFu
 			return
 		}
 
-		woDetailURL := os.Getenv("WO_DETAIL_URL")
+		woDetailURL := config.TechnicalAssistance.Get().WO_DETAIL_URL
 
 		var data []gin.H
 		for _, dbData := range Teknisis {

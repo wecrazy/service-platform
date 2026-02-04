@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 	"os"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -35,7 +35,7 @@ func GetSystemLogFiles(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Open the folder
-		dir, err := os.Open(config.GetConfig().App.LogDir)
+		dir, err := os.Open(config.WebPanel.Get().App.LogDir)
 		if err != nil {
 			logrus.Fatal(err)
 			c.JSON(http.StatusOK, gin.H{

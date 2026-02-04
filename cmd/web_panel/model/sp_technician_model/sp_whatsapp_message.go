@@ -1,7 +1,7 @@
 package sptechnicianmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -42,5 +42,5 @@ type SPWhatsAppMessage struct {
 }
 
 func (SPWhatsAppMessage) TableName() string {
-	return config.GetConfig().SPTechnician.TBSPWhatsappMsg
+	return config.WebPanel.Get().SPTechnician.TBSPWhatsappMsg
 }

@@ -2,10 +2,10 @@ package tests
 
 import (
 	"fmt"
+	"service-platform/cmd/web_panel/fun"
+	"service-platform/internal/config"
 	"strings"
 	"testing"
-	"service-platform/cmd/web_panel/config"
-	"service-platform/cmd/web_panel/fun"
 )
 
 // go test -v -timeout 60m ./tests/sendEmail_test.go
@@ -118,7 +118,7 @@ func TestSendToYahooMail(t *testing.T) {
 		</mj-body>
 		`,
 			strings.ToUpper(data.Name),
-			config.GetConfig().Default.PT,
+			config.WebPanel.Get().Default.PT,
 			"085123456789",
 		))
 		sb.WriteString("</mjml>")
@@ -331,7 +331,7 @@ func TestSendToYahooMail(t *testing.T) {
 // 			</mj-section>
 
 // 		</mj-body>
-// 		`, strings.ToUpper(data.Name), purpose, url, strings.ToLower(data.Email), config.GetConfig().Default.PT, "085123456789"))
+// 		`, strings.ToUpper(data.Name), purpose, url, strings.ToLower(data.Email), config.WebPanel.Get().Default.PT, "085123456789"))
 // 		sb.WriteString("</mjml>")
 
 // 		mjmlTemplate := sb.String()

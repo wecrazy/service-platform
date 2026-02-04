@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"github.com/dchest/captcha"
@@ -20,9 +20,9 @@ func GetCaptchaImage() gin.HandlerFunc {
 			Value:    captchaID,
 			Expires:  expiration,
 			Path:     "/",
-			Domain:   config.GetConfig().App.CookieLoginDomain,
+			Domain:   config.WebPanel.Get().App.CookieLoginDomain,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   config.GetConfig().App.CookieLoginSecure,
+			Secure:   config.WebPanel.Get().App.CookieLoginSecure,
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, captchaID_Cookie)

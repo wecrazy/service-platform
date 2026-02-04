@@ -11,6 +11,7 @@ import (
 	"service-platform/cmd/technical_assistance/model"
 	"service-platform/cmd/technical_assistance/model/cc_model"
 	"service-platform/cmd/technical_assistance/model/op_model"
+	"service-platform/internal/config"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -19,8 +20,8 @@ import (
 )
 
 func StaticFile(router *gin.Engine) {
-	staticPath := os.Getenv("APP_STATIC_DIR")
-	publishedDir := os.Getenv("APP_PUBLISHED_DIR")
+	staticPath := config.TechnicalAssistance.Get().APP_STATIC_DIR
+	publishedDir := config.TechnicalAssistance.Get().APP_PUBLISHED_DIR
 
 	// Ensure the static path is absolute
 	staticPath, err := filepath.Abs(staticPath)

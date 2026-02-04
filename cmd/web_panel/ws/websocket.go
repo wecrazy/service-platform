@@ -3,8 +3,8 @@ package ws
 import (
 	"fmt"
 	"net/http"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"sync"
@@ -108,7 +108,7 @@ func CloseWebsocketConnection(clientID string) {
 }
 
 func checkForReconnection(clientID string, db *gorm.DB) {
-	disconectionTimeStr := config.GetConfig().App.MaxDisconnectionTime // Parse the disconection time as an integer
+	disconectionTimeStr := config.WebPanel.Get().App.MaxDisconnectionTime // Parse the disconection time as an integer
 	disconectionExpiredSeconds, err := strconv.Atoi(disconectionTimeStr)
 	if err != nil {
 		disconectionExpiredSeconds = 30

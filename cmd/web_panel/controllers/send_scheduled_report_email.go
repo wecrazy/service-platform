@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	reportmodel "service-platform/cmd/web_panel/model/report_model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -55,7 +55,7 @@ func getReportEmailConfig(reportID string) ReportEmailConfig {
 	case "MTI_Report_VTR":
 		var sb strings.Builder
 
-		loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		if err != nil {
 			logrus.Errorf("Failed to load location: %v", err)
 			loc = time.UTC // Fallback to UTC if location loading fails
@@ -102,22 +102,22 @@ func getReportEmailConfig(reportID string) ReportEmailConfig {
 			</mj-column>
 			</mj-section>
 		</mj-body>
-		</mjml>`, config.GetConfig().Default.PT))
+		</mjml>`, config.WebPanel.Get().Default.PT))
 
 		// Set this to your email body
 		body := sb.String()
 
 		return ReportEmailConfig{
 			Subject: "MTI VTR Report - " + time.Now().Format("2006-01-02"),
-			To:      config.GetConfig().Report.MTI.VTR.To,
-			CC:      config.GetConfig().Report.MTI.VTR.Cc,
-			BCC:     config.GetConfig().Report.MTI.VTR.Bcc,
+			To:      config.WebPanel.Get().Report.MTI.VTR.To,
+			CC:      config.WebPanel.Get().Report.MTI.VTR.Cc,
+			BCC:     config.WebPanel.Get().Report.MTI.VTR.Bcc,
 			Body:    body,
 		}
 	case "MTI_Report_Penarikan":
 		var sb strings.Builder
 
-		loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		if err != nil {
 			logrus.Errorf("Failed to load location: %v", err)
 			loc = time.UTC // Fallback to UTC if location loading fails
@@ -164,22 +164,22 @@ func getReportEmailConfig(reportID string) ReportEmailConfig {
 			</mj-column>
 			</mj-section>
 		</mj-body>
-		</mjml>`, config.GetConfig().Default.PT))
+		</mjml>`, config.WebPanel.Get().Default.PT))
 
 		// Set this to your email body
 		body := sb.String()
 
 		return ReportEmailConfig{
 			Subject: "MTI Penarikan Report - " + time.Now().Format("2006-01-02"),
-			To:      config.GetConfig().Report.MTI.Penarikan.To,
-			CC:      config.GetConfig().Report.MTI.Penarikan.Cc,
-			BCC:     config.GetConfig().Report.MTI.Penarikan.Bcc,
+			To:      config.WebPanel.Get().Report.MTI.Penarikan.To,
+			CC:      config.WebPanel.Get().Report.MTI.Penarikan.Cc,
+			BCC:     config.WebPanel.Get().Report.MTI.Penarikan.Bcc,
 			Body:    body,
 		}
 	case "MTI_Report_Pemasangan":
 		var sb strings.Builder
 
-		loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		if err != nil {
 			logrus.Errorf("Failed to load location: %v", err)
 			loc = time.UTC // Fallback to UTC if location loading fails
@@ -226,16 +226,16 @@ func getReportEmailConfig(reportID string) ReportEmailConfig {
 			</mj-column>
 			</mj-section>
 		</mj-body>
-		</mjml>`, config.GetConfig().Default.PT))
+		</mjml>`, config.WebPanel.Get().Default.PT))
 
 		// Set this to your email body
 		body := sb.String()
 
 		return ReportEmailConfig{
 			Subject: "MTI Pemasangan Report - " + time.Now().Format("2006-01-02"),
-			To:      config.GetConfig().Report.MTI.Pemasangan.To,
-			CC:      config.GetConfig().Report.MTI.Pemasangan.Cc,
-			BCC:     config.GetConfig().Report.MTI.Pemasangan.Bcc,
+			To:      config.WebPanel.Get().Report.MTI.Pemasangan.To,
+			CC:      config.WebPanel.Get().Report.MTI.Pemasangan.Cc,
+			BCC:     config.WebPanel.Get().Report.MTI.Pemasangan.Bcc,
 			Body:    body,
 		}
 	default:

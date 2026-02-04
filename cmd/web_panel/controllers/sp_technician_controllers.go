@@ -9,10 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	sptechnicianmodel "service-platform/cmd/web_panel/model/sp_technician_model"
+	"service-platform/internal/config"
 	"sort"
 	"strings"
 	"sync"
@@ -90,7 +90,7 @@ type SPInfoForSPL struct {
 
 // updateTechnicianLastVisitFromBatch updates technician last visit times using data from the current batch
 func updateTechnicianLastVisitFromBatch(listOfData []OdooTaskDataRequestItem) error {
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
 	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, loc)
@@ -133,7 +133,7 @@ func updateTechnicianLastVisitFromBatch(listOfData []OdooTaskDataRequestItem) er
 
 // updateTechnicianFirstUploadFromBatch updates technician first upload times using the earliest timesheetlaststop from the batch
 func updateTechnicianFirstUploadFromBatch(listOfData []OdooTaskDataRequestItem) error {
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
 	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, loc)
@@ -176,7 +176,7 @@ func updateTechnicianFirstUploadFromBatch(listOfData []OdooTaskDataRequestItem) 
 
 // clearOldTechnicianData removes old technician data for the current day to avoid duplicates
 func clearOldTechnicianData() error {
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
@@ -336,7 +336,7 @@ func GetDataTechnicianODOOMS() error {
 		"order":  order,
 	}
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -421,8 +421,8 @@ func GetDataTechnicianODOOMS() error {
 		}
 
 		var phoneNumberUsed string
-		if config.GetConfig().SPTechnician.ActiveDebug {
-			phoneNumberUsed = config.GetConfig().SPTechnician.PhoneNumberUsedForTest
+		if config.WebPanel.Get().SPTechnician.ActiveDebug {
+			phoneNumberUsed = config.WebPanel.Get().SPTechnician.PhoneNumberUsedForTest
 		} else {
 			sanitizedPhone, err := fun.SanitizePhoneNumber(emp.NoTelp.String)
 			if err != nil {
@@ -541,7 +541,7 @@ func GetDataTechnicianODOOMS() error {
 // 			"order":  order,
 // 		}
 // 		payload := map[string]interface{}{
-// 			"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+// 			"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 // 			"params":  odooParams,
 // 		}
 // 		payloadBytes, err := json.Marshal(payload)
@@ -589,7 +589,7 @@ func GetDataTechnicianODOOMS() error {
 // 			"order":  order,
 // 		}
 // 		payload := map[string]interface{}{
-// 			"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+// 			"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 // 			"params":  odooParams,
 // 		}
 // 		payloadBytes, err := json.Marshal(payload)
@@ -646,7 +646,7 @@ func getBatchLoginAndDownloadTimes(loginIDs, downloadIDs []float64) (map[float64
 			"order":  order,
 		}
 		payload := map[string]interface{}{
-			"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+			"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 			"params":  odooParams,
 		}
 		payloadBytes, err := json.Marshal(payload)
@@ -691,7 +691,7 @@ func getBatchLoginAndDownloadTimes(loginIDs, downloadIDs []float64) (map[float64
 			"order":  order,
 		}
 		payload := map[string]interface{}{
-			"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+			"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 			"params":  odooParams,
 		}
 		payloadBytes, err := json.Marshal(payload)
@@ -752,7 +752,7 @@ func getBatchTechnicianLocations(locationIDs []float64) (map[int]TechnicianLocat
 	}
 
 	payload := map[string]any{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -807,7 +807,7 @@ func CreateTechnicianLoginReport() (string, error) {
 		return "", fmt.Errorf("failed to get data technician planned for today: %v", err)
 	}
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
@@ -1128,14 +1128,14 @@ func SendTechnicianLoginReport() error {
   </mj-body>
   `,
 		time.Now().Format("2006-01-02"),
-		config.GetConfig().Default.PT,
+		config.WebPanel.Get().Default.PT,
 	))
 	sb.WriteString("</mjml>")
 
 	mjmlTemplate := sb.String()
 
-	emailTo := config.GetConfig().Report.TechnicianLogin.To
-	emailCc := config.GetConfig().Report.TechnicianLogin.Cc
+	emailTo := config.WebPanel.Get().Report.TechnicianLogin.To
+	emailCc := config.WebPanel.Get().Report.TechnicianLogin.Cc
 	subject := fmt.Sprintf("Technician Login Report - %s", time.Now().Format("2006-01-02 15:04:05"))
 
 	attachments := []fun.EmailAttachment{
@@ -1195,7 +1195,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 
 // 	dbWeb := gormdb.Databases.Web
 
-// 	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+// 	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 // 	now := time.Now().In(loc)
 // 	hour := now.Hour()
 // 	// Greeting logic (ensuring correct 24-hour format)
@@ -1255,7 +1255,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 			"in-house",
 // 		}
 
-// 		atmDedicatedTechnician := config.GetConfig().SPTechnician.ATMDedicatedTechnician
+// 		atmDedicatedTechnician := config.WebPanel.Get().SPTechnician.ATMDedicatedTechnician
 // 		if len(atmDedicatedTechnician) > 0 {
 // 			excludedTechnicians = append(excludedTechnicians, atmDedicatedTechnician...)
 // 		}
@@ -1433,7 +1433,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 				logrus.Errorf("Failed to unmarshal WOVisited for technician %s: %v", record.Technician, err)
 // 			}
 // 		}
-// 		minJoVisited := config.GetConfig().SPTechnician.MinimumJOVisited
+// 		minJoVisited := config.WebPanel.Get().SPTechnician.MinimumJOVisited
 // 		if minJoVisited <= 0 {
 // 			minJoVisited = 1 // default minimum JO visited
 // 		}
@@ -1468,10 +1468,10 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 		}
 // 		speech := htgotts.Speech{Folder: audioForSPDir, Language: voices.Indonesian, Handler: &handlers.Native{}}
 
-// 		maxResponseSPAtHour := config.GetConfig().SPTechnician.MaxResponseSPAtHour // (7 PM on the same day)
-// 		dataHRD := config.GetConfig().Default.PTHRD
+// 		maxResponseSPAtHour := config.WebPanel.Get().SPTechnician.MaxResponseSPAtHour // (7 PM on the same day)
+// 		dataHRD := config.WebPanel.Get().Default.PTHRD
 // 		var jidStrSAC string
-// 		ODOOMSSAC := config.GetConfig().ODOOMSSAC
+// 		ODOOMSSAC := config.WebPanel.Get().ODOOMSSAC
 // 		SACData, ok := ODOOMSSAC[record.SAC]
 // 		if !ok {
 // 			logrus.Warnf("No SAC data found for SAC username %s, skipping WhatsApp notification", record.SAC)
@@ -1480,7 +1480,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 			jidStrSAC = fmt.Sprintf("%s@%s", SACData.PhoneNumber, "s.whatsapp.net")
 // 		}
 // 		// ADD: sent to Mr. Oliver too if needed
-// 		// jidStrOliver := fmt.Sprintf("%s@%s", config.GetConfig().Whatsmeow.WaOliver, "s.whatsapp.net")
+// 		// jidStrOliver := fmt.Sprintf("%s@%s", config.WebPanel.Get().Whatsmeow.WaOliver, "s.whatsapp.net")
 
 // 		var spIsProcessing = false
 // 		var dataSP sptechnicianmodel.TechnicianGotSP
@@ -1558,7 +1558,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 						"$pelanggaran_karyawan":   pelanggaranID,
 // 						"$nama_teknisi":           namaTeknisi,
 // 						"$tanggal_sp_diterbitkan": tglSP1Diterbitkan,
-// 						"$personalia_name":        config.GetConfig().Default.PTHRD[1].Name, // Assuming the 2nd HRD is Personalia
+// 						"$personalia_name":        config.WebPanel.Get().Default.PTHRD[1].Name, // Assuming the 2nd HRD is Personalia
 // 						"$sac_name":               SACData.FullName,
 // 						"$sac_ttd":                SACData.TTDPath,
 // 					}
@@ -1647,7 +1647,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 						)
 
 // 						// ADD: SP send to Mr. Oliver if needed
-// 						if !config.GetConfig().SPTechnician.ActiveDebug {
+// 						if !config.WebPanel.Get().SPTechnician.ActiveDebug {
 // 							for _, hrd := range dataHRD {
 // 								var msgIDsb strings.Builder
 // 								var msgENsb strings.Builder
@@ -1837,7 +1837,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 							"$pelanggaran_karyawan":   pelanggaranID,
 // 							"$nama_teknisi":           namaTeknisi,
 // 							"$tanggal_sp_diterbitkan": tglSP2Diterbitkan,
-// 							"$personalia_name":        config.GetConfig().Default.PTHRD[1].Name,
+// 							"$personalia_name":        config.WebPanel.Get().Default.PTHRD[1].Name,
 // 							"$sac_name":               SACData.FullName,
 // 							"$sac_ttd":                SACData.TTDPath,
 // 							"$record_technician":      record.Technician,
@@ -1924,7 +1924,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 							)
 
 // 							// ADD: SP 2 send to Mr. Oliver if needed
-// 							if !config.GetConfig().SPTechnician.ActiveDebug {
+// 							if !config.WebPanel.Get().SPTechnician.ActiveDebug {
 // 								for _, hrd := range dataHRD {
 // 									var msgIDsb strings.Builder
 // 									var msgENsb strings.Builder
@@ -2140,7 +2140,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 							"$pelanggaran_karyawan":   pelanggaranID,
 // 							"$nama_teknisi":           namaTeknisi,
 // 							"$tanggal_sp_diterbitkan": tglSP3Diterbitkan,
-// 							"$personalia_name":        config.GetConfig().Default.PTHRD[1].Name,
+// 							"$personalia_name":        config.WebPanel.Get().Default.PTHRD[1].Name,
 // 							"$sac_name":               SACData.FullName,
 // 							"$sac_ttd":                SACData.TTDPath,
 // 							"$record_technician":      record.Technician,
@@ -2233,7 +2233,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 							)
 
 // 							// ADD: SP 3 send to Mr. Oliver if needed
-// 							if !config.GetConfig().SPTechnician.ActiveDebug {
+// 							if !config.WebPanel.Get().SPTechnician.ActiveDebug {
 // 								for _, hrd := range dataHRD {
 // 									var msgIDsb strings.Builder
 // 									var msgENsb strings.Builder
@@ -2444,7 +2444,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 							"$pelanggaran_karyawan":   pelanggaranSP1SPLID,
 // 							"$nama_teknisi":           namaTeknisi,
 // 							"$tanggal_sp_diterbitkan": tglSP1Diterbitkan,
-// 							"$personalia_name":        config.GetConfig().Default.PTHRD[1].Name,
+// 							"$personalia_name":        config.WebPanel.Get().Default.PTHRD[1].Name,
 // 							"$sac_name":               SACData.FullName,
 // 							"$sac_ttd":                SACData.TTDPath,
 // 							"$record_spl":             spl,
@@ -2535,7 +2535,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 							)
 
 // 							// ADD: SPL SP 1 send to Mr. Oliver if needed
-// 							if !config.GetConfig().SPTechnician.ActiveDebug {
+// 							if !config.WebPanel.Get().SPTechnician.ActiveDebug {
 // 								for _, hrd := range dataHRD {
 // 									var msgIDsb strings.Builder
 // 									var msgENsb strings.Builder
@@ -2818,7 +2818,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 								"$pelanggaran_karyawan":   pelanggaranSP2SPLID,
 // 								"$nama_teknisi":           namaTeknisi,
 // 								"$tanggal_sp_diterbitkan": tglSP2Diterbitkan,
-// 								"$personalia_name":        config.GetConfig().Default.PTHRD[1].Name,
+// 								"$personalia_name":        config.WebPanel.Get().Default.PTHRD[1].Name,
 // 								"$sac_name":               SACData.FullName,
 // 								"$sac_ttd":                SACData.TTDPath,
 // 								"$record_spl":             spl,
@@ -2901,7 +2901,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 								sendLangDocumentMessageForSPSPL(forProject, spl, jidStrSPL, idMsg, enMsg, "id", pdfSPLSP2FilePath, 2, "62"+sanitizedNOHPSPL)
 
 // 								// ADD: SPL SP 2 send to Mr. Oliver if needed
-// 								if !config.GetConfig().SPTechnician.ActiveDebug {
+// 								if !config.WebPanel.Get().SPTechnician.ActiveDebug {
 // 									for _, hrd := range dataHRD {
 // 										var msgIDsb strings.Builder
 // 										var msgENsb strings.Builder
@@ -3185,7 +3185,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 								"$pelanggaran_karyawan":   pelanggaranSP3SPLID,
 // 								"$nama_teknisi":           namaTeknisi,
 // 								"$tanggal_sp_diterbitkan": tglSP3Diterbitkan,
-// 								"$personalia_name":        config.GetConfig().Default.PTHRD[1].Name,
+// 								"$personalia_name":        config.WebPanel.Get().Default.PTHRD[1].Name,
 // 								"$sac_name":               SACData.FullName,
 // 								"$sac_ttd":                SACData.TTDPath,
 // 								"$record_spl":             spl,
@@ -3272,7 +3272,7 @@ func IncrementNomorSuratSP(db *gorm.DB, id string) (int, error) {
 // 								sendLangDocumentMessageForSPSPL(forProject, spl, jidStrSPL, idMsg, enMsg, "id", pdfSPLSP3FilePath, 3, "62"+sanitizedNOHPSPL)
 
 // 								// ADD: SPL SP 3 send to Mr. Oliver if needed
-// 								if !config.GetConfig().SPTechnician.ActiveDebug {
+// 								if !config.WebPanel.Get().SPTechnician.ActiveDebug {
 // 									for _, hrd := range dataHRD {
 // 										var msgIDsb strings.Builder
 // 										var msgENsb strings.Builder
@@ -3381,7 +3381,7 @@ func GetDataTechnicianPlannedForToday() error {
 
 	GetDataTechnicianODOOMS()
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
@@ -3393,7 +3393,7 @@ func GetDataTechnicianPlannedForToday() error {
 	endDateParam := endOfDay.Format("2006-01-02 15:04:05")
 
 	ODOOModel := "project.task"
-	excludedStages := config.GetConfig().SPTechnician.ExcludeStages
+	excludedStages := config.WebPanel.Get().SPTechnician.ExcludeStages
 
 	domain := []interface{}{
 		[]interface{}{"planned_date_begin", ">=", startDateParam},
@@ -3404,7 +3404,7 @@ func GetDataTechnicianPlannedForToday() error {
 		domain = append(domain, []interface{}{"stage_id", "!=", excludedStages})
 	}
 
-	if config.GetConfig().SPTechnician.UncheckLinkPhoto {
+	if config.WebPanel.Get().SPTechnician.UncheckLinkPhoto {
 		domain = append(domain, []interface{}{"x_link_photo", "=", false}) // // no link photo, coz sometimes its stage New but got photo, means the data already uploaded by Technician but didint feedbacked yet by TA
 	}
 
@@ -3431,7 +3431,7 @@ func GetDataTechnicianPlannedForToday() error {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -3508,7 +3508,7 @@ func GetDataTechnicianPlannedForToday() error {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -3831,10 +3831,10 @@ func GetTechnicianStockOpnameData() ([]string, map[string]*TechnicianStockOpname
 	}
 	defer getDataOfSOTechnicianMutex.Unlock()
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	timeNow := time.Now().In(loc)
 
-	startDayScheduled := config.GetConfig().StockOpname.NumberOfDaysJONotSOYet
+	startDayScheduled := config.WebPanel.Get().StockOpname.NumberOfDaysJONotSOYet
 	startOfDay := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), 0, 0, 0, 0, loc)
 	if startDayScheduled > 0 {
 		startOfDay = startOfDay.AddDate(0, 0, -startDayScheduled)
@@ -3884,7 +3884,7 @@ func GetTechnicianStockOpnameData() ([]string, map[string]*TechnicianStockOpname
 	}
 
 	payload := map[string]any{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -3959,7 +3959,7 @@ func GetTechnicianStockOpnameData() ([]string, map[string]*TechnicianStockOpname
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -4157,7 +4157,7 @@ func CheckSPTechnicianV2() error {
 	}
 
 	// Start checking SP
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	tahunSP := now.Format("2006")
@@ -4194,7 +4194,7 @@ func CheckSPTechnicianV2() error {
 		"admin",
 		"edi purwanto",
 	}
-	atmDedicatedTechnician := config.GetConfig().SPTechnician.ATMDedicatedTechnician
+	atmDedicatedTechnician := config.WebPanel.Get().SPTechnician.ATMDedicatedTechnician
 	if len(atmDedicatedTechnician) > 0 {
 		excludedTechnicians = append(excludedTechnicians, atmDedicatedTechnician...)
 	}
@@ -4320,16 +4320,16 @@ func CheckSPTechnicianV2() error {
 	sendUsing := "telegram" // whatsapp | email | telegram
 	// Changed from whatsapp to telegram for SP delivery
 	forProject := "ODOO MS" // Mark all technicians is on ODOO Manage Service
-	minJOVisited := config.GetConfig().SPTechnician.MinimumJOVisited
+	minJOVisited := config.WebPanel.Get().SPTechnician.MinimumJOVisited
 	if minJOVisited <= 0 {
 		minJOVisited = 1
 	}
-	maxResponseSPAtHour := config.GetConfig().SPTechnician.MaxResponseSPAtHour
+	maxResponseSPAtHour := config.WebPanel.Get().SPTechnician.MaxResponseSPAtHour
 	if maxResponseSPAtHour <= 0 {
 		maxResponseSPAtHour = 19
 	}
 
-	dataHRD := config.GetConfig().Default.PTHRD
+	dataHRD := config.WebPanel.Get().Default.PTHRD
 	if len(dataHRD) == 0 {
 		return errors.New("no data found for HRD")
 	}
@@ -4341,7 +4341,7 @@ func CheckSPTechnicianV2() error {
 		return errors.New("data for HRD is incomplete")
 	}
 
-	ODOOMSSAC := config.GetConfig().ODOOMSSAC
+	ODOOMSSAC := config.WebPanel.Get().ODOOMSSAC
 	if len(ODOOMSSAC) == 0 {
 		return errors.New("no data found for SAC ODOO Manage Service")
 	}
@@ -5062,7 +5062,7 @@ func CheckSPTechnicianV2() error {
 		msgID := sb.String()
 		formattedMsgID := strings.ReplaceAll(msgID, "\n", "<br>")
 		if sendUsing == "email" {
-			sendToList := config.GetConfig().StockOpname.SOReportSendToEmail
+			sendToList := config.WebPanel.Get().StockOpname.SOReportSendToEmail
 			if len(sendToList) == 0 {
 				logrus.Error("send to list for stock opname report email is empty, cannot send the report")
 			} else {
@@ -5102,7 +5102,7 @@ func CheckSPTechnicianV2() error {
 			// 2. Call SendSOReportViaTelegram() with Excel file
 			// 3. Track in separate so_telegram_messages table
 		} else {
-			sendToList := config.GetConfig().StockOpname.SOReportSendTo
+			sendToList := config.WebPanel.Get().StockOpname.SOReportSendTo
 			if len(sendToList) == 0 {
 				logrus.Error("send to list for stock opname report is empty, cannot send the report")
 			} else {
@@ -5142,7 +5142,7 @@ func CheckSPTechnicianV2() error {
 	/*
 		Send SP to WhatsApp or Email (for Debug)
 	*/
-	sendUsingEmail := config.GetConfig().SPTechnician.EmailUsedForTest
+	sendUsingEmail := config.WebPanel.Get().SPTechnician.EmailUsedForTest
 
 	batchSize := 50
 	timeSleepStartDuration := 20
@@ -5317,7 +5317,7 @@ func CheckSPTechnicianV2() error {
 					sbID.WriteString(fmt.Sprintf("3. %s\n\n", spTechnician.PelanggaranSP3))
 					sbID.WriteString(fmt.Sprintf("Surat Peringatan Ketiga (SP-3) ini merupakan peringatan terakhir yang sekaligus menjadi dasar bagi Perusahaan terhadap Sdr. %s untuk meminta HRD melakukan tindak-lanjut sesuai peraturan karena telah berulang kali melakukan pelanggaran yang merugikan Perusahaan.\n\n", techName))
 					sbID.WriteString(fmt.Sprintf("Demikian Surat Peringatan Ketiga terakhir ini disampaikan agar selanjutnya dapat menghubungi pihak HRD untuk melakukan klarifikasi lebih lanjut. Jika dalam jangka waktu 2 (dua) hari kerja dari SP-3 diterbitkan, Sdr. %s tidak melakukan sanggahan, maka dianggap Sdr. %s Menyetujui penerbitan SP-3 ini dan Perusahaan berhak menerbitkan Surat Pemutusan Hubungan Kerja (S-PHK).\n\n", techName, techName))
-					sbID.WriteString(fmt.Sprintf("Untuk klarifikasi lebih lanjut, hubungi *%s* di +%s\n\n~ (HRD *%s*)", hrdPersonaliaName, hrdPhoneNumber, config.GetConfig().Default.PT))
+					sbID.WriteString(fmt.Sprintf("Untuk klarifikasi lebih lanjut, hubungi *%s* di +%s\n\n~ (HRD *%s*)", hrdPersonaliaName, hrdPhoneNumber, config.WebPanel.Get().Default.PT))
 				default:
 					logrus.Warnf("cannot process of sp : %d for technician %s", spNumber, technician)
 					continue
@@ -5347,7 +5347,7 @@ func CheckSPTechnicianV2() error {
 				})
 
 				// Send to HRD
-				dataHRD := config.GetConfig().Default.PTHRD
+				dataHRD := config.WebPanel.Get().Default.PTHRD
 				for _, hrd := range dataHRD {
 					if hrd.Name == "" || hrd.PhoneNumber == "" {
 						continue // Skip if no name or phone
@@ -5633,7 +5633,7 @@ func CheckSPTechnicianV2() error {
 					sbID.WriteString(fmt.Sprintf("3. %s\n\n", spSPL.PelanggaranSP3))
 					sbID.WriteString(fmt.Sprintf("Surat Peringatan Ketiga (SP-3) ini merupakan peringatan terakhir yang sekaligus menjadi dasar bagi Perusahaan terhadap Sdr. %s untuk meminta HRD melakukan tindak-lanjut sesuai peraturan karena telah berulang kali melakukan pelanggaran yang merugikan Perusahaan.\n\n", splName))
 					sbID.WriteString(fmt.Sprintf("Demikian Surat Peringatan Ketiga terakhir ini disampaikan agar selanjutnya dapat menghubungi pihak HRD untuk melakukan klarifikasi lebih lanjut. Jika dalam jangka waktu 2 (dua) hari kerja dari SP-3 diterbitkan, Sdr. %s tidak melakukan sanggahan, maka dianggap Sdr. %s Menyetujui penerbitan SP-3 ini dan Perusahaan berhak menerbitkan Surat Pemutusan Hubungan Kerja (S-PHK).\n\n", splName, splName))
-					sbID.WriteString(fmt.Sprintf("Untuk klarifikasi lebih lanjut, hubungi *%s* di +%s\n\n~ (HRD *%s*)", hrdPersonaliaName, hrdPhoneNumber, config.GetConfig().Default.PT))
+					sbID.WriteString(fmt.Sprintf("Untuk klarifikasi lebih lanjut, hubungi *%s* di +%s\n\n~ (HRD *%s*)", hrdPersonaliaName, hrdPhoneNumber, config.WebPanel.Get().Default.PT))
 
 				default:
 					logrus.Warnf("cannot process of sp : %d for spl %s", spNumber, spl)
@@ -5661,7 +5661,7 @@ func CheckSPTechnicianV2() error {
 				})
 
 				// Send to HRD
-				dataHRD := config.GetConfig().Default.PTHRD
+				dataHRD := config.WebPanel.Get().Default.PTHRD
 				for _, hrd := range dataHRD {
 					if hrd.Name == "" || hrd.PhoneNumber == "" {
 						continue // Skip if no name or phone
@@ -5902,7 +5902,7 @@ func CheckSPTechnicianV2() error {
 					sbID.WriteString(fmt.Sprintf("3. %s\n\n", spSAC.PelanggaranSP3))
 					sbID.WriteString(fmt.Sprintf("Surat Peringatan Ketiga (SP-3) ini merupakan peringatan terakhir yang sekaligus menjadi dasar bagi Perusahaan terhadap Sdr. %s untuk meminta HRD melakukan tindak-lanjut sesuai peraturan karena telah berulang kali melakukan pelanggaran yang merugikan Perusahaan.\n\n", sacName))
 					sbID.WriteString(fmt.Sprintf("Demikian Surat Peringatan Ketiga terakhir ini disampaikan agar selanjutnya dapat menghubungi pihak HRD untuk melakukan klarifikasi lebih lanjut. Jika dalam jangka waktu 2 (dua) hari kerja dari SP-3 diterbitkan, Sdr. %s tidak melakukan sanggahan, maka dianggap Sdr. %s Menyetujui penerbitan SP-3 ini dan Perusahaan berhak menerbitkan Surat Pemutusan Hubungan Kerja (S-PHK).\n\n", sacName, sacName))
-					sbID.WriteString(fmt.Sprintf("Untuk klarifikasi lebih lanjut, hubungi *%s* di +%s\n\n~ (HRD *%s*)", hrdPersonaliaName, hrdPhoneNumber, config.GetConfig().Default.PT))
+					sbID.WriteString(fmt.Sprintf("Untuk klarifikasi lebih lanjut, hubungi *%s* di +%s\n\n~ (HRD *%s*)", hrdPersonaliaName, hrdPhoneNumber, config.WebPanel.Get().Default.PT))
 				default:
 					logrus.Warnf("cannot process of sp : %d for sac %s", spNumber, sac)
 					continue
@@ -5928,7 +5928,7 @@ func CheckSPTechnicianV2() error {
 				})
 
 				// Send to HRD
-				dataHRD := config.GetConfig().Default.PTHRD
+				dataHRD := config.WebPanel.Get().Default.PTHRD
 				for _, hrd := range dataHRD {
 					if hrd.Name == "" || hrd.PhoneNumber == "" {
 						continue // Skip if no name or phone

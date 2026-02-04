@@ -21,7 +21,7 @@ Telegram Users
 
 ### 1. Config Files
 
-**Location:** `/home/user/server/service-platform/cmd/web_panel/config/`
+**Location:** `/home/user/server/service-platform/internal/config/`
 
 Added to both `conf.dev.yaml` and `conf.prod.yaml`:
 
@@ -35,7 +35,7 @@ TELEGRAM_SERVICE:
 
 ### 2. Config Struct
 
-**File:** `service-platform/cmd/web_panel/config/config.go`
+**File:** `service-platform/internal/config/config.go`
 
 ```go
 TelegramService struct {
@@ -55,7 +55,7 @@ Add this to `service-platform/cmd/web_panel/main.go` after database initializati
 ```go
 import (
     "service-platform/cmd/web_panel/controllers"
-    "service-platform/cmd/web_panel/config"
+    "service-platform/internal/config"
     // ... other imports
 )
 
@@ -66,7 +66,7 @@ func main() {
     gormdb.InitDB()
 
     // Initialize Telegram gRPC connection
-    cfg := config.GetConfig()
+    cfg := config.WebPanel.Get()
     if err := controllers.InitTelegramConnection(
         cfg.TelegramService.GRPCHost,
         cfg.TelegramService.GRPCPort,

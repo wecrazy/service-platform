@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"os"
 	"path/filepath"
+	"service-platform/internal/config"
 	"sync"
 )
 
@@ -28,7 +28,7 @@ func loadTemplates() (*template.Template, error) {
 	var err error
 
 	// Get the absolute path of the static directory
-	staticPath = os.Getenv("APP_STATIC_DIR")
+	staticPath = config.TechnicalAssistance.Get().APP_STATIC_DIR
 	staticPath, err = filepath.Abs(staticPath)
 	if err != nil {
 		fmt.Println("Error getting absolute path:", err)

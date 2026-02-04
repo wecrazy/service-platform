@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -41,5 +41,5 @@ type TicketHommyPayCC struct {
 }
 
 func (TicketHommyPayCC) TableName() string {
-	return config.GetConfig().Database.TbTicketHommyPayCC
+	return config.WebPanel.Get().Database.TbTicketHommyPayCC
 }

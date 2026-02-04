@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
 	"service-platform/cmd/web_panel/webguibuilder"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 
@@ -99,12 +99,12 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			// logrus.Infof("Using role-specific app config for role %d: %s", admin.Role, appConfig.AppName)
 		} else {
 			// Fallback to default config
-			appName = config.GetConfig().App.Name
-			appLogo = config.GetConfig().App.Logo
-			appVersion = config.GetConfig().App.Version
-			appVersionNo = strconv.Itoa(config.GetConfig().App.VersionNo)
-			appVersionCode = config.GetConfig().App.VersionCode
-			appVersionName = config.GetConfig().App.VersionName
+			appName = config.WebPanel.Get().App.Name
+			appLogo = config.WebPanel.Get().App.Logo
+			appVersion = config.WebPanel.Get().App.Version
+			appVersionNo = strconv.Itoa(config.WebPanel.Get().App.VersionNo)
+			appVersionCode = config.WebPanel.Get().App.VersionCode
+			appVersionName = config.WebPanel.Get().App.VersionName
 			// logrus.Infof("Using default app config for role %d (no specific config found)", admin.Role)
 		}
 
@@ -166,8 +166,8 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			"TABLE_APP_CONFIGURATION": webguibuilder.TABLE_APP_CONFIGURATION(admin.Session, redisDB),
 
 			/* ODOO Manage Service */
-			"UPLOADED_TIMEOUT_SECONDS":        config.GetConfig().UploadedExcelForODOOMS.Timeout,
-			"UPLOADED_MAX_FILE_SIZE_MB":       config.GetConfig().UploadedExcelForODOOMS.MaxFileSize,
+			"UPLOADED_TIMEOUT_SECONDS":        config.WebPanel.Get().UploadedExcelForODOOMS.Timeout,
+			"UPLOADED_MAX_FILE_SIZE_MB":       config.WebPanel.Get().UploadedExcelForODOOMS.MaxFileSize,
 			"UPDATE_TICKET_ODOO_MS_URL":       fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+admin.Session, redisDB) + "/tab-odoo-ms-upload-excel/upload",
 			"UPLOAD_NEW_TICKET_ODOO_MS_URL":   fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+admin.Session, redisDB) + "/tab-odoo-ms-upload-excel/upload_new_ticket",
 			"UPLOAD_HISTORY_URL":              fun.GLOBAL_URL + "web/" + fun.GetRedis("web:"+admin.Session, redisDB) + "/tab-odoo-ms-upload-excel/history/table",

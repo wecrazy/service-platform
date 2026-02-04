@@ -12,11 +12,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	reportmodel "service-platform/cmd/web_panel/model/report_model"
 	tamodel "service-platform/cmd/web_panel/model/ta_model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"time"
@@ -95,7 +95,7 @@ func ReportTA(v *events.Message, userLang string) {
 	idText, enText, excelFilePath := GetFileReportTA(userLang)
 	if excelFilePath != "" {
 		sendLangMessageWithStanza(v, stanzaID, originalSenderJID, idText, enText, userLang)
-		mentions := config.GetConfig().TechnicalAssistanceData.ReportTAMentions
+		mentions := config.WebPanel.Get().TechnicalAssistanceData.ReportTAMentions
 
 		excelFileCaption := "Report TA"
 		SendExcelFileWithStanza(v, stanzaID, originalSenderJID, excelFilePath, excelFileCaption, mentions, userLang)
@@ -129,7 +129,7 @@ func ReportTA(v *events.Message, userLang string) {
 	idText, enText, excelFilePath = GetFileReportTAFeedbackedAwaitingNextAction(userLang)
 	if excelFilePath != "" {
 		sendLangMessageWithStanza(v, stanzaID, originalSenderJID, idText, enText, userLang)
-		mentions := config.GetConfig().TechnicalAssistanceData.ReportTAMentions
+		mentions := config.WebPanel.Get().TechnicalAssistanceData.ReportTAMentions
 
 		excelFileCaption := "Report TA Feedbacked, awaiting next action"
 		SendExcelFileWithStanza(v, stanzaID, originalSenderJID, excelFilePath, excelFileCaption, mentions, userLang)
@@ -197,10 +197,10 @@ func ReportTA(v *events.Message, userLang string) {
 }
 
 func ShowTAUsersOnline(userLang string) (string, string) {
-	loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	if err != nil {
-		id := fmt.Sprintf("⚠ Gagal memuat zona waktu %s.", config.GetConfig().Default.Timezone)
-		en := fmt.Sprintf("⚠ Failed to load zone %s.", config.GetConfig().Default.Timezone)
+		id := fmt.Sprintf("⚠ Gagal memuat zona waktu %s.", config.WebPanel.Get().Default.Timezone)
+		en := fmt.Sprintf("⚠ Failed to load zone %s.", config.WebPanel.Get().Default.Timezone)
 		return id, en
 	}
 
@@ -241,10 +241,10 @@ func ShowTAUsersOnline(userLang string) (string, string) {
 }
 
 func ShowListLeftDataTA(userLang string) (string, string) {
-	loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	if err != nil {
-		id := fmt.Sprintf("⚠ Gagal memuat zona waktu %s.", config.GetConfig().Default.Timezone)
-		en := fmt.Sprintf("⚠ Failed to load zone %s.", config.GetConfig().Default.Timezone)
+		id := fmt.Sprintf("⚠ Gagal memuat zona waktu %s.", config.WebPanel.Get().Default.Timezone)
+		en := fmt.Sprintf("⚠ Failed to load zone %s.", config.WebPanel.Get().Default.Timezone)
 		return id, en
 	}
 
@@ -518,10 +518,10 @@ func ShowListLeftDataTA(userLang string) (string, string) {
 }
 
 func ShowListLeftDataFeedbackYetButNotResponse(userLang string) (string, string) {
-	loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	if err != nil {
-		id := fmt.Sprintf("⚠ Gagal memuat zona waktu %s.", config.GetConfig().Default.Timezone)
-		en := fmt.Sprintf("⚠ Failed to load zone %s.", config.GetConfig().Default.Timezone)
+		id := fmt.Sprintf("⚠ Gagal memuat zona waktu %s.", config.WebPanel.Get().Default.Timezone)
+		en := fmt.Sprintf("⚠ Failed to load zone %s.", config.WebPanel.Get().Default.Timezone)
 		return id, en
 	}
 
@@ -671,7 +671,7 @@ func GetFileReportTA(userLang string) (idText string, enText string, excelFilePa
 	}
 
 	// Step 3: Download the report with timeout
-	taReportURL := config.GetConfig().TechnicalAssistanceData.PublicURLReportTA
+	taReportURL := config.WebPanel.Get().TechnicalAssistanceData.PublicURLReportTA
 
 	// Create HTTP client with timeout
 	client := &http.Client{
@@ -739,10 +739,10 @@ func GetFileReportTA(userLang string) (idText string, enText string, excelFilePa
 func GetFileReportTAFeedbackedAwaitingNextAction(userLang string) (idText string, enText string, excelFilePath string) {
 	taskDoing := "Generate Report TA Feedbacked Awaiting Next Action"
 
-	loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	if err != nil {
-		idText = fmt.Sprintf("⚠ Gagal memuat zona waktu %s.", config.GetConfig().Default.Timezone)
-		enText = fmt.Sprintf("⚠ Failed to load zone %s.", config.GetConfig().Default.Timezone)
+		idText = fmt.Sprintf("⚠ Gagal memuat zona waktu %s.", config.WebPanel.Get().Default.Timezone)
+		enText = fmt.Sprintf("⚠ Failed to load zone %s.", config.WebPanel.Get().Default.Timezone)
 		return
 	}
 
@@ -859,7 +859,7 @@ func GetFileReportTAFeedbackedAwaitingNextAction(userLang string) (idText string
 		"order":  order,
 	}
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -1254,7 +1254,7 @@ func GetFileReportTAFeedbackedAwaitingNextAction(userLang string) (idText string
 	}
 
 	rowIndex = 3
-	UserTA := config.GetConfig().UserTA
+	UserTA := config.WebPanel.Get().UserTA
 	if len(taActivityData) > 0 {
 		for _, record := range taActivityData {
 			for _, column := range columnsTechNeedToResolve {
@@ -1462,10 +1462,10 @@ func GetFileReportTAFeedbackedAwaitingNextAction(userLang string) (idText string
 }
 
 func GetImgPivotReportFirstSheet(excelFilePath, userLang string) (idText string, enText string, imgFilePath string) {
-	loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	if err != nil {
-		return fmt.Sprintf("⚠ Gagal memuat zona %s.", config.GetConfig().Default.Timezone),
-			fmt.Sprintf("⚠ Failed to load timezone %s.", config.GetConfig().Default.Timezone),
+		return fmt.Sprintf("⚠ Gagal memuat zona %s.", config.WebPanel.Get().Default.Timezone),
+			fmt.Sprintf("⚠ Failed to load timezone %s.", config.WebPanel.Get().Default.Timezone),
 			""
 	}
 
@@ -1489,7 +1489,7 @@ func GetImgPivotReportFirstSheet(excelFilePath, userLang string) (idText string,
 
 	imgOutput := fmt.Sprintf("%s/pivotReportFirstSheet_%s.jpg", fileReportDir, now.Format("02Jan2006_15_04_05"))
 
-	logFile, _ := os.Create(config.GetConfig().TechnicalAssistanceData.LogExportPivotDebugPath)
+	logFile, _ := os.Create(config.WebPanel.Get().TechnicalAssistanceData.LogExportPivotDebugPath)
 	defer logFile.Close()
 
 	logExportPivot := func(msg string) {
@@ -1590,7 +1590,7 @@ func GetImgPivotReportFirstSheet(excelFilePath, userLang string) (idText string,
 	magickPath, err := exec.LookPath("convert")
 	if err != nil {
 		// fallback
-		magickPath = config.GetConfig().Default.MagickFullPath
+		magickPath = config.WebPanel.Get().Default.MagickFullPath
 		if _, statErr := os.Stat(magickPath); os.IsNotExist(statErr) {
 			logExportPivot("⛔ ImageMagick not found")
 			return "⚠ ImageMagick tidak ditemukan.", "⚠ ImageMagick not found.", ""
@@ -1695,7 +1695,7 @@ func ReportTechError(v *events.Message, userLang string) {
 	idText, enText, excelFilePath := GetFileReportTechError(userLang)
 	if excelFilePath != "" {
 		sendLangMessageWithStanza(v, stanzaID, originalSenderJID, idText, enText, userLang)
-		mentions := config.GetConfig().TechnicalAssistanceData.ReportTAMentions
+		mentions := config.WebPanel.Get().TechnicalAssistanceData.ReportTAMentions
 
 		excelFileCaption := "Report Tech Error"
 		SendExcelFileWithStanza(v, stanzaID, originalSenderJID, excelFilePath, excelFileCaption, mentions, userLang)
@@ -1748,7 +1748,7 @@ func GetFileReportTechError(userLang string) (idText string, enText string, exce
 	}
 
 	// Step 3: Download the report with timeout
-	reportURL := config.GetConfig().TechnicalAssistanceData.PublicURLReportTechError
+	reportURL := config.WebPanel.Get().TechnicalAssistanceData.PublicURLReportTechError
 
 	// Create HTTP client with timeout
 	client := &http.Client{
@@ -1830,7 +1830,7 @@ func ReportCompared(v *events.Message, userLang string) {
 	idText, enText, excelFilePath := GetFileReportCompared(userLang)
 	if excelFilePath != "" {
 		sendLangMessageWithStanza(v, stanzaID, originalSenderJID, idText, enText, userLang)
-		mentions := config.GetConfig().TechnicalAssistanceData.ReportTAMentions
+		mentions := config.WebPanel.Get().TechnicalAssistanceData.ReportTAMentions
 
 		excelFileCaption := "Report Compared"
 		SendExcelFileWithStanza(v, stanzaID, originalSenderJID, excelFilePath, excelFileCaption, mentions, userLang)
@@ -1882,7 +1882,7 @@ func GetFileReportCompared(userLang string) (idText string, enText string, excel
 	}
 
 	// Step 3: Download the report with timeout
-	reportURL := config.GetConfig().TechnicalAssistanceData.PublicURLReportCompared
+	reportURL := config.WebPanel.Get().TechnicalAssistanceData.PublicURLReportCompared
 
 	// Create HTTP client with timeout
 	client := &http.Client{
@@ -1950,7 +1950,7 @@ func GetDataTaskCompared() error {
 	}
 	defer getDataTaskComparedMutex.Unlock()
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	startOfMonth := time.Date(now.Year(), now.Month()-3, 1, 0, 0, 0, 0, loc)
@@ -1961,13 +1961,13 @@ func GetDataTaskCompared() error {
 	startDateParam := startOfMonth.Format("2006-01-02 15:04:05")
 	endDateParam := endOfMonth.Format("2006-01-02 15:04:05")
 
-	if config.GetConfig().Report.Compared.ActiveDebug {
-		startDateParam = config.GetConfig().Report.Compared.StartParam
-		endDateParam = config.GetConfig().Report.Compared.EndParam
+	if config.WebPanel.Get().Report.Compared.ActiveDebug {
+		startDateParam = config.WebPanel.Get().Report.Compared.StartParam
+		endDateParam = config.WebPanel.Get().Report.Compared.EndParam
 	}
 
 	ODOOModel := "project.task"
-	excludedCompany := config.GetConfig().ApiODOO.CompanyExcluded
+	excludedCompany := config.WebPanel.Get().ApiODOO.CompanyExcluded
 	domain := []interface{}{
 		[]interface{}{"active", "=", true},
 		[]interface{}{"company_id", "!=", excludedCompany},
@@ -2023,7 +2023,7 @@ func GetDataTaskCompared() error {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -2100,7 +2100,7 @@ func GetDataTaskCompared() error {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -2342,10 +2342,10 @@ func ReportComparedGenerated(v *events.Message, userLang string) {
 	sendLangMessageWithStanza(v, stanzaID, originalSenderJID, id, en, userLang)
 
 	// Create Excel Report
-	loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	if err != nil {
-		id := fmt.Sprintf("⚠ Gagal memuat zona %s.", config.GetConfig().Default.Timezone)
-		en := fmt.Sprintf("⚠ Failed to load timezone %s.", config.GetConfig().Default.Timezone)
+		id := fmt.Sprintf("⚠ Gagal memuat zona %s.", config.WebPanel.Get().Default.Timezone)
+		en := fmt.Sprintf("⚠ Failed to load timezone %s.", config.WebPanel.Get().Default.Timezone)
 		sendLangMessageWithStanza(v, stanzaID, originalSenderJID, id, en, userLang)
 		return
 	}
@@ -2406,7 +2406,7 @@ func ReportComparedGenerated(v *events.Message, userLang string) {
 		sendLangMessageWithStanza(v, stanzaID, originalSenderJID, id, en, userLang)
 
 		// Send all Excel files
-		mentions := config.GetConfig().TechnicalAssistanceData.ReportTAMentions
+		mentions := config.WebPanel.Get().TechnicalAssistanceData.ReportTAMentions
 		SendMultipleExcelFilesReportCompared(v, stanzaID, originalSenderJID, excelFiles, mentions, userLang)
 
 		// 🧹 Cleanup: remove the Excel files after sending
@@ -2562,7 +2562,7 @@ func GenerateSingleComparedReport(report ComparedReportDataExcel, outputDir stri
 		"order":  order,
 	}
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -2965,7 +2965,7 @@ func GenerateSingleComparedReport(report ComparedReportDataExcel, outputDir stri
 				// Handle dynamic photo column links
 				if photoID, exists := photoColumnLinks[column.ColTitle]; exists {
 					// This column is a photo, set the link accordingly
-					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", config.GetConfig().TechnicalAssistanceData.DashboardTAPublicURL, record.IDTask, photoID)
+					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", config.WebPanel.Get().TechnicalAssistanceData.DashboardTAPublicURL, record.IDTask, photoID)
 					f.SetCellValue(sheetTALeftData, cell, fmt.Sprintf("View %v", column.ColTitle))
 					f.SetCellStyle(sheetTALeftData, cell, cell, style)
 					// Add hyperlink to the cell using SetCellHyperlink
@@ -2987,7 +2987,7 @@ func GenerateSingleComparedReport(report ComparedReportDataExcel, outputDir stri
 					case "WO Number":
 						if record.WoNumber != "" {
 							wo := record.WoNumber
-							link := fmt.Sprintf("%s/projectTask/detailWO?wo_number=%s", config.GetConfig().App.WebPublicURL, wo)
+							link := fmt.Sprintf("%s/projectTask/detailWO?wo_number=%s", config.WebPanel.Get().App.WebPublicURL, wo)
 							f.SetCellHyperLink(sheetTALeftData, cell, link, "External")
 							value = wo
 						}
@@ -3164,7 +3164,7 @@ func GenerateSingleComparedReport(report ComparedReportDataExcel, outputDir stri
 				// Handle dynamic photo column links
 				if photoID, exists := photoColumnLinks[column.ColTitle]; exists {
 					// This column is a photo, set the link accordingly
-					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", config.GetConfig().TechnicalAssistanceData.DashboardTAPublicURL, record.IDTask, photoID)
+					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", config.WebPanel.Get().TechnicalAssistanceData.DashboardTAPublicURL, record.IDTask, photoID)
 					f.SetCellValue(sheetTALeftData, cell, fmt.Sprintf("View %v", column.ColTitle))
 					f.SetCellStyle(sheetTALeftData, cell, cell, style)
 					// Add hyperlink to the cell using SetCellHyperlink
@@ -3186,7 +3186,7 @@ func GenerateSingleComparedReport(report ComparedReportDataExcel, outputDir stri
 					case "WO Number":
 						if record.WoNumber != "" {
 							wo := record.WoNumber
-							link := fmt.Sprintf("%s/projectTask/detailWO?wo_number=%s", config.GetConfig().App.WebPublicURL, wo)
+							link := fmt.Sprintf("%s/projectTask/detailWO?wo_number=%s", config.WebPanel.Get().App.WebPublicURL, wo)
 							f.SetCellHyperLink(sheetTALeftData, cell, link, "External")
 							value = wo
 						}

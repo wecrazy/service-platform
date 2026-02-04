@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -26,5 +26,5 @@ type TrustedClient struct {
 }
 
 func (TrustedClient) TableName() string {
-	return config.GetConfig().Database.TbTrustedClient
+	return config.WebPanel.Get().Database.TbTrustedClient
 }

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/grpc/telegram"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	sptechnicianmodel "service-platform/cmd/web_panel/model/sp_technician_model"
+	"service-platform/internal/config"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -51,7 +51,7 @@ func SendSPDocumentViaTelegram(
 	}
 
 	// Prepare document URL
-	cfg := config.GetConfig()
+	cfg := config.WebPanel.Get()
 	baseURL := cfg.App.WebPublicURL
 	if baseURL == "" {
 		baseURL = fmt.Sprintf("http://%s:%s", cfg.App.Host, cfg.App.Port)
@@ -106,7 +106,7 @@ func SendSPDocumentViaTelegram(
 		client := telegram.GetClient()
 
 		// Get request timeout from config
-		cfg := config.GetConfig()
+		cfg := config.WebPanel.Get()
 		reqTimeout := time.Duration(cfg.TelegramService.RequestTimeout) * time.Second
 		if reqTimeout == 0 {
 			reqTimeout = 30 * time.Second
@@ -156,7 +156,7 @@ func SendSPDocumentViaTelegram(
 
 // calculateWorkingDayDeadline calculates a deadline N working days from start
 func calculateWorkingDayDeadline(startTime time.Time, workingDays int) time.Time {
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	deadline := startTime.In(loc)
 
 	daysAdded := 0

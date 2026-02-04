@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
 	reportmodel "service-platform/cmd/web_panel/model/report_model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"time"
@@ -208,7 +208,7 @@ func processExcelReportPenarikanMTI(v *events.Message, user *model.WAPhoneUser, 
 	}
 
 	directories := []string{}
-	directories = append(directories, config.GetConfig().ReportMTI.ReportDir)
+	directories = append(directories, config.WebPanel.Get().ReportMTI.ReportDir)
 
 	fileReportDir, err := fun.FindValidDirectory(directories)
 	if err != nil {
@@ -651,7 +651,7 @@ func compareMTIReportPenarikanYokkeWithODOO(v *events.Message, userLang string) 
 				"order":  order,
 			}
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 			payloadBytes, err := json.Marshal(payload)
@@ -923,16 +923,16 @@ func compareMTIReportPenarikanYokkeWithODOO(v *events.Message, userLang string) 
 
 	// Set Excel document properties (author, etc.)
 	f.SetDocProps(&excelize.DocProperties{
-		Creator:        config.GetConfig().Default.PT,
+		Creator:        config.WebPanel.Get().Default.PT,
 		Title:          "MTI Withdrawal Report Comparison",
 		Description:    "Comparison report between Yokke and ODOO for data MTI Withdrawal",
-		LastModifiedBy: config.GetConfig().Default.PT + " Service Report",
+		LastModifiedBy: config.WebPanel.Get().Default.PT + " Service Report",
 		Keywords:       "MTI, Report, Withdrawal, Comparison, Yokke, ODOO",
 	})
 
 	reportName := "MTI_Report_Penarikan"
 	reportFileName := fmt.Sprintf("%s_%s.xlsx", reportName, time.Now().Format("20060102_150405"))
-	fileReportDir := filepath.Join(config.GetConfig().ReportMTI.ReportDir, time.Now().Format("2006-01-02"))
+	fileReportDir := filepath.Join(config.WebPanel.Get().ReportMTI.ReportDir, time.Now().Format("2006-01-02"))
 	if err := os.MkdirAll(fileReportDir, 0755); err != nil {
 		logrus.Errorf("%s: failed to create report directory: %v", eventToDo, err)
 		id := fmt.Sprintf("gagal membuat direktori report: %v", err)

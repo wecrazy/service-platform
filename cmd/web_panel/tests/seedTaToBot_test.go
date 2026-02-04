@@ -2,11 +2,11 @@ package tests
 
 import (
 	"encoding/json"
-	"testing"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/database"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
+	"testing"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -16,24 +16,24 @@ import (
 func TestSeedUserTAToBot(t *testing.T) {
 	config.LoadConfig()
 
-	userTA := config.GetConfig().UserTA
+	userTA := config.WebPanel.Get().UserTA
 
 	if len(userTA) == 0 {
 		t.Error("UserTA map is empty")
 		return
 	}
 
-	dbName := config.GetConfig().Database.Name
+	dbName := config.WebPanel.Get().Database.Name
 	if dbName != "db_web_panel_gl" {
 		t.Errorf("Unexpected database name: %s", dbName)
 		return
 	}
 
 	dbWeb, err := database.InitAndCheckDB(
-		config.GetConfig().Database.Username,
-		config.GetConfig().Database.Password,
-		config.GetConfig().Database.Host,
-		config.GetConfig().Database.Port,
+		config.WebPanel.Get().Database.Username,
+		config.WebPanel.Get().Database.Password,
+		config.WebPanel.Get().Database.Host,
+		config.WebPanel.Get().Database.Port,
 		dbName,
 	)
 
@@ -93,7 +93,7 @@ func TestSeedUserTAToBot(t *testing.T) {
 					AllowedTypes:  datatypes.JSON(jsonBytes),
 					AllowedToCall: false,
 					MaxDailyQuota: 250,
-					Description:   "Technical Assistant " + config.GetConfig().Default.PT,
+					Description:   "Technical Assistant " + config.WebPanel.Get().Default.PT,
 					IsBanned:      false,
 					UserType:      model.ODOOMSStaff,
 					UserOf:        model.UserOfCSNA,

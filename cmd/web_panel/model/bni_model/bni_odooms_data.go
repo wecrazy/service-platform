@@ -1,7 +1,7 @@
 package bnimodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -47,5 +47,5 @@ type BNIOdooMSData struct { // Field service / project.task data
 }
 
 func (BNIOdooMSData) TableName() string {
-	return config.GetConfig().BNI.TBDataODOOMS
+	return config.WebPanel.Get().BNI.TBDataODOOMS
 }

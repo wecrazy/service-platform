@@ -1,7 +1,7 @@
 package odooms
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -17,5 +17,5 @@ type ODOOMSJobGroups struct {
 }
 
 func (ODOOMSJobGroups) TableName() string {
-	return config.GetConfig().Database.TbODOOMSJobGroup
+	return config.WebPanel.Get().Database.TbODOOMSJobGroup
 }

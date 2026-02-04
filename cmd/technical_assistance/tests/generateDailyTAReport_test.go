@@ -3,9 +3,9 @@ package tests
 import (
 	"fmt"
 	"os"
-	"service-platform/cmd/technical_assistance/config"
 	"service-platform/cmd/technical_assistance/controllers"
 	"service-platform/cmd/technical_assistance/database"
+	"service-platform/internal/config"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -28,9 +28,8 @@ func LoadEnvFromPaths(paths []string) (string, error) {
 
 func TestGenerateDailyReportTAActivity(t *testing.T) {
 	// Load YAML config
-	if err := config.LoadConfig(); err != nil {
-		t.Fatalf("❌ Error loading .yaml config: %v", err)
-	}
+	// Initialize dynamic config manager
+	config.TechnicalAssistance.MustInit("technical_assistance")
 
 	// Load environment variables from possible .env paths
 	if _, err := LoadEnvFromPaths([]string{
@@ -42,11 +41,11 @@ func TestGenerateDailyReportTAActivity(t *testing.T) {
 
 	// Initialize database connection
 	db, err := database.InitAndCheckDB(
-		os.Getenv("MYSQL_USER_DB_KONFIRMASI_PENGERJAAN"),
-		os.Getenv("MYSQL_PASS_DB_KONFIRMASI_PENGERJAAN"),
-		os.Getenv("MYSQL_HOST_DB_KONFIRMASI_PENGERJAAN"),
-		os.Getenv("MYSQL_PORT_DB_KONFIRMASI_PENGERJAAN"),
-		os.Getenv("MYSQL_NAME_DB_KONFIRMASI_PENGERJAAN"),
+		config.TechnicalAssistance.Get().MYSQL_USER_DB_KONFIRMASI_PENGERJAAN,
+		config.TechnicalAssistance.Get().MYSQL_PASS_DB_KONFIRMASI_PENGERJAAN,
+		config.TechnicalAssistance.Get().MYSQL_HOST_DB_KONFIRMASI_PENGERJAAN,
+		config.TechnicalAssistance.Get().MYSQL_PORT_DB_KONFIRMASI_PENGERJAAN,
+		config.TechnicalAssistance.Get().MYSQL_NAME_DB_KONFIRMASI_PENGERJAAN,
 	)
 	if err != nil {
 		t.Fatalf("❌ Database setup failed: %v", err)

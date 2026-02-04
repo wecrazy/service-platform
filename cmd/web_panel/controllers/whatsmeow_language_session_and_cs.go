@@ -30,7 +30,7 @@ func SetUserLang(jid, lang string) error {
 		context.Background(),
 		"user:lang:"+jid,
 		lang,
-		// time.Duration(config.GetConfig().Whatsmeow.RedisExpiry)*time.Hour,
+		// time.Duration(config.WebPanel.Get()().Whatsmeow.RedisExpiry)*time.Hour,
 		7*24*time.Hour, // 7 days
 	).Err()
 }

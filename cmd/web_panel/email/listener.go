@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"io"
 	"regexp"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/controllers"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -134,7 +134,7 @@ func StartYahooMailListener(ctx context.Context, db *gorm.DB) {
 
 // connectAndIdle connects to the IMAP server and enters IDLE mode to listen for new emails
 func connectAndIdle(ctx context.Context, db *gorm.DB) error {
-	cfg := config.GetConfig()
+	cfg := config.WebPanel.Get()
 
 	c, err := client.DialTLS(fmt.Sprintf("%s:%d", cfg.Email.ListenerHost, cfg.Email.ListenerPort), nil)
 	if err != nil {
@@ -422,7 +422,7 @@ func handleIncomingPotentialComplaintTicket(messageID string, db *gorm.DB) {
 	}
 
 	// Create new ticket in ODOO if enabled
-	if config.GetConfig().HommyPayCCData.EmailListenerCreateNewTicketInODOO {
+	if config.WebPanel.Get().HommyPayCCData.EmailListenerCreateNewTicketInODOO {
 		// Ticket Subject e.g. HPY/dd/mm/yyyy/random // FIX: ticket subject so its not random
 		ticketSubject := fmt.Sprintf("HPY/%s/%s", time.Now().Format("02/01/2006"), fun.GenerateRandomString(30))
 

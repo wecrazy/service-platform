@@ -38,8 +38,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"service-platform/internal/config"
 	"strings"
-	"service-platform/cmd/web_panel/config"
 )
 
 type IndonesianLibur struct {
@@ -62,9 +62,9 @@ func GetLibur(hari string) (*IndonesianLibur, error) {
 	var url string
 	switch strings.ToLower(hari) {
 	case "today":
-		url = config.GetConfig().API.IndonesianPublicHoliday + "/api/today"
+		url = config.WebPanel.Get().API.IndonesianPublicHoliday + "/api/today"
 	case "tomorrow":
-		url = config.GetConfig().API.IndonesianPublicHoliday + "/api/tomorrow"
+		url = config.WebPanel.Get().API.IndonesianPublicHoliday + "/api/tomorrow"
 	default:
 		return nil, fmt.Errorf("invalid parameter: %s", hari)
 	}
@@ -93,9 +93,9 @@ func GetLibur(hari string) (*IndonesianLibur, error) {
 func GetYearHolidays(year int) ([]IndonesiaHoliday, error) {
 	var url string
 	if year == 0 {
-		url = config.GetConfig().API.IndonesianPublicHoliday + "/api"
+		url = config.WebPanel.Get().API.IndonesianPublicHoliday + "/api"
 	} else {
-		url = fmt.Sprintf("%s/api?year=%d", config.GetConfig().API.IndonesianPublicHoliday, year)
+		url = fmt.Sprintf("%s/api?year=%d", config.WebPanel.Get().API.IndonesianPublicHoliday, year)
 	}
 
 	resp, err := http.Get(url)
@@ -124,7 +124,7 @@ func GetMonthBasedHolidaysOfCurrentYear(month int) ([]IndonesiaHoliday, error) {
 		return nil, errors.New("month parameter is required")
 	}
 
-	url := fmt.Sprintf("%s/api?month=%d", config.GetConfig().API.IndonesianPublicHoliday, month)
+	url := fmt.Sprintf("%s/api?month=%d", config.WebPanel.Get().API.IndonesianPublicHoliday, month)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -152,7 +152,7 @@ func GetHolidaysBasedOnYearAndMonth(year, month int) ([]IndonesiaHoliday, error)
 		return nil, errors.New("year and month parameters are required")
 	}
 
-	url := fmt.Sprintf("%s/api?year=%d&month=%d", config.GetConfig().API.IndonesianPublicHoliday, year, month)
+	url := fmt.Sprintf("%s/api?year=%d&month=%d", config.WebPanel.Get().API.IndonesianPublicHoliday, year, month)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -180,7 +180,7 @@ func GetHolidaysBasedOnYearMonthAndDay(year, month, day int) (*IndonesianLibur, 
 		return nil, errors.New("year, month, and day parameters are required")
 	}
 
-	url := fmt.Sprintf("%s/api?year=%d&month=%d&day=%d", config.GetConfig().API.IndonesianPublicHoliday, year, month, day)
+	url := fmt.Sprintf("%s/api?year=%d&month=%d&day=%d", config.WebPanel.Get().API.IndonesianPublicHoliday, year, month, day)
 
 	resp, err := http.Get(url)
 	if err != nil {

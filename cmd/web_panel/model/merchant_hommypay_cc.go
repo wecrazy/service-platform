@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -25,5 +25,5 @@ type MerchantHommyPayCC struct {
 }
 
 func (MerchantHommyPayCC) TableName() string {
-	return config.GetConfig().Database.TbMerchant
+	return config.WebPanel.Get().Database.TbMerchant
 }

@@ -15,12 +15,12 @@ import (
 	"strings"
 	"time"
 
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
 	reportmodel "service-platform/cmd/web_panel/model/report_model"
 	sptechnicianmodel "service-platform/cmd/web_panel/model/sp_technician_model"
+	"service-platform/internal/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -30,7 +30,7 @@ import (
 
 func GetTicketODOOMSPerformanceAchivementsChart() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		importPath := config.GetConfig().App.Logo
+		importPath := config.WebPanel.Get().App.Logo
 		newLogoPath := importPath[:len(importPath)-len(filepath.Base(importPath))] + "csna.png"
 		c.HTML(http.StatusOK, "tab-ticket-performance.html", gin.H{
 			"GLOBAL_URL": fun.GLOBAL_URL,
@@ -163,7 +163,7 @@ func GetDataTicketPerformance() gin.HandlerFunc {
 			}
 		}
 
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 		// For current month (dataDate empty), use base table
 		// For specific months, use monthly tables if they exist
 		if dataDate != "" {
@@ -628,7 +628,7 @@ func GetDataTicketPerformanceCostRevenue() gin.HandlerFunc {
 			}
 		}
 
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 		// For current month (dataDate empty), use base table
 		// For specific months, use monthly tables if they exist
 		if dataDate != "" {
@@ -712,8 +712,8 @@ func GetDataTicketPerformanceCostRevenue() gin.HandlerFunc {
 			filterWhereStr = " AND " + strings.Join(filterWhere, " AND ")
 		}
 
-		defaultPriceforCost := config.GetConfig().ODOOMSParam.DefaultPrice
-		defaultPenaltyPrice := config.GetConfig().ODOOMSParam.DefaultPenalty
+		defaultPriceforCost := config.WebPanel.Get().ODOOMSParam.DefaultPrice
+		defaultPenaltyPrice := config.WebPanel.Get().ODOOMSParam.DefaultPenalty
 
 		// 1. Get all dates in selected month (or current month if not specified)
 		now := time.Now()
@@ -1042,7 +1042,7 @@ func GetDataDateRangeTicketPerformance() gin.HandlerFunc {
 		var dateRanges []string
 		dbWeb := gormdb.Databases.Web
 
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 		currentYear := time.Now().Year()
 
 		// Check tables from 2024 to current year (or extend range as needed)
@@ -1073,7 +1073,7 @@ func GetDataDateRangeTicketPerformance() gin.HandlerFunc {
 
 func GetDataSACTicketPerformance() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		sacData := config.GetConfig().ODOOMSSAC
+		sacData := config.WebPanel.Get().ODOOMSSAC
 		sacList := []string{}
 		for sac := range sacData {
 			sacList = append(sacList, sac)
@@ -1274,7 +1274,7 @@ func GetDataCompanyTicketPerformance() gin.HandlerFunc {
 		dataDate := c.Query("data_date")
 
 		var companies []string
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 
 		// For current month (dataDate empty), use base table
 		// For specific months, use monthly tables if they exist
@@ -1340,7 +1340,7 @@ func GetDataSLAStatusTicketPerformance() gin.HandlerFunc {
 		dataDate := c.Query("data_date")
 
 		var slaStatuses []string
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 
 		// For current month (dataDate empty), use base table
 		// For specific months, use monthly tables if they exist
@@ -1407,7 +1407,7 @@ func GetDataTaskTypeTicketPerformance() gin.HandlerFunc {
 		dataDate := c.Query("data_date")
 
 		var taskTypes []string
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 
 		// For current month (dataDate empty), use base table
 		// For specific months, use monthly tables if they exist
@@ -1471,7 +1471,7 @@ func GetDataTaskTypeTicketPerformance() gin.HandlerFunc {
 
 func DownloadReportMasterTicketPerformance() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 
 		reportMainDir, err := fun.FindValidDirectory([]string{
@@ -1598,7 +1598,7 @@ func DownloadReportFilteredTicketPerformance() gin.HandlerFunc {
 			}
 		}
 
-		table := config.GetConfig().Database.TbReportMonitoringTicket
+		table := config.WebPanel.Get().Database.TbReportMonitoringTicket
 		if dataDate != "" {
 			table = fmt.Sprintf("%s_%s", table, strings.ToLower(strings.ReplaceAll(dataDate, " ", "")))
 		}
@@ -2298,7 +2298,7 @@ func DownloadReportFilteredTicketPerformance() gin.HandlerFunc {
 		}
 
 		// Generate filename with current date and filter info
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		filename := fmt.Sprintf("(Filtered)Ticket_Achievements_%s.xlsx", now.Format("02Jan2006_150405"))
 
@@ -2315,7 +2315,7 @@ func DownloadReportFilteredTicketPerformance() gin.HandlerFunc {
 
 func GetLoginVisitTechnicianChart() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		importPath := config.GetConfig().App.Logo
+		importPath := config.WebPanel.Get().App.Logo
 		newLogoPath := importPath[:len(importPath)-len(filepath.Base(importPath))] + "csna.png"
 		c.HTML(http.StatusOK, "tab-login-visit-technicians.html", gin.H{
 			"GLOBAL_URL": fun.GLOBAL_URL,
@@ -2467,8 +2467,8 @@ func GetDataLoginVisitTechnician() gin.HandlerFunc {
 		}
 
 		// table variable not needed
-		tableTechSPGiven := config.GetConfig().SPTechnician.TBTechGotSP
-		tableSPLSPGiven := config.GetConfig().SPTechnician.TBSPLGotSP
+		tableTechSPGiven := config.WebPanel.Get().SPTechnician.TBTechGotSP
+		tableSPLSPGiven := config.WebPanel.Get().SPTechnician.TBSPLGotSP
 
 		var filterWhere []string
 		var filterArgs []interface{}
@@ -2655,7 +2655,7 @@ func GetDataLoginVisitTechnician() gin.HandlerFunc {
 
 func DownloadReportMasterLoginVisitTechnician() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 
 		reportMainDir, err := fun.FindValidDirectory([]string{
@@ -2939,7 +2939,7 @@ func GetListPriceSalesPayment() gin.HandlerFunc {
 
 func GetCostRevenueODOOMSChart() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		importPath := config.GetConfig().App.Logo
+		importPath := config.WebPanel.Get().App.Logo
 		newLogoPath := importPath[:len(importPath)-len(filepath.Base(importPath))] + "csna.png"
 		c.HTML(http.StatusOK, "tab-cost-revenue.html", gin.H{
 			"GLOBAL_URL": fun.GLOBAL_URL,

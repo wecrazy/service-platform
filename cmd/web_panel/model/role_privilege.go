@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -17,5 +17,5 @@ type RolePrivilege struct {
 }
 
 func (RolePrivilege) TableName() string {
-	return config.GetConfig().Database.TbRolePrivilege
+	return config.WebPanel.Get().Database.TbRolePrivilege
 }

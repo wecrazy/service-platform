@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"service-platform/cmd/technical_assistance/model/op_model"
+	"service-platform/internal/config"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -292,7 +292,7 @@ func getAdditionalDatafromEndpointKukuh(idTask string) (map[string]interface{}, 
 	}
 
 	// Make HTTP POST request
-	resp, err := http.Post(os.Getenv("ENDPOINT_KUKUH_GET_DATA"), "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(config.TechnicalAssistance.Get().ENDPOINT_KUKUH_GET_DATA, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to make HTTP request: %w", err)
 	}

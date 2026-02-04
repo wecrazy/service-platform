@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"sync"
@@ -224,7 +224,7 @@ func ProcessUploadedExcelofODOOMSMustUpdatedTicket(db *gorm.DB) {
 
 func processCustomTemplateUpdateTicketInODOOMS(rows [][]string, totalSuccess, totalFail *atomic.Int64, uploadedExcel odooms.UploadedExcelToODOOMS, loginCookie []*http.Cookie, db *gorm.DB) string {
 	var wg sync.WaitGroup
-	sem := make(chan struct{}, config.GetConfig().Default.ConcurrencyLimit)
+	sem := make(chan struct{}, config.WebPanel.Get().Default.ConcurrencyLimit)
 	logAct := make(map[int]string)
 	odooModel := "helpdesk.ticket"
 	totalRows := len(rows) - 1
@@ -417,7 +417,7 @@ func processCustomTemplateUpdateTicketInODOOMS(rows [][]string, totalSuccess, to
 				delete(odooParams, "name")
 
 				payload := map[string]interface{}{
-					"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+					"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 					"params":  odooParams,
 				}
 
@@ -578,7 +578,7 @@ func BroadcastUploadedExcelForCreateNewTicketinODOOMSProgress(uploadedExcel odoo
 
 func processCustomTemplateCreateNewTicketInODOOMS(rows [][]string, totalSuccess, totalFail *atomic.Int64, uploadedExcel odooms.UploadedExcelToODOOMS, loginCookie []*http.Cookie, db *gorm.DB) string {
 	var wg sync.WaitGroup
-	sem := make(chan struct{}, config.GetConfig().Default.ConcurrencyLimit)
+	sem := make(chan struct{}, config.WebPanel.Get().Default.ConcurrencyLimit)
 	logAct := make(map[int]string)
 	odooModel := "helpdesk.ticket"
 	totalRows := len(rows) - 1
@@ -917,7 +917,7 @@ func processCustomTemplateCreateNewTicketInODOOMS(rows [][]string, totalSuccess,
 				}
 
 				payload := map[string]interface{}{
-					"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+					"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 					"params":  odooParams,
 				}
 
@@ -3156,7 +3156,7 @@ func BroadcastUploadedTaskIDForTaskUpdateinODOOMSProgress(uploadedExcel odooms.U
 // processCustomTemplateUpdateTaskInODOOMS processes the custom template for updating tasks in ODOOMS
 func processCustomTemplateUpdateTaskInODOOMS(rows [][]string, totalSuccess, totalFail *atomic.Int64, uploadedExcel odooms.UploadedExcelToODOOMS, loginCookie []*http.Cookie, db *gorm.DB) string {
 	var wg sync.WaitGroup
-	sem := make(chan struct{}, config.GetConfig().Default.ConcurrencyLimit)
+	sem := make(chan struct{}, config.WebPanel.Get().Default.ConcurrencyLimit)
 	logAct := make(map[int]string)
 	odooModel := "project.task"
 	totalRows := len(rows) - 1
@@ -3349,7 +3349,7 @@ func processCustomTemplateUpdateTaskInODOOMS(rows [][]string, totalSuccess, tota
 				delete(odooParams, "name")
 
 				payload := map[string]interface{}{
-					"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+					"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 					"params":  odooParams,
 				}
 

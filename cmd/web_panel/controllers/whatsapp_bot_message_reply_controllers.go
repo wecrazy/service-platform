@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"path/filepath"
 	"reflect"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -240,7 +240,7 @@ func TableWhatsappBotMessageReply() gin.HandlerFunc {
 					}
 				} else if theKey == "keywords" {
 					// Pretty print keywords as a list, truncate if more than 5, show all in tooltip
-					separator := config.GetConfig().Whatsmeow.KeywordSeparator
+					separator := config.WebPanel.Get().Whatsmeow.KeywordSeparator
 					keywordStr := fieldValue.String()
 					if keywordStr != "" {
 						keywords := strings.Split(keywordStr, separator)
@@ -296,7 +296,7 @@ func TableWhatsappBotMessageReply() gin.HandlerFunc {
 					var htmlRendered string
 					switch t {
 					case model.UserOfCSNA:
-						htmlRendered = config.GetConfig().Default.PT
+						htmlRendered = config.WebPanel.Get().Default.PT
 					case model.UserOfHommyPay:
 						htmlRendered = "Hommy Pay"
 					}
@@ -322,7 +322,7 @@ func TableWhatsappBotMessageReply() gin.HandlerFunc {
 func PutDataWhatsappBotMessageReply() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		table := config.GetConfig().Database.TbWAMsgReply
+		table := config.WebPanel.Get().Database.TbWAMsgReply
 		// Check if the table exists
 		if !dbWeb.Migrator().HasTable(table) {
 			fmt.Printf("Table %s does not exist.\n", table)
@@ -531,7 +531,7 @@ func PostNewWhatsappBotMessageReply() gin.HandlerFunc {
 			return
 		}
 
-		table := config.GetConfig().Database.TbWAMsgReply
+		table := config.WebPanel.Get().Database.TbWAMsgReply
 		// Check if the table exists
 		if !dbWeb.Migrator().HasTable(table) {
 			fmt.Printf("Table %s does not exist.\n", table)
@@ -755,10 +755,10 @@ func GetBatchTemplateWhatsappBotMessageReply[T any]() gin.HandlerFunc {
 		f.SetCellValue(sheetName, "A1", strings.ToUpper(structName))
 		f.SetCellStyle(sheetName, "A1", "A1", titleTextStyle)
 		// Notes
-		f.SetCellValue(sheetName, "B1", fmt.Sprintf("*separator keywords using: %s", config.GetConfig().Whatsmeow.KeywordSeparator))
+		f.SetCellValue(sheetName, "B1", fmt.Sprintf("*separator keywords using: %s", config.WebPanel.Get().Whatsmeow.KeywordSeparator))
 
 		// Dummy template data
-		dataSeparator := config.GetConfig().Whatsmeow.KeywordSeparator
+		dataSeparator := config.WebPanel.Get().Whatsmeow.KeywordSeparator
 		userTypes := model.AllWAUserTypes
 		userOfs := model.AllUserOf
 		userTypeStrs := make([]string, len(userTypes))
@@ -786,7 +786,7 @@ func GetBatchTemplateWhatsappBotMessageReply[T any]() gin.HandlerFunc {
 				"Bahasa Indonesia",
 				fmt.Sprintf("tolong dibantu %s tolong %s mohon dibantu %s saya ingin tanya %s saya ingin menanyakan",
 					dataSeparator, dataSeparator, dataSeparator, dataSeparator),
-				fmt.Sprintf("Halo! Untuk bantuan lebih lanjut, silakan hubungi Technical Support kami di +%s. Kami siap membantu Anda! 😊", config.GetConfig().Whatsmeow.WaTechnicalSupport),
+				fmt.Sprintf("Halo! Untuk bantuan lebih lanjut, silakan hubungi Technical Support kami di +%s. Kami siap membantu Anda! 😊", config.WebPanel.Get().Whatsmeow.WaTechnicalSupport),
 				string(model.CommonUser),
 				string(model.UserOfCSNA),
 			},
@@ -794,7 +794,7 @@ func GetBatchTemplateWhatsappBotMessageReply[T any]() gin.HandlerFunc {
 				"English",
 				fmt.Sprintf("please help %s help me %s need assistance %s I want to ask %s I’d like to inquire",
 					dataSeparator, dataSeparator, dataSeparator, dataSeparator),
-				fmt.Sprintf("Hello! For further assistance, please contact our Technical Support at +%s. We’ll be happy to help! 😊", config.GetConfig().Whatsmeow.WaTechnicalSupport),
+				fmt.Sprintf("Hello! For further assistance, please contact our Technical Support at +%s. We’ll be happy to help! 😊", config.WebPanel.Get().Whatsmeow.WaTechnicalSupport),
 				string(model.CommonUser),
 				string(model.UserOfCSNA),
 			},

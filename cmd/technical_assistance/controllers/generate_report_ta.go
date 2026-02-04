@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"service-platform/cmd/technical_assistance/config"
+	"service-platform/internal/config"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -78,7 +78,7 @@ func GenerateDailyReportTAActivity(db *gorm.DB, dbWeb *gorm.DB) (bool, error) {
 			NewFileName: excelFileName2,
 		},
 	}
-	config := config.GetConfig()
+	config := config.TechnicalAssistance.Get()
 
 	emailSubject := fmt.Sprintf("Technical Assistance Log Activity @%v", time.Now().Add(7*time.Hour).Format("02 January 2006"))
 	emailMsg := `
@@ -102,7 +102,7 @@ func GenerateDailyReportTAActivity(db *gorm.DB, dbWeb *gorm.DB) (bool, error) {
 }
 
 func SendMail(to []string, cc []string, subject string, message string, attachments []EmailAttachment) error {
-	config := config.GetConfig()
+	config := config.TechnicalAssistance.Get()
 
 	m := gomail.NewMessage()
 

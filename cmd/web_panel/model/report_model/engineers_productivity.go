@@ -1,7 +1,7 @@
 package reportmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -49,5 +49,5 @@ type EngineersProductivityData struct {
 }
 
 func (EngineersProductivityData) TableName() string {
-	return config.GetConfig().Database.TbReportEngineersProd
+	return config.WebPanel.Get().Database.TbReportEngineersProd
 }

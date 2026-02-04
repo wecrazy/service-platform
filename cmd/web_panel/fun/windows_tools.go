@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"service-platform/internal/config"
 	"strings"
-	"service-platform/cmd/web_panel/config"
 )
 
 // IsWSLRunning checks if any WSL instance is currently running
@@ -91,7 +91,7 @@ func StartMySQL() error {
 	}
 
 	// Normalize the path from config (forward slashes → Windows-safe path)
-	mysqlPath := filepath.FromSlash(config.GetConfig().Default.XAMPPMySQLPath)
+	mysqlPath := filepath.FromSlash(config.WebPanel.Get().Default.XAMPPMySQLPath)
 
 	cmd := exec.Command("cmd", "/C", mysqlPath)
 	return cmd.Start()

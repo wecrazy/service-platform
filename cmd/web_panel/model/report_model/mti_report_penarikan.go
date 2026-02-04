@@ -1,7 +1,7 @@
 package reportmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -57,5 +57,5 @@ type MTIReportPenarikan struct {
 }
 
 func (MTIReportPenarikan) TableName() string {
-	return config.GetConfig().ReportMTI.DBTablePenarikan
+	return config.WebPanel.Get().ReportMTI.DBTablePenarikan
 }

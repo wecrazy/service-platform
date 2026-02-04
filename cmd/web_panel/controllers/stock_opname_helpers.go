@@ -9,11 +9,11 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	sptechnicianmodel "service-platform/cmd/web_panel/model/sp_technician_model"
 	stockopnamemodel "service-platform/cmd/web_panel/model/stock_opname_model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"time"
@@ -65,7 +65,7 @@ func GetDataProductEDCCSNA() error {
 		"company_id",
 	}
 
-	excludedCompany := config.GetConfig().ApiODOO.CompanyExcluded
+	excludedCompany := config.WebPanel.Get().ApiODOO.CompanyExcluded
 	domain := []any{
 		[]any{"company_id", "!=", excludedCompany},
 	}
@@ -78,7 +78,7 @@ func GetDataProductEDCCSNA() error {
 	}
 
 	payload := map[string]any{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -151,7 +151,7 @@ func GetDataProductEDCCSNA() error {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -382,7 +382,7 @@ func GetDataProductEDCCSNA() error {
 			}
 
 			payload := map[string]any{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -701,7 +701,7 @@ func processSPofStockOpnameTechnician(
 						splCity = "Unknown"
 					}
 
-					ODOOMSSAC := config.GetConfig().ODOOMSSAC
+					ODOOMSSAC := config.WebPanel.Get().ODOOMSSAC
 					if len(ODOOMSSAC) == 0 {
 						return "", errors.New("no data found for SAC ODOO Manage Service")
 					}
@@ -748,7 +748,7 @@ func processSPofStockOpnameTechnician(
 						splCity = "Unknown"
 					}
 
-					ODOOMSSAC := config.GetConfig().ODOOMSSAC
+					ODOOMSSAC := config.WebPanel.Get().ODOOMSSAC
 					if len(ODOOMSSAC) == 0 {
 						return "", errors.New("no data found for SAC ODOO Manage Service")
 					}
@@ -884,7 +884,7 @@ func processSPofStockOpnameTechnician(
 					splCity = "Unknown"
 				}
 
-				ODOOMSSAC := config.GetConfig().ODOOMSSAC
+				ODOOMSSAC := config.WebPanel.Get().ODOOMSSAC
 				if len(ODOOMSSAC) == 0 {
 					return "", errors.New("no data found for SAC ODOO Manage Service")
 				}
@@ -931,7 +931,7 @@ func processSPofStockOpnameTechnician(
 					splCity = "Unknown"
 				}
 
-				ODOOMSSAC := config.GetConfig().ODOOMSSAC
+				ODOOMSSAC := config.WebPanel.Get().ODOOMSSAC
 				if len(ODOOMSSAC) == 0 {
 					return "", errors.New("no data found for SAC ODOO Manage Service")
 				}
@@ -1180,7 +1180,7 @@ func generateStockOpnameExcelReport(notSOItems, missingEDCItems []StockOpnameRep
 //   - []DataStockOpnameAggregate: A list of aggregated Stock Opname data.
 //   - error: An error if the data retrieval fails.
 func getStockOpnameOfTechnicianToday(technician string) ([]DataStockOpnameAggregate, error) {
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	timeNow := time.Now().In(loc)
 
 	startTime := timeNow
@@ -1251,7 +1251,7 @@ func getStockOpnameOfTechnicianToday(technician string) ([]DataStockOpnameAggreg
 	}
 
 	payload := map[string]any{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -1356,7 +1356,7 @@ func getStockOpnameOfTechnicianToday(technician string) ([]DataStockOpnameAggreg
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -1529,7 +1529,7 @@ func getStockMoveLineDetailedOperationsAPK(listID []int) ([]DetailedOperationsAP
 	}
 
 	payload := map[string]any{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -1603,7 +1603,7 @@ func getStockMoveLineDetailedOperationsAPK(listID []int) ([]DetailedOperationsAP
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -1811,8 +1811,8 @@ func generateMJMLTemplateForReportSOWithSPOrWarningLetter(useFor string, spTo st
 			`,
 		strings.ToUpper(recipient),
 		message,
-		config.GetConfig().Default.PT,
-		config.GetConfig().Whatsmeow.WaTechnicalSupport,
+		config.WebPanel.Get().Default.PT,
+		config.WebPanel.Get().Whatsmeow.WaTechnicalSupport,
 	))
 	sb.WriteString("</mjml>")
 
@@ -1927,7 +1927,7 @@ func GenerateSPStockOpnameRepliedExcel(db *gorm.DB, dateFilter string) (string, 
 				if msg.SPLGotSPID != nil {
 					proxyPath = "/proxy-pdf-sp-spl/"
 				}
-				spURL = config.GetConfig().App.WebPublicURL + proxyPath + filePath
+				spURL = config.WebPanel.Get().App.WebPublicURL + proxyPath + filePath
 			}
 			reportItems = append(reportItems, ReportItem{
 				Type:        spType,
@@ -2096,7 +2096,7 @@ func GetReportOfStockOpname(v *events.Message, userLang string) {
 	stanzaID := v.Info.ID
 	originalSenderJID := NormalizeSenderJID(v.Info.Sender.String())
 
-	tz := config.GetConfig().Default.Timezone
+	tz := config.WebPanel.Get().Default.Timezone
 	timezoneLocation, err := time.LoadLocation(tz)
 	if err != nil {
 		logrus.Errorf("Failed to load timezone location %s: %v", tz, err)
@@ -2141,7 +2141,7 @@ func GetReportOfListSO() gin.HandlerFunc {
 		defer cancel()
 		c.Request = c.Request.WithContext(ctx)
 
-		tz := config.GetConfig().Default.Timezone
+		tz := config.WebPanel.Get().Default.Timezone
 		timezoneLocation, err := time.LoadLocation(tz)
 		if err != nil {
 			logrus.Errorf("Failed to load timezone location %s: %v", tz, err)

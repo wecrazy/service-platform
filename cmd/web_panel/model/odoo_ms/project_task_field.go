@@ -1,7 +1,7 @@
 package odooms
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -15,5 +15,5 @@ type ODOOMSTaskField struct {
 }
 
 func (ODOOMSTaskField) TableName() string {
-	return config.GetConfig().Database.TbODOOMSTaskField
+	return config.WebPanel.Get().Database.TbODOOMSTaskField
 }

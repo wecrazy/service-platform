@@ -1,7 +1,7 @@
 package odooms
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -64,5 +64,5 @@ type CSNABALost struct {
 }
 
 func (CSNABALost) TableName() string {
-	return config.GetConfig().Database.TbBALost
+	return config.WebPanel.Get().Database.TbBALost
 }

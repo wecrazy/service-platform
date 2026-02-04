@@ -2,8 +2,8 @@ package tests
 
 import (
 	"fmt"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
+	"service-platform/internal/config"
 	"strings"
 	"testing"
 )
@@ -170,7 +170,7 @@ func sendAccountBSIMToEmail(fullname, username, email, password string) error {
 		password,
 		dashboardUrl,
 		dashboardUrl, dashboardUrl,
-		config.GetConfig().Default.PT,
+		config.WebPanel.Get().Default.PT,
 	))
 
 	mjmlTemplate := sb.String()

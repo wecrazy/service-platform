@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	sptechnicianmodel "service-platform/cmd/web_panel/model/sp_technician_model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -134,8 +134,8 @@ func CreatePDFSP1ForTechnician(placeholders map[string]string, outputPath string
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Peringatan 1", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("SP1, surat peringatan, teknisi, login", true)
 	pdf.SetSubject("Surat Peringatan 1 - Pemberitahuan untuk Teknisi", true)
 	pdf.SetCreationDate(time.Now())
@@ -173,7 +173,7 @@ func CreatePDFSP1ForTechnician(placeholders map[string]string, outputPath string
 		FontSize float64
 		Bold     bool
 	}{
-		{config.GetConfig().Default.PT, 10.5, true}, // bold
+		{config.WebPanel.Get().Default.PT, 10.5, true}, // bold
 		{"Rukan Crown Blok J No. 008, Green Lake City", 7, false},
 		{"Kel. Petir Kec. Cipondoh, Tangerang, Banten - Indonesia 15146", 7, false},
 		{"Tel.: (021) 22521101 / 5504722 / 5504723", 7, false},
@@ -502,8 +502,8 @@ func CreatePDFSP2ForTechnician(placeholders map[string]string, outputPath string
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Peringatan 2", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("SP2, surat peringatan, teknisi, login", true)
 	pdf.SetSubject("Surat Peringatan 2 - Pemberitahuan untuk Teknisi", true)
 	pdf.SetCreationDate(time.Now())
@@ -541,7 +541,7 @@ func CreatePDFSP2ForTechnician(placeholders map[string]string, outputPath string
 		FontSize float64
 		Bold     bool
 	}{
-		{config.GetConfig().Default.PT, 10.5, true}, // bold
+		{config.WebPanel.Get().Default.PT, 10.5, true}, // bold
 		{"Rukan Crown Blok J No. 008, Green Lake City", 7, false},
 		{"Kel. Petir Kec. Cipondoh, Tangerang, Banten - Indonesia 15146", 7, false},
 		{"Tel.: (021) 22521101 / 5504722 / 5504723", 7, false},
@@ -887,8 +887,8 @@ func CreatePDFSP3ForTechnician(placeholders map[string]string, outputPath string
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Peringatan 3", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("SP3, surat peringatan, teknisi, login", true)
 	pdf.SetSubject("Surat Peringatan 3 - Pemberitahuan untuk Teknisi", true)
 	pdf.SetCreationDate(time.Now())
@@ -926,7 +926,7 @@ func CreatePDFSP3ForTechnician(placeholders map[string]string, outputPath string
 		FontSize float64
 		Bold     bool
 	}{
-		{config.GetConfig().Default.PT, 10.5, true}, // bold
+		{config.WebPanel.Get().Default.PT, 10.5, true}, // bold
 		{"Rukan Crown Blok J No. 008, Green Lake City", 7, false},
 		{"Kel. Petir Kec. Cipondoh, Tangerang, Banten - Indonesia 15146", 7, false},
 		{"Tel.: (021) 22521101 / 5504722 / 5504723", 7, false},
@@ -1287,8 +1287,8 @@ func CreatePDFSP1ForSPL(placeholders map[string]string, outputPath string) error
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Peringatan 1", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("SP1, surat peringatan, spl, pelanggaran", true)
 	pdf.SetSubject("Surat Peringatan 1 - Pemberitahuan untuk SPL", true)
 	pdf.SetCreationDate(time.Now())
@@ -1326,7 +1326,7 @@ func CreatePDFSP1ForSPL(placeholders map[string]string, outputPath string) error
 		FontSize float64
 		Bold     bool
 	}{
-		{config.GetConfig().Default.PT, 10.5, true}, // bold
+		{config.WebPanel.Get().Default.PT, 10.5, true}, // bold
 		{"Rukan Crown Blok J No. 008, Green Lake City", 7, false},
 		{"Kel. Petir Kec. Cipondoh, Tangerang, Banten - Indonesia 15146", 7, false},
 		{"Tel.: (021) 22521101 / 5504722 / 5504723", 7, false},
@@ -1655,8 +1655,8 @@ func CreatePDFSP2ForSPL(placeholders map[string]string, outputPath string) error
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Peringatan 2", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("SP2, surat peringatan, spl, pelanggaran", true)
 	pdf.SetSubject("Surat Peringatan 2 - Pemberitahuan untuk SPL", true)
 	pdf.SetCreationDate(time.Now())
@@ -1694,7 +1694,7 @@ func CreatePDFSP2ForSPL(placeholders map[string]string, outputPath string) error
 		FontSize float64
 		Bold     bool
 	}{
-		{config.GetConfig().Default.PT, 10.5, true}, // bold
+		{config.WebPanel.Get().Default.PT, 10.5, true}, // bold
 		{"Rukan Crown Blok J No. 008, Green Lake City", 7, false},
 		{"Kel. Petir Kec. Cipondoh, Tangerang, Banten - Indonesia 15146", 7, false},
 		{"Tel.: (021) 22521101 / 5504722 / 5504723", 7, false},
@@ -2040,8 +2040,8 @@ func CreatePDFSP3ForSPL(placeholders map[string]string, outputPath string) error
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Peringatan 3", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("SP3, surat peringatan, spl, pelanggaran", true)
 	pdf.SetSubject("Surat Peringatan 3 - Pemberitahuan untuk SPL", true)
 	pdf.SetCreationDate(time.Now())
@@ -2079,7 +2079,7 @@ func CreatePDFSP3ForSPL(placeholders map[string]string, outputPath string) error
 		FontSize float64
 		Bold     bool
 	}{
-		{config.GetConfig().Default.PT, 10.5, true}, // bold
+		{config.WebPanel.Get().Default.PT, 10.5, true}, // bold
 		{"Rukan Crown Blok J No. 008, Green Lake City", 7, false},
 		{"Kel. Petir Kec. Cipondoh, Tangerang, Banten - Indonesia 15146", 7, false},
 		{"Tel.: (021) 22521101 / 5504722 / 5504723", 7, false},
@@ -2439,8 +2439,8 @@ func CreatePDFSP1ForSAC(placeholders map[string]string, outputPath string) error
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Peringatan 1", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("SP1, surat peringatan, sac, pelanggaran", true)
 	pdf.SetSubject("Surat Peringatan 1 - Pemberitahuan untuk SAC", true)
 	pdf.SetCreationDate(time.Now())
@@ -2478,7 +2478,7 @@ func CreatePDFSP1ForSAC(placeholders map[string]string, outputPath string) error
 		FontSize float64
 		Bold     bool
 	}{
-		{config.GetConfig().Default.PT, 10.5, true}, // bold
+		{config.WebPanel.Get().Default.PT, 10.5, true}, // bold
 		{"Rukan Crown Blok J No. 008, Green Lake City", 7, false},
 		{"Kel. Petir Kec. Cipondoh, Tangerang, Banten - Indonesia 15146", 7, false},
 		{"Tel.: (021) 22521101 / 5504722 / 5504723", 7, false},
@@ -2763,8 +2763,8 @@ func CreatePDFSP2ForSAC(placeholders map[string]string, outputPath string) error
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Peringatan 2", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("SP2, surat peringatan, sac, pelanggaran", true)
 	pdf.SetSubject("Surat Peringatan 2 - Pemberitahuan untuk SAC", true)
 	pdf.SetCreationDate(time.Now())
@@ -2802,7 +2802,7 @@ func CreatePDFSP2ForSAC(placeholders map[string]string, outputPath string) error
 		FontSize float64
 		Bold     bool
 	}{
-		{config.GetConfig().Default.PT, 10.5, true}, // bold
+		{config.WebPanel.Get().Default.PT, 10.5, true}, // bold
 		{"Rukan Crown Blok J No. 008, Green Lake City", 7, false},
 		{"Kel. Petir Kec. Cipondoh, Tangerang, Banten - Indonesia 15146", 7, false},
 		{"Tel.: (021) 22521101 / 5504722 / 5504723", 7, false},
@@ -3104,8 +3104,8 @@ func CreatePDFSP3ForSAC(placeholders map[string]string, outputPath string) error
 
 	pdf := fpdf.New("P", "mm", "A4", fontMainDir)
 	pdf.SetTitle("Surat Peringatan 3", true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("SP3, surat peringatan, sac, pelanggaran", true)
 	pdf.SetSubject("Surat Peringatan 3 - Pemberitahuan untuk SAC", true)
 	pdf.SetCreationDate(time.Now())
@@ -3143,7 +3143,7 @@ func CreatePDFSP3ForSAC(placeholders map[string]string, outputPath string) error
 		FontSize float64
 		Bold     bool
 	}{
-		{config.GetConfig().Default.PT, 10.5, true}, // bold
+		{config.WebPanel.Get().Default.PT, 10.5, true}, // bold
 		{"Rukan Crown Blok J No. 008, Green Lake City", 7, false},
 		{"Kel. Petir Kec. Cipondoh, Tangerang, Banten - Indonesia 15146", 7, false},
 		{"Tel.: (021) 22521101 / 5504722 / 5504723", 7, false},
@@ -5848,7 +5848,7 @@ func processSPForSPLWithMissingEDCNotSO(
 // 	companyRun.Properties().SetFontFamily("Century Gothic")
 // 	companyRun.Properties().SetBold(true)
 // 	companyRun.Properties().SetSize(10.5)
-// 	companyRun.AddText(config.GetConfig().Default.PT)
+// 	companyRun.AddText(config.WebPanel.Get().Default.PT)
 
 // 	addressPara := hdr.AddParagraph()
 // 	addressPara.Properties().SetAlignment(wml.ST_JcCenter)

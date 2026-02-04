@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"time"
@@ -153,7 +153,7 @@ func GetMerchantKresekBag(db *gorm.DB) (string, error) {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 
@@ -161,7 +161,7 @@ func GetMerchantKresekBag(db *gorm.DB) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error marshalling payload: %v", err)
 	}
-	url := config.GetConfig().ApiODOO.UrlGetDataKresekBag
+	url := config.WebPanel.Get().ApiODOO.UrlGetDataKresekBag
 	method := "POST"
 
 	body, err := FetchODOOKresekBag(url, method, string(payloadBytes))
@@ -664,7 +664,7 @@ func ShowPhotoByIDForMerchantKresekBag(rdb *redis.Client, db *gorm.DB) gin.Handl
 		<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
 `)
 
-		publicURLImg := config.GetConfig().FastLinkData.PublicURLMerchantImage
+		publicURLImg := config.WebPanel.Get().FastLinkData.PublicURLMerchantImage
 		v := reflect.ValueOf(dbData)
 		t := reflect.TypeOf(dbData)
 

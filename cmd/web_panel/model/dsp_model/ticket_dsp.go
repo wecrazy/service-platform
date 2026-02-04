@@ -1,7 +1,7 @@
 package dspmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -49,5 +49,5 @@ type TicketDSP struct {
 }
 
 func (TicketDSP) TableName() string {
-	return config.GetConfig().DSP.TBDataTicketODOOMS
+	return config.WebPanel.Get().DSP.TBDataTicketODOOMS
 }

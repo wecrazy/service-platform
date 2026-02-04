@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 )
@@ -14,13 +14,13 @@ import (
 func buildDBDefaultYAML() string {
 	var b strings.Builder
 
-	dbBackupDest := config.GetConfig().Database.DBBackupDestinationDir
-	dbBackupName := fmt.Sprintf("database_dumped_%s_%d.sql", config.GetConfig().Database.Name, time.Now().Unix())
+	dbBackupDest := config.WebPanel.Get().Database.DBBackupDestinationDir
+	dbBackupName := fmt.Sprintf("database_dumped_%s_%d.sql", config.WebPanel.Get().Database.Name, time.Now().Unix())
 
 	b.WriteString("jobs:\n")
 	b.WriteString("- name: local-dump\n")
 	b.WriteString("  dbdriver: mysql\n")
-	b.WriteString(fmt.Sprintf("  dbdsn: root@tcp(%s:%s)/%s\n", config.GetConfig().Database.Host, config.GetConfig().Database.Port, config.GetConfig().Database.Name))
+	b.WriteString(fmt.Sprintf("  dbdsn: root@tcp(%s:%s)/%s\n", config.WebPanel.Get().Database.Host, config.WebPanel.Get().Database.Port, config.WebPanel.Get().Database.Name))
 	b.WriteString(fmt.Sprintf("  gzip: %v\n", false))
 	b.WriteString("  storage:\n")
 	b.WriteString("    local:\n")
@@ -34,7 +34,7 @@ func buildDBDefaultYAML() string {
 }
 
 func DumpDatabase() error {
-	configPath := config.GetConfig().Database.DBConfigPath
+	configPath := config.WebPanel.Get().Database.DBConfigPath
 
 	configYAML := buildDBDefaultYAML()
 
@@ -69,10 +69,10 @@ func DumpDatabase() error {
 		fmt.Println("Found mysqldump at:", path)
 
 		// Build the command
-		cmd = exec.Command(path, "-u", config.GetConfig().Database.Username, fmt.Sprintf("-p%s", config.GetConfig().Database.Password), config.GetConfig().Database.Name)
+		cmd = exec.Command(path, "-u", config.WebPanel.Get().Database.Username, fmt.Sprintf("-p%s", config.WebPanel.Get().Database.Password), config.WebPanel.Get().Database.Name)
 
 		// Redirect output to dump file
-		dumpFile := config.GetConfig().Database.DBBackupDestinationDir + "/dump/db_dumped_" + time.Now().Format("2006_01_02") + ".sql"
+		dumpFile := config.WebPanel.Get().Database.DBBackupDestinationDir + "/dump/db_dumped_" + time.Now().Format("2006_01_02") + ".sql"
 
 		outFile, err := os.Create(dumpFile)
 		if err != nil {
@@ -81,10 +81,10 @@ func DumpDatabase() error {
 		defer outFile.Close()
 
 		cmd := exec.Command(path,
-			"-h", config.GetConfig().Database.Host,
-			"-u", config.GetConfig().Database.Username,
-			fmt.Sprintf("-p%s", config.GetConfig().Database.Password),
-			config.GetConfig().Database.Name,
+			"-h", config.WebPanel.Get().Database.Host,
+			"-u", config.WebPanel.Get().Database.Username,
+			fmt.Sprintf("-p%s", config.WebPanel.Get().Database.Password),
+			config.WebPanel.Get().Database.Name,
 		)
 
 		cmd.Stdout = outFile

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 )
 
 // IndonesiaRegion represents the indonesia_region table structure
@@ -21,5 +21,5 @@ type IndonesiaRegion struct {
 
 // TableName sets the table name for IndonesiaRegion model
 func (IndonesiaRegion) TableName() string {
-	return config.GetConfig().Database.TbIndonesiaRegion
+	return config.WebPanel.Get().Database.TbIndonesiaRegion
 }

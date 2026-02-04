@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/model"
 	bnimodel "service-platform/cmd/web_panel/model/bni_model"
 	contracttechnicianmodel "service-platform/cmd/web_panel/model/contract_technician_model"
@@ -14,6 +13,7 @@ import (
 	sptechnicianmodel "service-platform/cmd/web_panel/model/sp_technician_model"
 	stockopnamemodel "service-platform/cmd/web_panel/model/stock_opname_model"
 	whatsappmodel "service-platform/cmd/web_panel/model/whatsapp_model"
+	"service-platform/internal/config"
 
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -160,8 +160,8 @@ func AutoMigrateWeb(db *gorm.DB) {
 	var ticketHommyPayCCCount int64
 	db.Model(&model.TicketHommyPayCC{}).Count(&ticketHommyPayCCCount)
 	if ticketHommyPayCCCount == 0 {
-		tableName := config.GetConfig().Database.TbTicketHommyPayCC
-		startID := config.GetConfig().HommyPayCCData.StartTicketId
+		tableName := config.WebPanel.Get().Database.TbTicketHommyPayCC
+		startID := config.WebPanel.Get().HommyPayCCData.StartTicketId
 
 		sql := fmt.Sprintf("ALTER TABLE %s AUTO_INCREMENT = %d", tableName, startID)
 		if err := db.Exec(sql).Error; err != nil {

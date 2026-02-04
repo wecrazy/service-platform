@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 )
 
@@ -21,5 +21,5 @@ type LogActivity struct {
 }
 
 func (LogActivity) TableName() string {
-	return config.GetConfig().Database.TbLogActivity
+	return config.WebPanel.Get().Database.TbLogActivity
 }

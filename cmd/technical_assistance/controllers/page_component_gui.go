@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model"
 	"service-platform/cmd/technical_assistance/webguibuilder"
+	"service-platform/internal/config"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -72,12 +72,12 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		profile_image := "/profile/default.jpg?f=" + pathString
 
 		replacements := map[string]any{
-			"APP_NAME":         os.Getenv("APP_NAME"),
-			"APP_LOGO":         os.Getenv("APP_LOGO"),
-			"APP_VERSION":      os.Getenv("APP_VERSION"),
-			"APP_VERSION_NO":   os.Getenv("APP_VERSION_NO"),
-			"APP_VERSION_CODE": os.Getenv("APP_VERSION_CODE"),
-			"APP_VERSION_NAME": os.Getenv("APP_VERSION_NAME"),
+			"APP_NAME":         config.TechnicalAssistance.Get().APP_NAME,
+			"APP_LOGO":         config.TechnicalAssistance.Get().APP_LOGO,
+			"APP_VERSION":      config.TechnicalAssistance.Get().APP_VERSION_NO,
+			"APP_VERSION_NO":   config.TechnicalAssistance.Get().APP_VERSION_NO,
+			"APP_VERSION_CODE": config.TechnicalAssistance.Get().APP_VERSION_CODE,
+			"APP_VERSION_NAME": config.TechnicalAssistance.Get().APP_VERSION_NAME,
 			"fullname":         admin.Fullname,
 			"username":         admin.Username,
 			"userid":           admin.ID,

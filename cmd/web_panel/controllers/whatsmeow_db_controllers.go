@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
+	"service-platform/internal/config"
 	"strings"
 
 	"gorm.io/driver/sqlite"
@@ -18,11 +18,11 @@ type WhatsmeowLIDMap struct {
 }
 
 func (WhatsmeowLIDMap) TableName() string {
-	return config.GetConfig().Whatsmeow.DBSQLiteModel.TBLIDMap
+	return config.WebPanel.Get().Whatsmeow.DBSQLiteModel.TBLIDMap
 }
 
 func WhatsmeowDBSQliteConnect() (*gorm.DB, error) {
-	sqlSource := config.GetConfig().Whatsmeow.SqlSource
+	sqlSource := config.WebPanel.Get().Whatsmeow.SqlSource
 	sqlSourceParts := strings.Split(sqlSource, "/")
 
 	// fmt.Println("WhatsmeowDBSQliteConnect: sqlSource =", sqlSource)

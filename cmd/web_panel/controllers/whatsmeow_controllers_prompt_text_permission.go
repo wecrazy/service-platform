@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"fmt"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -78,9 +78,9 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		"ping": {
 			AllowFunc: func(u *model.WAPhoneUser) (bool, string, string) {
 				if u.UserType == model.WaBotSuperUser ||
-					u.PhoneNumber == config.GetConfig().Whatsmeow.WaSuperUser ||
-					u.PhoneNumber == config.GetConfig().Whatsmeow.WaSupport ||
-					u.PhoneNumber == config.GetConfig().Whatsmeow.WaTechnicalSupport {
+					u.PhoneNumber == config.WebPanel.Get().Whatsmeow.WaSuperUser ||
+					u.PhoneNumber == config.WebPanel.Get().Whatsmeow.WaSupport ||
+					u.PhoneNumber == config.WebPanel.Get().Whatsmeow.WaTechnicalSupport {
 					return true, "", ""
 				}
 				return false, "❌ You are not allowed to use ping.", "❌ Anda tidak punya izin untuk ping."
@@ -147,7 +147,7 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		/* Report */
 		"report mr oliver": {
 			AllowFunc: func(u *model.WAPhoneUser) (bool, string, string) {
-				if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.GetConfig().Whatsmeow.WaSuperUser {
+				if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.WebPanel.Get().Whatsmeow.WaSuperUser {
 					return true, "", ""
 				}
 				return false, "❌ Sorry, you are not allowed to check Mr. Oliver's report status!!", "❌ Maaf, Anda tidak berhak untuk mengecek status report Mr. Oliver!!"
@@ -159,7 +159,7 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		},
 		"generate report ta": {
 			AllowFunc: func(u *model.WAPhoneUser) (bool, string, string) {
-				allowedPhoneNumberAccessTAReport := config.GetConfig().TechnicalAssistanceData.AllowedToAccessReportPhoneNumbers
+				allowedPhoneNumberAccessTAReport := config.WebPanel.Get().TechnicalAssistanceData.AllowedToAccessReportPhoneNumbers
 				isAllowed := false
 				for _, num := range allowedPhoneNumberAccessTAReport {
 					sanitizedNum, err := fun.SanitizePhoneNumber(num)
@@ -189,7 +189,7 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		},
 		"generate report compared": {
 			AllowFunc: func(u *model.WAPhoneUser) (bool, string, string) {
-				allowedPhoneNumberAccessReport := config.GetConfig().TechnicalAssistanceData.AllowedToAccessReportPhoneNumbers
+				allowedPhoneNumberAccessReport := config.WebPanel.Get().TechnicalAssistanceData.AllowedToAccessReportPhoneNumbers
 				isAllowed := false
 				for _, num := range allowedPhoneNumberAccessReport {
 					sanitizedNum, err := fun.SanitizePhoneNumber(num)
@@ -219,7 +219,7 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		},
 		"generate report tech error": {
 			AllowFunc: func(u *model.WAPhoneUser) (bool, string, string) {
-				allowedPhoneNumberAccessTAReport := config.GetConfig().TechnicalAssistanceData.AllowedToAccessReportPhoneNumbers
+				allowedPhoneNumberAccessTAReport := config.WebPanel.Get().TechnicalAssistanceData.AllowedToAccessReportPhoneNumbers
 				isAllowed := false
 				for _, num := range allowedPhoneNumberAccessTAReport {
 					sanitizedNum, err := fun.SanitizePhoneNumber(num)
@@ -249,7 +249,7 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		},
 		"generate report ai error": {
 			AllowFunc: func(u *model.WAPhoneUser) (bool, string, string) {
-				if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.GetConfig().Whatsmeow.WaSuperUser || u.UserType == model.CompanyCOO || u.UserType == model.CompanyPM {
+				if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.WebPanel.Get().Whatsmeow.WaSuperUser || u.UserType == model.CompanyCOO || u.UserType == model.CompanyPM {
 					return true, "", ""
 				}
 				return false, "❌ Sorry, you are not allowed to check Report AI Error!!", "❌ Maaf, Anda tidak berhak untuk mengecek status Report Error AI"
@@ -264,7 +264,7 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		"show status vm odoo dashboard": {
 			AllowFunc: func(u *model.WAPhoneUser) (bool, string, string) {
 				if u.UserOf == model.UserOfCSNA {
-					if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.GetConfig().Whatsmeow.WaSuperUser {
+					if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.WebPanel.Get().Whatsmeow.WaSuperUser {
 						return true, "", ""
 					}
 				}
@@ -278,7 +278,7 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		"restart mysql vm odoo dashboard": {
 			AllowFunc: func(u *model.WAPhoneUser) (bool, string, string) {
 				if u.UserOf == model.UserOfCSNA {
-					if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.GetConfig().Whatsmeow.WaSuperUser {
+					if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.WebPanel.Get().Whatsmeow.WaSuperUser {
 						return true, "", ""
 					}
 				}
@@ -291,7 +291,7 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		},
 		"report so": {
 			AllowFunc: func(u *model.WAPhoneUser) (bool, string, string) {
-				if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.GetConfig().Whatsmeow.WaSuperUser || u.UserOf == model.UserOfCSNA {
+				if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.WebPanel.Get().Whatsmeow.WaSuperUser || u.UserOf == model.UserOfCSNA {
 					return true, "", ""
 				}
 				return false, "❌ You are not allowed to generate report Stock Opname", "❌ Anda tidak berhak untuk membuat laporan Stock Opname"
@@ -304,7 +304,7 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		/* Special */
 		"/all-cmd": {
 			AllowFunc: func(u *model.WAPhoneUser) (bool, string, string) {
-				if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.GetConfig().Whatsmeow.WaSuperUser {
+				if u.UserType == model.WaBotSuperUser || u.PhoneNumber == config.WebPanel.Get().Whatsmeow.WaSuperUser {
 					return true, "", ""
 				}
 				return false, "❌ You are not allowed to see all commands.", "❌ Anda tidak berhak melihat semua perintah."
@@ -377,18 +377,18 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 			isUseAIRafy, isSet, err := GetUserUseAIRafy(originalSenderJID)
 			if err != nil {
 				logrus.Error(err)
-				useAIRafy = config.GetConfig().Whatsmeow.UseAPIRafy
+				useAIRafy = config.WebPanel.Get().Whatsmeow.UseAPIRafy
 			} else if !isSet {
-				useAIRafy = config.GetConfig().Whatsmeow.UseAPIRafy
+				useAIRafy = config.WebPanel.Get().Whatsmeow.UseAPIRafy
 			} else {
 				useAIRafy = isUseAIRafy
 			}
-			url1 := config.GetConfig().API.RafyFAQODOOMSSOP
-			url2 := config.GetConfig().API.RafyFAQODOOMS
+			url1 := config.WebPanel.Get().API.RafyFAQODOOMSSOP
+			url2 := config.WebPanel.Get().API.RafyFAQODOOMS
 			urls := []string{url1, url2}
 
 			if useAIRafy {
-				botWAUsed := config.GetConfig().Whatsmeow.WaBotUsed
+				botWAUsed := config.WebPanel.Get().Whatsmeow.WaBotUsed
 				for _, waBot := range botWAUsed {
 					if strings.Contains(originalSenderJID, waBot) {
 						// return empty result, so it won't reply anything
@@ -471,18 +471,18 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 			// isUseAIRafy, isSet, err := GetUserUseAIRafy(originalSenderJID)
 			// if err != nil {
 			// 	logrus.Error(err)
-			// 	useAIRafy = config.GetConfig().Whatsmeow.UseAPIRafy
+			// 	useAIRafy = config.WebPanel.Get().Whatsmeow.UseAPIRafy
 			// } else if !isSet {
-			// 	useAIRafy = config.GetConfig().Whatsmeow.UseAPIRafy
+			// 	useAIRafy = config.WebPanel.Get().Whatsmeow.UseAPIRafy
 			// } else {
 			// 	useAIRafy = isUseAIRafy
 			// }
-			url1 := config.GetConfig().API.RafyFAQNUSACITA
-			url2 := config.GetConfig().API.RafyFAQODOOMS
+			url1 := config.WebPanel.Get().API.RafyFAQNUSACITA
+			url2 := config.WebPanel.Get().API.RafyFAQODOOMS
 			urls := []string{url1, url2}
 
 			if useAIRafy {
-				botWAUsed := config.GetConfig().Whatsmeow.WaBotUsed
+				botWAUsed := config.WebPanel.Get().Whatsmeow.WaBotUsed
 				for _, waBot := range botWAUsed {
 					if strings.Contains(originalSenderJID, waBot) {
 						// return empty result, so it won't reply anything
@@ -554,9 +554,9 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 		}
 
 		// No rule or static command prompt for wa bot found
-		msg := config.GetConfig().Whatsmeow.WaErrorMessage.EN.UnknownPrompt
+		msg := config.WebPanel.Get().Whatsmeow.WaErrorMessage.EN.UnknownPrompt
 		if userLang == "id" {
-			msg = config.GetConfig().Whatsmeow.WaErrorMessage.ID.UnknownPrompt
+			msg = config.WebPanel.Get().Whatsmeow.WaErrorMessage.ID.UnknownPrompt
 		}
 		_ = msg
 		// return PromptPermissionResult{
@@ -641,7 +641,7 @@ func CheckPromptPermission(v *events.Message, cmd string, user *model.WAPhoneUse
 	if rule.MaxDailyQuota > 0 {
 		usageKey := getUsageKey(cmd, userID)
 		pipe.Incr(contx, usageKey)
-		pipe.Expire(contx, usageKey, time.Duration(config.GetConfig().Whatsmeow.RedisExpiry)*time.Hour)
+		pipe.Expire(contx, usageKey, time.Duration(config.WebPanel.Get().Whatsmeow.RedisExpiry)*time.Hour)
 	}
 	if rule.CooldownSeconds > 0 {
 		cooldownKey := getCooldownKey(cmd, userID)
@@ -694,7 +694,7 @@ func CheckAndTrackBadWords(userID uint, cmd, userLang string) (bool, bool, strin
 	}
 
 	// check if reached max
-	if strike >= int64(config.GetConfig().Whatsmeow.WhatsappMaxBadWordStrike) {
+	if strike >= int64(config.WebPanel.Get().Whatsmeow.WhatsappMaxBadWordStrike) {
 		// optionally ban user in DB
 		dbWeb.Model(&model.WAPhoneUser{}).
 			Where("id = ?", userID).
@@ -704,9 +704,9 @@ func CheckAndTrackBadWords(userID uint, cmd, userLang string) (bool, bool, strin
 			})
 		var banMsg string
 		if userLang == "id" {
-			banMsg = config.GetConfig().Whatsmeow.WaErrorMessage.ID.AccountBannedCozBadWord
+			banMsg = config.WebPanel.Get().Whatsmeow.WaErrorMessage.ID.AccountBannedCozBadWord
 		} else {
-			banMsg = config.GetConfig().Whatsmeow.WaErrorMessage.EN.AccountBannedCozBadWord
+			banMsg = config.WebPanel.Get().Whatsmeow.WaErrorMessage.EN.AccountBannedCozBadWord
 		}
 		return true, true, banMsg
 	}
@@ -716,7 +716,7 @@ func CheckAndTrackBadWords(userID uint, cmd, userLang string) (bool, bool, strin
 
 func warnMessage(lang string, strike int) string {
 	if lang == "id" {
-		return fmt.Sprintf("⚠️ Peringatan: kata kasar terdeteksi! (%d/%d). Jika mencapai %d, akun Anda akan diblokir.", strike, config.GetConfig().Whatsmeow.WhatsappMaxBadWordStrike, config.GetConfig().Whatsmeow.WhatsappMaxBadWordStrike)
+		return fmt.Sprintf("⚠️ Peringatan: kata kasar terdeteksi! (%d/%d). Jika mencapai %d, akun Anda akan diblokir.", strike, config.WebPanel.Get().Whatsmeow.WhatsappMaxBadWordStrike, config.WebPanel.Get().Whatsmeow.WhatsappMaxBadWordStrike)
 	}
-	return fmt.Sprintf("⚠️ Warning: bad words detected! (%d/%d). If it reaches %d, your account will be banned.", strike, config.GetConfig().Whatsmeow.WhatsappMaxBadWordStrike, config.GetConfig().Whatsmeow.WhatsappMaxBadWordStrike)
+	return fmt.Sprintf("⚠️ Warning: bad words detected! (%d/%d). If it reaches %d, your account will be banned.", strike, config.WebPanel.Get().Whatsmeow.WhatsappMaxBadWordStrike, config.WebPanel.Get().Whatsmeow.WhatsappMaxBadWordStrike)
 }

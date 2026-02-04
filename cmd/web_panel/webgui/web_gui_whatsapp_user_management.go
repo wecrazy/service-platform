@@ -3,10 +3,10 @@ package webgui
 import (
 	"fmt"
 	"html/template"
-	"strings"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -330,7 +330,7 @@ func RenderDataTableServerSideWhatsappUserManagement(title, table_name, endpoint
 			for _, mode := range model.AllUserOf {
 				var optLabel string
 				if mode == model.UserOfCSNA {
-					optLabel = config.GetConfig().Default.PT
+					optLabel = config.WebPanel.Get().Default.PT
 				} else {
 					optLabel = fun.SnakeToCapitalized(string(mode))
 				}

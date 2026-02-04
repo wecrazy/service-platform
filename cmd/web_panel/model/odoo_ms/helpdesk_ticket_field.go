@@ -1,7 +1,7 @@
 package odooms
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -15,5 +15,5 @@ type ODOOMSTicketField struct {
 }
 
 func (ODOOMSTicketField) TableName() string {
-	return config.GetConfig().Database.TbODOOMSTicketField
+	return config.WebPanel.Get().Database.TbODOOMSTicketField
 }

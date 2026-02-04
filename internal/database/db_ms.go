@@ -13,7 +13,10 @@ import (
 )
 
 var (
+	PgSQLDBSP           *gorm.DB // PgSQLDBSP holds the GORM DB connection for DB SERVICE PLATFORM PostgreeSQL database
 	MySQLDBTA           *gorm.DB // MySQLDBTA holds the GORM DB connection for Dashboard Technical Assistance - Manage Service Integration of MySQL database
+	MySQLDBWebTA        *gorm.DB // MySQLDBWebTA holds the GORM DB connection for Dashboard Technical Assistance - WebPanel Integration of MySQL database
+	MySQLDBFastlink     *gorm.DB // MySQLDBFastlink holds the GORM DB connection for Dashboard Fastlink
 	MySQLDBMSMiddleware *gorm.DB // MySQLDBMSMiddleware holds the GORM DB connection for Middleware Microservice of MySQL database
 
 	// TODO: faiz
@@ -278,6 +281,168 @@ func MonitorDBWebPanelConnection(interval time.Duration) {
 				logrus.Errorf("Failed to reconnect to WebPanel database: %v", reconnectErr)
 			} else {
 				logrus.Info("Reconnected to WebPanel MySQL database successfully")
+			}
+		}
+	}
+}
+
+// InitDBFastlink initializes the Fastlink MySQL database connection
+func InitDBFastlink(host string, port int, user, pass, dbname string) error {
+	cfg := config.GetConfig()
+
+	dbCfgFastlink := DBConfig{
+		Type:              "MySQL",
+		User:              user,
+		Password:          pass,
+		Host:              host,
+		Port:              port,
+		Database:          dbname,
+		SSLMode:           cfg.WebPanelService.MySQLDBSSLMode,
+		MaxRetryConnect:   cfg.WebPanelService.MySQLDBMaxRetryConnect,
+		RetryDelay:        cfg.WebPanelService.MySQLDBRetryDelay,
+		MaxIdleConnection: cfg.WebPanelService.MySQLDBIdleConnection,
+		MaxOpenConnection: cfg.WebPanelService.MySQLDBOpenConnection,
+		ConnMaxLifeTime:   cfg.WebPanelService.MySQLDBConnMaxLifetime,
+	}
+
+	db, err := InitDBConnection(dbCfgFastlink)
+	if err != nil {
+		logrus.Errorf("Failed to initialize Fastlink database: %v", err)
+		return err
+	}
+
+	MySQLDBFastlink = db
+
+	log.Println("✅ Fastlink MySQL database initialized successfully")
+	return nil
+}
+
+// GetDBFastlink returns the Fastlink database connection
+func GetDBFastlink() *gorm.DB {
+	return MySQLDBFastlink
+}
+
+// CloseDBFastlink closes the Fastlink database connection
+func CloseDBFastlink() error {
+	if MySQLDBFastlink != nil {
+		sqlDB, err := MySQLDBFastlink.DB()
+		if err != nil {
+			return fmt.Errorf("failed to get sql.DB from Fastlink DB: %v", err)
+		}
+		if err := sqlDB.Close(); err != nil {
+			return fmt.Errorf("failed to close Fastlink database: %v", err)
+		}
+		log.Println("Disconnected from Fastlink MySQL database")
+	}
+	return nil
+}
+
+// HealthCheckDBFastlink checks if the Fastlink database connection is healthy
+func HealthCheckDBFastlink() error {
+	if MySQLDBFastlink == nil {
+		return fmt.Errorf("Fastlink database not initialized")
+	}
+	return HealthCheckDB(
+		MySQLDBFastlink,
+		"mysql",
+		"Fastlink",
+	)
+}
+
+// MonitorDBFastlinkConnection monitors the Fastlink database connection and logs disconnections
+func MonitorDBFastlinkConnection(interval time.Duration, host string, port int, user, pass, dbname string) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if err := HealthCheckDBFastlink(); err != nil {
+			logrus.Errorf("Fastlink database connection lost: %v", err)
+			// Attempt to reconnect
+			if reconnectErr := InitDBFastlink(host, port, user, pass, dbname); reconnectErr != nil {
+				logrus.Errorf("Failed to reconnect to Fastlink database: %v", reconnectErr)
+			} else {
+				logrus.Info("Reconnected to Fastlink MySQL database successfully")
+			}
+		}
+	}
+}
+
+// InitDBWebTA initializes the Web Technical Assistance MySQL database connection
+func InitDBWebTA(host string, port int, user, pass, dbname string) error {
+	cfg := config.GetConfig()
+
+	dbCfgWebTA := DBConfig{
+		Type:              "MySQL",
+		User:              user,
+		Password:          pass,
+		Host:              host,
+		Port:              port,
+		Database:          dbname,
+		SSLMode:           cfg.WebPanelService.MySQLDBSSLMode,
+		MaxRetryConnect:   cfg.WebPanelService.MySQLDBMaxRetryConnect,
+		RetryDelay:        cfg.WebPanelService.MySQLDBRetryDelay,
+		MaxIdleConnection: cfg.WebPanelService.MySQLDBIdleConnection,
+		MaxOpenConnection: cfg.WebPanelService.MySQLDBOpenConnection,
+		ConnMaxLifeTime:   cfg.WebPanelService.MySQLDBConnMaxLifetime,
+	}
+
+	db, err := InitDBConnection(dbCfgWebTA)
+	if err != nil {
+		logrus.Errorf("Failed to initialize WebTA database: %v", err)
+		return err
+	}
+
+	MySQLDBWebTA = db
+
+	log.Println("✅ WebTA MySQL database initialized successfully")
+	return nil
+}
+
+// GetDBWebTA returns the Web Technical Assistance database connection
+func GetDBWebTA() *gorm.DB {
+	return MySQLDBWebTA
+}
+
+// CloseDBWebTA closes the Web Technical Assistance database connection
+func CloseDBWebTA() error {
+	if MySQLDBWebTA != nil {
+		sqlDB, err := MySQLDBWebTA.DB()
+		if err != nil {
+			return fmt.Errorf("failed to get sql.DB from WebTA DB: %v", err)
+		}
+		if err := sqlDB.Close(); err != nil {
+			return fmt.Errorf("failed to close WebTA database: %v", err)
+		}
+		log.Println("Disconnected from WebTA MySQL database")
+	}
+	return nil
+}
+
+// HealthCheckDBWebTA checks if the WebTA database connection is healthy
+func HealthCheckDBWebTA() error {
+	if MySQLDBWebTA == nil {
+		return fmt.Errorf("WebTA database not initialized")
+	}
+	return HealthCheckDB(
+		MySQLDBWebTA,
+		"mysql",
+		"WebTA",
+	)
+}
+
+// MonitorDBWebTAConnection monitors the WebTA database connection and logs disconnections
+func MonitorDBWebTAConnection(interval time.Duration, host string, port int, user, pass, dbname string) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if err := HealthCheckDBWebTA(); err != nil {
+			logrus.Errorf("WebTA database connection lost: %v", err)
+			// Attempt to reconnect
+			if reconnectErr := InitDBWebTA(host, port, user, pass, dbname); reconnectErr != nil {
+				logrus.Errorf("Failed to reconnect to WebTA database: %v", reconnectErr)
+			} else {
+				logrus.Info("Reconnected to WebTA MySQL database successfully")
 			}
 		}
 	}

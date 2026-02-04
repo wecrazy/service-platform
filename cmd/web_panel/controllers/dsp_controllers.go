@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	dspmodel "service-platform/cmd/web_panel/model/dsp_model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"time"
@@ -38,7 +38,7 @@ func GetTicketDSPODOOMS() (string, error) {
 
 	ODOOModel := "helpdesk.ticket"
 	domain := []interface{}{
-		[]interface{}{"company_id", "=", config.GetConfig().DSP.CompanyIDInODOOMS},
+		[]interface{}{"company_id", "=", config.WebPanel.Get().DSP.CompanyIDInODOOMS},
 	}
 	fieldID := []string{"id"}
 	fields := []string{
@@ -81,7 +81,7 @@ func GetTicketDSPODOOMS() (string, error) {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -154,7 +154,7 @@ func GetTicketDSPODOOMS() (string, error) {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 

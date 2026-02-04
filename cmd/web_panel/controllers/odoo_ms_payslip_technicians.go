@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -178,8 +178,8 @@ func GeneratePDFPayslipTechnicianEDC(payrollData odooms.MSTechnicianPayroll, fil
 	}
 	imgCSNA := filepath.Join(imgAssetsDir, "csna.png")
 
-	signatureName := config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName
-	signatureImg := filepath.Join(imgAssetsDir, config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureImg)
+	signatureName := config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName
+	signatureImg := filepath.Join(imgAssetsDir, config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureImg)
 
 	fontMainDir, err := fun.FindValidDirectory([]string{
 		"web/assets/font",
@@ -198,8 +198,8 @@ func GeneratePDFPayslipTechnicianEDC(payrollData odooms.MSTechnicianPayroll, fil
 	// Create PDF instance
 	pdf := fpdf.New("P", "mm", "A4", "")
 	pdf.SetTitle(fmt.Sprintf("Slip gaji teknisi EDC: %s", teknisiName), true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("payslip, gaji, slip, teknisi, EDC", true)
 	pdf.SetSubject(fmt.Sprintf("Slip gaji yang akan diberikan kepada Saudara(i) %s", teknisiName), true)
 	pdf.SetCreationDate(time.Now())
@@ -239,7 +239,7 @@ func GeneratePDFPayslipTechnicianEDC(payrollData odooms.MSTechnicianPayroll, fil
 	currentY += logoHeight + 4.0
 	// Company name FIRST (BOLD, larger font) - positioned at top
 	pdf.SetFont("CenturyGothic", "B", 14)
-	titleText := strings.ToUpper(config.GetConfig().Default.PT)
+	titleText := strings.ToUpper(config.WebPanel.Get().Default.PT)
 	pdf.SetXY(marginLeft, currentY)
 	pdf.CellFormat(contentWidth, 6, titleText, "", 1, "C", false, 0, "")
 
@@ -454,7 +454,7 @@ func GeneratePDFPayslipTechnicianEDC(payrollData odooms.MSTechnicianPayroll, fil
 		}
 
 		var priceBPAKR, priceATM, priceOverduePM, priceOverdueNonPM, priceUnworkedPM, priceUnworkedNonPM float64
-		priceATM = config.GetConfig().ODOOMSParam.DefaultATMPrice
+		priceATM = config.WebPanel.Get().ODOOMSParam.DefaultATMPrice
 
 		var fsParams []odooms.ODOOMSFSParams
 		result = dbWeb.Model(&odooms.ODOOMSFSParams{}).
@@ -749,8 +749,8 @@ func GeneratePDFPayslipTechnicianATM(payrollData odooms.MSTechnicianPayrollDedic
 	}
 	imgCSNA := filepath.Join(imgAssetsDir, "csna.png")
 
-	signatureName := config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName
-	signatureImg := filepath.Join(imgAssetsDir, config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureImg)
+	signatureName := config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName
+	signatureImg := filepath.Join(imgAssetsDir, config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureImg)
 
 	fontMainDir, err := fun.FindValidDirectory([]string{
 		"web/assets/font",
@@ -769,8 +769,8 @@ func GeneratePDFPayslipTechnicianATM(payrollData odooms.MSTechnicianPayrollDedic
 	// Create PDF instance
 	pdf := fpdf.New("P", "mm", "A4", "")
 	pdf.SetTitle(fmt.Sprintf("Slip gaji teknisi ATM: %s", teknisiName), true)
-	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.GetConfig().Default.PT), true)
-	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.GetConfig().Default.PT), true)
+	pdf.SetAuthor(fmt.Sprintf("HRD %s", config.WebPanel.Get().Default.PT), true)
+	pdf.SetCreator(fmt.Sprintf("Service Report %s", config.WebPanel.Get().Default.PT), true)
 	pdf.SetKeywords("payslip, gaji, slip, teknisi, ATM", true)
 	pdf.SetSubject(fmt.Sprintf("Slip gaji yang akan diberikan kepada Saudara(i) %s", teknisiName), true)
 	pdf.SetCreationDate(time.Now())
@@ -810,7 +810,7 @@ func GeneratePDFPayslipTechnicianATM(payrollData odooms.MSTechnicianPayrollDedic
 	currentY += logoHeight + 4.0
 	// Company name FIRST (BOLD, larger font) - positioned at top
 	pdf.SetFont("CenturyGothic", "B", 14)
-	titleText := strings.ToUpper(config.GetConfig().Default.PT)
+	titleText := strings.ToUpper(config.WebPanel.Get().Default.PT)
 	pdf.SetXY(marginLeft, currentY)
 	pdf.CellFormat(contentWidth, 6, titleText, "", 1, "C", false, 0, "")
 
@@ -1015,7 +1015,7 @@ func GeneratePDFPayslipTechnicianATM(payrollData odooms.MSTechnicianPayrollDedic
 		}
 
 		var priceBPAKR, priceATM, priceOverduePM, priceOverdueNonPM, priceUnworkedPM, priceUnworkedNonPM float64
-		priceATM = config.GetConfig().ODOOMSParam.DefaultATMPrice
+		priceATM = config.WebPanel.Get().ODOOMSParam.DefaultATMPrice
 
 		var fsParams []odooms.ODOOMSFSParams
 		result = dbWeb.Model(&odooms.ODOOMSFSParams{}).
@@ -2564,9 +2564,9 @@ func SendIndividualPayslipTechnician() gin.HandlerFunc {
 		}
 
 		dbWeb := gormdb.Databases.Web
-		CCEmails := config.GetConfig().ODOOMSParam.PayslipTechnicianCCEmail
+		CCEmails := config.WebPanel.Get().ODOOMSParam.PayslipTechnicianCCEmail
 
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		hour := now.Hour()
 		// Greeting logic (ensuring correct 24-hour format)
@@ -2657,8 +2657,8 @@ func SendIndividualPayslipTechnician() gin.HandlerFunc {
 
 				var emailTo []string
 
-				if config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.Active {
-					emailTeknisi = config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.EmailUsedForTest
+				if config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.Active {
+					emailTeknisi = config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.EmailUsedForTest
 				}
 
 				emailTo = append(emailTo, emailTeknisi)
@@ -2703,8 +2703,8 @@ func SendIndividualPayslipTechnician() gin.HandlerFunc {
 					return
 				}
 
-				if config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.Active {
-					noHpTeknisi = config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.PhoneNumberUsedForTest
+				if config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.Active {
+					noHpTeknisi = config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.PhoneNumberUsedForTest
 				}
 
 				sanitizedPhone, err := fun.SanitizePhoneNumber(noHpTeknisi)
@@ -2719,13 +2719,13 @@ func SendIndividualPayslipTechnician() gin.HandlerFunc {
 				var sbID, sbEN strings.Builder
 				sbID.WriteString(fmt.Sprintf("%s Bapak/Ibu %s, berikut kami lampirkan slip gaji Anda untuk periode %s.\n\n", greetingID, namaTeknisi, payrollDate))
 				sbID.WriteString("_Best Regards,_\n")
-				sbID.WriteString(config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
-				sbID.WriteString(fmt.Sprintf("Finance - *%s*", config.GetConfig().Default.PT))
+				sbID.WriteString(config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
+				sbID.WriteString(fmt.Sprintf("Finance - *%s*", config.WebPanel.Get().Default.PT))
 
 				sbEN.WriteString(fmt.Sprintf("%s Mr/Mrs %s, please find attached your payslip for the period of %s.\n\n", greetingEN, namaTeknisi, payrollDate))
 				sbEN.WriteString("_Best Regards,_\n")
-				sbEN.WriteString(config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
-				sbEN.WriteString(fmt.Sprintf("Finance - *%s*", config.GetConfig().Default.PT))
+				sbEN.WriteString(config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
+				sbEN.WriteString(fmt.Sprintf("Finance - *%s*", config.WebPanel.Get().Default.PT))
 				msgID := sbID.String()
 				msgEN := sbEN.String()
 
@@ -2802,8 +2802,8 @@ func SendIndividualPayslipTechnician() gin.HandlerFunc {
 
 				var emailTo []string
 
-				if config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.Active {
-					emailTeknisi = config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.EmailUsedForTest
+				if config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.Active {
+					emailTeknisi = config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.EmailUsedForTest
 				}
 
 				emailTo = append(emailTo, emailTeknisi)
@@ -2848,8 +2848,8 @@ func SendIndividualPayslipTechnician() gin.HandlerFunc {
 					return
 				}
 
-				if config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.Active {
-					noHpTeknisi = config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.PhoneNumberUsedForTest
+				if config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.Active {
+					noHpTeknisi = config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.PhoneNumberUsedForTest
 				}
 
 				sanitizedPhone, err := fun.SanitizePhoneNumber(noHpTeknisi)
@@ -2864,13 +2864,13 @@ func SendIndividualPayslipTechnician() gin.HandlerFunc {
 				var sbID, sbEN strings.Builder
 				sbID.WriteString(fmt.Sprintf("%s Bapak/Ibu %s, berikut kami lampirkan slip gaji Anda untuk periode %s.\n\n", greetingID, namaTeknisi, payrollDate))
 				sbID.WriteString("_Best Regards,_\n")
-				sbID.WriteString(config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
-				sbID.WriteString(fmt.Sprintf("Finance - *%s*", config.GetConfig().Default.PT))
+				sbID.WriteString(config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
+				sbID.WriteString(fmt.Sprintf("Finance - *%s*", config.WebPanel.Get().Default.PT))
 
 				sbEN.WriteString(fmt.Sprintf("%s Mr/Mrs %s, please find attached your payslip for the period of %s.\n\n", greetingEN, namaTeknisi, payrollDate))
 				sbEN.WriteString("_Best Regards,_\n")
-				sbEN.WriteString(config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
-				sbEN.WriteString(fmt.Sprintf("Finance - *%s*", config.GetConfig().Default.PT))
+				sbEN.WriteString(config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
+				sbEN.WriteString(fmt.Sprintf("Finance - *%s*", config.WebPanel.Get().Default.PT))
 				msgID := sbID.String()
 				msgEN := sbEN.String()
 
@@ -2976,8 +2976,8 @@ func createTemplateEmailForPayslip(greeting, namaTeknisi, payrollDate string) st
 		greeting,
 		namaTeknisi,
 		payrollDate,
-		config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName,
-		config.GetConfig().Default.PT,
+		config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName,
+		config.WebPanel.Get().Default.PT,
 		"+6287883507445",
 	))
 	sb.WriteString("</mjml>")
@@ -3007,12 +3007,12 @@ func SendAllPayslipTechnician() gin.HandlerFunc {
 		}
 
 		dbWeb := gormdb.Databases.Web
-		CCEmails := config.GetConfig().ODOOMSParam.PayslipTechnicianCCEmail
+		CCEmails := config.WebPanel.Get().ODOOMSParam.PayslipTechnicianCCEmail
 		successLogs := []string{}
 		failedLogs := []string{}
 		totalSent := 0
 
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		hour := now.Hour()
 		// Greeting logic
@@ -3098,8 +3098,8 @@ func SendAllPayslipTechnician() gin.HandlerFunc {
 
 					var emailTo []string
 
-					if config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.Active {
-						emailTeknisi = config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.EmailUsedForTest
+					if config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.Active {
+						emailTeknisi = config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.EmailUsedForTest
 					}
 
 					emailTo = append(emailTo, emailTeknisi)
@@ -3131,8 +3131,8 @@ func SendAllPayslipTechnician() gin.HandlerFunc {
 						continue
 					}
 
-					if config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.Active {
-						noHpTeknisi = config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.PhoneNumberUsedForTest
+					if config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.Active {
+						noHpTeknisi = config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.PhoneNumberUsedForTest
 					}
 
 					sanitizedPhone, err := fun.SanitizePhoneNumber(noHpTeknisi)
@@ -3147,13 +3147,13 @@ func SendAllPayslipTechnician() gin.HandlerFunc {
 					var sbID, sbEN strings.Builder
 					sbID.WriteString(fmt.Sprintf("%s Bapak/Ibu %s, berikut kami lampirkan slip gaji Anda untuk periode %s.\n\n", greetingID, namaTeknisi, payrollDate))
 					sbID.WriteString("_Best Regards,_\n")
-					sbID.WriteString(config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
-					sbID.WriteString(fmt.Sprintf("Finance - *%s*", config.GetConfig().Default.PT))
+					sbID.WriteString(config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
+					sbID.WriteString(fmt.Sprintf("Finance - *%s*", config.WebPanel.Get().Default.PT))
 
 					sbEN.WriteString(fmt.Sprintf("%s Mr/Mrs %s, please find attached your payslip for the period of %s.\n\n", greetingEN, namaTeknisi, payrollDate))
 					sbEN.WriteString("_Best Regards,_\n")
-					sbEN.WriteString(config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
-					sbEN.WriteString(fmt.Sprintf("Finance - *%s*", config.GetConfig().Default.PT))
+					sbEN.WriteString(config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
+					sbEN.WriteString(fmt.Sprintf("Finance - *%s*", config.WebPanel.Get().Default.PT))
 					msgID := sbID.String()
 					msgEN := sbEN.String()
 
@@ -3234,8 +3234,8 @@ func SendAllPayslipTechnician() gin.HandlerFunc {
 
 					var emailTo []string
 
-					if config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.Active {
-						emailTeknisi = config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.EmailUsedForTest
+					if config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.Active {
+						emailTeknisi = config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.EmailUsedForTest
 					}
 
 					emailTo = append(emailTo, emailTeknisi)
@@ -3267,8 +3267,8 @@ func SendAllPayslipTechnician() gin.HandlerFunc {
 						continue
 					}
 
-					if config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.Active {
-						noHpTeknisi = config.GetConfig().ODOOMSParam.PayslipTechnicianDebug.PhoneNumberUsedForTest
+					if config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.Active {
+						noHpTeknisi = config.WebPanel.Get().ODOOMSParam.PayslipTechnicianDebug.PhoneNumberUsedForTest
 					}
 
 					sanitizedPhone, err := fun.SanitizePhoneNumber(noHpTeknisi)
@@ -3283,13 +3283,13 @@ func SendAllPayslipTechnician() gin.HandlerFunc {
 					var sbID, sbEN strings.Builder
 					sbID.WriteString(fmt.Sprintf("%s Bapak/Ibu %s, berikut kami lampirkan slip gaji Anda untuk periode %s.\n\n", greetingID, namaTeknisi, payrollDate))
 					sbID.WriteString("_Best Regards,_\n")
-					sbID.WriteString(config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
-					sbID.WriteString(fmt.Sprintf("Finance - *%s*", config.GetConfig().Default.PT))
+					sbID.WriteString(config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
+					sbID.WriteString(fmt.Sprintf("Finance - *%s*", config.WebPanel.Get().Default.PT))
 
 					sbEN.WriteString(fmt.Sprintf("%s Mr/Mrs %s, please find attached your payslip for the period of %s.\n\n", greetingEN, namaTeknisi, payrollDate))
 					sbEN.WriteString("_Best Regards,_\n")
-					sbEN.WriteString(config.GetConfig().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
-					sbEN.WriteString(fmt.Sprintf("Finance - *%s*", config.GetConfig().Default.PT))
+					sbEN.WriteString(config.WebPanel.Get().ODOOMSParam.PayslipTechnicianSignatureName + "\n\n")
+					sbEN.WriteString(fmt.Sprintf("Finance - *%s*", config.WebPanel.Get().Default.PT))
 					msgID := sbID.String()
 					msgEN := sbEN.String()
 

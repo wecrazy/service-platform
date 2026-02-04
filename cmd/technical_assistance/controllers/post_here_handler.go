@@ -6,7 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
+	"service-platform/internal/config"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,12 +20,12 @@ import (
 // 			return
 // 		}
 // 		// Buat request baru ke target server
-// 		req, err := http.NewRequest(c.Request.Method, os.Getenv("FILESTORE_URL")+c.FullPath(), bytes.NewBuffer(bodyBytes))
+// 		req, err := http.NewRequest(c.Request.Method, config.TechnicalAssistance.Get().FILESTORE_URL+c.FullPath(), bytes.NewBuffer(bodyBytes))
 // 		if err != nil {
 // 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
 // 			return
 // 		}
-// 		fmt.Println(os.Getenv("FILESTORE_URL") + c.FullPath())
+// 		fmt.Println(config.TechnicalAssistance.Get().FILESTORE_URL + c.FullPath())
 
 // 		// Copy headers dari request asli
 // 		// req.Header.Set("Content-Type", "application/json")
@@ -72,7 +72,7 @@ func PostHere() gin.HandlerFunc {
 		c.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 
 		// Ambil path dari request
-		targetURL := os.Getenv("FILESTORE_URL") + "/here" + c.Param("path")
+		targetURL := config.TechnicalAssistance.Get().FILESTORE_URL + "/here" + c.Param("path")
 		fmt.Println("Forwarding to:", targetURL)
 
 		// Buat request baru ke target server

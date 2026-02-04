@@ -111,7 +111,7 @@ In your web_panel main.go or initialization file, add:
 
 ```go
 import (
-    "service-platform/cmd/web_panel/config"
+    "service-platform/internal/config"
     "service-platform/cmd/web_panel/internal/grpcclient"
 )
 
@@ -119,7 +119,7 @@ func main() {
     // ... existing code ...
 
     // Initialize Telegram gRPC Client
-    cfg := config.GetConfig()
+    cfg := config.WebPanel.Get()
     if err := grpcclient.InitTelegramGRPCClient(
         "localhost",  // or cfg.Telegram.GRPCHost
         9092,         // or cfg.Telegram.GRPCPort

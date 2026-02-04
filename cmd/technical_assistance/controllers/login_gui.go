@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"net/http"
-	"os"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model"
+	"service-platform/internal/config"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,12 +26,12 @@ func GetWebLogin(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		parameters := gin.H{
-			"APP_NAME":         os.Getenv("APP_NAME"),
-			"APP_LOGO":         os.Getenv("APP_LOGO"),
-			"APP_VERSION":      os.Getenv("APP_VERSION"),
-			"APP_VERSION_NO":   os.Getenv("APP_VERSION_NO"),
-			"APP_VERSION_CODE": os.Getenv("APP_VERSION_CODE"),
-			"APP_VERSION_NAME": os.Getenv("APP_VERSION_NAME"),
+			"APP_NAME":         config.TechnicalAssistance.Get().APP_NAME,
+			"APP_LOGO":         config.TechnicalAssistance.Get().APP_LOGO,
+			"APP_VERSION":      config.TechnicalAssistance.Get().APP_VERSION_NO,
+			"APP_VERSION_NO":   config.TechnicalAssistance.Get().APP_VERSION_NO,
+			"APP_VERSION_CODE": config.TechnicalAssistance.Get().APP_VERSION_CODE,
+			"APP_VERSION_NAME": config.TechnicalAssistance.Get().APP_VERSION_NAME,
 		}
 
 		// Check if the credentials cookie is not nil before accessing its value

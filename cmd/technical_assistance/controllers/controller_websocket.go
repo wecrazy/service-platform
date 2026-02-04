@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"service-platform/cmd/technical_assistance/database"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model"
 	"service-platform/cmd/technical_assistance/model/op_model"
 	"service-platform/cmd/technical_assistance/ws"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"sync"
@@ -65,11 +65,11 @@ var upgrader = websocket.Upgrader{
 func WebSocketRealtime() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db, err := database.InitAndCheckDB(
-			os.Getenv("MYSQL_USER_DB_KONFIRMASI_PENGERJAAN"),
-			os.Getenv("MYSQL_PASS_DB_KONFIRMASI_PENGERJAAN"),
-			os.Getenv("MYSQL_HOST_DB_KONFIRMASI_PENGERJAAN"),
-			os.Getenv("MYSQL_PORT_DB_KONFIRMASI_PENGERJAAN"),
-			os.Getenv("MYSQL_NAME_DB_KONFIRMASI_PENGERJAAN"),
+			config.TechnicalAssistance.Get().MYSQL_USER_DB_KONFIRMASI_PENGERJAAN,
+			config.TechnicalAssistance.Get().MYSQL_PASS_DB_KONFIRMASI_PENGERJAAN,
+			config.TechnicalAssistance.Get().MYSQL_HOST_DB_KONFIRMASI_PENGERJAAN,
+			config.TechnicalAssistance.Get().MYSQL_PORT_DB_KONFIRMASI_PENGERJAAN,
+			config.TechnicalAssistance.Get().MYSQL_NAME_DB_KONFIRMASI_PENGERJAAN,
 		)
 		if err != nil {
 			log.Fatalf("WS Realtime Database setup failed: %v", err)

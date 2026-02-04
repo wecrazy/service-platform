@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -30,5 +30,5 @@ type WAMessage struct {
 
 // TableName sets table name
 func (WAMessage) TableName() string {
-	return config.GetConfig().Database.TbWAMsg
+	return config.WebPanel.Get().Database.TbWAMsg
 }

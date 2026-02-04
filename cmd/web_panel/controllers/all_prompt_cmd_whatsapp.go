@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 
@@ -73,7 +73,7 @@ func AllCMDWhatsapp(v *events.Message, userLang string) {
 		{
 			FileName:     "Report Pemasangan Juli 2025.xlsx",
 			FileType:     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-			MaxSize:      config.GetConfig().Whatsmeow.MaxUploadedDocumentSize * 1024 * 1024, // Convert MB to bytes
+			MaxSize:      config.WebPanel.Get().Whatsmeow.MaxUploadedDocumentSize * 1024 * 1024, // Convert MB to bytes
 			IDDesc:       "Contoh file yang dapat diunggah untuk Report Pemasangan MTI (Yokke) yang dicompare dengan data ODOO",
 			ENDesc:       "Example file that can be uploaded for MTI Installation Report (Yokke) compared with ODOO data",
 			TemplateFile: "https://example.com/path/to/template.xlsx", // Replace with actual template file URL

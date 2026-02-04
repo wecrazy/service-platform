@@ -1,7 +1,7 @@
 package tamodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 )
 
@@ -29,5 +29,5 @@ type LogAct struct {
 }
 
 func (LogAct) TableName() string {
-	return config.GetConfig().Database.TbTALogAct
+	return config.WebPanel.Get().Database.TbTALogAct
 }

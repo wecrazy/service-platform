@@ -3,13 +3,13 @@ package tests
 import (
 	"errors"
 	"fmt"
-	"strings"
-	"testing"
-	"time"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/database"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
+	"strings"
+	"testing"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -35,11 +35,11 @@ func TestCreateUserAndSendAccountInEmail(t *testing.T) {
 	}
 
 	dbWeb, err := database.InitAndCheckDB(
-		config.GetConfig().Database.Username,
-		config.GetConfig().Database.Password,
-		config.GetConfig().Database.Host,
-		config.GetConfig().Database.Port,
-		"db_web_panel_gl", // config.GetConfig().Database.Name,
+		config.WebPanel.Get().Database.Username,
+		config.WebPanel.Get().Database.Password,
+		config.WebPanel.Get().Database.Host,
+		config.WebPanel.Get().Database.Port,
+		"db_web_panel_gl", // config.WebPanel.Get().Database.Name,
 	)
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
@@ -117,7 +117,7 @@ func createUserDashboardDKI(db *gorm.DB, users []userAccount) error {
 
 func sendAccountDKIToEmail(fullname, username, email, password string) error {
 	subject := "[noreply] DKI Dashboard User Account Information"
-	dashboardUrl := config.GetConfig().App.WebPublicURL
+	dashboardUrl := config.WebPanel.Get().App.WebPublicURL
 	dashboardUrl = "https://dashboardms.csna4u.com:14427"
 
 	var sb strings.Builder
@@ -253,7 +253,7 @@ func sendAccountDKIToEmail(fullname, username, email, password string) error {
 		password,
 		dashboardUrl,
 		dashboardUrl, dashboardUrl,
-		config.GetConfig().Default.PT,
+		config.WebPanel.Get().Default.PT,
 	))
 
 	mjmlTemplate := sb.String()

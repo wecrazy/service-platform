@@ -3,10 +3,10 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"reflect"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model/cc_model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -245,7 +245,7 @@ func TableMerchantH_1CallLog(db *gorm.DB) gin.HandlerFunc {
 					}
 				} else if theKey == "wonumber" {
 					newData[theKey] = fmt.Sprintf(`<a href="%v/odooms-project-task/detailWO?wo_number=%v" target="_blank">%v</a>`,
-						os.Getenv("WO_DETAIL_URL"),
+						config.TechnicalAssistance.Get().WO_DETAIL_URL,
 						fieldValue.Interface().(string),
 						fieldValue.Interface().(string))
 				} else if theKey == "update_to_odoo" {

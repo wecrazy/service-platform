@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/controllers"
 	"service-platform/cmd/web_panel/database"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
+	"service-platform/internal/config"
 	"sort"
 	"strconv"
 	"strings"
@@ -27,9 +27,9 @@ var jakartaLoc *time.Location
 // loadTimezone loads the timezone from config
 func loadTimezone() {
 	var err error
-	jakartaLoc, err = time.LoadLocation(config.GetConfig().Default.Timezone)
+	jakartaLoc, err = time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	if err != nil {
-		logrus.Fatalf("Failed to load timezone %s: %v", config.GetConfig().Default.Timezone, err)
+		logrus.Fatalf("Failed to load timezone %s: %v", config.WebPanel.Get().Default.Timezone, err)
 	}
 	logrus.Infof("Scheduler timezone loaded: %s", jakartaLoc)
 }
@@ -91,7 +91,7 @@ var jobMap = map[string]func(){
 		}
 	},
 	"MrOliverReportStatus": func() {
-		originalSenderJIDStr := config.GetConfig().Whatsmeow.WAGTestJID            // e.g., "120363201154381780"
+		originalSenderJIDStr := config.WebPanel.Get().Whatsmeow.WAGTestJID         // e.g., "120363201154381780"
 		originalSenderJID := types.NewJID(originalSenderJIDStr, types.GroupServer) // creates "120363201154381780@g.us"
 		normalizedJID := controllers.NormalizeSenderJID(originalSenderJID.String())
 
@@ -127,7 +127,7 @@ var jobMap = map[string]func(){
 		controllers.SendLangMessage(normalizedJID, msgID, msgEN, "id")
 	},
 	"ReportAIError": func() {
-		phoneNumbersSend := config.GetConfig().Report.AIError.WhatsappSendToIfGotError
+		phoneNumbersSend := config.WebPanel.Get().Report.AIError.WhatsappSendToIfGotError
 		if len(phoneNumbersSend) == 0 {
 			logrus.Warnf("Skipping ReportAIError since no phone numbers configured to send to")
 			return
@@ -142,7 +142,7 @@ var jobMap = map[string]func(){
 		}
 
 		// Create Excel Report
-		loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		if err != nil {
 			logrus.Error(err)
 			return
@@ -184,7 +184,7 @@ var jobMap = map[string]func(){
 		}
 
 		// Generate the proxy link for the report
-		proxyLink := config.GetConfig().App.WebPublicURL + "/report-ai-error/" + filepath.Base(fileReportDir) + "/" + filepath.Base(excelFilePath)
+		proxyLink := config.WebPanel.Get().App.WebPublicURL + "/report-ai-error/" + filepath.Base(fileReportDir) + "/" + filepath.Base(excelFilePath)
 
 		var sb strings.Builder
 		sb.WriteString("<mjml>")
@@ -270,8 +270,8 @@ var jobMap = map[string]func(){
 		</mj-body>
 		`,
 			proxyLink,
-			config.GetConfig().Default.PT,
-			config.GetConfig().Whatsmeow.WaTechnicalSupport,
+			config.WebPanel.Get().Default.PT,
+			config.WebPanel.Get().Whatsmeow.WaTechnicalSupport,
 			"085123456789",
 		))
 		sb.WriteString("</mjml>")
@@ -279,9 +279,9 @@ var jobMap = map[string]func(){
 		mjmlTemplate := sb.String()
 
 		if err := fun.TrySendEmail(
-			config.GetConfig().Report.AIError.To,
-			config.GetConfig().Report.AIError.Cc,
-			config.GetConfig().Report.AIError.Bcc,
+			config.WebPanel.Get().Report.AIError.To,
+			config.WebPanel.Get().Report.AIError.Cc,
+			config.WebPanel.Get().Report.AIError.Bcc,
 			fmt.Sprintf("Report AI Error - %s", now.Format("02 Jan 2006")),
 			mjmlTemplate,
 			nil, // No attachments
@@ -301,13 +301,13 @@ var jobMap = map[string]func(){
 		// }
 	},
 	"ShowStatusVMODOODashboard": func() {
-		originalSenderJIDStr := config.GetConfig().Whatsmeow.WAGTestJID            // e.g., "120363201154381780"
+		originalSenderJIDStr := config.WebPanel.Get().Whatsmeow.WAGTestJID         // e.g., "120363201154381780"
 		originalSenderJID := types.NewJID(originalSenderJIDStr, types.GroupServer) // creates "120363201154381780@g.us"
 		normalizedJID := controllers.NormalizeSenderJID(originalSenderJID.String())
 
-		sshUser := config.GetConfig().VMOdooDashboard.SSHUser
-		sshPassword := config.GetConfig().VMOdooDashboard.SSHPwd
-		sshAddr := config.GetConfig().VMOdooDashboard.SSHAddr
+		sshUser := config.WebPanel.Get().VMOdooDashboard.SSHUser
+		sshPassword := config.WebPanel.Get().VMOdooDashboard.SSHPwd
+		sshAddr := config.WebPanel.Get().VMOdooDashboard.SSHAddr
 
 		client, err := controllers.ConnectSSH(sshUser, sshPassword, sshAddr)
 		if err != nil {
@@ -432,7 +432,7 @@ var jobMap = map[string]func(){
 		now := time.Now().In(jakartaLoc)
 		logrus.Infof("Running StatusSPTechnicianODOO check at %s", now.Format(time.RFC3339))
 
-		if !config.GetConfig().SPTechnician.RunOnWeekends {
+		if !config.WebPanel.Get().SPTechnician.RunOnWeekends {
 			if now.Weekday() == time.Saturday || now.Weekday() == time.Sunday {
 				// Skip on weekends
 				logrus.Infof("Skipping StatusSPTechnicianODOO on weekend (%s)", now.Weekday())
@@ -440,7 +440,7 @@ var jobMap = map[string]func(){
 			}
 		}
 
-		if !config.GetConfig().SPTechnician.RunOnHolidays {
+		if !config.WebPanel.Get().SPTechnician.RunOnHolidays {
 			todayData, err := fun.GetLibur("today")
 			if err != nil {
 				logrus.Errorf("Failed to get holiday info: %v", err)
@@ -494,7 +494,7 @@ var jobMap = map[string]func(){
 		// ADD: sendAllContractsToTechnicians(sendOption, db) each 18 on the month if needed !!!!!!
 	},
 	"NotifyHRDBeforeContractExpired": func() {
-		expiredInDays := config.GetConfig().ContractTechnicianODOO.NotifyHRDBeforeContractExpiredDays
+		expiredInDays := config.WebPanel.Get().ContractTechnicianODOO.NotifyHRDBeforeContractExpiredDays
 		if expiredInDays <= 0 {
 			expiredInDays = 30 // default 30 days
 		}
@@ -599,8 +599,8 @@ var jobMap = map[string]func(){
 	},
 	"MonitoringReport": func() {
 		var phoneNumbersSendTo []string
-		phoneNumbersSendTo = append(phoneNumbersSendTo, config.GetConfig().Report.MonitoringTicketODOOMS.WhatsappSendToIfGotError...)
-		phoneNumbersSendTo = append(phoneNumbersSendTo, config.GetConfig().Report.MonitoringLoginVisitTechnician.WhatsappSendToIfGotError...)
+		phoneNumbersSendTo = append(phoneNumbersSendTo, config.WebPanel.Get().Report.MonitoringTicketODOOMS.WhatsappSendToIfGotError...)
+		phoneNumbersSendTo = append(phoneNumbersSendTo, config.WebPanel.Get().Report.MonitoringLoginVisitTechnician.WhatsappSendToIfGotError...)
 		// Make unique
 		uniqueMap := make(map[string]struct{})
 		var uniqueNumbers []string
@@ -716,9 +716,9 @@ var jobMap = map[string]func(){
 			if err != nil {
 				logrus.Error(err)
 				ticketAchievementReport = ""
-			} else if fileInfo.Size() > config.GetConfig().Email.MaxAttachmentSize*1024*1024 {
-				id := fmt.Sprintf("⚠ Mohon maaf, gagal untuk mengirim email Summary Ticket Achievements karena ukuran file %d bytes melebihi batas maksimum %d MB", fileInfo.Size(), config.GetConfig().Email.MaxAttachmentSize)
-				en := fmt.Sprintf("⚠ Sorry, failed to send Summary Ticket Achievements because file size %d bytes exceeds maximum limit of %d MB", fileInfo.Size(), config.GetConfig().Email.MaxAttachmentSize)
+			} else if fileInfo.Size() > config.WebPanel.Get().Email.MaxAttachmentSize*1024*1024 {
+				id := fmt.Sprintf("⚠ Mohon maaf, gagal untuk mengirim email Summary Ticket Achievements karena ukuran file %d bytes melebihi batas maksimum %d MB", fileInfo.Size(), config.WebPanel.Get().Email.MaxAttachmentSize)
+				en := fmt.Sprintf("⚠ Sorry, failed to send Summary Ticket Achievements because file size %d bytes exceeds maximum limit of %d MB", fileInfo.Size(), config.WebPanel.Get().Email.MaxAttachmentSize)
 				for _, jid := range receiverJIDs {
 					controllers.SendLangMessage(jid, id, en, "id")
 				}
@@ -741,9 +741,9 @@ var jobMap = map[string]func(){
 			if err != nil {
 				logrus.Error(err)
 				loginVisitReport = ""
-			} else if fileInfo2.Size() > config.GetConfig().Email.MaxAttachmentSize*1024*1024 {
-				id := fmt.Sprintf("⚠ Mohon maaf, gagal untuk mengirim email Summary Technician Attendance karena ukuran file %d bytes melebihi batas maksimum %d MB", fileInfo2.Size(), config.GetConfig().Email.MaxAttachmentSize)
-				en := fmt.Sprintf("⚠ Sorry, failed to send Summary Technician Attendance because file size %d bytes exceeds maximum limit of %d MB", fileInfo2.Size(), config.GetConfig().Email.MaxAttachmentSize)
+			} else if fileInfo2.Size() > config.WebPanel.Get().Email.MaxAttachmentSize*1024*1024 {
+				id := fmt.Sprintf("⚠ Mohon maaf, gagal untuk mengirim email Summary Technician Attendance karena ukuran file %d bytes melebihi batas maksimum %d MB", fileInfo2.Size(), config.WebPanel.Get().Email.MaxAttachmentSize)
+				en := fmt.Sprintf("⚠ Sorry, failed to send Summary Technician Attendance because file size %d bytes exceeds maximum limit of %d MB", fileInfo2.Size(), config.WebPanel.Get().Email.MaxAttachmentSize)
 				for _, jid := range receiverJIDs {
 					controllers.SendLangMessage(jid, id, en, "id")
 				}
@@ -856,19 +856,19 @@ var jobMap = map[string]func(){
 
 	   </mj-body>
 	   `,
-			config.GetConfig().Default.PT,
-			config.GetConfig().Whatsmeow.WaTechnicalSupport,
+			config.WebPanel.Get().Default.PT,
+			config.WebPanel.Get().Whatsmeow.WaTechnicalSupport,
 		))
 		sb.WriteString("</mjml>")
 		mjmlTemplate := sb.String()
 
 		var monitoringReportsTo, monitoringReportsCc, monitoringReportsBcc []string
-		monitoringReportsTo = append(monitoringReportsTo, config.GetConfig().Report.MonitoringTicketODOOMS.To...)
-		monitoringReportsTo = append(monitoringReportsTo, config.GetConfig().Report.MonitoringLoginVisitTechnician.To...)
-		monitoringReportsCc = append(monitoringReportsCc, config.GetConfig().Report.MonitoringTicketODOOMS.Cc...)
-		monitoringReportsCc = append(monitoringReportsCc, config.GetConfig().Report.MonitoringLoginVisitTechnician.Cc...)
-		monitoringReportsBcc = append(monitoringReportsBcc, config.GetConfig().Report.MonitoringTicketODOOMS.Bcc...)
-		monitoringReportsBcc = append(monitoringReportsBcc, config.GetConfig().Report.MonitoringLoginVisitTechnician.Bcc...)
+		monitoringReportsTo = append(monitoringReportsTo, config.WebPanel.Get().Report.MonitoringTicketODOOMS.To...)
+		monitoringReportsTo = append(monitoringReportsTo, config.WebPanel.Get().Report.MonitoringLoginVisitTechnician.To...)
+		monitoringReportsCc = append(monitoringReportsCc, config.WebPanel.Get().Report.MonitoringTicketODOOMS.Cc...)
+		monitoringReportsCc = append(monitoringReportsCc, config.WebPanel.Get().Report.MonitoringLoginVisitTechnician.Cc...)
+		monitoringReportsBcc = append(monitoringReportsBcc, config.WebPanel.Get().Report.MonitoringTicketODOOMS.Bcc...)
+		monitoringReportsBcc = append(monitoringReportsBcc, config.WebPanel.Get().Report.MonitoringLoginVisitTechnician.Bcc...)
 
 		// Make unique
 		toMap := make(map[string]struct{})
@@ -918,7 +918,7 @@ var jobMap = map[string]func(){
 		}
 	},
 	"RemoveOldFilesDirectory": func() {
-		folderNeeds := config.GetConfig().FolderFileNeeds
+		folderNeeds := config.WebPanel.Get().FolderFileNeeds
 		if len(folderNeeds) == 0 {
 			logrus.Warn("No folders configured to clean old files")
 			return
@@ -972,7 +972,7 @@ var jobMap = map[string]func(){
 			return
 		}
 
-		thresholdRange := config.GetConfig().UploadedExcelForODOOMS.ThresholdPurgeFile // Can be "-2days", "-1month", etc.
+		thresholdRange := config.WebPanel.Get().UploadedExcelForODOOMS.ThresholdPurgeFile // Can be "-2days", "-1month", etc.
 		if err := fun.RemoveOldFiles(selectedDir, thresholdRange); err != nil {
 			logrus.Errorf("Failed to cleanup old Excel files in %s: %v", selectedDir, err)
 		} else {
@@ -980,7 +980,7 @@ var jobMap = map[string]func(){
 		}
 	},
 	"PurgeOldDatabaseLogs": func() {
-		dayInt := config.GetConfig().Database.PurgeLogOlderThanDays
+		dayInt := config.WebPanel.Get().Database.PurgeLogOlderThanDays
 		if dayInt <= 0 {
 			logrus.Warn("Skipping PurgeOldDatabaseLogs since Database.PurgeLogOlderThanDays is not set or <= 0")
 			return
@@ -1017,7 +1017,7 @@ var jobMap = map[string]func(){
 
 		logrus.Infof("SLA Report generation completed, %d files returned by controller", len(excelFilePaths))
 
-		slaTypesRaw := config.GetConfig().Report.SLA.GeneratedTypes
+		slaTypesRaw := config.WebPanel.Get().Report.SLA.GeneratedTypes
 		var slaTypes []string
 		for _, typ := range slaTypesRaw {
 			typClean := strings.ReplaceAll(typ, " ", "")
@@ -1179,7 +1179,7 @@ var jobMap = map[string]func(){
 			for _, typ := range availableReports {
 				if filePath, ok := typeToFile[typ]; ok {
 					fileReportDir := filepath.Dir(filePath)
-					proxyLink := config.GetConfig().App.WebPublicURL + "/report-sla/" + filepath.Base(fileReportDir) + "/" + filepath.Base(filePath)
+					proxyLink := config.WebPanel.Get().App.WebPublicURL + "/report-sla/" + filepath.Base(fileReportDir) + "/" + filepath.Base(filePath)
 					sb.WriteString(fmt.Sprintf(
 						`<li><b>%s</b>: <a href="%s" style="color:#6D28D9;font-weight:bold;">Download %s Report</a></li>`,
 						typ, proxyLink, typ,
@@ -1223,8 +1223,8 @@ var jobMap = map[string]func(){
 			</mj-column>
 		</mj-section>
 	</mj-body>`,
-			config.GetConfig().Default.PT,
-			config.GetConfig().Whatsmeow.WaTechnicalSupport,
+			config.WebPanel.Get().Default.PT,
+			config.WebPanel.Get().Whatsmeow.WaTechnicalSupport,
 		))
 
 		sb.WriteString("</mjml>")
@@ -1235,9 +1235,9 @@ var jobMap = map[string]func(){
 		// htmlOutput := mjml.ToHTML(mjmlTemplate)
 
 		if err := fun.TrySendEmail(
-			config.GetConfig().Report.SLA.To,
-			config.GetConfig().Report.SLA.Cc,
-			config.GetConfig().Report.SLA.Bcc,
+			config.WebPanel.Get().Report.SLA.To,
+			config.WebPanel.Get().Report.SLA.Cc,
+			config.WebPanel.Get().Report.SLA.Bcc,
 			fmt.Sprintf("SLA Report %v", time.Now().Format("02 Jan 2006")),
 			// fmt.Sprintf("SLA Report %s (%d/%d Generated)", time.Now().Format("02 Jan 2006"), len(availableReports), len(slaTypes)),
 			mjmlTemplate, // change to htmlOutput if conversion needed
@@ -1297,7 +1297,7 @@ var jobMap = map[string]func(){
 	// 	now := time.Now().In(jakartaLoc)
 	// 	logrus.Infof("Running StatusSPStockOpname check at %s", now.Format(time.RFC3339))
 
-	// 	if !config.GetConfig().SPTechnician.SORunOnWeekends {
+	// 	if !config.WebPanel.Get().SPTechnician.SORunOnWeekends {
 	// 		if now.Weekday() == time.Saturday || now.Weekday() == time.Sunday {
 	// 			// Skip on weekends
 	// 			logrus.Infof("Skipping StatusSPStockOpname on weekend (%s)", now.Weekday())
@@ -1305,7 +1305,7 @@ var jobMap = map[string]func(){
 	// 		}
 	// 	}
 
-	// 	if !config.GetConfig().SPTechnician.SORunOnHolidays {
+	// 	if !config.WebPanel.Get().SPTechnician.SORunOnHolidays {
 	// 		todayData, err := fun.GetLibur("today")
 	// 		if err != nil {
 	// 			logrus.Errorf("Failed to get holiday info: %v", err)
@@ -1333,7 +1333,7 @@ var jobMap = map[string]func(){
 	// ########### Deprecated / Not used anymore #########################
 	// ###################################################################
 	// "MonitoringTicketODOOMS": func() {
-	// 	phoneNumbersSend := config.GetConfig().Report.MonitoringTicketODOOMS.WhatsappSendToIfGotError
+	// 	phoneNumbersSend := config.WebPanel.Get().Report.MonitoringTicketODOOMS.WhatsappSendToIfGotError
 	// 	if len(phoneNumbersSend) == 0 {
 	// 		logrus.Warnf("Skipping MonitoringTicketODOOMS since no phone numbers configured to send to")
 	// 		return
@@ -1385,9 +1385,9 @@ var jobMap = map[string]func(){
 	// 		return
 	// 	}
 
-	// 	if fileInfo.Size() > config.GetConfig().Email.MaxAttachmentSize*1024*1024 {
-	// 		id := fmt.Sprintf("⚠ Mohon maaf, gagal untuk mengirim email Summary Ticket Achievements karena ukuran file %d bytes melebihi batas maksimum %d MB", fileInfo.Size(), config.GetConfig().Email.MaxAttachmentSize)
-	// 		en := fmt.Sprintf("⚠ Sorry, failed to send Summary Ticket Achievements because file size %d bytes exceeds maximum limit of %d MB", fileInfo.Size(), config.GetConfig().Email.MaxAttachmentSize)
+	// 	if fileInfo.Size() > config.WebPanel.Get().Email.MaxAttachmentSize*1024*1024 {
+	// 		id := fmt.Sprintf("⚠ Mohon maaf, gagal untuk mengirim email Summary Ticket Achievements karena ukuran file %d bytes melebihi batas maksimum %d MB", fileInfo.Size(), config.WebPanel.Get().Email.MaxAttachmentSize)
+	// 		en := fmt.Sprintf("⚠ Sorry, failed to send Summary Ticket Achievements because file size %d bytes exceeds maximum limit of %d MB", fileInfo.Size(), config.WebPanel.Get().Email.MaxAttachmentSize)
 	// 		for _, jid := range senderJIDs {
 	// 			controllers.SendLangMessage(jid, id, en, "id")
 	// 		}
@@ -1486,8 +1486,8 @@ var jobMap = map[string]func(){
 
 	// 	</mj-body>
 	// 	`,
-	// 		config.GetConfig().Default.PT,
-	// 		config.GetConfig().Whatsmeow.WaTechnicalSupport,
+	// 		config.WebPanel.Get().Default.PT,
+	// 		config.WebPanel.Get().Whatsmeow.WaTechnicalSupport,
 	// 		"085123456789",
 	// 	))
 	// 	sb.WriteString("</mjml>")
@@ -1502,9 +1502,9 @@ var jobMap = map[string]func(){
 	// 	}
 
 	// 	if err := fun.TrySendEmail(
-	// 		config.GetConfig().Report.MonitoringTicketODOOMS.To,
-	// 		config.GetConfig().Report.MonitoringTicketODOOMS.Cc,
-	// 		config.GetConfig().Report.MonitoringTicketODOOMS.Bcc,
+	// 		config.WebPanel.Get().Report.MonitoringTicketODOOMS.To,
+	// 		config.WebPanel.Get().Report.MonitoringTicketODOOMS.Cc,
+	// 		config.WebPanel.Get().Report.MonitoringTicketODOOMS.Bcc,
 	// 		fmt.Sprintf("Summary Ticket Achievements - %s", time.Now().Format("02 Jan 2006")),
 	// 		mjmlTemplate,
 	// 		attachments,
@@ -1532,7 +1532,7 @@ var jobMap = map[string]func(){
 	// },
 }
 
-func StartSchedulers(db *gorm.DB, cfg *config.YamlConfig) *gocron.Scheduler {
+func StartSchedulers(db *gorm.DB, cfg *config.TypeWebPanel) *gocron.Scheduler {
 	loadTimezone()
 	scheduler := gocron.NewScheduler(jakartaLoc)
 

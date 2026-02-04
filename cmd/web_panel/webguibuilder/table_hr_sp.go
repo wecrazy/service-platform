@@ -190,11 +190,11 @@ func TABLE_DATA_SP_SAC(session string, redisDB *redis.Client) template.HTML {
 func GET_SP_TECHNICIAN_COUNT() string {
 	db := gormdb.Databases.Web
 	var count int64
-	
+
 	if err := db.Model(&sptechnicianmodel.TechnicianGotSP{}).Count(&count).Error; err != nil {
 		return "0"
 	}
-	
+
 	return fmt.Sprintf("%d", count)
 }
 
@@ -202,11 +202,11 @@ func GET_SP_TECHNICIAN_COUNT() string {
 func GET_SP_SPL_COUNT() string {
 	db := gormdb.Databases.Web
 	var count int64
-	
+
 	if err := db.Model(&sptechnicianmodel.SPLGotSP{}).Count(&count).Error; err != nil {
 		return "0"
 	}
-	
+
 	return fmt.Sprintf("%d", count)
 }
 
@@ -214,10 +214,10 @@ func GET_SP_SPL_COUNT() string {
 func GET_SP_SAC_COUNT() string {
 	db := gormdb.Databases.Web
 	var count int64
-	
+
 	if err := db.Model(&sptechnicianmodel.SACGotSP{}).Count(&count).Error; err != nil {
 		return "0"
 	}
-	
+
 	return fmt.Sprintf("%d", count)
 }

@@ -11,50 +11,45 @@ import (
 	"time"
 
 	"service-platform/cmd/technical_assistance/app_installer"
-	"service-platform/cmd/technical_assistance/config"
 	"service-platform/cmd/technical_assistance/controllers"
 	"service-platform/cmd/technical_assistance/database"
 	"service-platform/cmd/technical_assistance/middleware"
 	"service-platform/cmd/technical_assistance/model"
 	"service-platform/cmd/technical_assistance/model/op_model"
 	"service-platform/cmd/technical_assistance/routes"
+	"service-platform/internal/config"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-co-op/gocron"
 	"github.com/go-redis/redis/v8"
-	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
 func main() {
 
-	exePath, errE := os.Executable()
-	if errE != nil {
-		log.Fatalf("Error getting executable path: %v", errE)
-	}
+	// exePath, errE := os.Executable()
+	// if errE != nil {
+	// 	log.Fatalf("Error getting executable path: %v", errE)
+	// }
 
-	exeDir := filepath.Dir(exePath)
-	log.Printf("Executable directory: %s", exeDir)
+	// exeDir := filepath.Dir(exePath)
+	// log.Printf("Executable directory: %s", exeDir)
 
-	// Load the .env file from the same directory as the executable
-	err1 := godotenv.Load(filepath.Join(exeDir, ".env"))
-	if err1 != nil {
-		log.Fatalf("Error loading .env file: %v", err1)
-	}
+	// // Load the .env file from the same directory as the executable
+	// err1 := godotenv.Load(filepath.Join(exeDir, ".env"))
+	// if err1 != nil {
+	// 	log.Fatalf("Error loading .env file: %v", err1)
+	// }
+
+	// Initialize dynamic config manager
+	config.TechnicalAssistance.MustInit("technical_assistance")
+	go config.TechnicalAssistance.Watch()
 
 	if app_installer.Init() {
 		fmt.Print("Apps Installed")
 		return
 	}
-
-	// Dynamic update conf.yaml
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
-
-	go config.WatchConfig()
-
 	// Increase resource limitations for LINUX
 	var rLimit syscall.Rlimit
 	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit); err != nil {
@@ -65,19 +60,19 @@ func main() {
 		panic(err)
 	}
 
-	appLogDir := os.Getenv("APP_LOG_DIR")
+	appLogDir := config.TechnicalAssistance.Get().APP_LOG_DIR
 
 	// Convert the string to an integer
-	redisDbNo, err := strconv.Atoi(os.Getenv("REDIS_DB"))
+	redisDbNo, err := strconv.Atoi(config.TechnicalAssistance.Get().REDIS_DB)
 	if err != nil {
 		fmt.Println("Failed to convert REDIS_DB to int:", err)
 		return
 	}
 
 	redisDB := redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"), // Redis server address
-		Password: os.Getenv("REDIS_PASSWORD"),                             // No password set
-		DB:       redisDbNo,                                               // Default database
+		Addr:     config.TechnicalAssistance.Get().REDIS_HOST + ":" + config.TechnicalAssistance.Get().REDIS_PORT, // Redis server address
+		Password: config.TechnicalAssistance.Get().REDIS_PASSWORD,                                                 // No password set
+		DB:       redisDbNo,                                                                                       // Default database
 	})
 
 	// Ping the Redis server to check the connection
@@ -88,44 +83,44 @@ func main() {
 	}
 	fmt.Println("Connected to Redis:", pong)
 
-	webHostPort := os.Getenv("APP_LISTEN")
-	ginMode := os.Getenv("GIN_MODE")
+	webHostPort := config.TechnicalAssistance.Get().APP_LISTEN
+	ginMode := config.TechnicalAssistance.Get().GIN_MODE
 	gin.SetMode(ginMode)
 
 	//PREPARE DB
 	db, err := database.InitAndCheckDB(
-		os.Getenv("MYSQL_USER_DB"),
-		os.Getenv("MYSQL_PASS_DB"),
-		os.Getenv("MYSQL_HOST_DB"),
-		os.Getenv("MYSQL_PORT_DB"),
-		os.Getenv("MYSQL_NAME_DB"),
+		config.TechnicalAssistance.Get().MYSQL_USER_DB,
+		config.TechnicalAssistance.Get().MYSQL_PASS_DB,
+		config.TechnicalAssistance.Get().MYSQL_HOST_DB,
+		config.TechnicalAssistance.Get().MYSQL_PORT_DB,
+		config.TechnicalAssistance.Get().MYSQL_NAME_DB,
 	)
 	if err != nil {
 		log.Fatalf("Database main setup failed: %v", err)
 	}
 	// db_call_center, err := database.InitAndCheckDB(
-	// 	os.Getenv("MYSQL_USER_DB"),
-	// 	os.Getenv("MYSQL_PASS_DB"),
-	// 	os.Getenv("MYSQL_HOST_DB"),
-	// 	os.Getenv("MYSQL_PORT_DB"),
-	// 	os.Getenv("MYSQL_NAME_CALL_CENTER_DB"),
+	// 	config.TechnicalAssistance.Get().MYSQL_USER_DB,
+	// 	config.TechnicalAssistance.Get().MYSQL_PASS_DB,
+	// 	config.TechnicalAssistance.Get().MYSQL_HOST_DB,
+	// 	config.TechnicalAssistance.Get().MYSQL_PORT_DB,
+	// 	config.TechnicalAssistance.Get().MYSQL_NAME_CALL_CENTER_DB,
 	// )
 	// if err != nil {
 	// 	log.Fatalf("Database cc setup failed: %v", err)
 	// }
 
 	db_konfirmasi_pengerjaan, err := database.InitAndCheckDB(
-		os.Getenv("MYSQL_USER_DB_KONFIRMASI_PENGERJAAN"),
-		os.Getenv("MYSQL_PASS_DB_KONFIRMASI_PENGERJAAN"),
-		os.Getenv("MYSQL_HOST_DB_KONFIRMASI_PENGERJAAN"),
-		os.Getenv("MYSQL_PORT_DB_KONFIRMASI_PENGERJAAN"),
-		os.Getenv("MYSQL_NAME_DB_KONFIRMASI_PENGERJAAN"),
+		config.TechnicalAssistance.Get().MYSQL_USER_DB_KONFIRMASI_PENGERJAAN,
+		config.TechnicalAssistance.Get().MYSQL_PASS_DB_KONFIRMASI_PENGERJAAN,
+		config.TechnicalAssistance.Get().MYSQL_HOST_DB_KONFIRMASI_PENGERJAAN,
+		config.TechnicalAssistance.Get().MYSQL_PORT_DB_KONFIRMASI_PENGERJAAN,
+		config.TechnicalAssistance.Get().MYSQL_NAME_DB_KONFIRMASI_PENGERJAAN,
 	)
 	if err != nil {
 		log.Fatalf("Database kukuh setup failed: %v", err)
 	}
 
-	database.AutoMigrateWeb(db)
+	go database.AutoMigrateWeb(db)
 
 	//HANDLE LOG WRITING
 	if err := os.MkdirAll(appLogDir, os.ModePerm); err != nil {

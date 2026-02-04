@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/controllers"
 	"service-platform/cmd/web_panel/fun"
+	"service-platform/internal/config"
 	"testing"
 	"time"
 
@@ -16,8 +16,8 @@ import (
 func TestGenerateReportAIERROR(t *testing.T) {
 	// ADD DB !!!!!!!!!!
 
-	loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
-	assert.NoError(t, err, "Failed to load zone "+config.GetConfig().Default.Timezone)
+	loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
+	assert.NoError(t, err, "Failed to load zone "+config.WebPanel.Get().Default.Timezone)
 
 	now := time.Now().In(loc)
 	reportName := fmt.Sprintf("(TEST)Report_AI_ERROR_%v", now.Format("02Jan2006_15_04_05.xlsx"))

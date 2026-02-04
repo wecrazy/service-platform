@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -75,7 +75,7 @@ func handleRepliesReactionsAndEditedMsgForPayslipTechnician() {
 	// ✅ Handle replies
 	if ctxInfo != nil && ctxInfo.QuotedMessage != nil && ctxInfo.StanzaID != nil && *ctxInfo.StanzaID != "" {
 		var replyText string
-		waReplyPublicURL := config.GetConfig().Whatsmeow.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
+		waReplyPublicURL := config.WebPanel.Get().Whatsmeow.WAReplyPublicURL + "/" + time.Now().Format("2006-01-02")
 
 		switch {
 

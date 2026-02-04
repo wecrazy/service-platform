@@ -1,7 +1,7 @@
 package reportmodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -51,5 +51,5 @@ type ODOOMSSLAReport struct {
 }
 
 func (ODOOMSSLAReport) TableName() string {
-	return config.GetConfig().Database.TbReportSLA
+	return config.WebPanel.Get().Database.TbReportSLA
 }

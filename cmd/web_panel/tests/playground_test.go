@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"image/jpeg"
 	"os"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"testing"
 
 	"github.com/nfnt/resize"
@@ -18,7 +18,7 @@ func TestUsingGoPlayground(t *testing.T) {
 	// TODO: do whatever you want
 	// REMOVE: anything you need
 	config.LoadConfig()
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.WebPanel.Get()
 
 	// // 1. Get all dates in current month (e.g. 01 Sep to end of month)
 	// now := time.Now()

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -39,5 +39,5 @@ type MerchantKresekBag struct {
 }
 
 func (MerchantKresekBag) TableName() string {
-	return config.GetConfig().Database.TbMerchantKresekBag
+	return config.WebPanel.Get().Database.TbMerchantKresekBag
 }

@@ -14,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/controllers"
 	"service-platform/cmd/web_panel/database"
 	"service-platform/cmd/web_panel/email"
@@ -27,6 +26,7 @@ import (
 	"service-platform/cmd/web_panel/pkg/infrastructure"
 	"service-platform/cmd/web_panel/routes"
 	"service-platform/cmd/web_panel/scheduler"
+	"service-platform/internal/config"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -55,12 +55,10 @@ func main() {
 	systemMonitor.StartResourceMonitoring()
 
 	// Dynamic update yaml config
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
+	config.WebPanel.MustInit("web_panel")
+	go config.WebPanel.Watch()
 
-	go config.WatchConfig()
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.WebPanel.Get()
 
 	// Init log
 	logger.InitLogrus()
@@ -107,7 +105,7 @@ func main() {
 		"main DB",
 	)
 	// Migrate
-	database.AutoMigrateWeb(GlobalDB)
+	go database.AutoMigrateWeb(GlobalDB)
 
 	GlobalDBFastlink = tryInitDB(
 		yamlCfg.Database.UsernameFastlink,
@@ -257,7 +255,7 @@ func initWhatsapp(RedisDB *redis.Client, db *gorm.DB) *whatsmeow.Client {
 		logrus.Fatalf("❌ Failed to init WhatsApp client: %v", err)
 	}
 	waClient.Connect()
-	jidStr := config.GetConfig().Whatsmeow.WaSuperUser + "@s.whatsapp.net"
+	jidStr := config.WebPanel.Get().Whatsmeow.WaSuperUser + "@s.whatsapp.net"
 	idText := fmt.Sprintf("[%v] 📞 Whatsapp siap digunakan", time.Now().Format("2006-01-02 15:04:05"))
 	enText := fmt.Sprintf("[%v] 📞 Whatsapp is ready to use", time.Now().Format("2006-01-02 15:04:05"))
 	controllers.SendLangMessage(jidStr, idText, enText, "id")
@@ -273,18 +271,18 @@ func initEmailListener(db *gorm.DB) (context.Context, context.CancelFunc) {
 }
 
 func startWebServer(
-	yamlCfg *config.YamlConfig,
+	yamlCfg *config.TypeWebPanel,
 	sched *gocron.Scheduler,
 	ctx context.Context,
 	cancel context.CancelFunc,
 	systemMonitor *fun.SystemResourceMonitor,
 ) {
 	// HANDLE WEB ENDPOINT
-	appLogDir := config.GetConfig().App.LogDir
+	appLogDir := yamlCfg.App.LogDir
 	if err := os.MkdirAll(appLogDir, os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
-	logPath := filepath.Join(appLogDir, config.GetConfig().App.AppLogFilename)
+	logPath := filepath.Join(appLogDir, yamlCfg.App.AppLogFilename)
 	logWriter := &lumberjack.Logger{
 		Filename:   logPath,
 		MaxSize:    15, // MB
@@ -348,7 +346,7 @@ func startWebServer(
 	} else {
 		logrus.Println("✅ Server stopped gracefully.")
 
-		jidStr := config.GetConfig().Whatsmeow.WaSuperUser + "@s.whatsapp.net"
+		jidStr := config.WebPanel.Get().Whatsmeow.WaSuperUser + "@s.whatsapp.net"
 		idText := fmt.Sprintf("[%v] 🔻 Server dimatikan", time.Now().Format("2006-01-02 15:04:05"))
 		enText := fmt.Sprintf("[%v] 🔻 Server stopped", time.Now().Format("2006-01-02 15:04:05"))
 		controllers.SendLangMessage(jidStr, idText, enText, "id")
@@ -361,7 +359,7 @@ func startWebServer(
 	os.Exit(0)
 }
 
-func printHostInfo(yamlCfg *config.YamlConfig, listenAddr string) {
+func printHostInfo(yamlCfg *config.TypeWebPanel, listenAddr string) {
 	url := func() string {
 		if listenAddr == ":80" || listenAddr == ":443" {
 			return "localhost" + listenAddr
@@ -388,7 +386,7 @@ func pingRedis(client *redis.Client) error {
 	return err
 }
 
-func HandleCLIArgs(yamlCfg *config.YamlConfig) bool {
+func HandleCLIArgs(yamlCfg *config.TypeWebPanel) bool {
 	if len(os.Args) > 1 {
 		arg := os.Args[1]
 		switch arg {
@@ -434,7 +432,7 @@ func increaseFileDescriptorLimit() {
 	fmt.Println("✅ File descriptor limit successfully increased.")
 }
 
-func setupRedis(cfg config.YamlConfig) {
+func setupRedis(cfg config.TypeWebPanel) {
 	redisHost := os.Getenv("REDIS_HOST")
 	if redisHost == "" {
 		redisHost = cfg.Redis.Host
@@ -454,7 +452,7 @@ func setupRedis(cfg config.YamlConfig) {
 	go monitorRedis(cfg, redisHost, maxAttempts, delay)
 }
 
-func connectRedis(cfg config.YamlConfig, redisHost string) (*redis.Client, error) {
+func connectRedis(cfg config.TypeWebPanel, redisHost string) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", redisHost, cfg.Redis.Port),
 		Password: cfg.Redis.Password,
@@ -468,7 +466,7 @@ func connectRedis(cfg config.YamlConfig, redisHost string) (*redis.Client, error
 	return client, nil
 }
 
-func monitorRedis(cfg config.YamlConfig, redisHost string, maxAttempts int, delay time.Duration) {
+func monitorRedis(cfg config.TypeWebPanel, redisHost string, maxAttempts int, delay time.Duration) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
@@ -508,7 +506,7 @@ func tryInitDB(user, pass, host, port, name, label string) *gorm.DB {
 	return db
 }
 
-func GlobalDBReconnectFunc(cfg config.YamlConfig) func() (*gorm.DB, error) {
+func GlobalDBReconnectFunc(cfg config.TypeWebPanel) func() (*gorm.DB, error) {
 	return func() (*gorm.DB, error) {
 		return database.InitAndCheckDB(
 			cfg.Database.Username,
@@ -520,7 +518,7 @@ func GlobalDBReconnectFunc(cfg config.YamlConfig) func() (*gorm.DB, error) {
 	}
 }
 
-func DBFastlinkReconnectFunc(cfg config.YamlConfig) func() (*gorm.DB, error) {
+func DBFastlinkReconnectFunc(cfg config.TypeWebPanel) func() (*gorm.DB, error) {
 	return func() (*gorm.DB, error) {
 		return database.InitAndCheckDB(
 			cfg.Database.UsernameFastlink,
@@ -532,7 +530,7 @@ func DBFastlinkReconnectFunc(cfg config.YamlConfig) func() (*gorm.DB, error) {
 	}
 }
 
-func DBTAReconnectFunc(cfg config.YamlConfig) func() (*gorm.DB, error) {
+func DBTAReconnectFunc(cfg config.TypeWebPanel) func() (*gorm.DB, error) {
 	return func() (*gorm.DB, error) {
 		return database.InitAndCheckDB(
 			cfg.Database.UsernameTA,
@@ -544,7 +542,7 @@ func DBTAReconnectFunc(cfg config.YamlConfig) func() (*gorm.DB, error) {
 	}
 }
 
-func DBWebTAReconnectFunc(cfg config.YamlConfig) func() (*gorm.DB, error) {
+func DBWebTAReconnectFunc(cfg config.TypeWebPanel) func() (*gorm.DB, error) {
 	return func() (*gorm.DB, error) {
 		return database.InitAndCheckDB(
 			cfg.Database.UsernameWebTA,
@@ -594,7 +592,7 @@ func reconnectWithRetries(
 	reconnect func() (*gorm.DB, error),
 	label string,
 ) {
-	cfg := config.GetConfig()
+	cfg := config.WebPanel.Get()
 	maxRetry := cfg.Database.MaxRetryConnect
 	delay := time.Duration(cfg.Database.RetryDelay) * time.Second
 
@@ -617,7 +615,7 @@ func MakeDBReconnectFunc(user, pass, host, port, name string) func() (*gorm.DB, 
 	}
 }
 
-func initTelegramGRPC(cfg *config.YamlConfig) {
+func initTelegramGRPC(cfg *config.TypeWebPanel) {
 	logrus.Info("📡 Initializing Telegram gRPC connection...")
 	if err := telegram.InitConnection(cfg.TelegramService.GRPCHost, cfg.TelegramService.GRPCPort); err != nil {
 		logrus.Warnf("⚠️ Telegram gRPC connection failed at startup: %v (will retry on first send)", err)

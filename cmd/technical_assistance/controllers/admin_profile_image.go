@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model"
+	"service-platform/internal/config"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,7 @@ import (
 func GetUserProfile(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Content-Type", "image/jpeg")
-		filePath := os.Getenv("APP_STATIC_DIR") + "/assets/img/avatars/default.jpg"
+		filePath := config.TechnicalAssistance.Get().APP_STATIC_DIR + "/assets/img/avatars/default.jpg"
 
 		pathParam := c.Query("f")
 		claims, err := fun.GetAESDecryptedURLtoJSON(pathParam)
@@ -43,7 +44,7 @@ func GetUserProfile(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// filePath = os.Getenv("APP_STATIC_DIR") + "/" + admin.ProfileImage
+		// filePath = config.TechnicalAssistance.Get().APP_STATIC_DIR + "/" + admin.ProfileImage
 		filePath = admin.ProfileImage
 		// Open the file
 		file, err := os.Open(filePath)
@@ -137,13 +138,13 @@ func UpdateAdminProfileImage(db *gorm.DB) gin.HandlerFunc {
 
 		// Save the file to the server
 		filename := fmt.Sprintf("%d%s", admin.ID, filepath.Ext(file.Filename))
-		filePath := filepath.Join(os.Getenv("APP_UPLOAD_DIR")+"/admin", filename)
+		filePath := filepath.Join(config.TechnicalAssistance.Get().APP_UPLOAD_DIR+"/admin", filename)
 		if err := c.SaveUploadedFile(file, filePath); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to save the file"})
 			return
 		}
 
-		filePath = strings.Trim(filePath, os.Getenv("APP_STATIC_DIR"))
+		filePath = strings.Trim(filePath, config.TechnicalAssistance.Get().APP_STATIC_DIR)
 		// Update the admin's profile image path in the database
 		admin.ProfileImage = filePath
 		if err := db.Save(&admin).Error; err != nil {

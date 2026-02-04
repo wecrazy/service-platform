@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -123,7 +123,7 @@ func SendTAFollowedUpResultToGroupTechnician() gin.HandlerFunc {
 		}
 
 		var sb strings.Builder
-		loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		if err != nil {
 			logrus.Errorf("Error loading location: %v", err)
 			c.Status(http.StatusInternalServerError)
@@ -162,7 +162,7 @@ func SendTAFollowedUpResultToGroupTechnician() gin.HandlerFunc {
 		}
 
 		var taName, taPhone string
-		DataTA := config.GetConfig().UserTA
+		DataTA := config.WebPanel.Get().UserTA
 		if ta, ok := DataTA[payload.Email]; ok {
 			taName = ta.Name
 			taPhone = ta.Phone
@@ -182,17 +182,17 @@ func SendTAFollowedUpResultToGroupTechnician() gin.HandlerFunc {
 		var jidString string
 		switch teknisiWAG {
 		case 1:
-			jidString = config.GetConfig().Whatsmeow.WAGRegionTechnician[1]
+			jidString = config.WebPanel.Get().Whatsmeow.WAGRegionTechnician[1]
 		case 2:
-			jidString = config.GetConfig().Whatsmeow.WAGRegionTechnician[2]
+			jidString = config.WebPanel.Get().Whatsmeow.WAGRegionTechnician[2]
 		case 3:
-			jidString = config.GetConfig().Whatsmeow.WAGRegionTechnician[3]
+			jidString = config.WebPanel.Get().Whatsmeow.WAGRegionTechnician[3]
 		case 4:
-			jidString = config.GetConfig().Whatsmeow.WAGRegionTechnician[4]
+			jidString = config.WebPanel.Get().Whatsmeow.WAGRegionTechnician[4]
 		case 5:
-			jidString = config.GetConfig().Whatsmeow.WAGRegionTechnician[5]
+			jidString = config.WebPanel.Get().Whatsmeow.WAGRegionTechnician[5]
 		default:
-			jidString = config.GetConfig().Whatsmeow.WAGTAJID
+			jidString = config.WebPanel.Get().Whatsmeow.WAGTAJID
 		}
 		jidString += "@g.us"
 		jid, err := types.ParseJID(jidString)
@@ -301,13 +301,13 @@ func SendTAFeedbackAboutJONeedsEvidenceToGroupTechnician() gin.HandlerFunc {
 		}
 
 		var taPhone string = "N/A"
-		DataTA := config.GetConfig().UserTA
+		DataTA := config.WebPanel.Get().UserTA
 		if ta, ok := DataTA[payload.EmailTa]; ok {
 			taPhone = ta.Phone
 		}
 
 		var sb strings.Builder
-		loc, err := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, err := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
@@ -357,17 +357,17 @@ func SendTAFeedbackAboutJONeedsEvidenceToGroupTechnician() gin.HandlerFunc {
 		var jidString string
 		switch teknisiWAG {
 		case 1:
-			jidString = config.GetConfig().Whatsmeow.WAGRegionTechnician[1]
+			jidString = config.WebPanel.Get().Whatsmeow.WAGRegionTechnician[1]
 		case 2:
-			jidString = config.GetConfig().Whatsmeow.WAGRegionTechnician[2]
+			jidString = config.WebPanel.Get().Whatsmeow.WAGRegionTechnician[2]
 		case 3:
-			jidString = config.GetConfig().Whatsmeow.WAGRegionTechnician[3]
+			jidString = config.WebPanel.Get().Whatsmeow.WAGRegionTechnician[3]
 		case 4:
-			jidString = config.GetConfig().Whatsmeow.WAGRegionTechnician[4]
+			jidString = config.WebPanel.Get().Whatsmeow.WAGRegionTechnician[4]
 		case 5:
-			jidString = config.GetConfig().Whatsmeow.WAGRegionTechnician[5]
+			jidString = config.WebPanel.Get().Whatsmeow.WAGRegionTechnician[5]
 		default:
-			jidString = config.GetConfig().Whatsmeow.WAGTAJID
+			jidString = config.WebPanel.Get().Whatsmeow.WAGTAJID
 		}
 		jidString += "@g.us"
 		jid, err := types.ParseJID(jidString)

@@ -3,8 +3,8 @@ package controllers
 import (
 	"fmt"
 	"regexp"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -456,11 +456,11 @@ func CheckFilePermission(v *events.Message, msgType string, user *model.WAPhoneU
 				// Allow all registered users to send images
 				return true, "", ""
 			},
-			MaxDailyQuota:     50,                                                              // 50 images per day
-			CooldownSeconds:   5,                                                               // 5 seconds between image uploads
-			MaxFileSizeBytes:  config.GetConfig().Whatsmeow.MaxUploadedImageSize * 1024 * 1024, // max size in MB converted to bytes
-			AllowedExtensions: config.GetConfig().Whatsmeow.ImageAllowedExtensions,             // e.g. []string{".jpg", ".jpeg", ".png", ".gif", ".webp"}
-			AllowedMimeTypes:  config.GetConfig().Whatsmeow.ImageAllowedMimeTypes,              // e.g. []string{"image/jpeg", "image/png", "image/gif", "image/webp"}
+			MaxDailyQuota:     50,                                                                 // 50 images per day
+			CooldownSeconds:   5,                                                                  // 5 seconds between image uploads
+			MaxFileSizeBytes:  config.WebPanel.Get().Whatsmeow.MaxUploadedImageSize * 1024 * 1024, // max size in MB converted to bytes
+			AllowedExtensions: config.WebPanel.Get().Whatsmeow.ImageAllowedExtensions,             // e.g. []string{".jpg", ".jpeg", ".png", ".gif", ".webp"}
+			AllowedMimeTypes:  config.WebPanel.Get().Whatsmeow.ImageAllowedMimeTypes,              // e.g. []string{"image/jpeg", "image/png", "image/gif", "image/webp"}
 			DenyMessageEN:     "❌ Image upload failed: quota exceeded, file too large, or unsupported format.",
 			DenyMessageID:     "❌ Gagal mengirim gambar: quota habis, file terlalu besar, atau format tidak didukung.",
 		},
@@ -472,16 +472,16 @@ func CheckFilePermission(v *events.Message, msgType string, user *model.WAPhoneU
 				// Only allow certain user types to send videos due to bandwidth concerns
 				if u.UserType == model.WaBotSuperUser ||
 					u.UserType == model.SupportStaff ||
-					u.PhoneNumber == config.GetConfig().Whatsmeow.WaSuperUser {
+					u.PhoneNumber == config.WebPanel.Get().Whatsmeow.WaSuperUser {
 					return true, "", ""
 				}
 				return false, "❌ You don't have permission to upload videos.", "❌ Anda tidak memiliki izin untuk mengirim video."
 			},
-			MaxDailyQuota:     10,                                                              // 10 videos per day
-			CooldownSeconds:   120,                                                             // 30 seconds between video uploads
-			MaxFileSizeBytes:  config.GetConfig().Whatsmeow.MaxUploadedVideoSize * 1024 * 1024, // max size in MB converted to bytes
-			AllowedExtensions: config.GetConfig().Whatsmeow.VideoAllowedExtensions,             // e.g. []string{".mp4", ".avi", ".mov", ".3gp"}
-			AllowedMimeTypes:  config.GetConfig().Whatsmeow.VideoAllowedMimeTypes,              // e.g. []string{"video/mp4", "video/x-msvideo", "video/quicktime", "video/3gpp"}
+			MaxDailyQuota:     10,                                                                 // 10 videos per day
+			CooldownSeconds:   120,                                                                // 30 seconds between video uploads
+			MaxFileSizeBytes:  config.WebPanel.Get().Whatsmeow.MaxUploadedVideoSize * 1024 * 1024, // max size in MB converted to bytes
+			AllowedExtensions: config.WebPanel.Get().Whatsmeow.VideoAllowedExtensions,             // e.g. []string{".mp4", ".avi", ".mov", ".3gp"}
+			AllowedMimeTypes:  config.WebPanel.Get().Whatsmeow.VideoAllowedMimeTypes,              // e.g. []string{"video/mp4", "video/x-msvideo", "video/quicktime", "video/3gpp"}
 			DenyMessageEN:     "❌ Video upload failed: no permission, quota exceeded, file too large, or unsupported format.",
 			DenyMessageID:     "❌ Gagal mengirim video: tidak ada izin, quota habis, file terlalu besar, atau format tidak didukung.",
 		},
@@ -494,11 +494,11 @@ func CheckFilePermission(v *events.Message, msgType string, user *model.WAPhoneU
 				}
 				return true, "", ""
 			},
-			MaxDailyQuota:     50,                                                                 // 25 documents per day
-			CooldownSeconds:   10,                                                                 // 10 seconds between document uploads
-			MaxFileSizeBytes:  config.GetConfig().Whatsmeow.MaxUploadedDocumentSize * 1024 * 1024, // max size in MB converted to bytes
-			AllowedExtensions: config.GetConfig().Whatsmeow.DocumentAllowedExtensions,             // e.g. []string{".pdf", ".doc", ".docx", ".txt", ".zip"}
-			AllowedMimeTypes:  config.GetConfig().Whatsmeow.DocumentAllowedMimeTypes,              // e.g. []string{"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "application/zip"}
+			MaxDailyQuota:     50,                                                                    // 25 documents per day
+			CooldownSeconds:   10,                                                                    // 10 seconds between document uploads
+			MaxFileSizeBytes:  config.WebPanel.Get().Whatsmeow.MaxUploadedDocumentSize * 1024 * 1024, // max size in MB converted to bytes
+			AllowedExtensions: config.WebPanel.Get().Whatsmeow.DocumentAllowedExtensions,             // e.g. []string{".pdf", ".doc", ".docx", ".txt", ".zip"}
+			AllowedMimeTypes:  config.WebPanel.Get().Whatsmeow.DocumentAllowedMimeTypes,              // e.g. []string{"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "application/zip"}
 			DenyMessageEN:     "❌ Document upload failed: no permission, quota exceeded, file too large, or unsupported format.",
 			DenyMessageID:     "❌ Gagal mengirim dokumen: tidak ada izin, quota habis, file terlalu besar, atau format tidak didukung.",
 		},
@@ -510,11 +510,11 @@ func CheckFilePermission(v *events.Message, msgType string, user *model.WAPhoneU
 				// Allow all registered users to send voice messages/audio
 				return true, "", ""
 			},
-			MaxDailyQuota:     100,                                                             // 100 audio messages per day
-			CooldownSeconds:   3,                                                               // 3 seconds between audio uploads
-			MaxFileSizeBytes:  config.GetConfig().Whatsmeow.MaxUploadedAudioSize * 1024 * 1024, // max size in MB converted to bytes
-			AllowedExtensions: config.GetConfig().Whatsmeow.AudioAllowedExtensions,             // e.g. []string{".mp3", ".wav", ".ogg", ".m4a", ".aac"}
-			AllowedMimeTypes:  config.GetConfig().Whatsmeow.AudioAllowedMimeTypes,              // e.g. []string{"audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/aac"}
+			MaxDailyQuota:     100,                                                                // 100 audio messages per day
+			CooldownSeconds:   3,                                                                  // 3 seconds between audio uploads
+			MaxFileSizeBytes:  config.WebPanel.Get().Whatsmeow.MaxUploadedAudioSize * 1024 * 1024, // max size in MB converted to bytes
+			AllowedExtensions: config.WebPanel.Get().Whatsmeow.AudioAllowedExtensions,             // e.g. []string{".mp3", ".wav", ".ogg", ".m4a", ".aac"}
+			AllowedMimeTypes:  config.WebPanel.Get().Whatsmeow.AudioAllowedMimeTypes,              // e.g. []string{"audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/aac"}
 			DenyMessageEN:     "❌ Audio upload failed: quota exceeded, file too large, or unsupported format.",
 			DenyMessageID:     "❌ Gagal mengirim audio: quota habis, file terlalu besar, atau format tidak didukung.",
 		},
@@ -610,7 +610,7 @@ func CheckFilePermission(v *events.Message, msgType string, user *model.WAPhoneU
 	if rule.MaxDailyQuota > 0 {
 		usageKey := getUsageKey("file_"+msgType, userID)
 		pipe.Incr(contx, usageKey)
-		pipe.Expire(contx, usageKey, time.Duration(config.GetConfig().Whatsmeow.RedisExpiry)*time.Hour)
+		pipe.Expire(contx, usageKey, time.Duration(config.WebPanel.Get().Whatsmeow.RedisExpiry)*time.Hour)
 	}
 	if rule.CooldownSeconds > 0 {
 		cooldownKey := getCooldownKey("file_"+msgType, userID)

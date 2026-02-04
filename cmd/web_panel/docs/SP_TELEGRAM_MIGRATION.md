@@ -6,8 +6,8 @@
 Both development and production config files now have Telegram service settings:
 
 **Location:** 
-- `/home/user/server/service-platform/cmd/web_panel/config/conf.dev.yaml` (line 407)
-- `/home/user/server/service-platform/cmd/web_panel/config/conf.prod.yaml` (line 402)
+- `/home/user/server/service-platform/internal/config/conf.dev.yaml` (line 407)
+- `/home/user/server/service-platform/internal/config/conf.prod.yaml` (line 402)
 
 **Configuration:**
 ```yaml
@@ -19,7 +19,7 @@ TELEGRAM_SERVICE:
 ```
 
 ### 2. Configuration Struct Added
-**File:** `/home/user/server/service-platform/cmd/web_panel/config/config.go` (lines 592-597)
+**File:** `/home/user/server/service-platform/internal/config/config.go` (lines 592-597)
 
 Added `TelegramService` struct to parse YAML config.
 
@@ -85,7 +85,7 @@ Add after database initialization in `/home/user/server/service-platform/cmd/web
 
 ```go
 // Initialize Telegram gRPC connection
-cfg := config.GetConfig()
+cfg := config.WebPanel.Get()
 if err := controllers.InitTelegramConnection(
     cfg.TelegramService.GRPCHost,
     cfg.TelegramService.GRPCPort,

@@ -7,13 +7,13 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/controllers"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/middleware"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -22,8 +22,8 @@ import (
 )
 
 func StaticFile(router *gin.Engine) {
-	staticPath := config.GetConfig().App.StaticDir
-	publishedDir := config.GetConfig().App.PublishedDir
+	staticPath := config.WebPanel.Get().App.StaticDir
+	publishedDir := config.WebPanel.Get().App.PublishedDir
 
 	// Resolve static path to absolute
 	staticPath, err := filepath.Abs(staticPath)
@@ -89,7 +89,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 	dbFastlink := gormdb.Databases.FastLink
 
 	// To view the dashboard API analytics go to: https://www.apianalytics.dev/dashboard and enter your API key
-	router.Use(analytics.Analytics(config.GetConfig().Default.APIKeyApiAnalyticsDev)) // Add middleware
+	router.Use(analytics.Analytics(config.WebPanel.Get().Default.APIKeyApiAnalyticsDev)) // Add middleware
 
 	// Health check endpoint for monitoring
 	router.GET("/health", func(c *gin.Context) {
@@ -671,7 +671,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote Excel file: %v", err)
@@ -726,7 +726,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote Excel file: %v", err)
@@ -782,7 +782,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote Excel file: %v", err)
@@ -838,7 +838,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote PDF: %v", err)
@@ -891,7 +891,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote PDF: %v", err)
@@ -944,7 +944,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote PDF: %v", err)
@@ -997,7 +997,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote PDF: %v", err)
@@ -1049,7 +1049,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote MP3: %v", err)
@@ -1101,7 +1101,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote MP3: %v", err)
@@ -1153,7 +1153,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote MP3: %v", err)
@@ -1207,7 +1207,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote PDF: %v", err)
@@ -1261,7 +1261,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote PDF: %v", err)
@@ -1313,7 +1313,7 @@ func HtmlRoutes(router *gin.Engine, redisDB *redis.Client, systemMonitor *fun.Sy
 			}
 
 			// If not found locally, fetch from remote server
-			remoteURL := config.GetConfig().App.WebPublicURL + c.Request.URL.Path
+			remoteURL := config.WebPanel.Get().App.WebPublicURL + c.Request.URL.Path
 			resp, err := http.Get(remoteURL)
 			if err != nil {
 				logrus.Errorf("Error fetching remote MP3: %v", err)

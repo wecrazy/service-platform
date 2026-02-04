@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"service-platform/cmd/technical_assistance/config"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model"
 	"service-platform/cmd/technical_assistance/model/op_model"
+	"service-platform/internal/config"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -150,7 +150,7 @@ func TAFeedback(redisDB *redis.Client, db_pengerjaan *gorm.DB, db_web *gorm.DB) 
 }
 
 func sendTAFeedback(data feedbackFromTA) {
-	urlToSend := config.GetConfig().Default.TaFeedbackURL
+	urlToSend := config.TechnicalAssistance.Get().Default.TaFeedbackURL
 	if !strings.HasPrefix(urlToSend, "http://") && !strings.HasPrefix(urlToSend, "https://") {
 		urlToSend = "http://" + urlToSend
 	}

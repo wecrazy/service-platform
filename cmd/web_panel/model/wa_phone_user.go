@@ -1,7 +1,7 @@
 package model
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/datatypes"
@@ -104,5 +104,5 @@ type WAPhoneUser struct {
 }
 
 func (WAPhoneUser) TableName() string {
-	return config.GetConfig().Database.TbWAPhoneUser
+	return config.WebPanel.Get().Database.TbWAPhoneUser
 }

@@ -12,12 +12,12 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	odooms "service-platform/cmd/web_panel/model/odoo_ms"
 	sptechnicianmodel "service-platform/cmd/web_panel/model/sp_technician_model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"time"
@@ -50,7 +50,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 		return "", fmt.Errorf("%s failed: %v", taskDoing, err)
 	}
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	numDays := time.Date(now.Year(), now.Month()+1, 0, 0, 0, 0, 0, loc).Day()
 
@@ -492,7 +492,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 	technicianParseCache := make(map[string]*DataTechnicianODOOMSBasedOnName, 1000)
 
 	// City name completion map
-	completedCity := config.GetConfig().Indonesia.CompletedCity
+	completedCity := config.WebPanel.Get().Indonesia.CompletedCity
 
 	// Pre-compile strings.ToLower for SPL check to avoid repeated computation
 	splCheckMap := make(map[string]bool, 1000)
@@ -629,7 +629,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 							}
 						}
 						if len(messages) > 0 {
-							techSP1Replied = strings.Join(messages, fmt.Sprintf("%s ", config.GetConfig().Default.Delimiter))
+							techSP1Replied = strings.Join(messages, fmt.Sprintf("%s ", config.WebPanel.Get().Default.Delimiter))
 						}
 					}
 				}
@@ -659,7 +659,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 							}
 						}
 						if len(messages) > 0 {
-							techSP2Replied = strings.Join(messages, fmt.Sprintf("%s ", config.GetConfig().Default.Delimiter))
+							techSP2Replied = strings.Join(messages, fmt.Sprintf("%s ", config.WebPanel.Get().Default.Delimiter))
 						}
 					}
 				}
@@ -689,7 +689,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 							}
 						}
 						if len(messages) > 0 {
-							techSP3Replied = strings.Join(messages, fmt.Sprintf("%s ", config.GetConfig().Default.Delimiter))
+							techSP3Replied = strings.Join(messages, fmt.Sprintf("%s ", config.WebPanel.Get().Default.Delimiter))
 						}
 					}
 				}
@@ -743,7 +743,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 					if len(data.WONumber) > 0 {
 						var woNumbers []string
 						if err := json.Unmarshal([]byte(data.WONumber), &woNumbers); err == nil {
-							value = strings.Join(woNumbers, fmt.Sprintf("%s ", config.GetConfig().Default.Delimiter))
+							value = strings.Join(woNumbers, fmt.Sprintf("%s ", config.WebPanel.Get().Default.Delimiter))
 						}
 
 						f.AddComment(sheetMaster, excelize.Comment{
@@ -751,7 +751,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 							Author: "Report Service",
 							Paragraph: []excelize.RichTextRun{
 								{
-									Text: fmt.Sprintf("You can separate the WO Numbers using formula =TEXTSPLIT(%s, \"%s\") ", cell, config.GetConfig().Default.Delimiter),
+									Text: fmt.Sprintf("You can separate the WO Numbers using formula =TEXTSPLIT(%s, \"%s\") ", cell, config.WebPanel.Get().Default.Delimiter),
 								},
 							},
 							Width:  300,
@@ -762,7 +762,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 					if len(data.WONumberVisited) > 0 {
 						var woNumbers []string
 						if err := json.Unmarshal([]byte(data.WONumberVisited), &woNumbers); err == nil {
-							value = strings.Join(woNumbers, fmt.Sprintf("%s ", config.GetConfig().Default.Delimiter))
+							value = strings.Join(woNumbers, fmt.Sprintf("%s ", config.WebPanel.Get().Default.Delimiter))
 						}
 
 						f.AddComment(sheetMaster, excelize.Comment{
@@ -770,7 +770,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 							Author: "Report Service",
 							Paragraph: []excelize.RichTextRun{
 								{
-									Text: fmt.Sprintf("You can separate the WO Numbers visited using formula =TEXTSPLIT(%s, \"%s\") ", cell, config.GetConfig().Default.Delimiter),
+									Text: fmt.Sprintf("You can separate the WO Numbers visited using formula =TEXTSPLIT(%s, \"%s\") ", cell, config.WebPanel.Get().Default.Delimiter),
 								},
 							},
 							Width:  300,
@@ -781,7 +781,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 					if len(data.WOLinkPhotos) > 0 {
 						var photoLinks []string
 						if err := json.Unmarshal([]byte(data.WOLinkPhotos), &photoLinks); err == nil {
-							value = strings.Join(photoLinks, fmt.Sprintf("%s ", config.GetConfig().Default.Delimiter))
+							value = strings.Join(photoLinks, fmt.Sprintf("%s ", config.WebPanel.Get().Default.Delimiter))
 						}
 
 						f.AddComment(sheetMaster, excelize.Comment{
@@ -789,7 +789,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 							Author: "Report Service",
 							Paragraph: []excelize.RichTextRun{
 								{
-									Text: fmt.Sprintf("You can separate the photo links of wo planned using formula =TEXTSPLIT(%s, \"%s\") ", cell, config.GetConfig().Default.Delimiter),
+									Text: fmt.Sprintf("You can separate the photo links of wo planned using formula =TEXTSPLIT(%s, \"%s\") ", cell, config.WebPanel.Get().Default.Delimiter),
 								},
 							},
 							Width:  300,
@@ -800,7 +800,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 					if len(data.WOVisitedLinkPhotos) > 0 {
 						var photoLinks []string
 						if err := json.Unmarshal([]byte(data.WOVisitedLinkPhotos), &photoLinks); err == nil {
-							value = strings.Join(photoLinks, fmt.Sprintf("%s ", config.GetConfig().Default.Delimiter))
+							value = strings.Join(photoLinks, fmt.Sprintf("%s ", config.WebPanel.Get().Default.Delimiter))
 						}
 
 						f.AddComment(sheetMaster, excelize.Comment{
@@ -808,7 +808,7 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 							Author: "Report Service",
 							Paragraph: []excelize.RichTextRun{
 								{
-									Text: fmt.Sprintf("You can separate the photo links of wo visited using formula =TEXTSPLIT(%s, \"%s\") ", cell, config.GetConfig().Default.Delimiter),
+									Text: fmt.Sprintf("You can separate the photo links of wo visited using formula =TEXTSPLIT(%s, \"%s\") ", cell, config.WebPanel.Get().Default.Delimiter),
 								},
 							},
 							Width:  300,
@@ -1519,8 +1519,8 @@ func MonitoringVisitAndLoginTechnicianODOOMS() (string, error) {
 		},
 		ShowBlanksAs: "zero",
 		Dimension: excelize.ChartDimension{
-			Width:  config.GetConfig().Report.MonitoringLoginVisitTechnician.ChartWidth,
-			Height: config.GetConfig().Report.MonitoringLoginVisitTechnician.ChartHeight,
+			Width:  config.WebPanel.Get().Report.MonitoringLoginVisitTechnician.ChartWidth,
+			Height: config.WebPanel.Get().Report.MonitoringLoginVisitTechnician.ChartHeight,
 		},
 		Legend: excelize.ChartLegend{
 			Position:      "top",
@@ -1561,7 +1561,7 @@ func GetDataOfTechnicianODOOMSForMonitoring() error {
 		return fmt.Errorf("%s: no technician data found from ODOO MS", taskDoing)
 	}
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
@@ -1637,7 +1637,7 @@ func GetDataOfTechnicianODOOMSForMonitoring() error {
 	}
 
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  odooParams,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -1710,7 +1710,7 @@ func GetDataOfTechnicianODOOMSForMonitoring() error {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -1817,7 +1817,7 @@ func GetDataOfTechnicianODOOMSForMonitoring() error {
 }
 
 func updateTechnicianODOOMSDataLastVisitFromBatchData(listOfData []OdooTaskDataRequestItem) error {
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
 	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, loc)
@@ -1858,7 +1858,7 @@ func updateTechnicianODOOMSDataLastVisitFromBatchData(listOfData []OdooTaskDataR
 }
 
 func updateTechnicianODOOMSDataFirstUploadedFromBatchData(listOfData []OdooTaskDataRequestItem) error {
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
 	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, loc)
@@ -1898,7 +1898,7 @@ func updateTechnicianODOOMSDataFirstUploadedFromBatchData(listOfData []OdooTaskD
 }
 
 func updateTechnicianODOOMSDataWONumberAndTicketSubjectFromBatchData(listOfData []OdooTaskDataRequestItem) error {
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
 	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, loc)
@@ -2090,7 +2090,7 @@ func GenerateChartMonitoringLoginVisitTechnicianODOOMSInBackground(excelFilePath
 	}
 	imgOutput := filepath.Join(fileReportDir, fmt.Sprintf("chartReportSummaryTechnicianAttendance_%s.png", time.Now().Format("02Jan2006")))
 
-	logFile, _ := os.Create(config.GetConfig().Report.MonitoringLoginVisitTechnician.LogExportChartDebugPath)
+	logFile, _ := os.Create(config.WebPanel.Get().Report.MonitoringLoginVisitTechnician.LogExportChartDebugPath)
 	if logFile != nil {
 		defer logFile.Close()
 	}
@@ -2211,7 +2211,7 @@ func GenerateChartMonitoringLoginVisitTechnicianODOOMSInBackground(excelFilePath
 	absImg, _ := filepath.Abs(imgOutput)
 	magickPath, err := exec.LookPath("convert")
 	if err != nil {
-		magickPath = config.GetConfig().Default.MagickFullPath
+		magickPath = config.WebPanel.Get().Default.MagickFullPath
 		if _, statErr := os.Stat(magickPath); os.IsNotExist(statErr) {
 			logExport("❌ ImageMagick 'convert' not found in PATH or at configured location")
 			return
@@ -2284,7 +2284,7 @@ func GenerateExcelChartMonitoringLoginVisitTechnicianODOOMSInBackground(excelFil
 		return
 	}
 
-	logFile, _ := os.Create(config.GetConfig().Report.MonitoringLoginVisitTechnician.LogExportChartDebugPath)
+	logFile, _ := os.Create(config.WebPanel.Get().Report.MonitoringLoginVisitTechnician.LogExportChartDebugPath)
 	if logFile != nil {
 		defer logFile.Close()
 	}

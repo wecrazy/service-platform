@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/logger"
 	"service-platform/cmd/web_panel/model"
 	whatsappmodel "service-platform/cmd/web_panel/model/whatsapp_model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"time"
@@ -83,7 +83,7 @@ func ProcessMessage(v *events.Message) {
 		return
 	}
 
-	redisExpiry := time.Duration(config.GetConfig().Whatsmeow.RedisExpiry) * time.Hour
+	redisExpiry := time.Duration(config.WebPanel.Get().Whatsmeow.RedisExpiry) * time.Hour
 
 	originalSenderJID := NormalizeSenderJID(v.Info.Sender.String())
 	stanzaID := v.Info.ID
@@ -280,8 +280,8 @@ func ProcessMessage(v *events.Message) {
 		logrus.Warnf("Blocked by validation: %v", err)
 
 		// Check if number not registered (ID & EN message from config)
-		if err.Error() == config.GetConfig().Whatsmeow.WaErrorMessage.ID.PhoneNumberNotRegistered ||
-			err.Error() == config.GetConfig().Whatsmeow.WaErrorMessage.EN.PhoneNumberNotRegistered {
+		if err.Error() == config.WebPanel.Get().Whatsmeow.WaErrorMessage.ID.PhoneNumberNotRegistered ||
+			err.Error() == config.WebPanel.Get().Whatsmeow.WaErrorMessage.EN.PhoneNumberNotRegistered {
 
 			notRegKey := "not_registered_" + originalSenderJID
 			exists, err := rdb.Exists(contx, notRegKey).Result()
@@ -296,7 +296,7 @@ func ProcessMessage(v *events.Message) {
 						"Terima kasih atas pengertiannya. 😊\n"+
 						"📞 Technical Support *@+%s*",
 					senderPhoneNumber,
-					config.GetConfig().Whatsmeow.WaTechnicalSupport,
+					config.WebPanel.Get().Whatsmeow.WaTechnicalSupport,
 				)
 				enMsg := fmt.Sprintf(
 					"Your number _(%s)_ is not registered yet.\n"+
@@ -304,7 +304,7 @@ func ProcessMessage(v *events.Message) {
 						"Thank you for your understanding. 😊\n"+
 						"📞 Technical Support *@+%s*",
 					senderPhoneNumber,
-					config.GetConfig().Whatsmeow.WaTechnicalSupport,
+					config.WebPanel.Get().Whatsmeow.WaTechnicalSupport,
 				)
 
 				SendLangMessage(originalSenderJID, idMsg, enMsg, userLang)
@@ -313,7 +313,7 @@ func ProcessMessage(v *events.Message) {
 		} else {
 			// Check if message came from group
 			if v.Info.IsGroup {
-				waGroup := config.GetConfig().Whatsmeow.WaGroupAllowedToUsePrompt
+				waGroup := config.WebPanel.Get().Whatsmeow.WaGroupAllowedToUsePrompt
 
 				if len(waGroup) > 0 {
 					senderPhoneNumberJID := senderPhoneNumber + "@s.whatsapp.net"
@@ -392,9 +392,9 @@ func ProcessMessage(v *events.Message) {
 				// Get file permission rule for validation
 				fileRules := map[string]FilePermissionRule{
 					"document": {
-						MaxFileSizeBytes:  config.GetConfig().Whatsmeow.MaxUploadedDocumentSize * 1024 * 1024, // max size in MB converted to bytes
-						AllowedExtensions: config.GetConfig().Whatsmeow.DocumentAllowedExtensions,             // e.g. []string{".pdf", ".doc", ".docx", ".txt", ".zip"}
-						AllowedMimeTypes:  config.GetConfig().Whatsmeow.DocumentAllowedMimeTypes,              // e.g. []string{"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "application/zip"
+						MaxFileSizeBytes:  config.WebPanel.Get().Whatsmeow.MaxUploadedDocumentSize * 1024 * 1024, // max size in MB converted to bytes
+						AllowedExtensions: config.WebPanel.Get().Whatsmeow.DocumentAllowedExtensions,             // e.g. []string{".pdf", ".doc", ".docx", ".txt", ".zip"}
+						AllowedMimeTypes:  config.WebPanel.Get().Whatsmeow.DocumentAllowedMimeTypes,              // e.g. []string{"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "application/zip"
 					},
 				}
 
@@ -459,7 +459,7 @@ func ProcessMessage(v *events.Message) {
 	}
 
 	// Group handling placeholder
-	waGroup := config.GetConfig().Whatsmeow.WaGroupAllowedToUsePrompt
+	waGroup := config.WebPanel.Get().Whatsmeow.WaGroupAllowedToUsePrompt
 	if v.Info.IsGroup && containsJID(waGroup, v.Info.Chat) {
 		switch messageTextLower {
 		case "ping pong ping!!":
@@ -488,7 +488,7 @@ func ProcessMessage(v *events.Message) {
 		}
 
 		if exists == 0 {
-			langPrompt := config.GetConfig().Whatsmeow.InitLanguagePrompt
+			langPrompt := config.WebPanel.Get().Whatsmeow.InitLanguagePrompt
 			sendTextMessageViaBot(originalSenderJID, langPrompt)
 			// rdb.Set(contx, langPromptKey, "true", redisExpiry)
 			rdb.Set(contx, langPromptKey, "true", 24*2*time.Hour) // 2 days
@@ -517,8 +517,8 @@ func StartWhatsappClient(redisDB *redis.Client, db *gorm.DB) (*whatsmeow.Client,
 	rdb = redisDB
 	dbWeb = db
 
-	clientLogPath := config.GetConfig().Whatsmeow.WhatsmeowClientLog
-	dbLogPath := config.GetConfig().Whatsmeow.WhatsmeowDBLog
+	clientLogPath := config.WebPanel.Get().Whatsmeow.WhatsmeowClientLog
+	dbLogPath := config.WebPanel.Get().Whatsmeow.WhatsmeowDBLog
 	if clientLogPath == "" {
 		return nil, errors.New("whatsmeow client log path is not defined")
 	}
@@ -526,8 +526,8 @@ func StartWhatsappClient(redisDB *redis.Client, db *gorm.DB) (*whatsmeow.Client,
 		return nil, errors.New("whatsmeow db log path is not defined")
 	}
 
-	dbLevelStr := config.GetConfig().Whatsmeow.WhatsmeowDBLogLevel
-	clientLevelStr := config.GetConfig().Whatsmeow.WhatsmeowClientLogLevel
+	dbLevelStr := config.WebPanel.Get().Whatsmeow.WhatsmeowDBLogLevel
+	clientLevelStr := config.WebPanel.Get().Whatsmeow.WhatsmeowClientLogLevel
 
 	dbLevel := logger.ParseWhatsmeowLogLevel(dbLevelStr)
 	clientLevel := logger.ParseWhatsmeowLogLevel(clientLevelStr)
@@ -541,8 +541,8 @@ func StartWhatsappClient(redisDB *redis.Client, db *gorm.DB) (*whatsmeow.Client,
 
 	container, err := sqlstore.New(
 		context.Background(),
-		config.GetConfig().Whatsmeow.SqlDriver,
-		fmt.Sprintf("file:%s?_foreign_keys=on", config.GetConfig().Whatsmeow.SqlSource),
+		config.WebPanel.Get().Whatsmeow.SqlDriver,
+		fmt.Sprintf("file:%s?_foreign_keys=on", config.WebPanel.Get().Whatsmeow.SqlSource),
 		dbLog,
 	)
 	if err != nil {
@@ -567,7 +567,7 @@ func StartWhatsappClient(redisDB *redis.Client, db *gorm.DB) (*whatsmeow.Client,
 // an error message is printed to the console. Optionally, the function can be extended to
 // save the QR code as an image file by using the commented-out code.
 func saveQRCodeToFile(code string) {
-	filePath := config.GetConfig().Whatsmeow.QrCode
+	filePath := config.WebPanel.Get().Whatsmeow.QrCode
 	err := os.WriteFile(filePath, []byte(code), 0644)
 	if err != nil {
 		fmt.Printf("Failed to save QR code: %v\n", err)
@@ -647,7 +647,7 @@ func startConnectAndListenQRCode() {
 func RefreshWhatsappQrcode() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		qrCodeMutex.Lock()
-		valid := time.Since(lastQRGeneratedAt) < time.Duration(config.GetConfig().Whatsmeow.QrExpired)*time.Second
+		valid := time.Since(lastQRGeneratedAt) < time.Duration(config.WebPanel.Get().Whatsmeow.QrExpired)*time.Second
 		qrCode := currentQRCode
 		qrCodeMutex.Unlock()
 
@@ -735,7 +735,7 @@ func EndSessionWhatsapp() gin.HandlerFunc {
 		}
 
 		// 3. Optional: Delete the session SQLite file (if used)
-		sessionPath := config.GetConfig().Whatsmeow.SqlSource
+		sessionPath := config.WebPanel.Get().Whatsmeow.SqlSource
 		if sessionPath != ":memory:" {
 			if err := os.Remove(sessionPath); err != nil && !os.IsNotExist(err) {
 				logrus.Errorf("Failed to remove WhatsApp session file: %v", err)
@@ -854,7 +854,7 @@ func CCFormRequestTemplate(v *events.Message, stanzaID, originalSenderJID string
 	}
 
 	if userLang == "" {
-		langPrompt := config.GetConfig().Whatsmeow.InitLanguagePrompt
+		langPrompt := config.WebPanel.Get().Whatsmeow.InitLanguagePrompt
 		sendTextMessageViaBot(originalSenderJID, langPrompt)
 		return
 	}
@@ -953,7 +953,7 @@ func ReplyRequestTemplate(v *events.Message, stanzaID, originalSenderJID string,
 	}
 
 	if userLang == "" {
-		langPrompt := config.GetConfig().Whatsmeow.InitLanguagePrompt
+		langPrompt := config.WebPanel.Get().Whatsmeow.InitLanguagePrompt
 		sendTextMessageViaBot(originalSenderJID, langPrompt)
 		return
 	}
@@ -1140,7 +1140,7 @@ func ReplyRequestTemplate(v *events.Message, stanzaID, originalSenderJID string,
 		sb.WriteString(fmt.Sprintf("Please wait Mr/Mrs *%v*, your request regarding the EDC with Serial Number: _%v_ has been received.\nIt will be processed and you will be informed once it is completed ☺", strings.TrimSpace(dataMap["Name"]), strings.TrimSpace(dataMap["EDC SN"])))
 	}
 
-	sb.WriteString(fmt.Sprintf("\n\n~Regards,\n *%s*", config.GetConfig().Default.PT))
+	sb.WriteString(fmt.Sprintf("\n\n~Regards,\n *%s*", config.WebPanel.Get().Default.PT))
 	textToSend := sb.String()
 
 	WhatsappClient.SendMessage(context.Background(), v.Info.Chat, &waE2E.Message{
@@ -1377,7 +1377,7 @@ func handleKeywordReply(jid, messageText, messageTextLower, userLang string, san
 
 		var matchedReply *model.WAMessageReply
 		for _, reply := range waBotReplyData {
-			for _, keyword := range strings.Split(reply.Keywords, config.GetConfig().Whatsmeow.KeywordSeparator) {
+			for _, keyword := range strings.Split(reply.Keywords, config.WebPanel.Get().Whatsmeow.KeywordSeparator) {
 				if strings.Contains(strings.ToLower(messageText), strings.ToLower(strings.TrimSpace(keyword))) {
 					matchedReply = &reply
 					break
@@ -1400,7 +1400,7 @@ func handleKeywordReply(jid, messageText, messageTextLower, userLang string, san
 		// Suggest similar keyword
 		var allKeywords []string
 		for _, reply := range waBotReplyData {
-			for _, keyword := range strings.Split(reply.Keywords, config.GetConfig().Whatsmeow.KeywordSeparator) {
+			for _, keyword := range strings.Split(reply.Keywords, config.WebPanel.Get().Whatsmeow.KeywordSeparator) {
 				if trimmed := strings.TrimSpace(keyword); trimmed != "" {
 					allKeywords = append(allKeywords, trimmed)
 				}
@@ -1416,20 +1416,20 @@ func handleKeywordReply(jid, messageText, messageTextLower, userLang string, san
 			return
 		}
 
-		// redisExpiry := time.Duration(config.GetConfig().Whatsmeow.RedisExpiry) * time.Hour
+		// redisExpiry := time.Duration(config.WebPanel.Get().Whatsmeow.RedisExpiry) * time.Hour
 		welcomeKey := "welcome_" + jid
 		exists, err := rdb.Exists(contx, welcomeKey).Result()
 		if err != nil {
 			logrus.Error(err)
 		}
 		if exists == 0 {
-			indo := config.GetConfig().Default.WelcomeID
-			eng := config.GetConfig().Default.WelcomeEN
+			indo := config.WebPanel.Get().Default.WelcomeID
+			eng := config.WebPanel.Get().Default.WelcomeEN
 
 			switch sanitizeRes.User.UserOf {
 			case model.UserOfHommyPay:
-				indo = config.GetConfig().HommyPayCCData.WelcomeID
-				eng = config.GetConfig().HommyPayCCData.WelcomeEN
+				indo = config.WebPanel.Get().HommyPayCCData.WelcomeID
+				eng = config.WebPanel.Get().HommyPayCCData.WelcomeEN
 			}
 
 			SendLangMessage(jid, indo, eng, userLang)
@@ -1496,13 +1496,13 @@ func sendLangMessageWithStanza(v *events.Message, stanzaID, originalSenderJID, i
 // parses the JSON response, and returns the generated text. Any errors during the HTTP request or
 // JSON unmarshalling are returned.
 // func askOllama(prompt string) (string, error) {
-// 	url := config.GetConfig().Whatsmeow.OllamaURL
+// 	url := config.WebPanel.Get().Whatsmeow.OllamaURL
 // 	if url == "" {
 // 		return "", errors.New("ollama URL is not configured")
 // 	}
 
 // 	body, _ := json.Marshal(OllamaRequest{
-// 		Model:  config.GetConfig().Whatsmeow.OllamaModel,
+// 		Model:  config.WebPanel.Get().Whatsmeow.OllamaModel,
 // 		Prompt: prompt,
 // 		Stream: false,
 // 	})
@@ -1537,15 +1537,15 @@ func ValidateWhatsappBOTPhoneUser(phoneNumber, senderJID string, isGroup bool, m
 
 	switch strings.ToLower(userLang) {
 	case "id":
-		errNotRegistered = errors.New(config.GetConfig().Whatsmeow.WaErrorMessage.ID.PhoneNumberNotRegistered)
-		errBanned = errors.New(config.GetConfig().Whatsmeow.WaErrorMessage.ID.PhoneNumberIsBanned)
-		errInvalidChat = errors.New(config.GetConfig().Whatsmeow.WaErrorMessage.ID.InvalidChat)
-		errMessageTypeDenied = errors.New(config.GetConfig().Whatsmeow.WaErrorMessage.ID.MessageTypeDenied)
+		errNotRegistered = errors.New(config.WebPanel.Get().Whatsmeow.WaErrorMessage.ID.PhoneNumberNotRegistered)
+		errBanned = errors.New(config.WebPanel.Get().Whatsmeow.WaErrorMessage.ID.PhoneNumberIsBanned)
+		errInvalidChat = errors.New(config.WebPanel.Get().Whatsmeow.WaErrorMessage.ID.InvalidChat)
+		errMessageTypeDenied = errors.New(config.WebPanel.Get().Whatsmeow.WaErrorMessage.ID.MessageTypeDenied)
 	default:
-		errNotRegistered = errors.New(config.GetConfig().Whatsmeow.WaErrorMessage.EN.PhoneNumberNotRegistered)
-		errBanned = errors.New(config.GetConfig().Whatsmeow.WaErrorMessage.EN.PhoneNumberIsBanned)
-		errInvalidChat = errors.New(config.GetConfig().Whatsmeow.WaErrorMessage.EN.InvalidChat)
-		errMessageTypeDenied = errors.New(config.GetConfig().Whatsmeow.WaErrorMessage.EN.MessageTypeDenied)
+		errNotRegistered = errors.New(config.WebPanel.Get().Whatsmeow.WaErrorMessage.EN.PhoneNumberNotRegistered)
+		errBanned = errors.New(config.WebPanel.Get().Whatsmeow.WaErrorMessage.EN.PhoneNumberIsBanned)
+		errInvalidChat = errors.New(config.WebPanel.Get().Whatsmeow.WaErrorMessage.EN.InvalidChat)
+		errMessageTypeDenied = errors.New(config.WebPanel.Get().Whatsmeow.WaErrorMessage.EN.MessageTypeDenied)
 	}
 
 	var user model.WAPhoneUser
@@ -1648,7 +1648,7 @@ func CheckAndNotifyQuota(
 
 	// On first increment, set expiry so it resets daily
 	if quotaCount == 1 {
-		rdb.Expire(contx, quotaKey, time.Duration(config.GetConfig().Whatsmeow.RedisExpiry)*time.Hour)
+		rdb.Expire(contx, quotaKey, time.Duration(config.WebPanel.Get().Whatsmeow.RedisExpiry)*time.Hour)
 	}
 
 	// Over quota?
@@ -1666,7 +1666,7 @@ func CheckAndNotifyQuota(
 			// Get TTL to tell user when quota resets
 			ttl, err := rdb.TTL(contx, quotaKey).Result()
 			if err != nil || ttl <= 0 {
-				ttl = time.Duration(config.GetConfig().Whatsmeow.RedisExpiry) * time.Hour
+				ttl = time.Duration(config.WebPanel.Get().Whatsmeow.RedisExpiry) * time.Hour
 			}
 
 			waitMsg := fun.FormatTTL(ttl)

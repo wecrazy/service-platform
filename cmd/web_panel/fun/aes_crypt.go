@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 )
 
 func GetAESDecryptedURLtoJSON(encrypted string) (map[string]interface{}, error) {
@@ -42,8 +42,8 @@ func GetAESEcryptedURLfromJSON(jsonMaps map[string]interface{}) (string, error) 
 }
 
 func GetAESDecrypted(encrypted string) ([]byte, error) {
-	key := config.GetConfig().App.AesKey
-	iv := config.GetConfig().App.AesKeyIV
+	key := config.WebPanel.Get().App.AesKey
+	iv := config.WebPanel.Get().App.AesKeyIV
 
 	if len(key) != 32 || len(iv) != 16 {
 		return nil, errors.New("invalid key or iv length")
@@ -89,8 +89,8 @@ func PKCS5UnPadding(src []byte) ([]byte, error) {
 }
 
 func GetAESEncrypted(plaintext string) (string, error) {
-	key := config.GetConfig().App.AesKey
-	iv := config.GetConfig().App.AesKeyIV
+	key := config.WebPanel.Get().App.AesKey
+	iv := config.WebPanel.Get().App.AesKeyIV
 
 	if len(key) != 32 || len(iv) != 16 {
 		return "", errors.New("invalid key or iv length")

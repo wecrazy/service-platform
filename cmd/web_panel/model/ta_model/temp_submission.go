@@ -1,7 +1,7 @@
 package tamodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 )
 
@@ -46,5 +46,5 @@ type TempSubmission struct {
 }
 
 func (TempSubmission) TableName() string {
-	return config.GetConfig().Database.TbTATempSubmission
+	return config.WebPanel.Get().Database.TbTATempSubmission
 }

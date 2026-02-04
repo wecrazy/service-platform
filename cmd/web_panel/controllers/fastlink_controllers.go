@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 	"strings"
 	"time"
 
@@ -416,7 +416,7 @@ func ShowPhotoByIDForMerchantFastlink(rdb *redis.Client, db *gorm.DB) gin.Handle
 		<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
 `)
 
-		publicURLImg := config.GetConfig().FastLinkData.PublicURLMerchantImage
+		publicURLImg := config.WebPanel.Get().FastLinkData.PublicURLMerchantImage
 		v := reflect.ValueOf(dbData)
 		t := reflect.TypeOf(dbData)
 

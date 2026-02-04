@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"service-platform/cmd/technical_assistance/model"
+	"service-platform/internal/config"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +35,7 @@ func GetSystemLogFiles(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Open the folder
-		dir, err := os.Open(os.Getenv("APP_LOG_DIR"))
+		dir, err := os.Open(config.TechnicalAssistance.Get().APP_LOG_DIR)
 		if err != nil {
 			log.Fatal(err)
 			c.JSON(http.StatusOK, gin.H{

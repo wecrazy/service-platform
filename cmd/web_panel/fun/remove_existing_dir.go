@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"service-platform/internal/config"
 	"strings"
 	"time"
-	"service-platform/cmd/web_panel/config"
 
 	"github.com/sirupsen/logrus"
 )
@@ -30,7 +30,7 @@ import (
 
 func RemoveExistingDirectory(dirPath, dateRange, dirDateFormat string) error {
 	// Support flexible dateRange: -2day, -4month, -1year, -1week, etc.
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	now := time.Now().In(loc)
 	threshold := now
 

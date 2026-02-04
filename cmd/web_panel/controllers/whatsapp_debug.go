@@ -3,8 +3,8 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	"service-platform/cmd/web_panel/config"
 	whatsappmodel "service-platform/cmd/web_panel/model/whatsapp_model"
+	"service-platform/internal/config"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -17,12 +17,12 @@ func CheckDatabaseTables(db *gorm.DB) gin.HandlerFunc {
 
 		// Check if tables exist by trying to query them
 		tables := map[string]interface{}{
-			config.GetConfig().Whatsmeow.WhatsappModel.TBConversation:          &whatsappmodel.WAConversation{},
-			config.GetConfig().Whatsmeow.WhatsappModel.TBChatMessage:           &whatsappmodel.WAChatMessage{},
-			config.GetConfig().Whatsmeow.WhatsappModel.TBContactInfo:           &whatsappmodel.WAContactInfo{},
-			config.GetConfig().Whatsmeow.WhatsappModel.TBGroupParticipant:      &whatsappmodel.WAGroupParticipant{},
-			config.GetConfig().Whatsmeow.WhatsappModel.TBMessageDeliveryStatus: &whatsappmodel.WAMessageDeliveryStatus{},
-			config.GetConfig().Whatsmeow.WhatsappModel.TBMediaFile:             &whatsappmodel.WAMediaFile{},
+			config.WebPanel.Get().Whatsmeow.WhatsappModel.TBConversation:          &whatsappmodel.WAConversation{},
+			config.WebPanel.Get().Whatsmeow.WhatsappModel.TBChatMessage:           &whatsappmodel.WAChatMessage{},
+			config.WebPanel.Get().Whatsmeow.WhatsappModel.TBContactInfo:           &whatsappmodel.WAContactInfo{},
+			config.WebPanel.Get().Whatsmeow.WhatsappModel.TBGroupParticipant:      &whatsappmodel.WAGroupParticipant{},
+			config.WebPanel.Get().Whatsmeow.WhatsappModel.TBMessageDeliveryStatus: &whatsappmodel.WAMessageDeliveryStatus{},
+			config.WebPanel.Get().Whatsmeow.WhatsappModel.TBMediaFile:             &whatsappmodel.WAMediaFile{},
 		}
 
 		for tableName, model := range tables {
@@ -41,7 +41,7 @@ func CheckDatabaseTables(db *gorm.DB) gin.HandlerFunc {
 
 		// Try to get raw table info
 		var tableList []string
-		tbPluck := fmt.Sprintf("Tables_in_%s", config.GetConfig().Database.Name)
+		tbPluck := fmt.Sprintf("Tables_in_%s", config.WebPanel.Get().Database.Name)
 		db.Raw("SHOW TABLES LIKE 'wa_%'").Pluck(tbPluck, &tableList)
 		result["raw_tables"] = tableList
 

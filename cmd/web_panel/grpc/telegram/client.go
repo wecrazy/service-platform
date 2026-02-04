@@ -3,7 +3,7 @@ package telegram
 import (
 	"context"
 	"fmt"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -23,7 +23,7 @@ func InitConnection(host string, port int) error {
 	}
 
 	addr := fmt.Sprintf("%s:%d", host, port)
-	cfg := config.GetConfig()
+	cfg := config.WebPanel.Get()
 	timeout := time.Duration(cfg.TelegramService.ConnectionTimeout) * time.Second
 	if timeout == 0 {
 		timeout = 5 * time.Second
@@ -77,6 +77,6 @@ func EnsureConnection() error {
 		return nil
 	}
 
-	cfg := config.GetConfig()
+	cfg := config.WebPanel.Get()
 	return InitConnection(cfg.TelegramService.GRPCHost, cfg.TelegramService.GRPCPort)
 }

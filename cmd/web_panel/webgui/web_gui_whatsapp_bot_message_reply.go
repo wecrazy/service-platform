@@ -3,9 +3,9 @@ package webgui
 import (
 	"fmt"
 	"html/template"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/model"
+	"service-platform/internal/config"
 
 	"gorm.io/gorm"
 )
@@ -311,7 +311,7 @@ func RenderDataTableServerSideWhatsappBotMessageReply(title, table_name, endpoin
 						insert_id,  // 6
 						insert_id,  // 7
 						insert_id,  // 8
-						config.GetConfig().Whatsmeow.KeywordSeparator, // 9 (e.g. "|||")
+						config.WebPanel.Get().Whatsmeow.KeywordSeparator, // 9 (e.g. "|||")
 						insert_id, // 10
 						insert_id, // 11
 						insert_id, // 12
@@ -404,7 +404,7 @@ func RenderDataTableServerSideWhatsappBotMessageReply(title, table_name, endpoin
 						edit_id,    // 5 (function suffix)
 						edit_id,    // 6 (container)
 						edit_id,    // 7 (hidden input)
-						config.GetConfig().Whatsmeow.KeywordSeparator, // 8
+						config.WebPanel.Get().Whatsmeow.KeywordSeparator, // 8
 						edit_id, // 9 (update function)
 						edit_id, // 10 (add field function)
 						edit_id, // 11 (update function)
@@ -882,7 +882,7 @@ func RenderDataTableServerSideWhatsappBotMessageReply(title, table_name, endpoin
 			for _, mode := range model.AllUserOf {
 				var optLabel string
 				if mode == model.UserOfCSNA {
-					optLabel = config.GetConfig().Default.PT
+					optLabel = config.WebPanel.Get().Default.PT
 				} else {
 					optLabel = fun.SnakeToCapitalized(string(mode))
 				}

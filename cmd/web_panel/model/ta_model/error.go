@@ -1,7 +1,7 @@
 package tamodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 )
 
@@ -40,5 +40,5 @@ type Error struct {
 }
 
 func (Error) TableName() string {
-	return config.GetConfig().Database.TbTAError
+	return config.WebPanel.Get().Database.TbTAError
 }

@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"reflect"
 	"runtime"
-	"service-platform/cmd/web_panel/config"
 	"service-platform/cmd/web_panel/fun"
 	"service-platform/cmd/web_panel/internal/gormdb"
 	"service-platform/cmd/web_panel/model"
 	mtimodel "service-platform/cmd/web_panel/model/mti_model"
+	"service-platform/internal/config"
 	"strings"
 	"sync"
 	"time"
@@ -89,7 +89,7 @@ func getProvinceFromCityMTI(city string) string {
 	}
 
 	// Try partial matching for common abbreviations
-	completedCity := config.GetConfig().Indonesia.CompletedCity
+	completedCity := config.WebPanel.Get().Indonesia.CompletedCity
 
 	if fullCity, exists := completedCity[cityLower]; exists {
 		if province, exists := regionCacheMTI[strings.ToLower(fullCity)]; exists {
@@ -141,18 +141,18 @@ func GetTaskODOOMSMTI() error {
 
 	ODOOModel := "project.task"
 	domain := []interface{}{
-		[]interface{}{"company_id", "=", config.GetConfig().MTI.CompanyIDInODOOMS},
+		[]interface{}{"company_id", "=", config.WebPanel.Get().MTI.CompanyIDInODOOMS},
 	}
-	if config.GetConfig().MTI.ActiveDebug {
-		startParam := config.GetConfig().MTI.StartParam
-		endParam := config.GetConfig().MTI.EndParam
+	if config.WebPanel.Get().MTI.ActiveDebug {
+		startParam := config.WebPanel.Get().MTI.StartParam
+		endParam := config.WebPanel.Get().MTI.EndParam
 		if startParam != "" && endParam != "" {
 			domain = append(domain, []interface{}{"x_received_datetime_spk", ">=", startParam})
 			domain = append(domain, []interface{}{"x_received_datetime_spk", "<=", endParam})
 		}
 	} else {
 		// Get current year from January 1st until date now
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		startOfYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, loc)
 
@@ -209,7 +209,7 @@ func GetTaskODOOMSMTI() error {
 		"order":  order,
 	}
 	payload := map[string]interface{}{
-		"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+		"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 		"params":  ODOOParams,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -291,7 +291,7 @@ func GetTaskODOOMSMTI() error {
 			}
 
 			payload := map[string]interface{}{
-				"jsonrpc": config.GetConfig().ApiODOO.JSONRPC,
+				"jsonrpc": config.WebPanel.Get().ApiODOO.JSONRPC,
 				"params":  odooParams,
 			}
 
@@ -1334,7 +1334,7 @@ func PivotPMMTI() gin.HandlerFunc {
 				COUNT(DISTINCT CASE WHEN reason_code IS NOT NULL AND reason_code NOT LIKE 'A00%' THEN tid END) as gagal_terkunjungi_count,
 				COUNT(DISTINCT CASE WHEN timesheet_last_stop IS NULL THEN tid END) as belum_kunjungan_count,
 				COUNT(DISTINCT tid) as total_count
-			FROM ` + config.GetConfig().MTI.TBDataODOOMS + `
+			FROM ` + config.WebPanel.Get().MTI.TBDataODOOMS + `
 			WHERE ` + whereClause + `
 			GROUP BY source
 			ORDER BY source
@@ -1658,7 +1658,7 @@ func PivotNonPMMTI() gin.HandlerFunc {
 			}
 
 			// Count priorities based on SLA deadlines and task status
-			loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+			loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 			now := time.Now().In(loc)
 
 			// Only count if timesheet_last_stop is null (not yet completed)
@@ -1918,7 +1918,7 @@ func ReportAllPMMTI() gin.HandlerFunc {
 		logrus.Infof("Excel file creation completed in %v", excelDuration)
 
 		// Generate filename
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		filename := fmt.Sprintf("PM_MTI_All_Data_%s.xlsx", now.Format("02Jan2006_150405"))
 
@@ -2065,7 +2065,7 @@ func ReportDataFilteredPMMTI() gin.HandlerFunc {
 		defer excelFile.Close()
 
 		// Generate filename
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		filename := fmt.Sprintf("PM_MTI_Filtered_Data_%s.xlsx", now.Format("02Jan2006_150405"))
 
@@ -2126,7 +2126,7 @@ func generatePivotDataPMMTI(dbWeb *gorm.DB, searchValue string) ([]map[string]in
 		}
 	}
 
-	tableMTI := config.GetConfig().MTI.TBDataODOOMS
+	tableMTI := config.WebPanel.Get().MTI.TBDataODOOMS
 
 	// Raw SQL query to aggregate the data
 	query := fmt.Sprintf(`
@@ -3230,7 +3230,7 @@ func ReportAllNonPMMTI() gin.HandlerFunc {
 		defer excelFile.Close()
 
 		// Generate filename
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		filename := fmt.Sprintf("Non_PM_MTI_All_Data_%s.xlsx", now.Format("02Jan2006_150405"))
 
@@ -3378,7 +3378,7 @@ func ReportDataFilteredNonPMMTI() gin.HandlerFunc {
 		defer excelFile.Close()
 
 		// Generate filename
-		loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+		loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 		now := time.Now().In(loc)
 		filename := fmt.Sprintf("Non_PM_MTI_Filtered_Data_%s.xlsx", now.Format("02Jan2006_150405"))
 

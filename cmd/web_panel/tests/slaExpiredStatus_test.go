@@ -2,7 +2,7 @@ package tests
 
 import (
 	"fmt"
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"testing"
 	"time"
 )
@@ -43,7 +43,7 @@ func SLAExpired(slaDeadline nullAbleTime) string {
 		return "SLA Not Found!"
 	}
 
-	loc, _ := time.LoadLocation(config.GetConfig().Default.Timezone)
+	loc, _ := time.LoadLocation(config.WebPanel.Get().Default.Timezone)
 	// now := time.Now().In(loc)
 	now := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 2, 0, 0, 0, loc)
 	slaTime := slaDeadline.Time.In(loc)

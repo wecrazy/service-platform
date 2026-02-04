@@ -12,9 +12,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"service-platform/cmd/technical_assistance/config"
 	"service-platform/cmd/technical_assistance/model"
 	"service-platform/cmd/technical_assistance/model/op_model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -520,7 +520,7 @@ func GenerateTAExcelReport(db *gorm.DB, dbWeb *gorm.DB) (string, string, error) 
 		f.SetCellStyle(masterSheet, cell, cell, style)
 	}
 
-	woDetailURL := os.Getenv("WO_DETAIL_URL")
+	woDetailURL := config.TechnicalAssistance.Get().WO_DETAIL_URL
 
 	rowIndex := 2
 	for _, record := range taActivityData {
@@ -978,7 +978,7 @@ func GenerateTAExcelReport(db *gorm.DB, dbWeb *gorm.DB) (string, string, error) 
 				// Handle dynamic photo column links
 				if photoID, exists := photoColumnLinks[column.ColTitle]; exists {
 					// This column is a photo, set the link accordingly
-					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", os.Getenv("WEB_PUBLIC_URL"), record.IDTask, photoID)
+					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", config.TechnicalAssistance.Get().WEB_PUBLIC_URL, record.IDTask, photoID)
 					f.SetCellValue(pendingSheet, cell, fmt.Sprintf("View %v", column.ColTitle))
 					f.SetCellStyle(pendingSheet, cell, cell, style)
 					// Add hyperlink to the cell using SetCellHyperlink
@@ -1104,7 +1104,7 @@ func GenerateTAExcelReport(db *gorm.DB, dbWeb *gorm.DB) (string, string, error) 
 				// Handle dynamic photo column links
 				if photoID, exists := photoColumnLinks[column.ColTitle]; exists {
 					// This column is a photo, set the link accordingly
-					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", os.Getenv("WEB_PUBLIC_URL"), record.IDTask, photoID)
+					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", config.TechnicalAssistance.Get().WEB_PUBLIC_URL, record.IDTask, photoID)
 					f.SetCellValue(errorSheet, cell, fmt.Sprintf("View %v", column.ColTitle))
 					f.SetCellStyle(errorSheet, cell, cell, style)
 					// Add hyperlink to the cell using SetCellHyperlink
@@ -1499,38 +1499,39 @@ func ODOOAPI(APIReq string, domain interface{}, model string, fields []string, o
 }
 
 func ODOOGetData(req string) (interface{}, error) {
-	yamlFilePaths := []string{
-		"/config/conf.yaml",
-		"config/conf.yaml",
-		"../config/conf.yaml",
-		"/../config/conf.yaml",
-		"../../config/conf.yaml",
-		"/../../config/conf.yaml",
-	}
+	// yamlFilePaths := []string{
+	// 	"/config/conf.yaml",
+	// 	"config/conf.yaml",
+	// 	"../config/conf.yaml",
+	// 	"/../config/conf.yaml",
+	// 	"../../config/conf.yaml",
+	// 	"/../../config/conf.yaml",
+	// }
 
-	var loadedConfig *config.YamlConfig
-	var err error
+	// var loadedConfig *config.YamlConfig
+	// var err error
 
-	for _, filePath := range yamlFilePaths {
-		if _, err := os.Stat(filePath); err == nil { // File exists
-			// log.Printf("Attempting to load configuration from '%s'", filePath)
-			loadedConfig, err = config.YAMLLoad(filePath)
-			if err != nil {
-				log.Printf("Failed to load configuration from '%s': %v", filePath, err)
-				continue
-			}
-			// log.Printf("Configuration successfully loaded from '%s'", filePath)
-			break
-		} else if os.IsNotExist(err) {
-			// log.Printf("Configuration file '%s' does not exist. Skipping.", filePath)
-		} else {
-			log.Printf("Error checking file '%s': %v", filePath, err)
-		}
-	}
+	// for _, filePath := range yamlFilePaths {
+	// 	if _, err := os.Stat(filePath); err == nil { // File exists
+	// 		// log.Printf("Attempting to load configuration from '%s'", filePath)
+	// 		loadedConfig, err = config.YAMLLoad(filePath)
+	// 		if err != nil {
+	// 			log.Printf("Failed to load configuration from '%s': %v", filePath, err)
+	// 			continue
+	// 		}
+	// 		// log.Printf("Configuration successfully loaded from '%s'", filePath)
+	// 		break
+	// 	} else if os.IsNotExist(err) {
+	// 		// log.Printf("Configuration file '%s' does not exist. Skipping.", filePath)
+	// 	} else {
+	// 		log.Printf("Error checking file '%s': %v", filePath, err)
+	// 	}
+	// }
 
-	if loadedConfig == nil {
-		log.Fatalf("Failed to load configuration: no valid configuration file found in paths: %v", yamlFilePaths)
-	}
+	// if loadedConfig == nil {
+	// 	log.Fatalf("Failed to load configuration: no valid configuration file found in paths: %v", yamlFilePaths)
+	// }
+	loadedConfig := config.TechnicalAssistance.Get()
 
 	urlGetData := loadedConfig.Odoo.UrlGetData
 
@@ -1676,39 +1677,39 @@ func ODOOGetData(req string) (interface{}, error) {
 }
 
 func GetSessionODOO() ([]*http.Cookie, error) {
-	yamlFilePaths := []string{
-		"/config/conf.yaml",
-		"config/conf.yaml",
-		"../config/conf.yaml",
-		"/../config/conf.yaml",
-		"../../config/conf.yaml",
-		"/../../config/conf.yaml",
-	}
+	// yamlFilePaths := []string{
+	// 	"/config/conf.yaml",
+	// 	"config/conf.yaml",
+	// 	"../config/conf.yaml",
+	// 	"/../config/conf.yaml",
+	// 	"../../config/conf.yaml",
+	// 	"/../../config/conf.yaml",
+	// }
 
-	var loadedConfig *config.YamlConfig
-	var err error
+	// var loadedConfig *config.YamlConfig
+	// var err error
 
-	for _, filePath := range yamlFilePaths {
-		if _, err := os.Stat(filePath); err == nil { // File exists
-			// log.Printf("Attempting to load configuration from '%s'", filePath)
-			loadedConfig, err = config.YAMLLoad(filePath)
-			if err != nil {
-				log.Printf("Failed to load configuration from '%s': %v", filePath, err)
-				continue
-			}
-			// log.Printf("Configuration successfully loaded from '%s'", filePath)
-			break
-		} else if os.IsNotExist(err) {
-			// log.Printf("Configuration file '%s' does not exist. Skipping.", filePath)
-		} else {
-			log.Printf("Error checking file '%s': %v", filePath, err)
-		}
-	}
+	// for _, filePath := range yamlFilePaths {
+	// 	if _, err := os.Stat(filePath); err == nil { // File exists
+	// 		// log.Printf("Attempting to load configuration from '%s'", filePath)
+	// 		loadedConfig, err = config.YAMLLoad(filePath)
+	// 		if err != nil {
+	// 			log.Printf("Failed to load configuration from '%s': %v", filePath, err)
+	// 			continue
+	// 		}
+	// 		// log.Printf("Configuration successfully loaded from '%s'", filePath)
+	// 		break
+	// 	} else if os.IsNotExist(err) {
+	// 		// log.Printf("Configuration file '%s' does not exist. Skipping.", filePath)
+	// 	} else {
+	// 		log.Printf("Error checking file '%s': %v", filePath, err)
+	// 	}
+	// }
 
-	if loadedConfig == nil {
-		log.Fatalf("Failed to load configuration: no valid configuration file found in paths: %v", yamlFilePaths)
-	}
-
+	// if loadedConfig == nil {
+	// 	log.Fatalf("Failed to load configuration: no valid configuration file found in paths: %v", yamlFilePaths)
+	// }
+	loadedConfig := config.TechnicalAssistance.Get()
 	db := loadedConfig.Odoo.Db
 	login := loadedConfig.Odoo.Login
 	password := loadedConfig.Odoo.Password
@@ -2011,7 +2012,7 @@ func GenerateTAMonthlyExcelReport(db *gorm.DB) (string, string, error) {
 		f.SetCellStyle(masterSheet, cell, cell, style)
 	}
 
-	woDetailURL := os.Getenv("WO_DETAIL_URL")
+	woDetailURL := config.TechnicalAssistance.Get().WO_DETAIL_URL
 
 	rowIndex := 2
 	for _, record := range taActivityData {
@@ -2889,7 +2890,7 @@ func GenerateTAComparedReport(db *gorm.DB) (string, string, error) {
 		"Foto Selfie Teknisi dan Merchant": "x_foto_selfie_teknisi_merchant",
 	}
 
-	woDetailURL := os.Getenv("WO_DETAIL_URL")
+	woDetailURL := config.TechnicalAssistance.Get().WO_DETAIL_URL
 
 	if len(errorData) > 0 {
 		for _, record := range errorData {
@@ -2902,7 +2903,7 @@ func GenerateTAComparedReport(db *gorm.DB) (string, string, error) {
 				// Handle dynamic photo column links
 				if photoID, exists := photoColumnLinks[column.ColTitle]; exists {
 					// This column is a photo, set the link accordingly
-					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", os.Getenv("WEB_PUBLIC_URL"), record.IDTask, photoID)
+					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", config.TechnicalAssistance.Get().WEB_PUBLIC_URL, record.IDTask, photoID)
 					f.SetCellValue(masterSheet, cell, fmt.Sprintf("View %v", column.ColTitle))
 					f.SetCellStyle(masterSheet, cell, cell, style)
 					// Add hyperlink to the cell using SetCellHyperlink
@@ -3104,7 +3105,7 @@ func GenerateTAComparedReport(db *gorm.DB) (string, string, error) {
 				// Handle dynamic photo column links
 				if photoID, exists := photoColumnLinks[column.ColTitle]; exists {
 					// This column is a photo, set the link accordingly
-					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", os.Getenv("WEB_PUBLIC_URL"), record.IDTask, photoID)
+					linkPhoto := fmt.Sprintf("%v/here/file/%v@%v", config.TechnicalAssistance.Get().WEB_PUBLIC_URL, record.IDTask, photoID)
 					f.SetCellValue(masterSheet, cell, fmt.Sprintf("View %v", column.ColTitle))
 					f.SetCellStyle(masterSheet, cell, cell, style)
 					// Add hyperlink to the cell using SetCellHyperlink

@@ -3,9 +3,9 @@ package controllers
 import (
 	"context"
 	"net/http"
-	"os"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -30,12 +30,12 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		}
 
 		parameters := gin.H{
-			"APP_NAME":         os.Getenv("APP_NAME"),
-			"APP_LOGO":         os.Getenv("APP_LOGO"),
-			"APP_VERSION":      os.Getenv("APP_VERSION"),
-			"APP_VERSION_NO":   os.Getenv("APP_VERSION_NO"),
-			"APP_VERSION_CODE": os.Getenv("APP_VERSION_CODE"),
-			"APP_VERSION_NAME": os.Getenv("APP_VERSION_NAME"),
+			"APP_NAME":         config.TechnicalAssistance.Get().APP_NAME,
+			"APP_LOGO":         config.TechnicalAssistance.Get().APP_LOGO,
+			"APP_VERSION":      config.TechnicalAssistance.Get().APP_VERSION_NO,
+			"APP_VERSION_NO":   config.TechnicalAssistance.Get().APP_VERSION_NO,
+			"APP_VERSION_CODE": config.TechnicalAssistance.Get().APP_VERSION_CODE,
+			"APP_VERSION_NAME": config.TechnicalAssistance.Get().APP_VERSION_NAME,
 			"MSG_HEADER":       "Please, Contact Admin",
 			"EMAIL_DOMAIN":     "",
 			"EMAIL":            email,
@@ -83,10 +83,10 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		// Now you can send the email with the verification link.
 		htmlMailTemplate := `<body style="font-family: Arial, sans-serif; text-align: center;">
 			<div style="background-color: #f4f4f4; padding: 20px;">
-				<img src="` + os.Getenv("WEB_PUBLIC_URL") + os.Getenv("APP_LOGO") + `" alt="BP" width="180" height="101" style="display: block; margin: 0 auto;">
-				<h1 style="color: #4287f5;">` + os.Getenv("APP_NAME") + ` Reset Password</h1>
+				<img src="` + config.TechnicalAssistance.Get().WEB_PUBLIC_URL + config.TechnicalAssistance.Get().APP_LOGO + `" alt="BP" width="180" height="101" style="display: block; margin: 0 auto;">
+				<h1 style="color: #4287f5;">` + config.TechnicalAssistance.Get().APP_NAME + ` Reset Password</h1>
 				<p>Please click the button below to verify your email address:</p>
-				<a href="` + os.Getenv("WEB_PUBLIC_URL") + `/reset-password/` + admin.Email + "/" + randomAccessToken + `" style="text-decoration: none;">
+				<a href="` + config.TechnicalAssistance.Get().WEB_PUBLIC_URL + `/reset-password/` + admin.Email + "/" + randomAccessToken + `" style="text-decoration: none;">
 					<button style="background-color: #4287f5; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
 						Reset Password
 					</button>
@@ -95,21 +95,21 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		</body>`
 
 		mailer := gomail.NewMessage()
-		mailer.SetHeader("From", "Email Verificator  <"+os.Getenv("CONFIG_SMTP_SENDER")+">")
+		mailer.SetHeader("From", "Email Verificator  <"+config.TechnicalAssistance.Get().CONFIG_SMTP_SENDER+">")
 		mailer.SetHeader("To", admin.Email)
 		mailer.SetHeader("Subject", "[noreply] Here Reset Password link")
 		mailer.SetBody("text/html", htmlMailTemplate)
 
-		smtpPortStr := os.Getenv("CONFIG_SMTP_PORT")
+		smtpPortStr := config.TechnicalAssistance.Get().CONFIG_SMTP_PORT
 		smtpPort, oops := strconv.Atoi(smtpPortStr)
 		if oops != nil {
 			smtpPort = 587
 		}
 		dialer := gomail.NewDialer(
-			os.Getenv("CONFIG_SMTP_HOST"),
+			config.TechnicalAssistance.Get().CONFIG_SMTP_HOST,
 			smtpPort,
-			os.Getenv("CONFIG_AUTH_EMAIL"),
-			os.Getenv("CONFIG_AUTH_PASSWORD"),
+			config.TechnicalAssistance.Get().CONFIG_AUTH_EMAIL,
+			config.TechnicalAssistance.Get().CONFIG_AUTH_PASSWORD,
 		)
 
 		errMailDialer := dialer.DialAndSend(mailer)

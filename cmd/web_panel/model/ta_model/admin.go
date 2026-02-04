@@ -1,7 +1,7 @@
 package tamodel
 
 import (
-	"service-platform/cmd/web_panel/config"
+	"service-platform/internal/config"
 	"time"
 
 	"gorm.io/gorm"
@@ -33,5 +33,5 @@ type Admin struct {
 }
 
 func (Admin) TableName() string {
-	return config.GetConfig().Database.TbTAAdmin
+	return config.WebPanel.Get().Database.TbTAAdmin
 }

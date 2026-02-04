@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"os"
 	"service-platform/cmd/technical_assistance/fun"
 	"service-platform/cmd/technical_assistance/model"
+	"service-platform/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -242,7 +242,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			return
 		}
 
-		loginTimeStr := os.Getenv("LOGIN_TIME_M")
+		loginTimeStr := config.TechnicalAssistance.Get().LOGIN_TIME_M
 
 		// Parse the login time as an integer
 		loginExpiredMinutes, err := strconv.Atoi(loginTimeStr)
@@ -258,9 +258,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    authToken,
 			Expires:  expiration,
 			Path:     fun.GLOBAL_URL,
-			Domain:   os.Getenv("COOKIE_LOGIN_DOMAIN"),
+			Domain:   config.TechnicalAssistance.Get().COOKIE_LOGIN_DOMAIN,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   os.Getenv("COOKIE_LOGIN_SECURE") == "true",
+			Secure:   config.TechnicalAssistance.Get().COOKIE_LOGIN_SECURE == "true",
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, auth)
@@ -271,9 +271,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    randomToken,
 			Expires:  expiration,
 			Path:     fun.GLOBAL_URL,
-			Domain:   os.Getenv("COOKIE_LOGIN_DOMAIN"),
+			Domain:   config.TechnicalAssistance.Get().COOKIE_LOGIN_DOMAIN,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   os.Getenv("COOKIE_LOGIN_SECURE") == "true",
+			Secure:   config.TechnicalAssistance.Get().COOKIE_LOGIN_SECURE == "true",
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, random)
@@ -284,9 +284,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    tokenString,
 			Expires:  expiration,
 			Path:     fun.GLOBAL_URL,
-			Domain:   os.Getenv("COOKIE_LOGIN_DOMAIN"),
+			Domain:   config.TechnicalAssistance.Get().COOKIE_LOGIN_DOMAIN,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   os.Getenv("COOKIE_LOGIN_SECURE") == "true",
+			Secure:   config.TechnicalAssistance.Get().COOKIE_LOGIN_SECURE == "true",
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, tokenCookie)
@@ -297,9 +297,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    url.QueryEscape(admin.Session),
 			Expires:  expiration,
 			Path:     fun.GLOBAL_URL,
-			Domain:   os.Getenv("COOKIE_LOGIN_DOMAIN"),
+			Domain:   config.TechnicalAssistance.Get().COOKIE_LOGIN_DOMAIN,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   os.Getenv("COOKIE_LOGIN_SECURE") == "true",
+			Secure:   config.TechnicalAssistance.Get().COOKIE_LOGIN_SECURE == "true",
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, credentialsCookie)
@@ -309,9 +309,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		// 	Value:    url.QueryEscape(admin.Session),
 		// 	Expires:  expiration,
 		// 	Path:     fun.GLOBAL_URL,
-		// 	Domain:   os.Getenv("COOKIE_LOGIN_DOMAIN"),
+		// 	Domain:   config.TechnicalAssistance.Get().COOKIE_LOGIN_DOMAIN,
 		// 	SameSite: http.SameSiteLaxMode,
-		// 	Secure:   os.Getenv("COOKIE_LOGIN_SECURE") == "true",
+		// 	Secure:   config.TechnicalAssistance.Get().COOKIE_LOGIN_SECURE == "true",
 		// 	HttpOnly: false,
 		// }
 		// http.SetCookie(c.Writer, syncCookie)
