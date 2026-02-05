@@ -24,7 +24,7 @@ type schedulerServer struct {
 	proto.UnimplementedSchedulerServiceServer
 	db        *gorm.DB
 	scheduler *gocron.Scheduler
-	cfg       *config.YamlConfig
+	cfg       *config.TypeConfig
 }
 
 func (s *schedulerServer) RegisterJob(ctx context.Context, req *proto.RegisterJobRequest) (*proto.RegisterJobResponse, error) {

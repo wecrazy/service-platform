@@ -19,11 +19,11 @@ import (
 
 // MockConfig holds test configuration
 type MockConfig struct {
-	*config.YamlConfig
+	*config.TypeConfig
 }
 
-func createTestConfig() *config.YamlConfig {
-	return &config.YamlConfig{
+func createTestConfig() *config.TypeConfig {
+	return &config.TypeConfig{
 		ODOOManageService: struct {
 			JsonRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
 			Login          string                         `yaml:"login" validate:"required"`

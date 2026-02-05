@@ -16,7 +16,7 @@ import (
 var (
 	timezoneLoc *time.Location
 	dbInstance  *gorm.DB
-	yamlCfg     *config.YamlConfig
+	yamlCfg     *config.TypeConfig
 )
 
 // JobMetadata stores execution metadata for each job
@@ -78,7 +78,7 @@ func ReloadTimezone() {
 	loadTimezone()
 }
 
-func StartScheduler(db *gorm.DB, cfg *config.YamlConfig) *gocron.Scheduler {
+func StartScheduler(db *gorm.DB, cfg *config.TypeConfig) *gocron.Scheduler {
 	loadTimezone()
 	dbInstance = db // Store DB instance for jobs that need it
 	yamlCfg = cfg   // Store config for jobs that need it

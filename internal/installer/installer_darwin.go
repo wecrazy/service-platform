@@ -15,6 +15,6 @@ func EnsureAdminPrivileges() {
 	}
 }
 
-func Install(yamlCfg *config.YamlConfig) {
+func Install(yamlCfg *config.TypeConfig) {
 	fmt.Println("🍎 macOS detected — but we are sorry, we don't have macOS installer yet")
 }

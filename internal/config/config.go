@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	config      YamlConfig
+	config      TypeConfig
 	configMutex sync.RWMutex
 	configPath  string
 )
@@ -160,7 +160,7 @@ func LoadConfig() error {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	var newConfig YamlConfig
+	var newConfig TypeConfig
 	if err := yaml.Unmarshal(file, &newConfig); err != nil {
 		return fmt.Errorf("failed to parse YAML: %w", err)
 	}
@@ -223,15 +223,15 @@ func WatchConfig() {
 }
 
 // GetConfig returns the current configuration
-func GetConfig() YamlConfig {
+func GetConfig() TypeConfig {
 	configMutex.RLock()
 	defer configMutex.RUnlock()
 	return config
 }
 
-// YamlConfig represents the structure of the configuration YAML file
+// TypeConfig represents the structure of the configuration YAML file
 // Fields are organized into sections such as App, Default, Redis, Database, etc.
-type YamlConfig struct {
+type TypeConfig struct {
 	App struct {
 		Host                 string `yaml:"host" validate:"required"`
 		GinMode              string `yaml:"gin_mode" validate:"required"`

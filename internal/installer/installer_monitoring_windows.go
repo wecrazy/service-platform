@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func InstallMonitoring(yamlCfg *config.YamlConfig) {
+func InstallMonitoring(yamlCfg *config.TypeConfig) {
 	fmt.Println("🪟  Windows detected — installing monitoring service...")
 
 	execPath, err := os.Executable()
@@ -89,7 +89,7 @@ func InstallMonitoring(yamlCfg *config.YamlConfig) {
 	fmt.Printf("✅ %s started successfully.\n", serviceName)
 }
 
-func UninstallMonitoring(yamlCfg *config.YamlConfig) {
+func UninstallMonitoring(yamlCfg *config.TypeConfig) {
 	serviceName := yamlCfg.Monitoring.ServiceName
 	if len(serviceName) == 0 || strings.TrimSpace(serviceName) == "" {
 		log.Fatalf("Service name cannot be empty or whitespace only")

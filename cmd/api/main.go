@@ -114,7 +114,7 @@ func retryConnect[T any](maxAttempts int, delay time.Duration, connectFn func() 
 
 // setupRedis initializes and connects to Redis using the provided configuration, with retry logic and health monitoring.
 // cfg: the YAML configuration containing Redis settings.
-func setupRedis(cfg config.YamlConfig) {
+func setupRedis(cfg config.TypeConfig) {
 	redisHost := cfg.Redis.Host
 	if redisHost == "" {
 		logrus.Fatal("Redis host is not configured.")
@@ -145,7 +145,7 @@ func setupRedis(cfg config.YamlConfig) {
 // cfg: the YAML configuration containing Redis settings.
 // redisHost: the hostname of the Redis server.
 // Returns a connected Redis client or an error if connection fails.
-func connectRedis(cfg config.YamlConfig, redisHost string) (*redis.Client, error) {
+func connectRedis(cfg config.TypeConfig, redisHost string) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:            fmt.Sprintf("%s:%d", redisHost, cfg.Redis.Port),
 		Password:        cfg.Redis.Password,
@@ -185,7 +185,7 @@ func pingRedis(client *redis.Client) error {
 // redisHost: the hostname of the Redis server.
 // maxAttempts: the maximum number of reconnection attempts.
 // delay: the duration to wait between reconnection attempts.
-func monitorRedis(cfg config.YamlConfig, redisHost string, maxAttempts int, delay time.Duration) {
+func monitorRedis(cfg config.TypeConfig, redisHost string, maxAttempts int, delay time.Duration) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
@@ -313,7 +313,7 @@ func reconnectWithRetries(
 // HandleCLIArgs processes command-line arguments for installation.
 // yamlCfg: the YAML configuration.
 // Returns true if the application should exit after handling the argument.
-func HandleCLIArgs(yamlCfg *config.YamlConfig) bool {
+func HandleCLIArgs(yamlCfg *config.TypeConfig) bool {
 	if len(os.Args) > 1 {
 		arg := os.Args[1]
 		switch arg {
@@ -332,7 +332,7 @@ func HandleCLIArgs(yamlCfg *config.YamlConfig) bool {
 
 // createFolderNeeds creates necessary folders based on configuration.
 // cfg: the YAML configuration containing folder needs.
-func createFolderNeeds(cfg *config.YamlConfig) {
+func createFolderNeeds(cfg *config.TypeConfig) {
 	folderDir, err := fun.FindValidDirectory([]string{
 		"web/file",
 		"../web/file",
@@ -364,7 +364,7 @@ func createFolderNeeds(cfg *config.YamlConfig) {
 // yamlCfg: the YAML configuration.
 // systemMonitor: the system resource monitor.
 func startWebServer(
-	yamlCfg *config.YamlConfig,
+	yamlCfg *config.TypeConfig,
 	systemMonitor *fun.SystemResourceMonitor,
 ) {
 	appLogDir := config.GetConfig().App.LogDir
@@ -458,7 +458,7 @@ func startWebServer(
 // printHostInfo prints the host information for the web server.
 // yamlCfg: the YAML configuration.
 // listenAddr: the address the server is listening on.
-func printHostInfo(yamlCfg *config.YamlConfig, listenAddr string) {
+func printHostInfo(yamlCfg *config.TypeConfig, listenAddr string) {
 	url := func() string {
 		if listenAddr == ":80" || listenAddr == ":443" {
 			return "localhost" + listenAddr

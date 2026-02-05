@@ -8,10 +8,10 @@ import (
 	"service-platform/internal/config"
 )
 
-func InstallMonitoring(yamlCfg *config.YamlConfig) {
+func InstallMonitoring(yamlCfg *config.TypeConfig) {
 	fmt.Printf("⚠️ Unsupported OS for monitoring service installation: %s\n", runtime.GOOS)
 }
 
-func UninstallMonitoring(yamlCfg *config.YamlConfig) {
+func UninstallMonitoring(yamlCfg *config.TypeConfig) {
 	fmt.Printf("⚠️ Unsupported OS for monitoring service uninstallation: %s\n", runtime.GOOS)
 }

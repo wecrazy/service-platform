@@ -26,7 +26,7 @@ func CheckExistingTechnicianInODOOMS(name, email, phoneNumber string) (bool, *od
 }
 
 // checkExistingTechnicianInODOOMSWithConfig is the testable version that accepts config as parameter
-func CheckExistingTechnicianInODOOMSWithConfig(name, email, phoneNumber string, cfg config.YamlConfig) (bool, *odoomsmodel.ODOOMSTechnicianItem, error) {
+func CheckExistingTechnicianInODOOMSWithConfig(name, email, phoneNumber string, cfg config.TypeConfig) (bool, *odoomsmodel.ODOOMSTechnicianItem, error) {
 	if name == "" && email == "" && phoneNumber == "" {
 		return false, nil, errors.New("at least one search parameter (name, email, or phoneNumber) must be provided")
 	}

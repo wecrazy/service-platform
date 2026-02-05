@@ -30,13 +30,13 @@ type TelegramHelper struct {
 	bot         *tgbotapi.BotAPI
 	redis       *redis.Client
 	db          *gorm.DB
-	config      *config.YamlConfig
+	config      *config.TypeConfig
 	defaultLang string
 	validator   *validator.Validate
 }
 
 // NewTelegramHelper creates a new TelegramHelper instance
-func NewTelegramHelper(bot *tgbotapi.BotAPI, redis *redis.Client, db *gorm.DB, config *config.YamlConfig, defaultLang string) *TelegramHelper {
+func NewTelegramHelper(bot *tgbotapi.BotAPI, redis *redis.Client, db *gorm.DB, config *config.TypeConfig, defaultLang string) *TelegramHelper {
 	return &TelegramHelper{
 		bot:         bot,
 		redis:       redis,

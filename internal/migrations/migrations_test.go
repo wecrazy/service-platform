@@ -17,7 +17,7 @@ import (
 type MigrationTestSuite struct {
 	suite.Suite
 	db           *gorm.DB
-	config       config.YamlConfig
+	config       config.TypeConfig
 	logger       *logrus.Logger
 	migrationSvc *MigrationService
 }
@@ -35,7 +35,7 @@ func (suite *MigrationTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	// Setup test config
-	suite.config = config.YamlConfig{}
+	suite.config = config.TypeConfig{}
 	suite.config.Database.Type = "sqlite"
 
 	// Setup logger

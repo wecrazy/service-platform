@@ -14,8 +14,8 @@ import (
 )
 
 // createTestConfigODOOMSAPIHelper creates a test configuration for ODOOMS testing
-func createTestConfigODOOMSAPIHelper() *config.YamlConfig {
-	return &config.YamlConfig{
+func createTestConfigODOOMSAPIHelper() *config.TypeConfig {
+	return &config.TypeConfig{
 		ODOOManageService: struct {
 			JsonRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
 			Login          string                         `yaml:"login" validate:"required"`

@@ -91,7 +91,7 @@ var (
 //	cookies, err := helper.GetODOOMSCookies("user@company.com", "password")
 //	stats := helper.GetSessionCacheStats()
 type ODOOMSAPIHelper struct {
-	config         *config.YamlConfig
+	config         *config.TypeConfig
 	client         *http.Client
 	dbTA           *gorm.DB // Database connection for Dashboard Technical Assistance - Manage Service Integration
 	dbMSMiddleware *gorm.DB // Database connection for Middleware Manage Service Integration
@@ -111,7 +111,7 @@ type ODOOMSAPIHelper struct {
 //
 //	config := config.GetConfig()
 //	helper := NewODOOMSAPIHelper(&config, dbTA)
-func NewODOOMSAPIHelper(cfg *config.YamlConfig, dbTA *gorm.DB, dbMSMiddleware *gorm.DB) *ODOOMSAPIHelper {
+func NewODOOMSAPIHelper(cfg *config.TypeConfig, dbTA *gorm.DB, dbMSMiddleware *gorm.DB) *ODOOMSAPIHelper {
 	return &ODOOMSAPIHelper{
 		config: cfg,
 		client: &http.Client{

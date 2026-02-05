@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	config      YamlConfig
+	config      TypeConfig
 	configMutex sync.RWMutex
 	configPath  string
 )
@@ -323,7 +323,7 @@ type PayslipTechnicianDebug struct {
 	EmailUsedForTest       string `yaml:"EMAIL_USED_FOR_TEST"`
 }
 
-type YamlConfig struct {
+type TypeConfig struct {
 	App struct {
 		Host                 string `yaml:"HOST"`
 		GinMode              string `yaml:"GIN_MODE"`
@@ -763,13 +763,13 @@ type YamlConfig struct {
 	} `yaml:"ODOOMS_PARAM"`
 }
 
-func YAMLLoad(filePath string) (*YamlConfig, error) {
+func YAMLLoad(filePath string) (*TypeConfig, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	var config YamlConfig
+	var config TypeConfig
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		return nil, err
@@ -778,7 +778,7 @@ func YAMLLoad(filePath string) (*YamlConfig, error) {
 	return &config, nil
 }
 
-func InitConfig() (*YamlConfig, error) {
+func InitConfig() (*TypeConfig, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Error getting current working directory: %v", err)
@@ -793,11 +793,11 @@ func InitConfig() (*YamlConfig, error) {
 		}
 	}
 
-	var yamlConfig *YamlConfig
+	var TypeConfig *TypeConfig
 
 	for _, filePath := range configPaths {
 		if _, err := os.Stat(filePath); err == nil {
-			yamlConfig, err = YAMLLoad(filePath)
+			TypeConfig, err = YAMLLoad(filePath)
 			if err != nil {
 				log.Printf("failed to load configuration from '%s': %v", filePath, err)
 				continue
@@ -811,11 +811,11 @@ func InitConfig() (*YamlConfig, error) {
 		}
 	}
 
-	if yamlConfig == nil {
+	if TypeConfig == nil {
 		log.Fatalf("failed to load YAML configuration: no valid configuration file found in paths: %v", configPaths)
 	}
 
-	return yamlConfig, nil
+	return TypeConfig, nil
 }
 
 func LoadConfig() error {
@@ -849,7 +849,7 @@ func LoadConfig() error {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	var newConfig YamlConfig
+	var newConfig TypeConfig
 	if err := yaml.Unmarshal(file, &newConfig); err != nil {
 		return fmt.Errorf("failed to parse YAML: %w", err)
 	}
@@ -903,7 +903,7 @@ func WatchConfig() {
 	}
 }
 
-func GetConfig() YamlConfig {
+func GetConfig() TypeConfig {
 	configMutex.RLock()
 	defer configMutex.RUnlock()
 	return config

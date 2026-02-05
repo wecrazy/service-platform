@@ -1508,7 +1508,7 @@ func ODOOGetData(req string) (interface{}, error) {
 	// 	"/../../config/conf.yaml",
 	// }
 
-	// var loadedConfig *config.YamlConfig
+	// var loadedConfig *config.TypeConfig
 	// var err error
 
 	// for _, filePath := range yamlFilePaths {
@@ -1686,7 +1686,7 @@ func GetSessionODOO() ([]*http.Cookie, error) {
 	// 	"/../../config/conf.yaml",
 	// }
 
-	// var loadedConfig *config.YamlConfig
+	// var loadedConfig *config.TypeConfig
 	// var err error
 
 	// for _, filePath := range yamlFilePaths {

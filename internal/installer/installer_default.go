@@ -12,6 +12,6 @@ func EnsureAdminPrivileges() {
 	fmt.Println("⚠️  Privilege check not implemented for this OS.")
 }
 
-func Install(yamlCfg *config.YamlConfig) {
+func Install(yamlCfg *config.TypeConfig) {
 	fmt.Printf("⚠️ Unsupported OS: %s\n", runtime.GOOS)
 }

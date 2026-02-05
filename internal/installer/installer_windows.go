@@ -23,7 +23,7 @@ func EnsureAdminPrivileges() {
 	}
 }
 
-func Install(yamlCfg *config.YamlConfig) {
+func Install(yamlCfg *config.TypeConfig) {
 	fmt.Println("🪟  Windows detected — running Windows install steps...")
 	execPath, err := os.Executable()
 	if err != nil {

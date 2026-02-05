@@ -18,7 +18,7 @@ func EnsureAdminPrivileges() {
 	}
 }
 
-func Install(yamlCfg *config.YamlConfig) {
+func Install(yamlCfg *config.TypeConfig) {
 	fmt.Println("🐧 Linux detected — running Linux install steps...")
 
 	execPath, err := os.Executable()

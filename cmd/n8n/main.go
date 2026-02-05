@@ -192,7 +192,7 @@ type WhatsAppBridgeResponse struct {
 }
 
 // startWhatsAppBridge starts an HTTP server that forwards requests to WhatsApp gRPC service
-func startWhatsAppBridge(cfg *config.YamlConfig) {
+func startWhatsAppBridge(cfg *config.TypeConfig) {
 	// Initialize logger with Loki support
 	logger.InitLogrus()
 
