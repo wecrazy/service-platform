@@ -34,8 +34,51 @@ var LanguageNameMap = map[string]string{
 // LanguageAliasMap maps alternative language codes to their canonical codes
 // This allows users to use ISO 639-1 or other common codes
 var LanguageAliasMap = map[string]string{
-	"ja": LangJP, // Japanese (ISO 639-1 code "ja" maps to our "jp")
-	"zh": LangCN, // Chinese (ISO 639-1 code "zh" maps to our "cn")
+	// Indonesian
+	"in": LangID, // Sometimes reported as "in" instead of "id"
+
+	// English variants
+	"en-US": LangEN,
+	"en-GB": LangEN,
+	"en-CA": LangEN,
+
+	// Spanish variants
+	"es-ES": LangES,
+	"es-MX": LangES,
+	"es-AR": LangES,
+	"es-CO": LangES,
+
+	// French variants
+	"fr-FR": LangFR,
+	"fr-CA": LangFR,
+	"fr-BE": LangFR,
+
+	// German variants
+	"de-DE": LangDE,
+	"de-AT": LangDE,
+	"de-CH": LangDE,
+
+	// Portuguese variants
+	"pt-BR": LangPT,
+	"pt-PT": LangPT,
+
+	// Russian variants
+	"ru-RU": LangRU,
+	"ru-UA": LangRU,
+
+	// Japanese
+	"ja": LangJP, // ISO 639-1 code "ja" maps to our "jp"
+
+	// Chinese variants
+	"zh":    LangCN, // General Chinese
+	"zh-CN": LangCN, // Simplified Chinese
+	"zh-TW": LangCN, // Traditional Chinese (still map to our "cn")
+	"zh-HK": LangCN,
+
+	// Arabic variants
+	"ar-SA": LangAR, // Saudi Arabia
+	"ar-EG": LangAR, // Egypt
+	"ar-AE": LangAR, // UAE
 }
 
 // GetSupportedLanguages returns a list of all supported language codes

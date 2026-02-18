@@ -23,6 +23,11 @@ const (
 	TelegramService_SendMessageWithKeyboard_FullMethodName = "/proto.TelegramService/SendMessageWithKeyboard"
 	TelegramService_EditMessage_FullMethodName             = "/proto.TelegramService/EditMessage"
 	TelegramService_AnswerCallbackQuery_FullMethodName     = "/proto.TelegramService/AnswerCallbackQuery"
+	TelegramService_SendVoice_FullMethodName               = "/proto.TelegramService/SendVoice"
+	TelegramService_SendDocument_FullMethodName            = "/proto.TelegramService/SendDocument"
+	TelegramService_SendPhoto_FullMethodName               = "/proto.TelegramService/SendPhoto"
+	TelegramService_SendAudio_FullMethodName               = "/proto.TelegramService/SendAudio"
+	TelegramService_SendVideo_FullMethodName               = "/proto.TelegramService/SendVideo"
 )
 
 // TelegramServiceClient is the client API for TelegramService service.
@@ -42,6 +47,16 @@ type TelegramServiceClient interface {
 	EditMessage(ctx context.Context, in *EditTelegramMessageRequest, opts ...grpc.CallOption) (*EditTelegramMessageResponse, error)
 	// AnswerCallbackQuery sends an answer to a callback query.
 	AnswerCallbackQuery(ctx context.Context, in *TelegramAnswerCallbackQueryRequest, opts ...grpc.CallOption) (*TelegramAnswerCallbackQueryResponse, error)
+	// SendVoice sends a voice message.
+	SendVoice(ctx context.Context, in *SendTelegramVoiceRequest, opts ...grpc.CallOption) (*SendTelegramVoiceResponse, error)
+	// SendDocument sends a document.
+	SendDocument(ctx context.Context, in *SendTelegramDocumentRequest, opts ...grpc.CallOption) (*SendTelegramDocumentResponse, error)
+	// SendPhoto sends a photo.
+	SendPhoto(ctx context.Context, in *SendTelegramPhotoRequest, opts ...grpc.CallOption) (*SendTelegramPhotoResponse, error)
+	// SendAudio sends an audio file.
+	SendAudio(ctx context.Context, in *SendTelegramAudioRequest, opts ...grpc.CallOption) (*SendTelegramAudioResponse, error)
+	// SendVideo sends a video.
+	SendVideo(ctx context.Context, in *SendTelegramVideoRequest, opts ...grpc.CallOption) (*SendTelegramVideoResponse, error)
 }
 
 type telegramServiceClient struct {
@@ -92,6 +107,56 @@ func (c *telegramServiceClient) AnswerCallbackQuery(ctx context.Context, in *Tel
 	return out, nil
 }
 
+func (c *telegramServiceClient) SendVoice(ctx context.Context, in *SendTelegramVoiceRequest, opts ...grpc.CallOption) (*SendTelegramVoiceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SendTelegramVoiceResponse)
+	err := c.cc.Invoke(ctx, TelegramService_SendVoice_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *telegramServiceClient) SendDocument(ctx context.Context, in *SendTelegramDocumentRequest, opts ...grpc.CallOption) (*SendTelegramDocumentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SendTelegramDocumentResponse)
+	err := c.cc.Invoke(ctx, TelegramService_SendDocument_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *telegramServiceClient) SendPhoto(ctx context.Context, in *SendTelegramPhotoRequest, opts ...grpc.CallOption) (*SendTelegramPhotoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SendTelegramPhotoResponse)
+	err := c.cc.Invoke(ctx, TelegramService_SendPhoto_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *telegramServiceClient) SendAudio(ctx context.Context, in *SendTelegramAudioRequest, opts ...grpc.CallOption) (*SendTelegramAudioResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SendTelegramAudioResponse)
+	err := c.cc.Invoke(ctx, TelegramService_SendAudio_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *telegramServiceClient) SendVideo(ctx context.Context, in *SendTelegramVideoRequest, opts ...grpc.CallOption) (*SendTelegramVideoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SendTelegramVideoResponse)
+	err := c.cc.Invoke(ctx, TelegramService_SendVideo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TelegramServiceServer is the server API for TelegramService service.
 // All implementations must embed UnimplementedTelegramServiceServer
 // for forward compatibility.
@@ -109,6 +174,16 @@ type TelegramServiceServer interface {
 	EditMessage(context.Context, *EditTelegramMessageRequest) (*EditTelegramMessageResponse, error)
 	// AnswerCallbackQuery sends an answer to a callback query.
 	AnswerCallbackQuery(context.Context, *TelegramAnswerCallbackQueryRequest) (*TelegramAnswerCallbackQueryResponse, error)
+	// SendVoice sends a voice message.
+	SendVoice(context.Context, *SendTelegramVoiceRequest) (*SendTelegramVoiceResponse, error)
+	// SendDocument sends a document.
+	SendDocument(context.Context, *SendTelegramDocumentRequest) (*SendTelegramDocumentResponse, error)
+	// SendPhoto sends a photo.
+	SendPhoto(context.Context, *SendTelegramPhotoRequest) (*SendTelegramPhotoResponse, error)
+	// SendAudio sends an audio file.
+	SendAudio(context.Context, *SendTelegramAudioRequest) (*SendTelegramAudioResponse, error)
+	// SendVideo sends a video.
+	SendVideo(context.Context, *SendTelegramVideoRequest) (*SendTelegramVideoResponse, error)
 	mustEmbedUnimplementedTelegramServiceServer()
 }
 
@@ -130,6 +205,21 @@ func (UnimplementedTelegramServiceServer) EditMessage(context.Context, *EditTele
 }
 func (UnimplementedTelegramServiceServer) AnswerCallbackQuery(context.Context, *TelegramAnswerCallbackQueryRequest) (*TelegramAnswerCallbackQueryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AnswerCallbackQuery not implemented")
+}
+func (UnimplementedTelegramServiceServer) SendVoice(context.Context, *SendTelegramVoiceRequest) (*SendTelegramVoiceResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SendVoice not implemented")
+}
+func (UnimplementedTelegramServiceServer) SendDocument(context.Context, *SendTelegramDocumentRequest) (*SendTelegramDocumentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SendDocument not implemented")
+}
+func (UnimplementedTelegramServiceServer) SendPhoto(context.Context, *SendTelegramPhotoRequest) (*SendTelegramPhotoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SendPhoto not implemented")
+}
+func (UnimplementedTelegramServiceServer) SendAudio(context.Context, *SendTelegramAudioRequest) (*SendTelegramAudioResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SendAudio not implemented")
+}
+func (UnimplementedTelegramServiceServer) SendVideo(context.Context, *SendTelegramVideoRequest) (*SendTelegramVideoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SendVideo not implemented")
 }
 func (UnimplementedTelegramServiceServer) mustEmbedUnimplementedTelegramServiceServer() {}
 func (UnimplementedTelegramServiceServer) testEmbeddedByValue()                         {}
@@ -224,6 +314,96 @@ func _TelegramService_AnswerCallbackQuery_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TelegramService_SendVoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendTelegramVoiceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TelegramServiceServer).SendVoice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TelegramService_SendVoice_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TelegramServiceServer).SendVoice(ctx, req.(*SendTelegramVoiceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TelegramService_SendDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendTelegramDocumentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TelegramServiceServer).SendDocument(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TelegramService_SendDocument_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TelegramServiceServer).SendDocument(ctx, req.(*SendTelegramDocumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TelegramService_SendPhoto_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendTelegramPhotoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TelegramServiceServer).SendPhoto(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TelegramService_SendPhoto_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TelegramServiceServer).SendPhoto(ctx, req.(*SendTelegramPhotoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TelegramService_SendAudio_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendTelegramAudioRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TelegramServiceServer).SendAudio(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TelegramService_SendAudio_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TelegramServiceServer).SendAudio(ctx, req.(*SendTelegramAudioRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TelegramService_SendVideo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendTelegramVideoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TelegramServiceServer).SendVideo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TelegramService_SendVideo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TelegramServiceServer).SendVideo(ctx, req.(*SendTelegramVideoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TelegramService_ServiceDesc is the grpc.ServiceDesc for TelegramService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -246,6 +426,26 @@ var TelegramService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AnswerCallbackQuery",
 			Handler:    _TelegramService_AnswerCallbackQuery_Handler,
+		},
+		{
+			MethodName: "SendVoice",
+			Handler:    _TelegramService_SendVoice_Handler,
+		},
+		{
+			MethodName: "SendDocument",
+			Handler:    _TelegramService_SendDocument_Handler,
+		},
+		{
+			MethodName: "SendPhoto",
+			Handler:    _TelegramService_SendPhoto_Handler,
+		},
+		{
+			MethodName: "SendAudio",
+			Handler:    _TelegramService_SendAudio_Handler,
+		},
+		{
+			MethodName: "SendVideo",
+			Handler:    _TelegramService_SendVideo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
