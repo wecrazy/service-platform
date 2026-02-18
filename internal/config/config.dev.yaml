@@ -64,7 +64,7 @@ database:
   port: 5432
   username: "swi"
   password: "Takasitau"
-  name: "db_service_platform_dev_rm"
+  name: "rm_development_db_service_platform"
   max_retry_connect: 3
   retry_delay: 5            # seconds
   max_idle_connection: 10
