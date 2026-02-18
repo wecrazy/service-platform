@@ -3,6 +3,7 @@ package migrations
 import (
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
+	telegrammodel "service-platform/internal/core/model/telegram_model"
 	whatsnyanmodel "service-platform/internal/core/model/whatsnyan_model"
 	"service-platform/internal/migrations"
 	"time"
@@ -40,6 +41,10 @@ func upInitialSchema(db *gorm.DB) error {
 		&whatsnyanmodel.WhatsAppGroupParticipant{},
 		&whatsnyanmodel.WhatsAppMsg{},
 		&whatsnyanmodel.WhatsAppIncomingMsg{},
+		// Telegram Models
+		&telegrammodel.TelegramUsers{},
+		&telegrammodel.TelegramMsg{},
+		&telegrammodel.TelegramIncomingMsg{},
 	)
 }
 
@@ -51,6 +56,9 @@ func downInitialSchema(db *gorm.DB) error {
 		config.GetConfig().Whatsnyan.Tables.TBWhatsnyanGroup,
 		config.GetConfig().Whatsnyan.Tables.TBWhatsnyanIncomingMessage,
 		config.GetConfig().Whatsnyan.Tables.TBWhatsnyanMessage,
+		config.GetConfig().Telegram.Tables.TBTelegramIncomingMessage,
+		config.GetConfig().Telegram.Tables.TBTelegramMessage,
+		config.GetConfig().Telegram.Tables.TBTelegramUser,
 		config.GetConfig().Database.TbWhatsappMessageAutoReply,
 		config.GetConfig().Database.TbWhatsappMessage,
 		config.GetConfig().Database.TbWhatsappUser,

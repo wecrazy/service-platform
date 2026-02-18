@@ -64,7 +64,7 @@ database:
   port: 5432
   username: "swi"
   password: "Takasitau"
-  name: "db_service_platform_dev_rm"
+  name: "rm_development_db_service_platform"
   max_retry_connect: 3
   retry_delay: 5            # seconds
   max_idle_connection: 10
@@ -366,3 +366,160 @@ telegram:
   tables:
     tb_telegram_message: "telegram_messages"
     tb_telegram_incoming_message: "telegram_incoming_messages"
+    tb_telegram_user: "telegram_users"
+  technical_support_phone: "+6287883507445"
+odoo_ms:
+  jsonrpc_version: "2.0"
+  login: "desta@smartwebindonesia.com"
+  password: "Makan198"
+  db: "gsa_db"
+  # url: "https://192.101.1.66:8069"                          # Development (:20080)
+  url: "https://gsa4u.net:13070"                          # Production GL
+  path_session: "/web/session/authenticate"
+  path_getdata: "/api/getdata"
+  path_updatedata: "/api/updatedata"
+  path_createdata: "/api/createdata"
+  max_retry: 10
+  retry_delay: 5                                            # seconds
+  session_timeout: 90                                       # seconds  
+  data_timeout: 900                                         # seconds
+  skip_ssl_verify: true
+  # ADD: company included or excluded here if needed !
+  # e.g. : company_excluded: [1,2,3]
+  # e.g. : company_included: [4,5,6]
+  sac:
+    "Angga Yuda":
+      username: "SAC 5 Angga"
+      fullname: "Angga Yudha"
+      phone: "+6287776565444"
+      email: "yudha@csnams.com"
+      ttd_path: "ttd_angga.png"
+      region: 5
+    "Osvaldo":
+      username: "SAC 3 Aldo"
+      fullname: "Osvaldo Donaldo Mario"
+      phone: "+6281388700593"
+      email: "osvaldomdonaldo@csna4u.com"
+      ttd_path: "ttd_osvaldo.png"
+      region: 3
+    "Burhanudin":
+      username: "SAC 1 Burhan"
+      fullname: "Burhanuddin"
+      phone: "+628889778898"
+      email: "bur@csnams.com"
+      ttd_path: "ttd_burhan.png"
+      region: 1
+    "Tetty Sintauli":
+      username: "SAC 4 Tetty"
+      fullname: "Tetty Sintauli Manurung"
+      phone: "+6281290306350"
+      email: "tetty@csnams.com"
+      ttd_path: "ttd_tetty.png"
+      region: 4
+    "Tomi Bustami":
+      username: "SAC 2 Tomy"
+      fullname: "Tomi Bustami"
+      phone: "+6283898911740"
+      email: "tomibustami@gmail.com"
+      ttd_path: "ttd_tomi.png"
+      region: 2
+technical_assistance:
+  api_host: "127.0.0.1"
+  api_port: 31425
+  mysqldb_host: "127.0.0.1"
+  mysqldb_port: 3306
+  mysqldb_user: "swi"
+  mysqldb_password: "Takasitau"
+  mysqldb_dbname: "web_technical_assistance"
+  mysqldb_max_retry_connect: 3
+  mysqldb_retry_delay: 5                                   # seconds
+  mysqldb_idle_connection: 10
+  mysqldb_open_connection: 10
+  mysqldb_conn_max_lifetime: 30                            # minutes
+  mysqldb_conn_max_idle_time: 10                           # minutes
+  mysqldb_ssl_mode: "disable"                              # disable | require | verify-ca | verify-full 
+  redisdb_host: "127.0.0.1"
+  redisdb_port: 6379
+  redisdb_dbused: 3
+  user_ta:
+    "wegirandol@smartwebindonesia.com":
+      name: "Dev RM"
+      phone: "+6285173207755"
+    "admin@swi.com":
+      name: "Admin RM"
+      phone: "+6287883507445"
+    "testmfjr@gmail.com":
+      name: "Tes Dev Mfjr"
+      phone: "+6287883507445"
+    "desta@smartwebindonesia.com":
+      name: "Admin RM Dev Ipal"
+      phone: "+6287883507445"
+    "ramaadelins@csna4u.com":
+      name: "Technical Assistance 1 - Rama Adelins"
+      phone: "+6287841191559"
+    "naominaomiyns@gmail.com":
+      name: "Technical Assistance 2 - Naomi"
+      phone: "+62881012885705"
+    "thessalonica_a@smartwebindonesia.com":
+      name: "Technical Assistance 3 - Thessa"
+      phone: "+6287722563104"
+    "ta_assistant1@csna4u.com":
+      name: "Technical Assistance 3 - Thessa"
+      phone: "+6287722563104"
+    "suhendrik.180189@gmail.com":
+      name: "Technical Assistance 4 - Suhendrik Zakaria"
+      phone: "+6281802066488"
+    "mukti@csnams.com":
+      name: "Technical Assistance 5 - Arif Arya M."
+      phone: "+6282113191066"
+    "abdu@csnams.com":
+      name: "SAC ODOO ATM"
+      phone: "+628170772551"
+    "triyanawirda910@gmail.com":
+      name: "Technical Assistance 6 - Wiwi"
+      phone: "+6287776000306"
+    "iin_inayah@smartwebindonesia.com":
+      name: "Technical Assistance 7 - Iin"
+      phone: "+6281932045460"
+    "ta_assistant3@csna4u.com":
+      name: "Technical Assistance 7 - Iin"
+      phone: "+6281932045460"
+    "tetty@csnams.com":
+      name: "SAC 4 - Tetty Manurung"
+      phone: "+6281290306350"
+    "callcenter@gmail.com":
+      name: "Team Call Center"
+      phone: "+6287883507445"
+    "sri_t@smartwebindonesia.com":
+      name: "Assistant - Sri"
+      phone: "+6287883507445"
+  tables:
+    tb_logact: "log_act"
+    tb_pending: "pending"
+    tb_error: "error"
+ms_middleware:
+  mysqldb_host: "192.153.5.7"
+  mysqldb_port: 3310
+  mysqldb_user: "swi"
+  mysqldb_password: "Takasitau"
+  mysqldb_dbname: "odoo_pending"
+  mysqldb_max_retry_connect: 3
+  mysqldb_retry_delay: 5                                   # seconds
+  mysqldb_idle_connection: 10
+  mysqldb_open_connection: 10
+  mysqldb_conn_max_lifetime: 30                            # minutes
+  mysqldb_conn_max_idle_time: 10                           # minutes
+  mysqldb_ssl_mode: "disable"                              # disable | require | verify-ca |
+web_panel:                                                 # Web Panel service holds Reporting, Dashboard of ODOO Manage Service
+  mysqldb_host: "127.0.0.1"
+  mysqldb_port: 3306
+  mysqldb_user: "swi"
+  mysqldb_password: "Takasitau"
+  mysqldb_dbname: "db_web_panel_rm"
+  mysqldb_max_retry_connect: 3
+  mysqldb_retry_delay: 5                                   # seconds
+  mysqldb_idle_connection: 10
+  mysqldb_open_connection: 10
+  mysqldb_conn_max_lifetime: 30                            # minutes
+  mysqldb_conn_max_idle_time: 10                           # minutes
+  mysqldb_ssl_mode: "disable"                              # disable | require | verify-ca |

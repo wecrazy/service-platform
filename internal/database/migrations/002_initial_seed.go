@@ -31,6 +31,8 @@ func upInitialSeed(db *gorm.DB) error {
 	seed.SeedAppConfig(db)
 	seed.SeedWhatsAppMsgAutoReply(db)
 	seed.SeedIndonesiaRegion(db)
+	seed.SeedTelegramUser(db)
+	seed.SeedTelegramUserOfSACMS(db)
 
 	return nil
 }
