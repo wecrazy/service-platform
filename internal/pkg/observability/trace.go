@@ -19,7 +19,7 @@ var globalTracerProvider *trace.TracerProvider
 // Returns a cleanup function that must be deferred to properly shutdown the tracer
 // Returns nil if Tempo is disabled
 func InitTracer(ctx context.Context) (func(context.Context) error, error) {
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	// Check if Tempo is enabled
 	if !cfg.Observability.Tempo.Enabled {
@@ -92,7 +92,7 @@ func ShutdownTracer(ctx context.Context) error {
 
 // getEnvironmentFromConfig returns the current environment
 func getEnvironmentFromConfig() string {
-	env := config.GetConfig().App.LogLevel
+	env := config.ServicePlatform.Get().App.LogLevel
 	if env == "DEBUG" || env == "debug" {
 		return "development"
 	}

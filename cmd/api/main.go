@@ -114,7 +114,7 @@ func retryConnect[T any](maxAttempts int, delay time.Duration, connectFn func() 
 
 // setupRedis initializes and connects to Redis using the provided configuration, with retry logic and health monitoring.
 // cfg: the YAML configuration containing Redis settings.
-func setupRedis(cfg config.YamlConfig) {
+func setupRedis(cfg config.TypeServicePlatform) {
 	redisHost := cfg.Redis.Host
 	if redisHost == "" {
 		logrus.Fatal("Redis host is not configured.")
@@ -145,7 +145,7 @@ func setupRedis(cfg config.YamlConfig) {
 // cfg: the YAML configuration containing Redis settings.
 // redisHost: the hostname of the Redis server.
 // Returns a connected Redis client or an error if connection fails.
-func connectRedis(cfg config.YamlConfig, redisHost string) (*redis.Client, error) {
+func connectRedis(cfg config.TypeServicePlatform, redisHost string) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:            fmt.Sprintf("%s:%d", redisHost, cfg.Redis.Port),
 		Password:        cfg.Redis.Password,
@@ -185,7 +185,7 @@ func pingRedis(client *redis.Client) error {
 // redisHost: the hostname of the Redis server.
 // maxAttempts: the maximum number of reconnection attempts.
 // delay: the duration to wait between reconnection attempts.
-func monitorRedis(cfg config.YamlConfig, redisHost string, maxAttempts int, delay time.Duration) {
+func monitorRedis(cfg config.TypeServicePlatform, redisHost string, maxAttempts int, delay time.Duration) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
@@ -293,7 +293,7 @@ func reconnectWithRetries(
 	reconnect func() (*gorm.DB, error),
 	label string,
 ) {
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 	maxRetry := cfg.Database.MaxRetryConnect
 	delay := time.Duration(cfg.Database.RetryDelay) * time.Second
 
@@ -313,7 +313,7 @@ func reconnectWithRetries(
 // HandleCLIArgs processes command-line arguments for installation.
 // yamlCfg: the YAML configuration.
 // Returns true if the application should exit after handling the argument.
-func HandleCLIArgs(yamlCfg *config.YamlConfig) bool {
+func HandleCLIArgs(yamlCfg *config.TypeServicePlatform) bool {
 	if len(os.Args) > 1 {
 		arg := os.Args[1]
 		switch arg {
@@ -332,7 +332,7 @@ func HandleCLIArgs(yamlCfg *config.YamlConfig) bool {
 
 // createFolderNeeds creates necessary folders based on configuration.
 // cfg: the YAML configuration containing folder needs.
-func createFolderNeeds(cfg *config.YamlConfig) {
+func createFolderNeeds(cfg *config.TypeServicePlatform) {
 	folderDir, err := fun.FindValidDirectory([]string{
 		"web/file",
 		"../web/file",
@@ -364,10 +364,10 @@ func createFolderNeeds(cfg *config.YamlConfig) {
 // yamlCfg: the YAML configuration.
 // systemMonitor: the system resource monitor.
 func startWebServer(
-	yamlCfg *config.YamlConfig,
+	yamlCfg *config.TypeServicePlatform,
 	systemMonitor *fun.SystemResourceMonitor,
 ) {
-	appLogDir := config.GetConfig().App.LogDir
+	appLogDir := config.ServicePlatform.Get().App.LogDir
 	// Resolve absolute path for log directory
 	if resolvedDir, err := fun.GetLogDir(appLogDir); err == nil {
 		appLogDir = resolvedDir
@@ -378,13 +378,13 @@ func startWebServer(
 	if err := os.MkdirAll(appLogDir, os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
-	logPath := filepath.Join(appLogDir, config.GetConfig().App.AppLogFilename)
+	logPath := filepath.Join(appLogDir, config.ServicePlatform.Get().App.AppLogFilename)
 	logWriter := &lumberjack.Logger{
 		Filename:   logPath,
-		MaxSize:    config.GetConfig().App.AppLogMaxSize,
-		MaxBackups: config.GetConfig().App.AppLogMaxBackups,
-		MaxAge:     config.GetConfig().App.AppLogMaxAge,
-		Compress:   config.GetConfig().App.AppLogCompress,
+		MaxSize:    config.ServicePlatform.Get().App.AppLogMaxSize,
+		MaxBackups: config.ServicePlatform.Get().App.AppLogMaxBackups,
+		MaxAge:     config.ServicePlatform.Get().App.AppLogMaxAge,
+		Compress:   config.ServicePlatform.Get().App.AppLogCompress,
 	}
 
 	r := gin.Default()
@@ -437,7 +437,7 @@ func startWebServer(
 	}
 
 	// Send shutdown notification to super user BEFORE closing connections
-	suPhoneNumber := config.GetConfig().Default.SuperUserPhone
+	suPhoneNumber := config.ServicePlatform.Get().Default.SuperUserPhone
 	jidStr := fmt.Sprintf("%s@%s", suPhoneNumber, types.DefaultUserServer)
 
 	// Send shutdown message and wait for completion before closing connections
@@ -458,7 +458,7 @@ func startWebServer(
 // printHostInfo prints the host information for the web server.
 // yamlCfg: the YAML configuration.
 // listenAddr: the address the server is listening on.
-func printHostInfo(yamlCfg *config.YamlConfig, listenAddr string) {
+func printHostInfo(yamlCfg *config.TypeServicePlatform, listenAddr string) {
 	url := func() string {
 		if listenAddr == ":80" || listenAddr == ":443" {
 			return "localhost" + listenAddr
@@ -553,13 +553,10 @@ func main() {
 	// Start system resource monitoring
 	systemMonitor.StartResourceMonitoring()
 
-	// Dynamic update yaml config
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	go config.ServicePlatform.Watch()
 
-	go config.WatchConfig()
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.ServicePlatform.Get()
 
 	// Update Swagger Info dynamically
 	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%d", yamlCfg.App.Host, yamlCfg.App.Port)

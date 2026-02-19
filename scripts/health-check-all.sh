@@ -19,7 +19,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Determine config mode and load config
 CONFIG_MODE=$(yq '.config_mode' "$PROJECT_ROOT/internal/config/conf.yaml" 2>/dev/null || echo "dev")
-CONFIG_FILE="$PROJECT_ROOT/internal/config/config.${CONFIG_MODE}.yaml"
+CONFIG_FILE="$PROJECT_ROOT/internal/config/service-platform.${CONFIG_MODE}.yaml"
 
 # Read ports from config
 API_PORT=$(yq '.app.port' "$CONFIG_FILE" 2>/dev/null || echo "6221")

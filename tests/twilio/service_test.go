@@ -2,6 +2,7 @@ package twilio_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"testing"
@@ -86,11 +87,13 @@ func (s *TwilioWhatsAppServer) GetMessageStatus(ctx context.Context, req *pb.Twi
 
 // TestGRPCServiceConnection tests gRPC service connectivity
 func TestGRPCServiceConnection(t *testing.T) {
-	if err := config.LoadConfig(); err != nil {
-		t.Fatalf("Failed to load config: %v", err)
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err := errors.New("failed to load configuration")
+		t.Fatalf("Config should be loaded successfully: %v", err)
 	}
 
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	// Skip if credentials not configured
 	if cfg.Twilio.AccountSID == "" {
@@ -146,11 +149,14 @@ func TestGRPCServiceConnection(t *testing.T) {
 
 // TestSendMessageRPC tests SendMessage RPC call
 func TestSendMessageRPC(t *testing.T) {
-	if err := config.LoadConfig(); err != nil {
-		t.Fatalf("Failed to load config: %v", err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		t.Fatalf("Config should be loaded successfully: %v", err)
 	}
 
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	// Skip if credentials not configured
 	if cfg.Twilio.AccountSID == "" {
@@ -217,11 +223,14 @@ func TestSendMessageRPC(t *testing.T) {
 
 // TestGetMessageStatusRPC tests GetMessageStatus RPC call
 func TestGetMessageStatusRPC(t *testing.T) {
-	if err := config.LoadConfig(); err != nil {
-		t.Fatalf("Failed to load config: %v", err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		t.Fatalf("Config should be loaded successfully: %v", err)
 	}
 
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	// Skip if credentials not configured
 	if cfg.Twilio.AccountSID == "" {

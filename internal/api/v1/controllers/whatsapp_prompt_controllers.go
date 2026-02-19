@@ -55,7 +55,7 @@ func HandlePing(ctx context.Context, v *events.Message, stanzaID string, origina
 
 // HandlePprof handles the ".pprof" command to generate and send a CPU profile
 func HandlePprof(ctx context.Context, v *events.Message, stanzaID string, originalSenderJID string, userLang string, client *whatsmeow.Client, rdb *redis.Client, db *gorm.DB) {
-	cpuIntervalSec := config.GetConfig().Default.CPUCaptureInterval
+	cpuIntervalSec := config.ServicePlatform.Get().Default.CPUCaptureInterval
 	if cpuIntervalSec <= 0 {
 		cpuIntervalSec = 10 // default to 10 seconds if not set properly
 	}

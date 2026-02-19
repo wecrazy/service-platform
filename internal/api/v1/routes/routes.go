@@ -26,8 +26,8 @@ import (
 )
 
 func StaticFile(router *gin.Engine) {
-	staticPath := config.GetConfig().App.StaticDir
-	publishedDir := config.GetConfig().App.PublishedDir
+	staticPath := config.ServicePlatform.Get().App.StaticDir
+	publishedDir := config.ServicePlatform.Get().App.PublishedDir
 
 	// Resolve static path to absolute
 	staticPath, err := filepath.Abs(staticPath)
@@ -147,7 +147,7 @@ func HtmlRoutes(
 	}
 
 	// To view the dashboard API analytics go to: https://www.apianalytics.dev/dashboard and enter your API key
-	router.Use(analytics.Analytics(config.GetConfig().API.AnalyticsDevAPIKey))
+	router.Use(analytics.Analytics(config.ServicePlatform.Get().API.AnalyticsDevAPIKey))
 
 	// Rate limiting middleware
 	router.Use(middleware.RateLimitMiddleware())

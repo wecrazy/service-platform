@@ -30,13 +30,13 @@ type TelegramHelper struct {
 	bot         *tgbotapi.BotAPI
 	redis       *redis.Client
 	db          *gorm.DB
-	config      *config.YamlConfig
+	config      *config.TypeServicePlatform
 	defaultLang string
 	validator   *validator.Validate
 }
 
 // NewTelegramHelper creates a new TelegramHelper instance
-func NewTelegramHelper(bot *tgbotapi.BotAPI, redis *redis.Client, db *gorm.DB, config *config.YamlConfig, defaultLang string) *TelegramHelper {
+func NewTelegramHelper(bot *tgbotapi.BotAPI, redis *redis.Client, db *gorm.DB, config *config.TypeServicePlatform, defaultLang string) *TelegramHelper {
 	return &TelegramHelper{
 		bot:         bot,
 		redis:       redis,
@@ -359,8 +359,7 @@ func (h *TelegramHelper) HandleUpdate(update tgbotapi.Update) {
 	}
 }
 
-// TODO: faiz
-// buat function untuk handle reply dari SP yang dikirim
+// TODO: buat function untuk handle reply dari SP yang dikirim
 // baca message.Chat.ID untuk tau chat id nya, dan hapus dari DB jika diperlukan klo SP yg terkirim sudah dibalas
 func (h *TelegramHelper) HandleReplyMessage(message *tgbotapi.Message) {
 

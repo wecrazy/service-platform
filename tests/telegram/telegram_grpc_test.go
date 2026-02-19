@@ -2,6 +2,7 @@ package telegram_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -27,9 +28,12 @@ type TelegramGRPCTestSuite struct {
 // It loads configuration and creates a gRPC client connection to the Telegram service.
 func (suite *TelegramGRPCTestSuite) SetupTest() {
 	var err error
-	err = config.LoadConfig()
-	assert.NoError(suite.T(), err)
-	cfg := config.GetConfig()
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		assert.NoError(suite.T(), err, "Config should be loaded successfully")
+	}
+	cfg := config.ServicePlatform.Get()
 
 	host := cfg.GRPC.Host
 	port := cfg.GRPC.Port

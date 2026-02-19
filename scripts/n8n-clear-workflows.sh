@@ -2,7 +2,7 @@
 
 # N8N Clear Workflows Script
 # Removes all workflows from the N8N instance via API
-# Reads configuration from config.dev.yaml or config.prod.yaml based on conf.yaml
+# Reads configuration from service-platform.dev.yaml or service-platform.prod.yaml based on conf.yaml
 # Usage: bash scripts/n8n-clear-workflows.sh [--force]
 
 # Detect script directory
@@ -24,7 +24,7 @@ if [ "$CONFIG_MODE" != "dev" ] && [ "$CONFIG_MODE" != "prod" ]; then
 fi
 
 # Load config from appropriate file
-CONFIG_FILE="${PROJECT_ROOT}/internal/config/config.${CONFIG_MODE}.yaml"
+CONFIG_FILE="${PROJECT_ROOT}/internal/config/service-platform.${CONFIG_MODE}.yaml"
 if [ ! -f "$CONFIG_FILE" ]; then
 	echo "❌ Config file not found: $CONFIG_FILE"
 	exit 1

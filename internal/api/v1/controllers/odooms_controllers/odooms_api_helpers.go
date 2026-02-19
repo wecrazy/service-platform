@@ -21,12 +21,13 @@ import (
 
 // CheckExistingTechnicianInODOOMS checks if a technician exists in ODOOMS based on name, email, or phone number
 func CheckExistingTechnicianInODOOMS(name, email, phoneNumber string) (bool, *odoomsmodel.ODOOMSTechnicianItem, error) {
-	techExists, techData, err := CheckExistingTechnicianInODOOMSWithConfig(name, email, phoneNumber, config.GetConfig())
+	config.ManageService.MustInit("manage-service") // Load config manage-service.%s.yaml
+	techExists, techData, err := CheckExistingTechnicianInODOOMSWithConfig(name, email, phoneNumber, config.ManageService.Get())
 	return techExists, techData, err
 }
 
 // checkExistingTechnicianInODOOMSWithConfig is the testable version that accepts config as parameter
-func CheckExistingTechnicianInODOOMSWithConfig(name, email, phoneNumber string, cfg config.YamlConfig) (bool, *odoomsmodel.ODOOMSTechnicianItem, error) {
+func CheckExistingTechnicianInODOOMSWithConfig(name, email, phoneNumber string, cfg config.TypeManageService) (bool, *odoomsmodel.ODOOMSTechnicianItem, error) {
 	if name == "" && email == "" && phoneNumber == "" {
 		return false, nil, errors.New("at least one search parameter (name, email, or phoneNumber) must be provided")
 	}
@@ -108,7 +109,7 @@ func CheckExistingTechnicianInODOOMSWithConfig(name, email, phoneNumber string, 
 	}
 
 	payload := map[string]any{
-		"jsonrpc": cfg.ODOOManageService.JsonRPCVersion,
+		"jsonrpc": cfg.ODOOMS.JsonRPCVersion,
 		"params":  odooParams,
 	}
 
@@ -118,29 +119,29 @@ func CheckExistingTechnicianInODOOMSWithConfig(name, email, phoneNumber string, 
 	}
 
 	methodUsed := "POST"
-	url := cfg.ODOOManageService.URL + cfg.ODOOManageService.PathGetData
+	url := cfg.ODOOMS.URL + cfg.ODOOMS.PathGetData
 
 	// Create a temporary helper for this request
 	tempHelper := NewODOOMSAPIHelper(&cfg, database.GetDBTA(), database.GetDBMS())
 
 	// Get session cookies
-	sessionCookies, err := tempHelper.GetODOOMSCookies(cfg.ODOOManageService.Login, cfg.ODOOManageService.Password)
+	sessionCookies, err := tempHelper.GetODOOMSCookies(cfg.ODOOMS.Login, cfg.ODOOMS.Password)
 	if err != nil {
 		return false, nil, fmt.Errorf("failed to get session cookies: %w", err)
 	}
 
 	// Make the request directly instead of using FetchODOOMS
-	maxRetries := cfg.ODOOManageService.MaxRetry
+	maxRetries := cfg.ODOOMS.MaxRetry
 	if maxRetries <= 0 {
 		maxRetries = 3
 	}
 
-	retryDelay := cfg.ODOOManageService.RetryDelay
+	retryDelay := cfg.ODOOMS.RetryDelay
 	if retryDelay <= 0 {
 		retryDelay = 3
 	}
 
-	reqTimeout := time.Duration(cfg.ODOOManageService.DataTimeout) * time.Second
+	reqTimeout := time.Duration(cfg.ODOOMS.DataTimeout) * time.Second
 	if reqTimeout <= 0 {
 		reqTimeout = 5 * time.Minute // 300 seconds default
 	}
@@ -267,6 +268,8 @@ func CheckExistingTechnicianInODOOMSWithConfig(name, email, phoneNumber string, 
 }
 
 func (h *ODOOMSAPIHelper) CheckWONumberStatusInTAMS(woNumber string) map[string]string {
+	config.ManageService.MustInit("manage-service") // Load config manage-service.%s.yaml
+
 	langMsg := make(map[string]string)
 
 	// Localized messages
@@ -541,7 +544,7 @@ func (h *ODOOMSAPIHelper) CheckWONumberStatusInTAMS(woNumber string) map[string]
 		case "log":
 			sb.WriteString(fmt.Sprintf(getLocalizedMessage(lang, "wo_details_header"), resultData.WoNumber))
 			if resultData.Email != "" {
-				DataTA := config.GetConfig().TechnicalAssistance.UserTA
+				DataTA := config.ManageService.Get().TechnicalAssistance.UserTA
 				ta, ok := DataTA[resultData.Email]
 				if ok {
 					taName := ta.Name

@@ -91,7 +91,7 @@ var (
 //	cookies, err := helper.GetODOOMSCookies("user@company.com", "password")
 //	stats := helper.GetSessionCacheStats()
 type ODOOMSAPIHelper struct {
-	config         *config.YamlConfig
+	config         *config.TypeManageService
 	client         *http.Client
 	dbTA           *gorm.DB // Database connection for Dashboard Technical Assistance - Manage Service Integration
 	dbMSMiddleware *gorm.DB // Database connection for Middleware Manage Service Integration
@@ -109,14 +109,14 @@ type ODOOMSAPIHelper struct {
 //
 // Example:
 //
-//	config := config.GetConfig()
+//	config := config.ManageService.Get()
 //	helper := NewODOOMSAPIHelper(&config, dbTA)
-func NewODOOMSAPIHelper(cfg *config.YamlConfig, dbTA *gorm.DB, dbMSMiddleware *gorm.DB) *ODOOMSAPIHelper {
+func NewODOOMSAPIHelper(cfg *config.TypeManageService, dbTA *gorm.DB, dbMSMiddleware *gorm.DB) *ODOOMSAPIHelper {
 	return &ODOOMSAPIHelper{
 		config: cfg,
 		client: &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.ODOOManageService.SkipSSLVerify},
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.ODOOMS.SkipSSLVerify},
 			},
 		},
 		dbTA:           dbTA,
@@ -228,7 +228,7 @@ func (h *ODOOMSAPIHelper) GetODOOMSCookies(email, password string) ([]*http.Cook
 //   - error: Authentication or network errors
 func (h *ODOOMSAPIHelper) getODOOMSCookies(email, password string) ([]*http.Cookie, error) {
 	// Use ODOOManageService config instead of non-existent ApiODOO
-	odooConfig := h.config.ODOOManageService
+	odooConfig := h.config.ODOOMS
 
 	requestJSON := `{
 		"jsonrpc": "%s",
@@ -414,7 +414,8 @@ func SetTestHelper(helper *ODOOMSAPIHelper) {
 //	This function is thread-safe and can be called concurrently from multiple goroutines.
 //	Session caching is handled automatically with proper mutex locking.
 func FetchODOOMS(url, method, req string) ([]byte, error) {
-	yamlCfg := config.GetConfig()
+	config.ManageService.MustInit("manage-service") // Load config manage-service.%s.yaml
+	yamlCfg := config.ManageService.Get()
 
 	// Lazy initialize the global ODOOMS helper
 	if odoomsHelper == nil {
@@ -424,7 +425,7 @@ func FetchODOOMS(url, method, req string) ([]byte, error) {
 	}
 
 	// Use ODOOManageService config instead of non-existent ApiODOO
-	odooConfig := yamlCfg.ODOOManageService
+	odooConfig := yamlCfg.ODOOMS
 
 	maxRetries := odooConfig.MaxRetry
 	if maxRetries <= 0 {

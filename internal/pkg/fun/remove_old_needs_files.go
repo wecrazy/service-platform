@@ -11,7 +11,7 @@ import (
 
 // RemoveOldFilesInNeedsDir removes old date-based directories from configured needs directories
 func RemoveOldFilesInNeedsDir(olderThan string) {
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 	folderNeeds := cfg.FolderFileNeeds
 
 	if len(folderNeeds) == 0 {

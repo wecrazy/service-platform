@@ -27,9 +27,7 @@ import (
 )
 
 func main() {
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
 
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
@@ -52,10 +50,10 @@ func main() {
 func startN8n() {
 	fmt.Println("🚀 Starting N8N workflow automation...")
 
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
-	cfg := config.GetConfig()
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	go config.ServicePlatform.Watch()
+
+	cfg := config.ServicePlatform.Get()
 
 	// Check if Podman is available
 	if !fun.IsPodmanAvailable() {
@@ -192,7 +190,7 @@ type WhatsAppBridgeResponse struct {
 }
 
 // startWhatsAppBridge starts an HTTP server that forwards requests to WhatsApp gRPC service
-func startWhatsAppBridge(cfg *config.YamlConfig) {
+func startWhatsAppBridge(cfg *config.TypeServicePlatform) {
 	// Initialize logger with Loki support
 	logger.InitLogrus()
 

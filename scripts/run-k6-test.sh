@@ -57,6 +57,11 @@ detect_runtime() {
 
 RUNTIME=$(detect_runtime)
 
+# Load configuration
+CONFIG_MODE=$(yq -r '.config_mode' "$PROJECT_ROOT/internal/config/conf.yaml" 2>/dev/null || echo "dev")
+CONFIG_FILE="$PROJECT_ROOT/internal/config/service-platform.${CONFIG_MODE}.yaml"
+API_PORT=$(yq -r '.app.port' "$CONFIG_FILE" 2>/dev/null || echo "6221")
+
 # Function to check if monitoring stack is running
 check_monitoring() {
     if [ "$RUNTIME" = "podman-compose" ]; then
@@ -70,7 +75,7 @@ check_monitoring() {
 
 # Function to check if API is reachable
 check_api() {
-    local API_URL="http://localhost:6221/health"
+    local API_URL="http://localhost:${API_PORT}/health"
     if curl -s -f "$API_URL" > /dev/null 2>&1; then
         return 0
     else

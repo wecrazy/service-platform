@@ -37,7 +37,7 @@ type Users struct {
 }
 
 func (Users) TableName() string {
-	return config.GetConfig().Database.TbUser
+	return config.ServicePlatform.Get().Database.TbUser
 }
 
 type UserStatus struct {
@@ -49,7 +49,7 @@ type UserStatus struct {
 }
 
 func (UserStatus) TableName() string {
-	return config.GetConfig().Database.TbUserStatus
+	return config.ServicePlatform.Get().Database.TbUserStatus
 }
 
 type UserPasswordChangeLog struct {
@@ -59,5 +59,5 @@ type UserPasswordChangeLog struct {
 }
 
 func (UserPasswordChangeLog) TableName() string {
-	return config.GetConfig().Database.TbUserPasswordChangeLog
+	return config.ServicePlatform.Get().Database.TbUserPasswordChangeLog
 }

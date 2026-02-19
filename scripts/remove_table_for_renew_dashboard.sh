@@ -73,7 +73,7 @@ echo -e "Config mode: ${GREEN}$CONFIG_MODE${NC}"
 
 # Step 2: Determine which config file to use
 echo -e "${YELLOW}[2/5] Loading configuration file...${NC}"
-CONFIG_FILE="$CONFIG_DIR/config.$CONFIG_MODE.yaml"
+CONFIG_FILE="$CONFIG_DIR/service-platform.$CONFIG_MODE.yaml"
 
 if [ ! -f "$CONFIG_FILE" ]; then
     echo -e "${RED}Error: Configuration file not found: $CONFIG_FILE${NC}"

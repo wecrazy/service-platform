@@ -34,10 +34,10 @@ func NewWhatsmeowLogger(module string, logFile string, level logrus.Level) *Logr
 	// Rotate log files
 	fileWriter := &lumberjack.Logger{
 		Filename:   logFile,
-		MaxSize:    config.GetConfig().Whatsnyan.LogMaxSize, // MB
-		MaxBackups: config.GetConfig().Whatsnyan.LogMaxBackups,
-		MaxAge:     config.GetConfig().Whatsnyan.LogMaxAge, // days
-		Compress:   config.GetConfig().Whatsnyan.LogCompress,
+		MaxSize:    config.ServicePlatform.Get().Whatsnyan.LogMaxSize, // MB
+		MaxBackups: config.ServicePlatform.Get().Whatsnyan.LogMaxBackups,
+		MaxAge:     config.ServicePlatform.Get().Whatsnyan.LogMaxAge, // days
+		Compress:   config.ServicePlatform.Get().Whatsnyan.LogCompress,
 	}
 
 	// Console + file

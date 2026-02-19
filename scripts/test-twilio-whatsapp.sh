@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 
 # Determine config mode (same pattern as health-check-all.sh)
 CONFIG_MODE=$(yq '.config_mode' "internal/config/conf.yaml" 2>/dev/null | tr -d '"' || echo "dev")
-CONFIG_FILE="internal/config/config.${CONFIG_MODE}.yaml"
+CONFIG_FILE="internal/config/service-platform.${CONFIG_MODE}.yaml"
 
 # Check if credentials are loaded
 echo "${YELLOW}1. Checking Twilio configuration...${NC}"

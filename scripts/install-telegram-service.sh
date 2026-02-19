@@ -125,7 +125,8 @@ StandardError=journal
 SyslogIdentifier=$SERVICE_NAME
 
 # Environment variables
-Environment=CONFIG_FILE=$WORKING_DIR/internal/config/config.yaml
+# Note: cfg.go will auto-detect dev/prod from conf.yaml
+Environment=CONFIG_DIR=$WORKING_DIR/internal/config
 
 # Security settings
 NoNewPrivileges=yes
