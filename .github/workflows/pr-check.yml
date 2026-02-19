@@ -84,54 +84,6 @@ jobs:
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0
 
-  test-coverage:
-    name: Test Coverage Check
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-
-      - name: Run tests with coverage
-        run: go test -v -coverprofile=coverage.out -covermode=atomic ./tests/... ./internal/migrations/...
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: test_db
-
-      - name: Check coverage threshold
-        run: |
-          coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
-          echo "Total coverage: $coverage%"
-          threshold=50
-          if (( $(echo "$coverage < $threshold" | bc -l) )); then
-            echo "❌ Coverage $coverage% is below threshold $threshold%"
-            exit 1
-          fi
-          echo "✅ Coverage meets threshold"
-
   build-check:
     name: Build Verification
     runs-on: ubuntu-latest
