@@ -7,21 +7,28 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "go"
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
-    # Group minor and patch updates
+    # Group minor and patch updates together
     groups:
-      go-dependencies:
+      go-minor-patch:
+        description: "Group minor and patch updates"
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
+      go-major:
+        description: "Major updates (reviewed separately)"
+        patterns:
+          - "*"
+        update-types:
+          - "major"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
@@ -44,11 +51,20 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 3
+      time: "10:00"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "docker"
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
+    # Group Docker updates by base image
+    groups:
+      docker-images:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"

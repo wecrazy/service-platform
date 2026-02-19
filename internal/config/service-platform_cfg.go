@@ -177,7 +177,7 @@ type TypeServicePlatform struct {
 		GrafanaPort       int `yaml:"grafana_port" validate:"required"`
 		NginxAuthPort     int `yaml:"nginx_auth_port" validate:"required"`
 		NginxExporterPort int `yaml:"nginx_exporter_port" validate:"required"`
-		GoDocPort         int `yaml:"go_doc_port" validate:"required"`
+		GoDocPort         int `yaml:"godoc_port" validate:"required"`
 	} `yaml:"metrics" validate:"required"`
 
 	RateLimit struct {
