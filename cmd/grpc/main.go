@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"service-platform/internal/config"
@@ -88,13 +87,8 @@ func (s *authServer) Logout(ctx context.Context, req *proto.LogoutRequest) (*pro
 }
 
 func main() {
-	// Dynamic update yaml config
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
-
-	go config.WatchConfig()
-	yamlCfg := config.GetConfig()
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	yamlCfg := config.ServicePlatform.Get()
 
 	// Init log
 	logger.InitLogrus()
@@ -114,7 +108,7 @@ func main() {
 	}
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", config.GetConfig().Redis.Host, yamlCfg.Redis.Port),
+		Addr:     fmt.Sprintf("%s:%d", yamlCfg.Redis.Host, yamlCfg.Redis.Port),
 		Password: yamlCfg.Redis.Password,
 		DB:       yamlCfg.Redis.Db,
 	})
@@ -131,12 +125,12 @@ func main() {
 	// Start metrics server
 	go func() {
 		http.Handle("/grpc-metrics", promhttp.Handler())
-		metricsPort := config.GetConfig().Metrics.GRPCPort
+		metricsPort := yamlCfg.Metrics.GRPCPort
 		logrus.Printf("📊 Metrics server listening on :%d", metricsPort)
 		logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", metricsPort), nil))
 	}()
 
-	logrus.Println("🚀 Auth gRPC server listening on " + fmt.Sprintf(":%d", config.GetConfig().GRPC.Port))
+	logrus.Println("🚀 Auth gRPC server listening on " + fmt.Sprintf(":%d", yamlCfg.GRPC.Port))
 	logrus.Println("📝 Note: Scheduler is now a separate service (run cmd/scheduler/main.go)")
 
 	if err := s.Serve(lis); err != nil {

@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"fmt"
-	"log"
 
 	"service-platform/internal/config"
 	"service-platform/internal/pkg/logger"
@@ -20,14 +19,14 @@ var (
 
 // InitClient initializes the Telegram gRPC client
 func InitClient() {
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
-	go config.WatchConfig()
-	cfg := config.GetConfig()
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	go config.ServicePlatform.Watch()
+
+	logger.InitLogrus()
+
+	cfg := config.ServicePlatform.Get()
 
 	// Init log
-	logger.InitLogrus()
 
 	address := fmt.Sprintf("%s:%d", cfg.Telegram.Host, cfg.Telegram.GRPCPort)
 

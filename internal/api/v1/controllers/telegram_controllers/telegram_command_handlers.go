@@ -456,7 +456,8 @@ func (h *TelegramHelper) handleHeadViewStatusSP(message *tgbotapi.Message, teleg
 // handleMSExpectedInput processes user input when expecting WO/TID/etc.
 func (h *TelegramHelper) handleMSExpectedInput(message *tgbotapi.Message, inputType string, userLang string) {
 	// Clear the expectation
-	cfg := config.GetConfig()
+	config.ManageService.MustInit("manage-service") // Load config manage-service.%s.yaml
+	cfg := config.ManageService.Get()
 
 	key := fmt.Sprintf("telegram:expecting_input:%d", message.Chat.ID)
 	h.redis.Del(context.Background(), key)

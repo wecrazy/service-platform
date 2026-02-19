@@ -2,6 +2,7 @@ package unit
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -17,8 +18,12 @@ import (
 
 func TestMongoDBConnection(t *testing.T) {
 	// Load config
-	err := config.LoadConfig()
-	require.NoError(t, err, "Failed to load config")
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		require.NoError(t, err, "Config should be loaded successfully")
+	}
 
 	// Initialize MongoDB connection using config
 	err = database.InitMongoDB()
@@ -57,8 +62,12 @@ func TestMongoDBConnection(t *testing.T) {
 
 func TestMongoDBCRUDOperations(t *testing.T) {
 	// Load config
-	err := config.LoadConfig()
-	require.NoError(t, err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		require.NoError(t, err, "Config should be loaded successfully")
+	}
 
 	// Initialize MongoDB
 	err = database.InitMongoDB()
@@ -122,8 +131,12 @@ func TestMongoDBCRUDOperations(t *testing.T) {
 }
 
 func TestMongoDBBulkOperations(t *testing.T) {
-	err := config.LoadConfig()
-	require.NoError(t, err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		require.NoError(t, err, "Config should be loaded successfully")
+	}
 
 	err = database.InitMongoDB()
 	require.NoError(t, err)
@@ -179,8 +192,12 @@ func TestMongoDBBulkOperations(t *testing.T) {
 }
 
 func TestMongoDBQueryOperations(t *testing.T) {
-	err := config.LoadConfig()
-	require.NoError(t, err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		require.NoError(t, err, "Config should be loaded successfully")
+	}
 
 	err = database.InitMongoDB()
 	require.NoError(t, err)
@@ -267,8 +284,12 @@ func TestMongoDBQueryOperations(t *testing.T) {
 }
 
 func TestMongoDBIndexing(t *testing.T) {
-	err := config.LoadConfig()
-	require.NoError(t, err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		require.NoError(t, err, "Config should be loaded successfully")
+	}
 
 	err = database.InitMongoDB()
 	require.NoError(t, err)
@@ -318,8 +339,12 @@ func TestMongoDBIndexing(t *testing.T) {
 }
 
 func TestMongoDBErrorHandling(t *testing.T) {
-	err := config.LoadConfig()
-	require.NoError(t, err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		require.NoError(t, err, "Config should be loaded successfully")
+	}
 
 	err = database.InitMongoDB()
 	require.NoError(t, err)
@@ -362,8 +387,12 @@ func TestMongoDBErrorHandling(t *testing.T) {
 }
 
 func TestMongoDBVectorOperations(t *testing.T) {
-	err := config.LoadConfig()
-	require.NoError(t, err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		require.NoError(t, err, "Config should be loaded successfully")
+	}
 
 	err = database.InitMongoDB()
 	require.NoError(t, err)
@@ -603,8 +632,12 @@ func TestMongoDBVectorOperations(t *testing.T) {
 }
 
 func TestMongoDBVectorSearchPipeline(t *testing.T) {
-	err := config.LoadConfig()
-	require.NoError(t, err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		require.NoError(t, err, "Config should be loaded successfully")
+	}
 
 	err = database.InitMongoDB()
 	require.NoError(t, err)

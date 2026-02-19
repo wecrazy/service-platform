@@ -16,7 +16,7 @@ import (
 // PurgeOldLogBackupFiles removes old .gz backup files from the log directory
 // that are older than the specified duration (e.g., "3Days", "1Week", "1Month")
 func PurgeOldLogBackupFiles(olderThan string) {
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 	logDir := cfg.App.LogDir
 
 	// Validate log directory exists

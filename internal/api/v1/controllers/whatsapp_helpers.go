@@ -165,7 +165,7 @@ func ValidateGroupJID(groupJID string) (types.JID, error) {
 	if !isMember {
 		botNumber := me
 		// Check indonesian format
-		if strings.HasPrefix(botNumber, config.GetConfig().Default.DialingCodeDefault) {
+		if strings.HasPrefix(botNumber, config.ServicePlatform.Get().Default.DialingCodeDefault) {
 			botNumber = "+" + botNumber
 		}
 		return types.JID{}, fmt.Errorf("your bot number (%s) is not a member of group %s", botNumber, groupInfoResp.Name)
@@ -196,8 +196,8 @@ func CheckValidWhatsappPhoneNumber(phoneNumber string, client *whatsmeow.Client)
 	}
 
 	// Check minimum length
-	if len(phoneNumber) < config.GetConfig().Default.MinLengthPhoneNumber {
-		return "", fmt.Errorf("%s is too short, min. %d digits", phoneNumber, config.GetConfig().Default.MinLengthPhoneNumber)
+	if len(phoneNumber) < config.ServicePlatform.Get().Default.MinLengthPhoneNumber {
+		return "", fmt.Errorf("%s is too short, min. %d digits", phoneNumber, config.ServicePlatform.Get().Default.MinLengthPhoneNumber)
 	}
 
 	// Sanitize the number (e.g., remove +, spaces, etc.)
@@ -207,7 +207,7 @@ func CheckValidWhatsappPhoneNumber(phoneNumber string, client *whatsmeow.Client)
 	}
 
 	// Append @types.DefaultUserServer for WhatsApp JID
-	jid := config.GetConfig().Default.DialingCodeDefault + sanitizedPhone + "@" + types.DefaultUserServer
+	jid := config.ServicePlatform.Get().Default.DialingCodeDefault + sanitizedPhone + "@" + types.DefaultUserServer
 
 	// Check if the number is registered on WhatsApp
 	ctx := context.Background()
@@ -326,7 +326,7 @@ func SetUserLang(jid, lang string, rdb *redis.Client) error {
 		return errors.New("redis client is nil")
 	}
 
-	duration := config.GetConfig().Whatsnyan.LanguageExpiry
+	duration := config.ServicePlatform.Get().Whatsnyan.LanguageExpiry
 	if duration <= 0 {
 		duration = 1 * 24 * 60 * 60 // default to 1 day
 	}
@@ -509,7 +509,7 @@ func SendLangWhatsAppTextMsg(jid, stanzaID string, v *events.Message, lang Langu
 // @Router       /check_wa [get]
 func CheckWAPhoneNumberIsRegistered() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		digitNoTelp := config.GetConfig().Default.MinLengthPhoneNumber
+		digitNoTelp := config.ServicePlatform.Get().Default.MinLengthPhoneNumber
 
 		var req dto.CheckWARegisteredRequest
 		if err := c.ShouldBindQuery(&req); err != nil {
@@ -533,7 +533,7 @@ func CheckWAPhoneNumberIsRegistered() gin.HandlerFunc {
 			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		} else {
-			sanitizedPhoneNumber = config.GetConfig().Default.DialingCodeDefault + sanitizedPhoneNumber
+			sanitizedPhoneNumber = config.ServicePlatform.Get().Default.DialingCodeDefault + sanitizedPhoneNumber
 		}
 
 		jid := sanitizedPhoneNumber + "@" + types.DefaultUserServer
@@ -819,18 +819,18 @@ func ValidateUserToUseBotWhatsapp(phoneNumber, jid string, isGroup bool, msgType
 	err := db.Where("phone_number = ?", phoneNumber).First(&waUser).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			errorInLanguages[fun.LangID] = fmt.Sprintf("Mohon maaf, nomor Anda belum terdaftar untuk menggunakan layanan ini. Silakan hubungi layanan bantuan teknis kami di +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-			errorInLanguages[fun.LangEN] = fmt.Sprintf("Sorry, your number is not registered to use this service. Please contact our technical support at +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-			errorInLanguages[fun.LangES] = fmt.Sprintf("Lo siento, su número no está registrado para usar este servicio. Por favor, contacte a nuestro soporte técnico en +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-			errorInLanguages[fun.LangFR] = fmt.Sprintf("Désolé, votre numéro n'est pas enregistré pour utiliser ce service. Veuillez contacter notre support technique au +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-			errorInLanguages[fun.LangDE] = fmt.Sprintf("Entschuldigung, Ihre Nummer ist nicht registriert, um diesen Dienst zu nutzen. Bitte kontaktieren Sie unseren technischen Support unter +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-			errorInLanguages[fun.LangPT] = fmt.Sprintf("Desculpe, seu número não está registrado para usar este serviço. Por favor, entre em contato com nosso suporte técnico em +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-			errorInLanguages[fun.LangRU] = fmt.Sprintf("Извините, ваш номер не зарегистрирован для использования этой услуги. Пожалуйста, свяжитесь с нашей технической поддержкой по телефону +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-			errorInLanguages[fun.LangJP] = fmt.Sprintf("申し訳ありませんが、あなたの番号はこのサービスを利用するために登録されていません。+%s の技術サポートにお問い合わせください。", config.GetConfig().Whatsnyan.WATechnicalSupport)
-			errorInLanguages[fun.LangCN] = fmt.Sprintf("抱歉，您的号码未注册使用此服务。请联系 +%s 的技术支持。", config.GetConfig().Whatsnyan.WATechnicalSupport)
-			errorInLanguages[fun.LangAR] = fmt.Sprintf("عذرًا، رقمك غير مسجل لاستخدام هذه الخدمة. يرجى الاتصال بدعمنا الفني على +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
+			errorInLanguages[fun.LangID] = fmt.Sprintf("Mohon maaf, nomor Anda belum terdaftar untuk menggunakan layanan ini. Silakan hubungi layanan bantuan teknis kami di +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+			errorInLanguages[fun.LangEN] = fmt.Sprintf("Sorry, your number is not registered to use this service. Please contact our technical support at +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+			errorInLanguages[fun.LangES] = fmt.Sprintf("Lo siento, su número no está registrado para usar este servicio. Por favor, contacte a nuestro soporte técnico en +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+			errorInLanguages[fun.LangFR] = fmt.Sprintf("Désolé, votre numéro n'est pas enregistré pour utiliser ce service. Veuillez contacter notre support technique au +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+			errorInLanguages[fun.LangDE] = fmt.Sprintf("Entschuldigung, Ihre Nummer ist nicht registriert, um diesen Dienst zu nutzen. Bitte kontaktieren Sie unseren technischen Support unter +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+			errorInLanguages[fun.LangPT] = fmt.Sprintf("Desculpe, seu número não está registrado para usar este serviço. Por favor, entre em contato com nosso suporte técnico em +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+			errorInLanguages[fun.LangRU] = fmt.Sprintf("Извините, ваш номер не зарегистрирован для использования этой услуги. Пожалуйста, свяжитесь с нашей технической поддержкой по телефону +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+			errorInLanguages[fun.LangJP] = fmt.Sprintf("申し訳ありませんが、あなたの番号はこのサービスを利用するために登録されていません。+%s の技術サポートにお問い合わせください。", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+			errorInLanguages[fun.LangCN] = fmt.Sprintf("抱歉，您的号码未注册使用此服务。请联系 +%s 的技术支持。", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+			errorInLanguages[fun.LangAR] = fmt.Sprintf("عذرًا، رقمك غير مسجل لاستخدام هذه الخدمة. يرجى الاتصال بدعمنا الفني على +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
-			expireDuration := config.GetConfig().Whatsnyan.NotRegisteredPhoneExpiry
+			expireDuration := config.ServicePlatform.Get().Whatsnyan.NotRegisteredPhoneExpiry
 			if expireDuration <= 0 {
 				expireDuration = 3600 // default to 1 hour
 			}
@@ -880,33 +880,33 @@ func ValidateUserToUseBotWhatsapp(phoneNumber, jid string, isGroup bool, msgType
 	}
 
 	if waUser.IsBanned {
-		errorInLanguages[fun.LangID] = fmt.Sprintf("⛔ Nomor Anda sudah diblokir untuk menggunakan layanan ini. Silakan hubungi layanan bantuan teknis kami di +%s untuk informasi lebih lanjut.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangEN] = fmt.Sprintf("⛔ Your number has been banned from using this service. Please contact our technical support at +%s for more information.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangES] = fmt.Sprintf("⛔ Su número ha sido bloqueado para usar este servicio. Por favor, contacte a nuestro soporte técnico en +%s para más información.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangFR] = fmt.Sprintf("⛔ Votre numéro a été bloqué pour utiliser ce service. Veuillez contacter notre support technique au +%s pour plus d'informations.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangDE] = fmt.Sprintf("⛔ Ihre Nummer wurde für die Nutzung dieses Dienstes gesperrt. Bitte kontaktieren Sie unseren technischen Support unter +%s für weitere Informationen.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangPT] = fmt.Sprintf("⛔ Seu número foi banido de usar este serviço. Por favor, entre em contato com nosso suporte técnico em +%s para mais informações.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangRU] = fmt.Sprintf("⛔ Ваш номер был заблокирован для использования этой услуги. Пожалуйста, свяжитесь с нашей технической поддержкой по телефону +%s для получения дополнительной информации.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangJP] = fmt.Sprintf("⛔ あなたの番号はこのサービスの利用を禁止されています。詳細については、+%s の技術サポートにお問い合わせください。", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangCN] = fmt.Sprintf("⛔ 您的号码已被禁止使用此服务。请联系 +%s 的技术支持以获取更多信息。", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangAR] = fmt.Sprintf("⛔ تم حظر رقمك من استخدام هذه الخدمة. يرجى الاتصال بدعمنا الفني على +%s لمزيد من المعلومات.", config.GetConfig().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangID] = fmt.Sprintf("⛔ Nomor Anda sudah diblokir untuk menggunakan layanan ini. Silakan hubungi layanan bantuan teknis kami di +%s untuk informasi lebih lanjut.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangEN] = fmt.Sprintf("⛔ Your number has been banned from using this service. Please contact our technical support at +%s for more information.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangES] = fmt.Sprintf("⛔ Su número ha sido bloqueado para usar este servicio. Por favor, contacte a nuestro soporte técnico en +%s para más información.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangFR] = fmt.Sprintf("⛔ Votre numéro a été bloqué pour utiliser ce service. Veuillez contacter notre support technique au +%s pour plus d'informations.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangDE] = fmt.Sprintf("⛔ Ihre Nummer wurde für die Nutzung dieses Dienstes gesperrt. Bitte kontaktieren Sie unseren technischen Support unter +%s für weitere Informationen.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangPT] = fmt.Sprintf("⛔ Seu número foi banido de usar este serviço. Por favor, entre em contato com nosso suporte técnico em +%s para mais informações.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangRU] = fmt.Sprintf("⛔ Ваш номер был заблокирован для использования этой услуги. Пожалуйста, свяжитесь с нашей технической поддержкой по телефону +%s для получения дополнительной информации.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangJP] = fmt.Sprintf("⛔ あなたの番号はこのサービスの利用を禁止されています。詳細については、+%s の技術サポートにお問い合わせください。", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangCN] = fmt.Sprintf("⛔ 您的号码已被禁止使用此服务。请联系 +%s 的技术支持以获取更多信息。", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangAR] = fmt.Sprintf("⛔ تم حظر رقمك من استخدام هذه الخدمة. يرجى الاتصال بدعمنا الفني على +%s لمزيد من المعلومات.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 		return nil, errorInLanguages
 	}
 
 	if !waUser.IsRegistered {
-		errorInLanguages[fun.LangID] = fmt.Sprintf("Mohon maaf, nomor Anda belum terdaftar untuk menggunakan layanan ini. Silakan hubungi layanan bantuan teknis kami di +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangEN] = fmt.Sprintf("Sorry, your number is not registered to use this service. Please contact our technical support at +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangES] = fmt.Sprintf("Lo siento, su número no está registrado para usar este servicio. Por favor, contacte a nuestro soporte técnico en +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangFR] = fmt.Sprintf("Désolé, votre numéro n'est pas enregistré pour utiliser ce service. Veuillez contacter notre support technique au +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangDE] = fmt.Sprintf("Entschuldigung, Ihre Nummer ist nicht registriert, um diesen Dienst zu nutzen. Bitte kontaktieren Sie unseren technischen Support unter +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangPT] = fmt.Sprintf("Desculpe, seu número não está registrado para usar este serviço. Por favor, entre em contato com nosso suporte técnico em +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangRU] = fmt.Sprintf("Извините, ваш номер не зарегистрирован для использования этой услуги. Пожалуйста, свяжитесь с нашей технической поддержкой по телефону +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangJP] = fmt.Sprintf("申し訳ありませんが、あなたの番号はこのサービスを利用するために登録されていません。+%s の技術サポートにお問い合わせください。", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangCN] = fmt.Sprintf("抱歉，您的号码未注册使用此服务。请联系 +%s 的技术支持。", config.GetConfig().Whatsnyan.WATechnicalSupport)
-		errorInLanguages[fun.LangAR] = fmt.Sprintf("عذرًا، رقمك غير مسجل لاستخدام هذه الخدمة. يرجى الاتصال بدعمنا الفني على +%s.", config.GetConfig().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangID] = fmt.Sprintf("Mohon maaf, nomor Anda belum terdaftar untuk menggunakan layanan ini. Silakan hubungi layanan bantuan teknis kami di +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangEN] = fmt.Sprintf("Sorry, your number is not registered to use this service. Please contact our technical support at +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangES] = fmt.Sprintf("Lo siento, su número no está registrado para usar este servicio. Por favor, contacte a nuestro soporte técnico en +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangFR] = fmt.Sprintf("Désolé, votre numéro n'est pas enregistré pour utiliser ce service. Veuillez contacter notre support technique au +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangDE] = fmt.Sprintf("Entschuldigung, Ihre Nummer ist nicht registriert, um diesen Dienst zu nutzen. Bitte kontaktieren Sie unseren technischen Support unter +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangPT] = fmt.Sprintf("Desculpe, seu número não está registrado para usar este serviço. Por favor, entre em contato com nosso suporte técnico em +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangRU] = fmt.Sprintf("Извините, ваш номер не зарегистрирован для использования этой услуги. Пожалуйста, свяжитесь с нашей технической поддержкой по телефону +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangJP] = fmt.Sprintf("申し訳ありませんが、あなたの番号はこのサービスを利用するために登録されていません。+%s の技術サポートにお問い合わせください。", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangCN] = fmt.Sprintf("抱歉，您的号码未注册使用此服务。请联系 +%s 的技术支持。", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
+		errorInLanguages[fun.LangAR] = fmt.Sprintf("عذرًا، رقمك غير مسجل لاستخدام هذه الخدمة. يرجى الاتصال بدعمنا الفني على +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
-		expireDuration := config.GetConfig().Whatsnyan.NotRegisteredPhoneExpiry
+		expireDuration := config.ServicePlatform.Get().Whatsnyan.NotRegisteredPhoneExpiry
 		if expireDuration <= 0 {
 			expireDuration = 3600 // default to 1 hour
 		}
@@ -1047,7 +1047,7 @@ func CheckAndNotifyQuotaLimit(userID uint, useBot bool, jid string, maxQuota int
 			return false, err
 		}
 
-		duration := config.GetConfig().Whatsnyan.QuotaLimitExpiry
+		duration := config.ServicePlatform.Get().Whatsnyan.QuotaLimitExpiry
 		if duration <= 0 {
 			duration = 86400 // default to 24 hours
 		}
@@ -1072,7 +1072,7 @@ func CheckAndNotifyQuotaLimit(userID uint, useBot bool, jid string, maxQuota int
 				// Get TTL to tell user when quota resets
 				ttl, err := rdb.TTL(context.Background(), quotaMsgKey).Result()
 				if err != nil || ttl <= 0 {
-					ttl = time.Duration(config.GetConfig().Whatsnyan.QuotaLimitExpiry) * time.Second
+					ttl = time.Duration(config.ServicePlatform.Get().Whatsnyan.QuotaLimitExpiry) * time.Second
 				}
 
 				lang := NewLanguageMsgTranslation(fun.DefaultLang)
@@ -1468,11 +1468,11 @@ func CheckFilePermission(ctx context.Context, v *events.Message, msgType string,
 				// Allow all registered users to send images
 				return true, NewLanguageMsgTranslation(userLang)
 			},
-			MaxDailyQuota:     config.GetConfig().Whatsnyan.Files.Image.MaxDailyQuota,
-			CooldownSeconds:   config.GetConfig().Whatsnyan.Files.Image.CoolDownSeconds,
-			MaxFileSizeBytes:  config.GetConfig().Whatsnyan.Files.Image.MaxSize * 1024 * 1024, // max size in MB converted to bytes
-			AllowedExtensions: config.GetConfig().Whatsnyan.Files.Image.AllowedExtensions,     // e.g. []string{".jpg", ".jpeg", ".png", ".gif", ".webp"}
-			AllowedMimeTypes:  config.GetConfig().Whatsnyan.Files.Image.AllowedMimeTypes,      // e.g. []string{"image/jpeg", "image/png", "image/gif", "image/webp"}
+			MaxDailyQuota:     config.ServicePlatform.Get().Whatsnyan.Files.Image.MaxDailyQuota,
+			CooldownSeconds:   config.ServicePlatform.Get().Whatsnyan.Files.Image.CoolDownSeconds,
+			MaxFileSizeBytes:  config.ServicePlatform.Get().Whatsnyan.Files.Image.MaxSize * 1024 * 1024, // max size in MB converted to bytes
+			AllowedExtensions: config.ServicePlatform.Get().Whatsnyan.Files.Image.AllowedExtensions,     // e.g. []string{".jpg", ".jpeg", ".png", ".gif", ".webp"}
+			AllowedMimeTypes:  config.ServicePlatform.Get().Whatsnyan.Files.Image.AllowedMimeTypes,      // e.g. []string{"image/jpeg", "image/png", "image/gif", "image/webp"}
 			DenyMessage: LanguageTranslation{
 				LanguageCode: userLang,
 				Texts: map[string]string{
@@ -1510,7 +1510,7 @@ func CheckFilePermission(ctx context.Context, v *events.Message, msgType string,
 				// Only allow certain user types to send videos due to bandwidth concerns
 				if u.UserType == model.SuperUser ||
 					u.UserType == model.AdministratorUser ||
-					u.PhoneNumber == config.GetConfig().Default.SuperUserPhone {
+					u.PhoneNumber == config.ServicePlatform.Get().Default.SuperUserPhone {
 					return true, NewLanguageMsgTranslation(userLang)
 				}
 				lang := NewLanguageMsgTranslation(userLang)
@@ -1528,11 +1528,11 @@ func CheckFilePermission(ctx context.Context, v *events.Message, msgType string,
 				}
 				return false, lang
 			},
-			MaxDailyQuota:     config.GetConfig().Whatsnyan.Files.Video.MaxDailyQuota,
-			CooldownSeconds:   config.GetConfig().Whatsnyan.Files.Video.CoolDownSeconds,
-			MaxFileSizeBytes:  config.GetConfig().Whatsnyan.Files.Video.MaxSize * 1024 * 1024, // max size in MB converted to bytes
-			AllowedExtensions: config.GetConfig().Whatsnyan.Files.Video.AllowedExtensions,     // e.g. []string{".mp4", ".avi", ".mov", ".3gp"}
-			AllowedMimeTypes:  config.GetConfig().Whatsnyan.Files.Video.AllowedMimeTypes,      // e.g. []string{"video/mp4", "video/x-msvideo", "video/quicktime", "video/3gpp"}
+			MaxDailyQuota:     config.ServicePlatform.Get().Whatsnyan.Files.Video.MaxDailyQuota,
+			CooldownSeconds:   config.ServicePlatform.Get().Whatsnyan.Files.Video.CoolDownSeconds,
+			MaxFileSizeBytes:  config.ServicePlatform.Get().Whatsnyan.Files.Video.MaxSize * 1024 * 1024, // max size in MB converted to bytes
+			AllowedExtensions: config.ServicePlatform.Get().Whatsnyan.Files.Video.AllowedExtensions,     // e.g. []string{".mp4", ".avi", ".mov", ".3gp"}
+			AllowedMimeTypes:  config.ServicePlatform.Get().Whatsnyan.Files.Video.AllowedMimeTypes,      // e.g. []string{"video/mp4", "video/x-msvideo", "video/quicktime", "video/3gpp"}
 			DenyMessage: LanguageTranslation{
 				LanguageCode: userLang,
 				Texts: map[string]string{
@@ -1554,11 +1554,11 @@ func CheckFilePermission(ctx context.Context, v *events.Message, msgType string,
 				// Permission check is done later in SanitizeAndFilterDocument
 				return true, LanguageTranslation{}
 			},
-			MaxDailyQuota:     config.GetConfig().Whatsnyan.Files.Document.MaxDailyQuota,
-			CooldownSeconds:   config.GetConfig().Whatsnyan.Files.Document.CoolDownSeconds,
-			MaxFileSizeBytes:  config.GetConfig().Whatsnyan.Files.Document.MaxSize * 1024 * 1024, // max size in MB converted to bytes
-			AllowedExtensions: config.GetConfig().Whatsnyan.Files.Document.AllowedExtensions,     // e.g. []string{".pdf", ".doc", ".docx", ".txt", ".zip"}
-			AllowedMimeTypes:  config.GetConfig().Whatsnyan.Files.Document.AllowedMimeTypes,      // e.g. []string{"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "application/zip"}
+			MaxDailyQuota:     config.ServicePlatform.Get().Whatsnyan.Files.Document.MaxDailyQuota,
+			CooldownSeconds:   config.ServicePlatform.Get().Whatsnyan.Files.Document.CoolDownSeconds,
+			MaxFileSizeBytes:  config.ServicePlatform.Get().Whatsnyan.Files.Document.MaxSize * 1024 * 1024, // max size in MB converted to bytes
+			AllowedExtensions: config.ServicePlatform.Get().Whatsnyan.Files.Document.AllowedExtensions,     // e.g. []string{".pdf", ".doc", ".docx", ".txt", ".zip"}
+			AllowedMimeTypes:  config.ServicePlatform.Get().Whatsnyan.Files.Document.AllowedMimeTypes,      // e.g. []string{"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "application/zip"}
 			DenyMessage: LanguageTranslation{
 				LanguageCode: userLang,
 				Texts: map[string]string{
@@ -1596,11 +1596,11 @@ func CheckFilePermission(ctx context.Context, v *events.Message, msgType string,
 				// Allow all registered users to send voice messages/audio
 				return true, NewLanguageMsgTranslation(userLang)
 			},
-			MaxDailyQuota:     config.GetConfig().Whatsnyan.Files.Audio.MaxDailyQuota,
-			CooldownSeconds:   config.GetConfig().Whatsnyan.Files.Audio.CoolDownSeconds,
-			MaxFileSizeBytes:  config.GetConfig().Whatsnyan.Files.Audio.MaxSize * 1024 * 1024, // max size in MB converted to bytes
-			AllowedExtensions: config.GetConfig().Whatsnyan.Files.Audio.AllowedExtensions,     // e.g. []string{".mp3", ".wav", ".ogg", ".m4a", ".aac"}
-			AllowedMimeTypes:  config.GetConfig().Whatsnyan.Files.Audio.AllowedMimeTypes,      // e.g. []string{"audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/aac"}
+			MaxDailyQuota:     config.ServicePlatform.Get().Whatsnyan.Files.Audio.MaxDailyQuota,
+			CooldownSeconds:   config.ServicePlatform.Get().Whatsnyan.Files.Audio.CoolDownSeconds,
+			MaxFileSizeBytes:  config.ServicePlatform.Get().Whatsnyan.Files.Audio.MaxSize * 1024 * 1024, // max size in MB converted to bytes
+			AllowedExtensions: config.ServicePlatform.Get().Whatsnyan.Files.Audio.AllowedExtensions,     // e.g. []string{".mp3", ".wav", ".ogg", ".m4a", ".aac"}
+			AllowedMimeTypes:  config.ServicePlatform.Get().Whatsnyan.Files.Audio.AllowedMimeTypes,      // e.g. []string{"audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/aac"}
 			DenyMessage: LanguageTranslation{
 				LanguageCode: userLang,
 				Texts: map[string]string{
@@ -1739,7 +1739,7 @@ func CheckFilePermission(ctx context.Context, v *events.Message, msgType string,
 	if rule.MaxDailyQuota > 0 {
 		usageKey := getUsageKey("file_"+msgType, userID)
 		pipe.Incr(ctx, usageKey)
-		pipe.Expire(ctx, usageKey, time.Duration(config.GetConfig().Whatsnyan.QuotaLimitExpiry)*time.Second)
+		pipe.Expire(ctx, usageKey, time.Duration(config.ServicePlatform.Get().Whatsnyan.QuotaLimitExpiry)*time.Second)
 	}
 	if rule.CooldownSeconds > 0 {
 		cooldownKey := getCooldownKey("file_"+msgType, userID)
@@ -1974,7 +1974,7 @@ func CheckPromptPermission(ctx context.Context, v *events.Message, cmd string, w
 	if rule.MaxDailyQuota > 0 {
 		usageKey := getUsageKey("cmd_"+cmd, userID)
 		pipe.Incr(ctx, usageKey)
-		pipe.Expire(ctx, usageKey, time.Duration(config.GetConfig().Whatsnyan.QuotaLimitExpiry)*time.Second)
+		pipe.Expire(ctx, usageKey, time.Duration(config.ServicePlatform.Get().Whatsnyan.QuotaLimitExpiry)*time.Second)
 	}
 	if rule.CooldownSeconds > 0 {
 		cooldownKey := getCooldownKey("cmd_"+cmd, userID)
@@ -2001,7 +2001,7 @@ func CheckBadWords(ctx context.Context, cmd string, waUser *model.WAUsers, userL
 					logrus.Errorf("Failed to increment bad word strikes: %v", err)
 				}
 
-				maxStrikes := config.GetConfig().Default.MaxBadWordStrikes
+				maxStrikes := config.ServicePlatform.Get().Default.MaxBadWordStrikes
 				if maxStrikes <= 0 {
 					maxStrikes = 3 // default to 3 if not set
 				}
@@ -2076,7 +2076,7 @@ func HandleKeywordSearch(ctx context.Context, v *events.Message, stanzaID string
 		if err := db.Where("language_id = ? AND user_of = ? AND (for_user_type = ? OR for_user_type = ?)",
 			lang.ID, userOf, model.CommonUser, userType).Find(&autoReplies).Error; err == nil {
 
-			dataSeparator := config.GetConfig().Default.DataSeparator
+			dataSeparator := config.ServicePlatform.Get().Default.DataSeparator
 			if dataSeparator == "" {
 				dataSeparator = "|"
 			}

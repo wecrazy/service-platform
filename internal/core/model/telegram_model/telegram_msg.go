@@ -47,7 +47,7 @@ type TelegramMsg struct {
 }
 
 func (TelegramMsg) TableName() string {
-	return config.GetConfig().Telegram.Tables.TBTelegramMessage
+	return config.ServicePlatform.Get().Telegram.Tables.TBTelegramMessage
 }
 
 // TelegramIncomingMsg represents an incoming Telegram message record in the database
@@ -76,5 +76,5 @@ type TelegramIncomingMsg struct {
 }
 
 func (TelegramIncomingMsg) TableName() string {
-	return config.GetConfig().Telegram.Tables.TBTelegramIncomingMessage
+	return config.ServicePlatform.Get().Telegram.Tables.TBTelegramIncomingMessage
 }

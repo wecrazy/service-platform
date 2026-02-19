@@ -258,16 +258,13 @@ func (s *TwilioWhatsAppServer) GetMessageStatus(ctx context.Context, req *pb.Twi
 }
 
 func main() {
-	// Load configuration
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading config: %v", err)
-	}
-	go config.WatchConfig()
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	go config.ServicePlatform.Watch()
+
+	cfg := config.ServicePlatform.Get()
 
 	// Initialize logger
 	logger.InitLogrus()
-
-	cfg := config.GetConfig()
 
 	// Initialize Twilio client
 	fmt.Println("🔧 Initializing Twilio WhatsApp client...")

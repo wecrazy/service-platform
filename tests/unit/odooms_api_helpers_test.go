@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,9 +15,9 @@ import (
 )
 
 // createTestConfigODOOMSAPIHelper creates a test configuration for ODOOMS testing
-func createTestConfigODOOMSAPIHelper() *config.YamlConfig {
-	return &config.YamlConfig{
-		ODOOManageService: struct {
+func createTestConfigODOOMSAPIHelper() *config.TypeManageService {
+	return &config.TypeManageService{
+		ODOOMS: struct {
 			JsonRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
 			Login          string                         `yaml:"login" validate:"required"`
 			Password       string                         `yaml:"password" validate:"required"`
@@ -69,7 +70,7 @@ func TestCheckExistingTechnicianInODOOMS_Success(t *testing.T) {
 
 	// Create test config
 	testConfig := createTestConfigODOOMSAPIHelper()
-	testConfig.ODOOManageService.URL = server.URL
+	testConfig.ODOOMS.URL = server.URL
 
 	// Test with phone number
 	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "", "+628123456789", *testConfig)
@@ -116,7 +117,7 @@ func TestCheckExistingTechnicianInODOOMS_NotFound(t *testing.T) {
 
 	// Create test config
 	testConfig := createTestConfigODOOMSAPIHelper()
-	testConfig.ODOOManageService.URL = server.URL
+	testConfig.ODOOMS.URL = server.URL
 
 	// Test with non-existent technician
 	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Nonexistent", "nonexistent@example.com", "+628000000000", *testConfig)
@@ -136,7 +137,7 @@ func TestCheckExistingTechnicianInODOOMS_ServerError(t *testing.T) {
 
 	// Create test config
 	testConfig := createTestConfigODOOMSAPIHelper()
-	testConfig.ODOOManageService.URL = server.URL
+	testConfig.ODOOMS.URL = server.URL
 
 	// Test server error
 	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
@@ -170,7 +171,7 @@ func TestCheckExistingTechnicianInODOOMS_SessionExpired(t *testing.T) {
 
 	// Create test config
 	testConfig := createTestConfigODOOMSAPIHelper()
-	testConfig.ODOOManageService.URL = server.URL
+	testConfig.ODOOMS.URL = server.URL
 
 	// Test session expired error
 	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
@@ -200,7 +201,7 @@ func TestCheckExistingTechnicianInODOOMS_InvalidResponse(t *testing.T) {
 
 	// Create test config
 	testConfig := createTestConfigODOOMSAPIHelper()
-	testConfig.ODOOManageService.URL = server.URL
+	testConfig.ODOOMS.URL = server.URL
 
 	// Test invalid response
 	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
@@ -232,7 +233,7 @@ func TestCheckExistingTechnicianInODOOMS_NoResultField(t *testing.T) {
 
 	// Create test config
 	testConfig := createTestConfigODOOMSAPIHelper()
-	testConfig.ODOOManageService.URL = server.URL
+	testConfig.ODOOMS.URL = server.URL
 
 	// Test missing result field
 	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("Test", "test@example.com", "+628123456789", *testConfig)
@@ -282,7 +283,7 @@ func TestCheckExistingTechnicianInODOOMS_EmptyParameters(t *testing.T) {
 
 	// Create test config
 	testConfig := createTestConfigODOOMSAPIHelper()
-	testConfig.ODOOManageService.URL = server.URL
+	testConfig.ODOOMS.URL = server.URL
 
 	// Test with all empty parameters (should still work but return error due to empty domain)
 	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "", "", *testConfig)
@@ -298,16 +299,19 @@ func TestCheckExistingTechnicianInODOOMS_SingleParameter(t *testing.T) {
 	// server := createMockODOOServerForTechnician()
 	// defer server.Close()
 
-	if err := config.LoadConfig(); err != nil {
+	var err error
+	config.ManageService.MustInit("manage-service") // Load config with name "manage-service.%s.yaml"
+	if !config.ManageService.IsLoaded() {
+		err = errors.New("failed to load configuration")
 		log.Fatal(err)
 	}
 
-	cfg := config.GetConfig()
+	cfg := config.ManageService.Get()
 
 	// Create test config
 	testConfig := createTestConfigODOOMSAPIHelper()
-	// testConfig.ODOOManageService.URL = server.URL
-	testConfig.ODOOManageService.URL = cfg.ODOOManageService.URL
+	// testConfig.ODOOMS.URL = server.URL
+	testConfig.ODOOMS.URL = cfg.ODOOMS.URL
 
 	// Test with only email
 	exists, _, err := odoomscontrollers.CheckExistingTechnicianInODOOMSWithConfig("", "testmfjr@gmail.com", "", cfg)

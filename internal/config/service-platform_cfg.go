@@ -1,237 +1,11 @@
 package config
 
-import (
-	"fmt"
-	"log"
-	"os"
-	"path/filepath"
-	"sync"
-	"time"
+// ServicePlatform holds the configuration for the service platform. It is initialized as a pointer to an instance of TypeServicePlatform, which can be used throughout the application to access service platform-specific configuration settings. The actual fields and methods of TypeServicePlatform can be defined as needed to encapsulate all relevant configuration options for the service platform.
+var ServicePlatform = &configs[TypeServicePlatform]{}
 
-	"github.com/fsnotify/fsnotify"
-	"github.com/go-playground/validator/v10"
-	"gopkg.in/yaml.v3"
-)
-
-var (
-	config      YamlConfig
-	configMutex sync.RWMutex
-	configPath  string
-)
-
-// yamlFilePaths defines possible locations for environment-specific config files
-// %s will be replaced with "dev" or "prod"
-var yamlFilePaths = []string{
-	"internal/config/config.%s.yaml",
-	"/internal/config/config.%s.yaml",
-	"internal/config/config.%s.yaml",
-	"../internal/config/config.%s.yaml",
-	"/../internal/config/config.%s.yaml",
-	"../../internal/config/config.%s.yaml",
-	"/../../internal/config/config.%s.yaml",
-}
-
-// mainConfigPaths defines possible locations for the main conf.yaml file
-var mainConfigPaths = []string{
-	"internal/config/conf.yaml",
-	"/internal/config/conf.yaml",
-	"internal/config/conf.yaml",
-	"../internal/config/conf.yaml",
-	"/../internal/config/conf.yaml",
-	"../../internal/config/conf.yaml",
-	"/../../internal/config/conf.yaml",
-}
-
-// MainConfig represents the main configuration structure for determining mode
-type MainConfig struct {
-	ConfigMode string `yaml:"config_mode" validate:"required"`
-}
-
-// getEnvironment returns the current environment (dev or prod)
-// Priority: 1. config_mode from conf.yaml, 2. ENV environment variable, 3. GO_ENV, 4. default to "dev"
-func getEnvironment() string {
-	// First try to read from main config file
-	if mode := getConfigModeFromFile(); mode != "" {
-		return mode
-	}
-
-	// Check ENV environment variable
-	if env := os.Getenv("ENV"); env != "" {
-		if env == "dev" || env == "prod" {
-			return env
-		}
-	}
-
-	// Check GO_ENV environment variable
-	if env := os.Getenv("GO_ENV"); env != "" {
-		if env == "development" {
-			return "dev"
-		}
-		if env == "production" {
-			return "prod"
-		}
-		if env == "dev" || env == "prod" {
-			return env
-		}
-	}
-
-	// Default to development
-	return "dev"
-}
-
-// getConfigModeFromFile reads the CONFIG_MODE from the main conf.yaml file
-func getConfigModeFromFile() string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return ""
-	}
-
-	baseDir := cwd
-
-	for _, path := range mainConfigPaths {
-		var fullPath string
-		if !filepath.IsAbs(path) {
-			fullPath = filepath.Join(baseDir, path)
-		} else {
-			fullPath = path
-		}
-
-		if _, err := os.Stat(fullPath); err == nil {
-			data, err := os.ReadFile(fullPath)
-			if err != nil {
-				continue
-			}
-
-			var mainConfig MainConfig
-			if err := yaml.Unmarshal(data, &mainConfig); err != nil {
-				continue
-			}
-
-			if mainConfig.ConfigMode == "dev" || mainConfig.ConfigMode == "prod" {
-				return mainConfig.ConfigMode
-			}
-		}
-	}
-
-	return ""
-}
-
-// getConfigPaths returns the list of config file paths for the current environment
-func getConfigPaths() []string {
-	env := getEnvironment()
-	paths := make([]string, len(yamlFilePaths))
-
-	for i, path := range yamlFilePaths {
-		paths[i] = fmt.Sprintf(path, env)
-	}
-
-	return paths
-}
-
-// LoadConfig loads the configuration from the appropriate YAML file based on the environment
-func LoadConfig() error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("Error getting current working directory: %v", err)
-	}
-
-	baseDir := cwd
-	configPaths := getConfigPaths()
-
-	for i, path := range configPaths {
-		if !filepath.IsAbs(path) {
-			configPaths[i] = filepath.Join(baseDir, path)
-		}
-	}
-
-	for _, path := range configPaths {
-		if _, err := os.Stat(path); err == nil {
-			// log.Printf("Config file found: %v (Environment: %s from %s)", path, getEnvironment(), getConfigSource())
-			configPath = path
-			break
-		}
-	}
-	if configPath == "" {
-		return fmt.Errorf("no valid config file found from paths: %v", configPaths)
-	}
-
-	file, err := os.ReadFile(configPath)
-	if err != nil {
-		return fmt.Errorf("failed to read config file: %w", err)
-	}
-
-	var newConfig YamlConfig
-	if err := yaml.Unmarshal(file, &newConfig); err != nil {
-		return fmt.Errorf("failed to parse YAML: %w", err)
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(&newConfig); err != nil {
-		return fmt.Errorf("config validation failed: %w", err)
-	}
-
-	configMutex.Lock()
-	config = newConfig
-	configMutex.Unlock()
-
-	return nil
-}
-
-// WatchConfig sets up a file watcher to monitor changes to the config file
-func WatchConfig() {
-	if configPath == "" {
-		log.Println("no valid config file found. Skipping watcher.")
-		return
-	}
-
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Printf("failed to initialize config watcher:%v", err)
-	}
-	defer watcher.Close()
-
-	err = watcher.Add(configPath)
-	if err != nil {
-		log.Printf("failed to watch config file:%v", err)
-	}
-
-	log.Println("👀 Watching for yaml config changes:", configPath)
-
-	for {
-		select {
-		case event, ok := <-watcher.Events:
-			if !ok {
-				return
-			}
-			if event.Op == fsnotify.Write {
-				log.Println("config file updated. Reloading...")
-				// Small delay to handle editors that save in multiple writes
-				time.Sleep(100 * time.Millisecond)
-				if err := LoadConfig(); err != nil {
-					log.Printf("⚠️  Failed to reload config (keeping previous config): %v", err)
-				} else {
-					log.Println("✅ Config reloaded successfully.")
-				}
-			}
-		case err, ok := <-watcher.Errors:
-			if !ok {
-				return
-			}
-			log.Println("config watcher error:", err)
-		}
-	}
-}
-
-// GetConfig returns the current configuration
-func GetConfig() YamlConfig {
-	configMutex.RLock()
-	defer configMutex.RUnlock()
-	return config
-}
-
-// YamlConfig represents the structure of the configuration YAML file
+// TypeServicePlatform represents the structure of the configuration YAML file
 // Fields are organized into sections such as App, Default, Redis, Database, etc.
-type YamlConfig struct {
+type TypeServicePlatform struct {
 	App struct {
 		Host                 string `yaml:"host" validate:"required"`
 		GinMode              string `yaml:"gin_mode" validate:"required"`
@@ -393,13 +167,17 @@ type YamlConfig struct {
 	} `yaml:"whatsnyan" validate:"required"`
 
 	Metrics struct {
-		APIPort       int `yaml:"api_port" validate:"required"`
-		GRPCPort      int `yaml:"grpc_port" validate:"required"`
-		SchedulerPort int `yaml:"scheduler_port" validate:"required"`
-		WhatsAppPort  int `yaml:"whatsapp_port" validate:"required"`
-		TelegramPort  int `yaml:"telegram_port" validate:"required"`
-		TwilioPort    int `yaml:"twilio_port" validate:"required"`
-		GrafanaPort   int `yaml:"grafana_port" validate:"required"`
+		PrometheusPort    int `yaml:"prometheus_port" validate:"required"`
+		APIPort           int `yaml:"api_port" validate:"required"`
+		GRPCPort          int `yaml:"grpc_port" validate:"required"`
+		SchedulerPort     int `yaml:"scheduler_port" validate:"required"`
+		WhatsAppPort      int `yaml:"whatsapp_port" validate:"required"`
+		TelegramPort      int `yaml:"telegram_port" validate:"required"`
+		TwilioPort        int `yaml:"twilio_port" validate:"required"`
+		GrafanaPort       int `yaml:"grafana_port" validate:"required"`
+		NginxAuthPort     int `yaml:"nginx_auth_port" validate:"required"`
+		NginxExporterPort int `yaml:"nginx_exporter_port" validate:"required"`
+		GoDocPort         int `yaml:"go_doc_port" validate:"required"`
 	} `yaml:"metrics" validate:"required"`
 
 	RateLimit struct {
@@ -498,80 +276,6 @@ type YamlConfig struct {
 		GRPCPort       int    `yaml:"grpc_port" validate:"required"`
 		IsDev          bool   `yaml:"is_dev"`
 	} `yaml:"twilio" validate:"required"`
-
-	// ODOOManageService holds configuration for ODOO Manage Service integration
-	ODOOManageService struct {
-		JsonRPCVersion string                  `yaml:"jsonrpc_version" validate:"required"`
-		Login          string                  `yaml:"login" validate:"required"`
-		Password       string                  `yaml:"password" validate:"required"`
-		DB             string                  `yaml:"db" validate:"required"`
-		URL            string                  `yaml:"url" validate:"required"`
-		PathSession    string                  `yaml:"path_session" validate:"required"`
-		PathGetData    string                  `yaml:"path_getdata" validate:"required"`
-		PathUpdateData string                  `yaml:"path_updatedata" validate:"required"`
-		PathCreateData string                  `yaml:"path_createdata" validate:"required"`
-		MaxRetry       int                     `yaml:"max_retry" validate:"required"`
-		RetryDelay     int                     `yaml:"retry_delay" validate:"required"`
-		SessionTimeout int                     `yaml:"session_timeout" validate:"required"`
-		DataTimeout    int                     `yaml:"data_timeout"`
-		SkipSSLVerify  bool                    `yaml:"skip_ssl_verify"`
-		SACData        map[string]ODOOMSACData `yaml:"sac" validate:"required"`
-	} `yaml:"odoo_ms" validate:"required"`
-
-	// TechnicalAssistance holds configuration for technical assistance services and configurations
-	TechnicalAssistance struct {
-		APIHost                string                `yaml:"api_host" validate:"required"`
-		APIPort                int                   `yaml:"api_port" validate:"required"`
-		MySQLDBHost            string                `yaml:"mysqldb_host" validate:"required"`
-		MySQLDBPort            int                   `yaml:"mysqldb_port" validate:"required"`
-		MySQLDBUser            string                `yaml:"mysqldb_user" validate:"required"`
-		MySQLDBPass            string                `yaml:"mysqldb_password" validate:"required"`
-		MySQLDBName            string                `yaml:"mysqldb_dbname" validate:"required"`
-		MySQLDBMaxRetryConnect int                   `yaml:"mysqldb_max_retry_connect" validate:"required"`
-		MySQLDBRetryDelay      int                   `yaml:"mysqldb_retry_delay" validate:"required"`
-		MySQLDBIdleConnection  int                   `yaml:"mysqldb_idle_connection" validate:"required"`
-		MySQLDBOpenConnection  int                   `yaml:"mysqldb_open_connection" validate:"required"`
-		MySQLDBConnMaxLifetime int                   `yaml:"mysqldb_conn_max_lifetime" validate:"required"`
-		MySQLDBConnMaxIdleTime int                   `yaml:"mysqldb_conn_max_idle_time" validate:"required"`
-		MySQLDBSSLMode         string                `yaml:"mysqldb_ssl_mode" validate:"required"`
-		RedisHost              string                `yaml:"redisdb_host" validate:"required"`
-		RedisPort              int                   `yaml:"redisdb_port" validate:"required"`
-		RedisDBUsed            int                   `yaml:"redisdb_dbused" validate:"required"`
-		UserTA                 map[string]TAUserData `yaml:"user_ta" validate:"required"`
-		Tables                 TATables              `yaml:"tables" validate:"required"`
-	} `yaml:"technical_assistance" validate:"required"`
-
-	// MSMiddleware holds configuration for the middleware microservice
-	MSMiddleware struct {
-		MySQLDBHost            string `yaml:"mysqldb_host" validate:"required"`
-		MySQLDBPort            int    `yaml:"mysqldb_port" validate:"required"`
-		MySQLDBUser            string `yaml:"mysqldb_user" validate:"required"`
-		MySQLDBPass            string `yaml:"mysqldb_password" validate:"required"`
-		MySQLDBName            string `yaml:"mysqldb_dbname" validate:"required"`
-		MySQLDBMaxRetryConnect int    `yaml:"mysqldb_max_retry_connect" validate:"required"`
-		MySQLDBRetryDelay      int    `yaml:"mysqldb_retry_delay" validate:"required"`
-		MySQLDBIdleConnection  int    `yaml:"mysqldb_idle_connection" validate:"required"`
-		MySQLDBOpenConnection  int    `yaml:"mysqldb_open_connection" validate:"required"`
-		MySQLDBConnMaxLifetime int    `yaml:"mysqldb_conn_max_lifetime" validate:"required"`
-		MySQLDBConnMaxIdleTime int    `yaml:"mysqldb_conn_max_idle_time" validate:"required"`
-		MySQLDBSSLMode         string `yaml:"mysqldb_ssl_mode" validate:"required"`
-	} `yaml:"ms_middleware" validate:"required"`
-
-	// WebPanelService holds Dashboard & Reporting of ODOO Manage Service
-	WebPanelService struct {
-		MySQLDBHost            string `yaml:"mysqldb_host" validate:"required"`
-		MySQLDBPort            int    `yaml:"mysqldb_port" validate:"required"`
-		MySQLDBUser            string `yaml:"mysqldb_user" validate:"required"`
-		MySQLDBPass            string `yaml:"mysqldb_password" validate:"required"`
-		MySQLDBName            string `yaml:"mysqldb_dbname" validate:"required"`
-		MySQLDBMaxRetryConnect int    `yaml:"mysqldb_max_retry_connect" validate:"required"`
-		MySQLDBRetryDelay      int    `yaml:"mysqldb_retry_delay" validate:"required"`
-		MySQLDBIdleConnection  int    `yaml:"mysqldb_idle_connection" validate:"required"`
-		MySQLDBOpenConnection  int    `yaml:"mysqldb_open_connection" validate:"required"`
-		MySQLDBConnMaxLifetime int    `yaml:"mysqldb_conn_max_lifetime" validate:"required"`
-		MySQLDBConnMaxIdleTime int    `yaml:"mysqldb_conn_max_idle_time" validate:"required"`
-		MySQLDBSSLMode         string `yaml:"mysqldb_ssl_mode" validate:"required"`
-	} `yaml:"web_panel" validate:"required"`
 }
 
 // K6Thresholds represents default thresholds for k6 tests
@@ -667,27 +371,4 @@ type TelegramTables struct {
 	TBTelegramMessage         string `yaml:"tb_telegram_message" validate:"required"`
 	TBTelegramIncomingMessage string `yaml:"tb_telegram_incoming_message" validate:"required"`
 	TBTelegramUser            string `yaml:"tb_telegram_user" validate:"required"`
-}
-
-// TAUserData represents a user data structure for Technical Assistance, e.g. email -> name & phone
-type TAUserData struct {
-	Name  string `yaml:"name" validate:"required"`
-	Phone string `yaml:"phone" validate:"required"`
-}
-
-// TATables represents the table names used in the Technical Assistance service
-type TATables struct {
-	TBLogActivity string `yaml:"tb_logact" validate:"required"`
-	TBPending     string `yaml:"tb_pending" validate:"required"`
-	TBError       string `yaml:"tb_error" validate:"required"`
-}
-
-// ODOOMSACData represents SAC (Service Area Coordinator) user data for ODOO Manage Service integration
-type ODOOMSACData struct {
-	Username string `yaml:"username" validate:"required"`
-	Fullname string `yaml:"fullname" validate:"required"`
-	Phone    string `yaml:"phone" validate:"required"`
-	Email    string `yaml:"email" validate:"required"`
-	TTDPath  string `yaml:"ttd_path" validate:"required"`
-	Region   int    `yaml:"region" validate:"required"`
 }

@@ -2,6 +2,7 @@ package grpc_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -29,9 +30,14 @@ func (suite *GRPCTestSuite) SetupTest() {
 	// For integration tests, start a test server
 	// For now, assume server is running on localhost:50051
 	var err error
-	err = config.LoadConfig()
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		assert.NoError(suite.T(), err, "Config should be loaded successfully")
+	}
+
 	assert.NoError(suite.T(), err)
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	host := cfg.GRPC.Host
 	port := cfg.GRPC.Port

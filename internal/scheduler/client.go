@@ -5,7 +5,6 @@ package scheduler
 
 import (
 	"fmt"
-	"log"
 
 	"service-platform/internal/config"
 	pb "service-platform/proto"
@@ -36,10 +35,9 @@ var (
 //	scheduler.InitClient()
 //	defer scheduler.CloseClient()
 func InitClient() {
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
-	cfg := config.GetConfig()
+
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	cfg := config.ServicePlatform.Get()
 
 	// Connect to scheduler service (different port from main gRPC)
 	host := cfg.Schedules.Host

@@ -15,7 +15,7 @@ type Role struct {
 }
 
 func (Role) TableName() string {
-	return config.GetConfig().Database.TbRole
+	return config.ServicePlatform.Get().Database.TbRole
 }
 
 type RolePrivilege struct {
@@ -29,5 +29,5 @@ type RolePrivilege struct {
 }
 
 func (RolePrivilege) TableName() string {
-	return config.GetConfig().Database.TbRolePrivilege
+	return config.ServicePlatform.Get().Database.TbRolePrivilege
 }

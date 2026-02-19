@@ -17,7 +17,7 @@ var MongoDBClient *mongo.Client
 
 // BuildMongoURI builds MongoDB connection URI from config
 func BuildMongoURI() string {
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 	uri := fmt.Sprintf("mongodb://%s:%d/%s", cfg.MongoDB.Host, cfg.MongoDB.Port, cfg.MongoDB.Database)
 
 	if cfg.MongoDB.Username != "" && cfg.MongoDB.Password != "" {
@@ -42,13 +42,13 @@ func InitMongoDB() error {
 	clientOptions := options.Client().ApplyURI(uri)
 
 	// Set connection pool options
-	if cfg := config.GetConfig(); cfg.MongoDB.MaxPoolSize > 0 {
+	if cfg := config.ServicePlatform.Get(); cfg.MongoDB.MaxPoolSize > 0 {
 		clientOptions.SetMaxPoolSize(cfg.MongoDB.MaxPoolSize)
 	}
-	if cfg := config.GetConfig(); cfg.MongoDB.MinPoolSize > 0 {
+	if cfg := config.ServicePlatform.Get(); cfg.MongoDB.MinPoolSize > 0 {
 		clientOptions.SetMinPoolSize(cfg.MongoDB.MinPoolSize)
 	}
-	if cfg := config.GetConfig(); cfg.MongoDB.MaxIdleTime > 0 {
+	if cfg := config.ServicePlatform.Get(); cfg.MongoDB.MaxIdleTime > 0 {
 		clientOptions.SetMaxConnIdleTime(time.Duration(cfg.MongoDB.MaxIdleTime) * time.Second)
 	}
 

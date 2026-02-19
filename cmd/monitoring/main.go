@@ -13,10 +13,8 @@ import (
 
 func main() {
 	// Load config
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf: %v", err)
-	}
-	yamlCfg := config.GetConfig()
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	yamlCfg := config.ServicePlatform.Get()
 
 	// Init log
 	logger.InitLogrus()

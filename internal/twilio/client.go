@@ -22,7 +22,7 @@ type Client struct {
 
 // NewClient initializes a new Twilio WhatsApp client using config
 func NewClient() (*Client, error) {
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 	twilioConfig := cfg.Twilio
 
 	if twilioConfig.AccountSID == "" || twilioConfig.AuthToken == "" || twilioConfig.WhatsAppNumber == "" {

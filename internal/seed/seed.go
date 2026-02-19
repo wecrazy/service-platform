@@ -505,9 +505,9 @@ func SeedUser(db *gorm.DB) {
 		{
 			Fullname:     "RM Developer",
 			Username:     "rm_dev",
-			Phone:        config.GetConfig().Default.SuperUserPhone,
-			Email:        config.GetConfig().Default.SuperUserEmail,
-			Password:     fun.GenerateSaltedPassword(config.GetConfig().Default.SuperUserPassword),
+			Phone:        config.ServicePlatform.Get().Default.SuperUserPhone,
+			Email:        config.ServicePlatform.Get().Default.SuperUserEmail,
+			Password:     fun.GenerateSaltedPassword(config.ServicePlatform.Get().Default.SuperUserPassword),
 			Type:         0,
 			Role:         int(superUserRole.ID),
 			Status:       2,
@@ -667,7 +667,7 @@ func SeedUserPasswordChangeLog(db *gorm.DB) {
 // Errors in SQL file import are logged but don't prevent the seeding process
 // from continuing, allowing the application to start even with missing regional data.
 func SeedIndonesiaRegion(db *gorm.DB) {
-	tableName := config.GetConfig().Database.TbIndonesiaRegion
+	tableName := config.ServicePlatform.Get().Database.TbIndonesiaRegion
 
 	// Check if table exists
 	if !fun.TableExists(db, tableName) {
@@ -691,7 +691,7 @@ func SeedIndonesiaRegion(db *gorm.DB) {
 	if count == 0 {
 		logrus.Infof("Importing data from SQL file into table '%s'...", tableName)
 
-		sqlDumpedFile := config.GetConfig().Database.DumpedIndonesiaRegionSQL
+		sqlDumpedFile := config.ServicePlatform.Get().Database.DumpedIndonesiaRegionSQL
 
 		internalDir, err := fun.FindValidDirectory([]string{
 			"internal",
@@ -737,7 +737,7 @@ func SeedIndonesiaRegion(db *gorm.DB) {
 // This function is called automatically by SeedIndonesiaRegion if the table doesn't exist.
 func createIndonesiaRegionTable(db *gorm.DB) error {
 	// Create the table with custom table name from config
-	tableName := config.GetConfig().Database.TbIndonesiaRegion
+	tableName := config.ServicePlatform.Get().Database.TbIndonesiaRegion
 
 	// Set custom table name for migration
 	err := db.Table(tableName).AutoMigrate(&model.IndonesiaRegion{})
@@ -780,8 +780,8 @@ func SeedWhatsappUser(db *gorm.DB) {
 		users := []model.WAUsers{
 			{
 				FullName:      "RM Developer",
-				Email:         config.GetConfig().Default.SuperUserEmail,
-				PhoneNumber:   config.GetConfig().Default.SuperUserPhone,
+				Email:         config.ServicePlatform.Get().Default.SuperUserEmail,
+				PhoneNumber:   config.ServicePlatform.Get().Default.SuperUserPhone,
 				IsRegistered:  true,
 				AllowedChats:  model.BothChat,
 				AllowedTypes:  allowedTypes,
@@ -1006,7 +1006,7 @@ func SeedWhatsAppMsgAutoReply(db *gorm.DB) {
 	var count int64
 	db.Model(&model.WhatsappMessageAutoReply{}).Count(&count)
 
-	dataSeparator := config.GetConfig().Default.DataSeparator
+	dataSeparator := config.ServicePlatform.Get().Default.DataSeparator
 	if dataSeparator == "" {
 		dataSeparator = "|"
 	}
@@ -1224,7 +1224,7 @@ func importIndonesiaRegionData(db *gorm.DB, filePath string) error {
 	}
 
 	// Get table name from config
-	tableName := config.GetConfig().Database.TbIndonesiaRegion
+	tableName := config.ServicePlatform.Get().Database.TbIndonesiaRegion
 
 	// Split the content by semicolons to get individual SQL statements
 	sqlStatements := strings.Split(string(content), ";")
@@ -1335,7 +1335,7 @@ func SeedTelegramUser(db *gorm.DB) {
 // The function checks for existing users by phone number to avoid duplicates,
 // ensuring idempotent behavior.
 func SeedTelegramUserOfSACMS(db *gorm.DB) {
-	sacData := config.GetConfig().ODOOManageService.SACData
+	sacData := config.ManageService.Get().ODOOMS.SACData
 	if len(sacData) == 0 {
 		logrus.Info("No SAC data found in configuration, skipping Telegram UserOf SACMS seeding.")
 		return

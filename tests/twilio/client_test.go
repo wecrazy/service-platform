@@ -1,6 +1,7 @@
 package twilio_test
 
 import (
+	"errors"
 	"testing"
 
 	"service-platform/internal/config"
@@ -10,11 +11,14 @@ import (
 // TestNewClient tests the initialization of Twilio client
 func TestNewClient(t *testing.T) {
 	// Load config
-	if err := config.LoadConfig(); err != nil {
-		t.Fatalf("Failed to load config: %v", err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		t.Fatalf("Config should be loaded successfully: %v", err)
 	}
 
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	// Check if credentials are set
 	if cfg.Twilio.AccountSID == "" {
@@ -43,11 +47,13 @@ func TestNewClient(t *testing.T) {
 
 // TestNewClientMissingCredentials tests client initialization validation
 func TestNewClientMissingCredentials(t *testing.T) {
-	if err := config.LoadConfig(); err != nil {
-		t.Fatalf("Failed to load config: %v", err)
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err := errors.New("failed to load configuration")
+		t.Fatalf("Config should be loaded successfully: %v", err)
 	}
 
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	// Verify we have credentials to test against
 	if cfg.Twilio.AccountSID != "" &&
@@ -73,11 +79,14 @@ func TestNewClientMissingCredentials(t *testing.T) {
 
 // TestSendMessage tests sending a text message
 func TestSendMessage(t *testing.T) {
-	if err := config.LoadConfig(); err != nil {
-		t.Fatalf("Failed to load config: %v", err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		t.Fatalf("Config should be loaded successfully: %v", err)
 	}
 
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	// Skip if credentials not configured
 	if cfg.Twilio.AccountSID == "" ||
@@ -112,11 +121,14 @@ func TestSendMessage(t *testing.T) {
 
 // TestSendMediaMessage tests sending a media message
 func TestSendMediaMessage(t *testing.T) {
-	if err := config.LoadConfig(); err != nil {
-		t.Fatalf("Failed to load config: %v", err)
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		t.Fatalf("Config should be loaded successfully: %v", err)
 	}
 
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	// Skip if credentials not configured
 	if cfg.Twilio.AccountSID == "" ||

@@ -15,7 +15,7 @@ type Language struct {
 }
 
 func (Language) TableName() string {
-	return config.GetConfig().Database.TbLanguage
+	return config.ServicePlatform.Get().Database.TbLanguage
 }
 
 type BadWordCategory string
@@ -37,5 +37,5 @@ type BadWord struct {
 }
 
 func (BadWord) TableName() string {
-	return config.GetConfig().Database.TbBadWord
+	return config.ServicePlatform.Get().Database.TbBadWord
 }

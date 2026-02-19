@@ -7,8 +7,8 @@ import (
 	"os"
 	"service-platform/internal/config"
 	"service-platform/internal/database"
-	"service-platform/internal/migrations"
 	_ "service-platform/internal/database/migrations" // Import migrations to register them via init()
+	"service-platform/internal/migrations"
 
 	"github.com/sirupsen/logrus"
 )
@@ -21,20 +21,18 @@ func main() {
 	)
 	flag.Parse()
 
-	// Initialize configuration
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Failed to initialize config: %v", err)
-	}
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	yamlCfg := config.ServicePlatform.Get()
 
 	// Initialize database connection
 	db, err := database.InitAndCheckDB(
-		config.GetConfig().Database.Type,
-		config.GetConfig().Database.Username,
-		config.GetConfig().Database.Password,
-		config.GetConfig().Database.Host,
-		config.GetConfig().Database.Port,
-		config.GetConfig().Database.Name,
-		config.GetConfig().Database.SSLMode,
+		yamlCfg.Database.Type,
+		yamlCfg.Database.Username,
+		yamlCfg.Database.Password,
+		yamlCfg.Database.Host,
+		yamlCfg.Database.Port,
+		yamlCfg.Database.Name,
+		yamlCfg.Database.SSLMode,
 	)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -45,7 +43,7 @@ func main() {
 	defer sqlDB.Close()
 
 	// Initialize migration service with dependency injection
-	migrationService := migrations.NewMigrationService(db, config.GetConfig(), logrus.StandardLogger())
+	migrationService := migrations.NewMigrationService(db, yamlCfg, logrus.StandardLogger())
 
 	// Execute migration action
 	switch *action {

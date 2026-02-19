@@ -24,7 +24,7 @@ type schedulerServer struct {
 	proto.UnimplementedSchedulerServiceServer
 	db        *gorm.DB
 	scheduler *gocron.Scheduler
-	cfg       *config.YamlConfig
+	cfg       *config.TypeServicePlatform
 }
 
 func (s *schedulerServer) RegisterJob(ctx context.Context, req *proto.RegisterJobRequest) (*proto.RegisterJobResponse, error) {
@@ -147,14 +147,16 @@ func (s *schedulerServer) ReloadScheduler(ctx context.Context, req *proto.Reload
 	if s.scheduler != nil {
 		s.scheduler.Stop()
 	}
-	if err := config.LoadConfig(); err != nil {
+
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
 		return &proto.ReloadSchedulerResponse{
 			Success: false,
-			Message: fmt.Sprintf("Failed to reload config: %v", err),
+			Message: "Failed to load config service-platform",
 		}, nil
 	}
 
-	yamlCfg := config.GetConfig()
+	yamlCfg := config.ServicePlatform.Get()
 	s.cfg = &yamlCfg
 	scheduler.ReloadTimezone()
 	s.scheduler = scheduler.StartScheduler(s.db, s.cfg)
@@ -167,11 +169,11 @@ func (s *schedulerServer) ReloadScheduler(ctx context.Context, req *proto.Reload
 }
 
 func main() {
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf: %v", err)
-	}
-	go config.WatchConfig()
-	cfg := config.GetConfig()
+
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	go config.ServicePlatform.Watch()
+
+	cfg := config.ServicePlatform.Get()
 
 	logger.InitLogrus()
 
