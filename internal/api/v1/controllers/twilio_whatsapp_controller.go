@@ -76,27 +76,29 @@ func HandleTwilioWhatsAppWebhook(db *gorm.DB) gin.HandlerFunc {
 			}
 		}
 
-		// Send auto-reply via Twilio API (not TwiML - this actually sends a message)
-		client, err := twilio.NewClient()
-		if err != nil {
-			logrus.Errorf("❌ Failed to create Twilio client for reply: %v", err)
-		} else {
-			defer client.Close()
+		// TODO: enable it again if you need to send the response message via Twilio API instead of TwiML (currently just sending empty TwiML response)
+		_ = responseMessage // To avoid unused variable warning if auto-reply logic is not implemented yet
+		// // Send auto-reply via Twilio API (not TwiML - this actually sends a message)
+		// client, err := twilio.NewClient()
+		// if err != nil {
+		// 	logrus.Errorf("❌ Failed to create Twilio client for reply: %v", err)
+		// } else {
+		// 	defer client.Close()
 
-			// Send message back to the sender
-			// Extract phone number from "whatsapp:+6285173207755" format
-			replyToPhone := strings.ReplaceAll(req.From, "whatsapp:", "")
-			topicName := "Twilio WhatsApp"
+		// 	// Send message back to the sender
+		// 	// Extract phone number from "whatsapp:+6285173207755" format
+		// 	replyToPhone := strings.ReplaceAll(req.From, "whatsapp:", "")
+		// 	topicName := "Twilio WhatsApp"
 
-			messageSID, err := client.SendMessage(replyToPhone, responseMessage)
-			if err != nil {
-				logrus.Errorf("❌ Failed to send auto-reply to %s: %v", replyToPhone, err)
-			} else {
-				logrus.Infof("✅ Auto-reply sent successfully to %s. SID: %s", replyToPhone, messageSID)
-				logrus.Infof("   Topic: %s", topicName)
-				logrus.Infof("   Message: %s", responseMessage)
-			}
-		}
+		// 	messageSID, err := client.SendMessage(replyToPhone, responseMessage)
+		// 	if err != nil {
+		// 		logrus.Errorf("❌ Failed to send auto-reply to %s: %v", replyToPhone, err)
+		// 	} else {
+		// 		logrus.Infof("✅ Auto-reply sent successfully to %s. SID: %s", replyToPhone, messageSID)
+		// 		logrus.Infof("   Topic: %s", topicName)
+		// 		logrus.Infof("   Message: %s", responseMessage)
+		// 	}
+		// }
 
 		// Return TwiML 200 OK (just acknowledgment, not the actual reply)
 		twimlResponse := `<?xml version="1.0" encoding="UTF-8"?>

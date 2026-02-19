@@ -146,7 +146,26 @@ jobs:
           cache: true
 
       - name: Build all services
-        run: make build
+        run: |
+          mkdir -p bin
+          services=(
+            "api:./cmd/api"
+            "whatsapp:./cmd/whatsapp"
+            "grpc:./cmd/grpc"
+            "scheduler:./cmd/scheduler"
+            "monitoring:./cmd/monitoring"
+            "n8n:./cmd/n8n"
+            "telegram:./cmd/telegram"
+            "migrate:./cmd/migrate"
+            "seed:./cmd/seed"
+            "twilio-whatsapp:./cmd/twilio/whatsapp"
+          )
+          for service_pair in "${services[@]}"; do
+            service_name="${service_pair%%:*}"
+            service_path="${service_pair##*:}"
+            echo "Building $service_name..."
+            go build -v -o bin/$service_name $service_path || exit 1
+          done
 
       - name: Verify binaries
         run: |
