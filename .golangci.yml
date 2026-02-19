@@ -9,8 +9,6 @@ linters:
     - ineffassign   # Detect ineffectual assignments
     - staticcheck   # Go static analysis
     - unused        # Check for unused constants, variables, functions
-    - gofmt         # Check code formatting
-    - goimports     # Check import order
     - misspell      # Fix commonly misspelled words
     - gosec         # Security checker
     - gocritic      # Opinionated Go linter

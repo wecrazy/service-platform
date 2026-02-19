@@ -33,12 +33,26 @@ jobs:
       - name: Build all services
         run: |
           mkdir -p dist
-          for service in api wa grpc scheduler monitoring n8n; do
-            echo "Building $service..."
-            GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/service-platform-$service-linux-amd64 cmd/$service/main.go
-            GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/service-platform-$service-darwin-amd64 cmd/$service/main.go
-            GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/service-platform-$service-darwin-arm64 cmd/$service/main.go
-            GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/service-platform-$service-windows-amd64.exe cmd/$service/main.go
+          services=(
+            "api:./cmd/api"
+            "whatsapp:./cmd/whatsapp"
+            "grpc:./cmd/grpc"
+            "scheduler:./cmd/scheduler"
+            "monitoring:./cmd/monitoring"
+            "n8n:./cmd/n8n"
+            "telegram:./cmd/telegram"
+            "migrate:./cmd/migrate"
+            "seed:./cmd/seed"
+            "twilio-whatsapp:./cmd/twilio/whatsapp"
+          )
+          for service_pair in "${services[@]}"; do
+            service_name="${service_pair%%:*}"
+            service_path="${service_pair##*:}"
+            echo "Building $service_name..."
+            GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/service-platform-$service_name-linux-amd64 $service_path
+            GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/service-platform-$service_name-darwin-amd64 $service_path
+            GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/service-platform-$service_name-darwin-arm64 $service_path
+            GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/service-platform-$service_name-windows-amd64.exe $service_path
           done
 
       - name: Generate checksums
