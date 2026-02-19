@@ -8,6 +8,7 @@ import (
 	"service-platform/internal/config"
 	"service-platform/internal/database"
 	"service-platform/internal/migrations"
+	_ "service-platform/internal/database/migrations" // Import migrations to register them via init()
 
 	"github.com/sirupsen/logrus"
 )

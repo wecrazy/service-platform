@@ -1313,7 +1313,7 @@ func GetWhatsAppUsersDataTable(db *gorm.DB) gin.HandlerFunc {
 // @Accept       json
 // @Produce      json
 // @Param        id path int true "User ID"
-// @Success      200  {object}   model.WAUsers
+// @Success      200  {object}   map[string]interface{}
 // @Router       /api/v1/{access}/tab-whatsapp-user-management/users/{id} [get]
 func GetWhatsAppUser(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {

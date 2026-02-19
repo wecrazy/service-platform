@@ -311,5 +311,24 @@ func HtmlRoutes(
 			tabTelegram.POST("/send_video", telegramcontrollers.SendTelegramVideo(db))
 		}
 
+		/*
+			Tab Twilio WhatsApp - Bot & Messaging
+		*/
+		tabTwilioWhatsApp := api.Group("/tab-twilio-whatsapp")
+		{
+			// Messaging
+			tabTwilioWhatsApp.POST("/send_message", controllers.SendTwilioWhatsAppMessage(db))
+			tabTwilioWhatsApp.POST("/send_media_message", controllers.SendTwilioWhatsAppMediaMessage(db))
+
+			// Message history
+			tabTwilioWhatsApp.GET("/messages", controllers.GetTwilioWhatsAppMessages(db))
+			tabTwilioWhatsApp.GET("/incoming", controllers.GetTwilioWhatsAppIncomingMessages(db))
+		}
+
 	}
+
+	// Twilio WhatsApp Webhook - Incoming messages (NOT authenticated)
+	// This receives incoming WhatsApp messages from Twilio Sandbox
+	// Endpoint: POST /twilio_reply
+	router.POST("/twilio_reply", controllers.HandleTwilioWhatsAppWebhook(db))
 }
