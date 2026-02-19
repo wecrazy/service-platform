@@ -398,6 +398,7 @@ type YamlConfig struct {
 		SchedulerPort int `yaml:"scheduler_port" validate:"required"`
 		WhatsAppPort  int `yaml:"whatsapp_port" validate:"required"`
 		TelegramPort  int `yaml:"telegram_port" validate:"required"`
+		TwilioPort    int `yaml:"twilio_port" validate:"required"`
 		GrafanaPort   int `yaml:"grafana_port" validate:"required"`
 	} `yaml:"metrics" validate:"required"`
 
@@ -488,6 +489,15 @@ type YamlConfig struct {
 		Tables                TelegramTables `yaml:"tables" validate:"required"`
 		TechnicalSupportPhone string         `yaml:"technical_support_phone" validate:"required"`
 	} `yaml:"telegram" validate:"required"`
+
+	Twilio struct {
+		AccountSID     string `yaml:"account_sid" validate:"required"`
+		AuthToken      string `yaml:"auth_token" validate:"required"`
+		WhatsAppNumber string `yaml:"whatsapp_number" validate:"required"`
+		Host           string `yaml:"host" validate:"required"`
+		GRPCPort       int    `yaml:"grpc_port" validate:"required"`
+		IsDev          bool   `yaml:"is_dev"`
+	} `yaml:"twilio" validate:"required"`
 
 	// ODOOManageService holds configuration for ODOO Manage Service integration
 	ODOOManageService struct {

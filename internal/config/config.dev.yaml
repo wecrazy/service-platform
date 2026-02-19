@@ -271,6 +271,7 @@ metrics:
   scheduler_port: 9091
   whatsapp_port: 9093
   telegram_port: 9094
+  twilio_port: 9097
   grafana_port: 3063
 rate_limit:
   enabled: true
@@ -368,6 +369,13 @@ telegram:
     tb_telegram_incoming_message: "telegram_incoming_messages"
     tb_telegram_user: "telegram_users"
   technical_support_phone: "+6287883507445"
+twilio:
+  account_sid: "AC85aa7f267b84939ad944ca33c64f2ba7"
+  auth_token: "ef6e7b03c61e756b40054ccb3569a9c9"
+  whatsapp_number: "whatsapp:+14155238886"
+  host: "localhost"
+  grpc_port: 50061
+  is_dev: true
 odoo_ms:
   jsonrpc_version: "2.0"
   login: "desta@smartwebindonesia.com"
