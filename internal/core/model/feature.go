@@ -20,5 +20,5 @@ type Feature struct {
 }
 
 func (Feature) TableName() string {
-	return config.GetConfig().Database.TbFeature
+	return config.ServicePlatform.Get().Database.TbFeature
 }

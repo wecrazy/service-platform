@@ -51,7 +51,7 @@ func startRedisWindows() error {
 		}
 
 		logrus.Info("🚀 Attempted to start Redis in a new window. Waiting for it to be ready...")
-		return waitForRedis(config.GetConfig().Redis.Host, config.GetConfig().Redis.Port, 20)
+		return waitForRedis(config.ServicePlatform.Get().Redis.Host, config.ServicePlatform.Get().Redis.Port, 20)
 	}
 
 	// 2. Try WSL Redis
@@ -74,7 +74,7 @@ func startRedisWindows() error {
 			}
 
 			logrus.Info("🚀 Attempted to start Redis in WSL. Waiting for it to be ready...")
-			return waitForRedis(config.GetConfig().Redis.Host, config.GetConfig().Redis.Port, 20)
+			return waitForRedis(config.ServicePlatform.Get().Redis.Host, config.ServicePlatform.Get().Redis.Port, 20)
 		}
 	}
 
@@ -102,7 +102,7 @@ func startRedisLinux() error {
 	}
 
 	logrus.Info("🚀 Attempted to start Redis on Linux. Waiting for it to be ready...")
-	return waitForRedis(config.GetConfig().Redis.Host, config.GetConfig().Redis.Port, 20)
+	return waitForRedis(config.ServicePlatform.Get().Redis.Host, config.ServicePlatform.Get().Redis.Port, 20)
 }
 
 func waitForRedis(host string, port int, maxAttempts int) error {

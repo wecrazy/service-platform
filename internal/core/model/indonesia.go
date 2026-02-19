@@ -18,5 +18,5 @@ type IndonesiaRegion struct {
 }
 
 func (IndonesiaRegion) TableName() string {
-	return config.GetConfig().Database.TbIndonesiaRegion
+	return config.ServicePlatform.Get().Database.TbIndonesiaRegion
 }

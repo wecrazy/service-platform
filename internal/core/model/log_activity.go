@@ -23,5 +23,5 @@ type LogActivity struct {
 }
 
 func (LogActivity) TableName() string {
-	return config.GetConfig().Database.TbLogActivity
+	return config.ServicePlatform.Get().Database.TbLogActivity
 }

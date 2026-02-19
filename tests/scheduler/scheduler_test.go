@@ -2,6 +2,7 @@ package scheduler_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -27,9 +28,14 @@ type SchedulerTestSuite struct {
 // It loads configuration and creates a gRPC client connection to the scheduler service.
 func (suite *SchedulerTestSuite) SetupTest() {
 	// Load config
-	err := config.LoadConfig()
-	assert.NoError(suite.T(), err)
-	cfg := config.GetConfig()
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		assert.NoError(suite.T(), err, "Config should be loaded successfully")
+	}
+
+	cfg := config.ServicePlatform.Get()
 
 	// For integration tests, assume server is running
 	host := cfg.Schedules.Host

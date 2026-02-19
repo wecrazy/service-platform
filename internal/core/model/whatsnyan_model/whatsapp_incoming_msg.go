@@ -21,5 +21,5 @@ type WhatsAppIncomingMsg struct {
 }
 
 func (WhatsAppIncomingMsg) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBWhatsnyanIncomingMessage
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBWhatsnyanIncomingMessage
 }

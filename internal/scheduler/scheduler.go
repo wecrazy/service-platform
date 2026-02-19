@@ -16,7 +16,7 @@ import (
 var (
 	timezoneLoc *time.Location
 	dbInstance  *gorm.DB
-	yamlCfg     *config.YamlConfig
+	yamlCfg     *config.TypeServicePlatform
 )
 
 // JobMetadata stores execution metadata for each job
@@ -66,9 +66,9 @@ var jobMetadata = make(map[string]*JobMetadata)
 // loadTimezone loads the timezone from config
 func loadTimezone() {
 	var err error
-	timezoneLoc, err = time.LoadLocation(config.GetConfig().Schedules.Timezone)
+	timezoneLoc, err = time.LoadLocation(config.ServicePlatform.Get().Schedules.Timezone)
 	if err != nil {
-		logrus.Fatalf("Failed to load timezone %s: %v", config.GetConfig().Schedules.Timezone, err)
+		logrus.Fatalf("Failed to load timezone %s: %v", config.ServicePlatform.Get().Schedules.Timezone, err)
 	}
 	logrus.Infof("Scheduler timezone loaded: %s", timezoneLoc)
 }
@@ -78,7 +78,7 @@ func ReloadTimezone() {
 	loadTimezone()
 }
 
-func StartScheduler(db *gorm.DB, cfg *config.YamlConfig) *gocron.Scheduler {
+func StartScheduler(db *gorm.DB, cfg *config.TypeServicePlatform) *gocron.Scheduler {
 	loadTimezone()
 	dbInstance = db // Store DB instance for jobs that need it
 	yamlCfg = cfg   // Store config for jobs that need it

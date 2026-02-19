@@ -8,6 +8,21 @@
 
 ACTION=${1:-start}
 
+# Get project root for config files
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Load configuration
+CONFIG_MODE=$(yq -r '.config_mode' "$PROJECT_ROOT/internal/config/conf.yaml" 2>/dev/null || echo "dev")
+CONFIG_FILE="$PROJECT_ROOT/internal/config/service-platform.${CONFIG_MODE}.yaml"
+
+# Read monitoring ports from config
+GRAFANA_PORT=$(yq -r '.metrics.grafana_port' "$CONFIG_FILE" 2>/dev/null || echo "3063")
+PROMETHEUS_PORT=${PROMETHEUS_PORT:-9090}   # Usually fixed in docker-compose
+LOKI_PORT=${LOKI_PORT:-3100}                # Usually fixed in docker-compose
+TEMPO_PORT=${TEMPO_PORT:-3200}              # Usually fixed in docker-compose
+NGINX_PORT=${NGINX_PORT:-9180}              # Usually fixed in docker-compose
+
 # Determine which container runtime to use (prioritize podman-compose)
 if command -v podman-compose &> /dev/null; then
     COMPOSE_CMD="podman-compose"
@@ -29,13 +44,13 @@ case $ACTION in
     echo "✅ Monitoring stack started!"
     echo ""
     echo "📊 Access Points:"
-    echo "  • Grafana (direct): http://localhost:3063"
-    echo "  • Grafana (via Nginx auth): http://localhost:9180"
-    echo "  • Prometheus: http://localhost:9090"
-    echo "  • Loki API: http://localhost:3100"
-    echo "  • Tempo API: http://localhost:3200"
+    echo "  • Grafana (direct): http://localhost:${GRAFANA_PORT}"
+    echo "  • Grafana (via Nginx auth): http://localhost:${NGINX_PORT}"
+    echo "  • Prometheus: http://localhost:${PROMETHEUS_PORT}"
+    echo "  • Loki API: http://localhost:${LOKI_PORT}"
+    echo "  • Tempo API: http://localhost:${TEMPO_PORT}"
     echo ""
-    echo "🔐 Nginx Credentials (if using port 9180):"
+    echo "🔐 Nginx Credentials (if using port ${NGINX_PORT}):"
     echo "  • Username: admin"
     echo "  • Password: Net55206011##"
     echo ""
@@ -128,13 +143,13 @@ case $ACTION in
 
   test-tempo)
     echo "🧪 Testing Tempo connectivity..."
-    curl -v http://localhost:3200/tempo/api/search
+    curl -v http://localhost:${TEMPO_PORT}/tempo/api/search
     echo ""
     ;;
 
   test-nginx)
     echo "🧪 Testing Nginx health check..."
-    curl -v http://localhost:8080/health
+    curl -v http://localhost:${NGINX_PORT}/health
     echo ""
     ;;
 
@@ -171,9 +186,9 @@ case $ACTION in
     echo "  bash scripts/monitoring-quickstart.sh status"
     echo ""
     echo "📍 Access Points:"
-    echo "  • Grafana (direct): http://localhost:3063"
-    echo "  • Grafana (via Nginx): http://localhost:9180"
-    echo "  • Prometheus: http://localhost:9090"
+    echo "  • Grafana (direct): http://localhost:${GRAFANA_PORT}"
+    echo "  • Grafana (via Nginx): http://localhost:${NGINX_PORT}"
+    echo "  • Prometheus: http://localhost:${PROMETHEUS_PORT}"
     echo ""
     echo "🔐 Default Credentials: admin / Net55206011##"
     echo "ℹ️  Current Runtime: $RUNTIME"

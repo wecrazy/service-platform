@@ -86,7 +86,7 @@ type WAUsers struct {
 }
 
 func (WAUsers) TableName() string {
-	return config.GetConfig().Database.TbWhatsappUser
+	return config.ServicePlatform.Get().Database.TbWhatsappUser
 }
 
 type WhatsappMessageAutoReply struct {
@@ -102,5 +102,5 @@ type WhatsappMessageAutoReply struct {
 }
 
 func (WhatsappMessageAutoReply) TableName() string {
-	return config.GetConfig().Database.TbWhatsappMessageAutoReply
+	return config.ServicePlatform.Get().Database.TbWhatsappMessageAutoReply
 }

@@ -24,7 +24,7 @@ func InitRateLimiter(redisClient *redis.Client) {
 // RateLimitMiddleware applies rate limiting to requests
 func RateLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !config.GetConfig().RateLimit.Enabled || rateLimiter == nil {
+		if !config.ServicePlatform.Get().RateLimit.Enabled || rateLimiter == nil {
 			c.Next()
 			return
 		}
@@ -33,7 +33,7 @@ func RateLimitMiddleware() gin.HandlerFunc {
 		key := c.ClientIP()
 
 		// Apply rate limit
-		result, err := rateLimiter.Allow(c.Request.Context(), key, redis_rate.PerSecond(config.GetConfig().RateLimit.Requests))
+		result, err := rateLimiter.Allow(c.Request.Context(), key, redis_rate.PerSecond(config.ServicePlatform.Get().RateLimit.Requests))
 		if err != nil {
 			logrus.WithError(err).Error("Rate limiter error")
 			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Rate limiting service unavailable")

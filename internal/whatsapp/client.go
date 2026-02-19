@@ -2,7 +2,6 @@ package whatsapp
 
 import (
 	"fmt"
-	"log"
 
 	"service-platform/internal/config"
 	"service-platform/internal/pkg/logger"
@@ -20,14 +19,11 @@ var (
 
 // InitClient initializes the WhatsApp gRPC client
 func InitClient() {
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
-	go config.WatchConfig()
-	cfg := config.GetConfig()
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	go config.ServicePlatform.Watch()
 
-	// Init log
 	logger.InitLogrus()
+	cfg := config.ServicePlatform.Get()
 
 	address := fmt.Sprintf("%s:%d", cfg.Whatsnyan.GRPCHost, cfg.Whatsnyan.GRPCPort)
 

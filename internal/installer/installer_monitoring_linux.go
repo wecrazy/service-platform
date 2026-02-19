@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func InstallMonitoring(yamlCfg *config.YamlConfig) {
+func InstallMonitoring(yamlCfg *config.TypeServicePlatform) {
 	fmt.Println("🐧 Linux detected — installing monitoring service...")
 
 	execPath, err := os.Executable()
@@ -109,7 +109,7 @@ RemainAfterExit=yes
 	}
 }
 
-func UninstallMonitoring(yamlCfg *config.YamlConfig) {
+func UninstallMonitoring(yamlCfg *config.TypeServicePlatform) {
 	fmt.Println("🐧 Linux detected — uninstalling monitoring service...")
 
 	serviceName := yamlCfg.Monitoring.ServiceName

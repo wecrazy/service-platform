@@ -68,7 +68,7 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Invalid phone number: "+err.Error())
 				return
 			}
-			jid := config.GetConfig().Default.DialingCodeDefault + sanitizedPhone + "@" + types.DefaultUserServer
+			jid := config.ServicePlatform.Get().Default.DialingCodeDefault + sanitizedPhone + "@" + types.DefaultUserServer
 
 			// Check if registered on WhatsApp
 			resp, err := whatsapp.Client.IsOnWhatsApp(c.Request.Context(), &pb.IsOnWhatsAppRequest{
@@ -87,7 +87,7 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 				return
 			}
 
-			recipientJID = types.NewJID(config.GetConfig().Default.DialingCodeDefault+sanitizedPhone, types.DefaultUserServer)
+			recipientJID = types.NewJID(config.ServicePlatform.Get().Default.DialingCodeDefault+sanitizedPhone, types.DefaultUserServer)
 		}
 
 		var content *pb.MessageContent
@@ -98,8 +98,8 @@ func SendWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Message content cannot be empty for text type")
 				return
 			}
-			if len(req.Message) > config.GetConfig().Whatsnyan.MaxMessageLength {
-				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, fmt.Sprintf("Message content exceeds maximum length of %d characters", config.GetConfig().Whatsnyan.MaxMessageLength))
+			if len(req.Message) > config.ServicePlatform.Get().Whatsnyan.MaxMessageLength {
+				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, fmt.Sprintf("Message content exceeds maximum length of %d characters", config.ServicePlatform.Get().Whatsnyan.MaxMessageLength))
 				return
 			}
 			content = &pb.MessageContent{

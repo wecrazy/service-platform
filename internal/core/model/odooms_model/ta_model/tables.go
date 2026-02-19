@@ -30,7 +30,7 @@ type LogAct struct {
 }
 
 func (LogAct) TableName() string {
-	return config.GetConfig().TechnicalAssistance.Tables.TBLogActivity
+	return config.ManageService.Get().TechnicalAssistance.Tables.TBLogActivity
 }
 
 // Pending represents a pending task record in the database
@@ -71,7 +71,7 @@ type Pending struct {
 }
 
 func (Pending) TableName() string {
-	return config.GetConfig().TechnicalAssistance.Tables.TBPending
+	return config.ManageService.Get().TechnicalAssistance.Tables.TBPending
 }
 
 // Error represents an photo error record in the database
@@ -110,5 +110,5 @@ type Error struct {
 }
 
 func (Error) TableName() string {
-	return config.GetConfig().TechnicalAssistance.Tables.TBError
+	return config.ManageService.Get().TechnicalAssistance.Tables.TBError
 }

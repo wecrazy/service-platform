@@ -28,9 +28,13 @@ type WhatsAppTestSuite struct {
 // It loads configuration and creates a gRPC client connection to the WhatsApp service.
 func (suite *WhatsAppTestSuite) SetupTest() {
 	// Load config
-	err := config.LoadConfig()
-	assert.NoError(suite.T(), err)
-	cfg := config.GetConfig()
+	var err error
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = fmt.Errorf("failed to load configuration")
+		assert.NoError(suite.T(), err, "Config should be loaded successfully")
+	}
+	cfg := config.ServicePlatform.Get()
 
 	// For integration tests, assume server is running
 	host := cfg.Whatsnyan.GRPCHost

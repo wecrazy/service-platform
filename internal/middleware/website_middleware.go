@@ -431,7 +431,7 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			return
 		}
 
-		loginTime := config.GetConfig().App.LoginTimeM
+		loginTime := config.ServicePlatform.Get().App.LoginTimeM
 		if loginTime == 0 {
 			loginTime = 15 // Default to 15 minutes if parsing or env is not set
 		}
@@ -533,7 +533,7 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		// Compare the access value with the data from Redis
 		if data != access {
-			if config.GetConfig().App.Debug {
+			if config.ServicePlatform.Get().App.Debug {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Access not allowed coz %s != %s", data, access)})
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Access not allowed"})

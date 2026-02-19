@@ -41,7 +41,7 @@ func GetSortedMigrations() []*Migration {
 
 // createMigrationsTable creates the schema_migrations table if it doesn't exist
 func createMigrationsTable(db *gorm.DB) error {
-	dbType := config.GetConfig().Database.Type
+	dbType := config.ServicePlatform.Get().Database.Type
 	switch strings.ToLower(dbType) {
 	case "postgres", "postgresql":
 		return db.Exec(`

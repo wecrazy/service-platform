@@ -30,5 +30,5 @@ type WhatsAppMsg struct {
 }
 
 func (WhatsAppMsg) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBWhatsnyanMessage
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBWhatsnyanMessage
 }

@@ -24,7 +24,7 @@ fi
 echo "🔧 Using configuration: $CONFIG_MODE"
 
 # Load monitoring config from appropriate file
-CONFIG_FILE="${PROJECT_ROOT}/internal/config/config.${CONFIG_MODE}.yaml"
+CONFIG_FILE="${PROJECT_ROOT}/internal/config/service-platform.${CONFIG_MODE}.yaml"
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "❌ Config file not found: $CONFIG_FILE"
     exit 1

@@ -24,5 +24,5 @@ type AppConfig struct {
 }
 
 func (AppConfig) TableName() string {
-	return config.GetConfig().Database.TbWebAppConfig
+	return config.ServicePlatform.Get().Database.TbWebAppConfig
 }

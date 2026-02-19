@@ -247,7 +247,6 @@ docs-serve:
 clean-dashboard:
 	./scripts/remove_table_for_renew_dashboard.sh
 
-# Configuration
 config-dev:
 	@./scripts/switch_config.sh dev
 

@@ -49,5 +49,5 @@ type TelegramUsers struct {
 }
 
 func (TelegramUsers) TableName() string {
-	return config.GetConfig().Telegram.Tables.TBTelegramUser
+	return config.ServicePlatform.Get().Telegram.Tables.TBTelegramUser
 }
