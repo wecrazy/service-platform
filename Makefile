@@ -1,10 +1,13 @@
-.PHONY: run-api run-wa run-telegram run-scheduler run-grpc run-all build build-api build-wa build-telegram build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all mongo-up mongo-down mongo-logs mongo-status test test-mongo help
+.PHONY: run-api run-wa run-twilio-whatsapp run-telegram run-scheduler run-grpc run-all build build-api build-wa build-twilio-whatsapp build-telegram build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all mongo-up mongo-down mongo-logs mongo-status test test-twilio test-twilio-sandbox test-mongo help
 
 run-api:
 	go run cmd/api/main.go
 
 run-wa:
 	go run cmd/whatsapp/main.go
+
+run-twilio-whatsapp:
+	go run cmd/twilio/whatsapp/main.go
 
 run-telegram:
 	go run cmd/telegram/main.go
@@ -22,6 +25,10 @@ build-api:
 build-wa:
 	mkdir -p bin
 	go build -o bin/wa cmd/whatsapp/main.go
+
+build-twilio-whatsapp:
+	mkdir -p bin
+	go build -o bin/twilio-whatsapp cmd/twilio/whatsapp/main.go
 
 build-telegram:
 	mkdir -p bin
@@ -43,10 +50,18 @@ build-n8n:
 	mkdir -p bin
 	go build -o bin/n8n cmd/n8n/main.go
 
-build: build-api build-wa build-grpc build-monitoring build-n8n
+build: build-api build-wa build-twilio-whatsapp build-grpc build-monitoring build-n8n
 
 test:
 	go test -v -cover ./tests/... ./internal/migrations/...
+
+test-twilio:
+	@echo "🧪 Running Twilio WhatsApp tests..."
+	@go test -v -cover ./tests/twilio/...
+
+test-twilio-sandbox:
+	@echo "🧪 Testing Twilio WhatsApp Sandbox connectivity..."
+	@bash scripts/test-twilio-whatsapp.sh
 
 test-mongo:
 	@echo "🧪 Running MongoDB tests..."
@@ -203,6 +218,13 @@ proto-gen: install-protoc-gen
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		proto/telegram.proto
+	@echo "⛓️  Generating code for twilio_whatsapp.proto"
+	@GOBIN=$$(go env GOPATH)/bin; \
+	protoc --plugin=protoc-gen-go="$$GOBIN/protoc-gen-go" \
+		--plugin=protoc-gen-go-grpc="$$GOBIN/protoc-gen-go-grpc" \
+		--go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		proto/twilio_whatsapp.proto
 	@echo "✅ gRPC code generation complete"
 
 # Documentation
@@ -423,7 +445,8 @@ help:
 	@echo "  make build-api            			- Build API service"
 	@echo "  make build-grpc         			- Build gRPC service"
 	@echo "  make build-scheduler   			- Build scheduler service"
-	@echo "  make build-wa           			- Build WhatsApp service"
+	@echo "  make build-wa           			- Build WhatsApp service (whatsmeow)"
+	@echo "  make build-twilio-whatsapp         		- Build Twilio WhatsApp service"
 	@echo "  make build-telegram      			- Build Telegram service"
 	@echo "  make build-monitoring   			- Build monitoring service"
 	@echo "  make build             			- Build all services"
@@ -432,7 +455,8 @@ help:
 	@echo "  make run-api            			- Run API service"
 	@echo "  make run-grpc           			- Run gRPC service"
 	@echo "  make run-scheduler      			- Run scheduler service"
-	@echo "  make run-wa             			- Run WhatsApp service"
+	@echo "  make run-wa             			- Run WhatsApp service (whatsmeow)"
+	@echo "  make run-twilio-whatsapp         		- Run Twilio WhatsApp service"
 	@echo "  make run-telegram         			- Run Telegram service"
 	@echo "  make run-all            			- Run all services"
 	@echo ""
@@ -496,9 +520,16 @@ help:
 	@echo "  make tempo-test         			- Test Tempo tracing setup"
 	@echo "  make observability-verify 			- Verify observability stack (logs, tracing, metrics)"
 	@echo "  make health-check-all   			- Run comprehensive health check for all services"
+	@echo ""
+	@echo "🧪 Testing Commands:"
+	@echo "  make test               			- Run all tests (unit, integration, migrations)"
+	@echo "  make test-twilio        			- Run Twilio WhatsApp service tests"
+	@echo "  make test-twilio-sandbox 			- Test Twilio WhatsApp Sandbox connectivity"
+	@echo "  make test-mongo         			- Run MongoDB-specific tests"
+	@echo ""
+	@echo "🗄️  MongoDB Commands:"
 	@echo "  make mongo-up            			- Start MongoDB container"
 	@echo "  make mongo-down          			- Stop MongoDB container"
 	@echo "  make mongo-logs          			- View MongoDB logs"
 	@echo "  make mongo-status        			- Check MongoDB container status"
 	@echo "  make mongo-check         			- Check MongoDB and MongoExpress accessibility"
-	@echo "  make test-mongo          			- Run MongoDB-specific tests"
