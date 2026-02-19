@@ -114,7 +114,27 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [api, wa, grpc, scheduler, monitoring, n8n]
+        include:
+          - service: api
+            path: ./cmd/api
+          - service: whatsapp
+            path: ./cmd/whatsapp
+          - service: grpc
+            path: ./cmd/grpc
+          - service: scheduler
+            path: ./cmd/scheduler
+          - service: monitoring
+            path: ./cmd/monitoring
+          - service: n8n
+            path: ./cmd/n8n
+          - service: telegram
+            path: ./cmd/telegram
+          - service: migrate
+            path: ./cmd/migrate
+          - service: seed
+            path: ./cmd/seed
+          - service: twilio-whatsapp
+            path: ./cmd/twilio/whatsapp
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -128,7 +148,7 @@ jobs:
       - name: Build ${{ matrix.service }}
         run: |
           mkdir -p bin
-          go build -v -o bin/${{ matrix.service }} cmd/${{ matrix.service }}/main.go
+          go build -v -o bin/${{ matrix.service }} ${{ matrix.path }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
