@@ -51,6 +51,7 @@ type server struct {
 	db                                    *gorm.DB             // Database connection
 	rdb                                   *redis.Client        // Redis client
 	pairingAttempts                       map[string]time.Time // Track pairing attempts by phone number
+	lastBatteryLevel                      int32                // Track last battery level from WhatsApp events
 }
 
 // SendMessage sends a WhatsApp message to a specified recipient.
@@ -394,11 +395,8 @@ func (s *server) initializeClient() error {
 		return nil
 	}
 
-	// Load config
-	if err := config.LoadConfig(); err != nil {
-		return fmt.Errorf("failed to load config: %v", err)
-	}
-	cfg := config.GetConfig()
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	cfg := config.ServicePlatform.Get()
 
 	// Build PostgreSQL DSN
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
@@ -443,8 +441,8 @@ func (s *server) initializeClient() error {
 	fmt.Println("💾 Redis initialized @", fmt.Sprintf("%s:%d", redisHost, cfg.Redis.Port))
 
 	// Create a logger that writes to stdout
-	dbLevel := logger.ParseWhatsmeowLogLevel(config.GetConfig().Whatsnyan.DBLogLevel)
-	clientLevel := logger.ParseWhatsmeowLogLevel(config.GetConfig().Whatsnyan.ClientLogLevel)
+	dbLevel := logger.ParseWhatsmeowLogLevel(config.ServicePlatform.Get().Whatsnyan.DBLogLevel)
+	clientLevel := logger.ParseWhatsmeowLogLevel(config.ServicePlatform.Get().Whatsnyan.ClientLogLevel)
 	logDir, err := fun.FindValidDirectory([]string{
 		"log",
 		"../log",
@@ -454,8 +452,8 @@ func (s *server) initializeClient() error {
 	if err != nil {
 		return fmt.Errorf("failed to find log directory: %v", err)
 	}
-	dbLogFile := filepath.Join(logDir, config.GetConfig().Whatsnyan.DBLog)
-	clientLogFile := filepath.Join(logDir, config.GetConfig().Whatsnyan.ClientLog)
+	dbLogFile := filepath.Join(logDir, config.ServicePlatform.Get().Whatsnyan.DBLog)
+	clientLogFile := filepath.Join(logDir, config.ServicePlatform.Get().Whatsnyan.ClientLog)
 
 	dbLogger := logger.NewWhatsmeowLogger("Database", dbLogFile, dbLevel)
 	clientLogger := logger.NewWhatsmeowLogger("Client", clientLogFile, clientLevel)
@@ -518,11 +516,11 @@ func (s *server) Connect(ctx context.Context, req *pb.ConnectRequest) (*pb.Conne
 
 	// Check if phone pairing is requested (config must enable it)
 	// If enable_phone_pairing is false, always use QR code
-	enablePhonePairing := config.GetConfig().Whatsnyan.EnablePhonePairing
-	usePhonePairing := enablePhonePairing && (req.PhoneNumber != "" || config.GetConfig().Whatsnyan.PairingPhoneNumber != "")
+	enablePhonePairing := config.ServicePlatform.Get().Whatsnyan.EnablePhonePairing
+	usePhonePairing := enablePhonePairing && (req.PhoneNumber != "" || config.ServicePlatform.Get().Whatsnyan.PairingPhoneNumber != "")
 	pairingPhone := req.PhoneNumber
 	if pairingPhone == "" && enablePhonePairing {
-		pairingPhone = config.GetConfig().Whatsnyan.PairingPhoneNumber
+		pairingPhone = config.ServicePlatform.Get().Whatsnyan.PairingPhoneNumber
 	}
 
 	if usePhonePairing && pairingPhone != "" {
@@ -671,7 +669,7 @@ func (s *server) Connect(ctx context.Context, req *pb.ConnectRequest) (*pb.Conne
 			if err != nil {
 				return &pb.ConnectResponse{Success: false, Message: fmt.Sprintf("Failed to find web directory: %v", err)}, nil
 			}
-			logoPath := config.GetConfig().App.LogoJPG
+			logoPath := config.ServicePlatform.Get().App.LogoJPG
 			if logoPath == "" {
 				return &pb.ConnectResponse{Success: false, Message: "Logo path is not configured"}, nil
 			}
@@ -880,6 +878,15 @@ func (s *server) GetMe(ctx context.Context, req *pb.GetMeRequest) (*pb.GetMeResp
 		}
 	}
 
+	// Get battery percentage
+	// Note: Battery info comes from WhatsApp server updates
+	// Battery is tracked by listening to BatteryEvent in event handlers
+	// For now, return 0 if not available (implement battery tracking in event handler)
+	batteryLevel := int32(0)
+	if s.lastBatteryLevel > 0 {
+		batteryLevel = s.lastBatteryLevel
+	}
+
 	return &pb.GetMeResponse{
 		Success:       true,
 		Message:       "User info retrieved successfully",
@@ -889,6 +896,7 @@ func (s *server) GetMe(ctx context.Context, req *pb.GetMeRequest) (*pb.GetMeResp
 		ProfilePicUrl: profilePicURL,
 		Device:        device,
 		Platform:      platform,
+		Battery:       batteryLevel,
 	}, nil
 }
 
@@ -1281,6 +1289,11 @@ func (s *server) eventHandler(evt interface{}) {
 		jid := s.client.Store.ID.User
 		logrus.Warnf("Received LoggedOut 🏃🏻 event for %s", jid)
 		// whatsmeow automatically deletes the device from the store on LoggedOut
+	// // Note: ADD the events battery that get from whatsmeow if exists! To trace the battery percentage
+	// case *events.Battery:
+	// 	// Track battery level from WhatsApp device
+	// 	s.lastBatteryLevel = int32(v.Level)
+	// 	logrus.Debugf("🔋 Battery level updated: %d%%", v.Level)
 	case *events.Receipt:
 		for _, msgID := range v.MessageIDs {
 			if string(v.Type) != "" {
@@ -1303,13 +1316,13 @@ func (s *server) eventHandler(evt interface{}) {
 		} else {
 			sanitizedPhone, err := fun.SanitizeIndonesiaPhoneNumber(phoneNumber)
 			if err == nil {
-				phoneNumber = config.GetConfig().Default.DialingCodeDefault + sanitizedPhone
+				phoneNumber = config.ServicePlatform.Get().Default.DialingCodeDefault + sanitizedPhone
 			} else {
 				logrus.Errorf("Failed to sanitize phone number %s: %v", phoneNumber, err)
 			}
 		}
 
-		if config.GetConfig().Whatsnyan.NeedVerifyAccount {
+		if config.ServicePlatform.Get().Whatsnyan.NeedVerifyAccount {
 			callReject := true
 			var waUser model.WAUsers
 			if err := s.db.Where("phone_number = ?", phoneNumber).First(&waUser).Error; err == nil {
@@ -1325,34 +1338,34 @@ func (s *server) eventHandler(evt interface{}) {
 
 				langMessages := make(map[string]string)
 				langMessages[fun.LangID] = fmt.Sprintf("📞❌ Maaf, nomor *%s* tidak diizinkan untuk melakukan panggilan ke WhatsApp ini.\n\nApabila ada kendala, Anda bisa menghubungi layanan bantuan teknis kami di nomor berikut: +%s. Terima kasih. 🙏",
-					phoneNumber, config.GetConfig().Whatsnyan.WATechnicalSupport)
+					phoneNumber, config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 				langMessages[fun.LangEN] = fmt.Sprintf("📞❌ Sorry, the number *%s* is not allowed to make calls to this WhatsApp.\n\nIf you have any issues, you can contact our technical support service at the following number: +%s. Thank you. 🙏",
-					phoneNumber, config.GetConfig().Whatsnyan.WATechnicalSupport)
+					phoneNumber, config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 				langMessages[fun.LangES] = fmt.Sprintf("📞❌ Lo sentimos, el número *%s* no tiene permitido llamar a este WhatsApp.\n\nSi tienes algún inconveniente, puedes contactar a nuestro servicio de soporte técnico al siguiente número: +%s. Gracias. 🙏",
-					phoneNumber, config.GetConfig().Whatsnyan.WATechnicalSupport)
+					phoneNumber, config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 				langMessages[fun.LangFR] = fmt.Sprintf("📞❌ Désolé, le numéro *%s* n'est pas autorisé à appeler ce WhatsApp.\n\nEn cas de problème, vous pouvez contacter notre support technique au numéro suivant : +%s. Merci. 🙏",
-					phoneNumber, config.GetConfig().Whatsnyan.WATechnicalSupport)
+					phoneNumber, config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 				langMessages[fun.LangDE] = fmt.Sprintf("📞❌ Entschuldigung, die Nummer *%s* darf diesen WhatsApp-Account nicht anrufen.\n\nBei Problemen können Sie unseren technischen Support unter folgender Nummer kontaktieren: +%s. Vielen Dank. 🙏",
-					phoneNumber, config.GetConfig().Whatsnyan.WATechnicalSupport)
+					phoneNumber, config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 				langMessages[fun.LangPT] = fmt.Sprintf("📞❌ Desculpe, o número *%s* não está autorizado a fazer chamadas para este WhatsApp.\n\nSe tiver algum problema, você pode contatar nosso suporte técnico pelo seguinte número: +%s. Obrigado. 🙏",
-					phoneNumber, config.GetConfig().Whatsnyan.WATechnicalSupport)
+					phoneNumber, config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 				langMessages[fun.LangAR] = fmt.Sprintf("📞❌ عذرًا، الرقم *%s* غير مسموح له بإجراء مكالمات إلى هذا الواتساب.\n\nإذا واجهت أي مشكلة، يمكنك التواصل مع الدعم الفني عبر الرقم التالي: +%s. شكرًا لك. 🙏",
-					phoneNumber, config.GetConfig().Whatsnyan.WATechnicalSupport)
+					phoneNumber, config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 				langMessages[fun.LangJP] = fmt.Sprintf("📞❌ 申し訳ありませんが、番号 *%s* はこのWhatsAppへの通話が許可されていません。\n\n問題がある場合は、次の番号から技術サポートにお問い合わせください: +%s。ありがとうございます。🙏",
-					phoneNumber, config.GetConfig().Whatsnyan.WATechnicalSupport)
+					phoneNumber, config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 				langMessages[fun.LangCN] = fmt.Sprintf("📞❌ 抱歉，号码 *%s* 不允许拨打此 WhatsApp。\n\n如果您有任何问题，可以联系技术支持：+%s。谢谢。🙏",
-					phoneNumber, config.GetConfig().Whatsnyan.WATechnicalSupport)
+					phoneNumber, config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 				langMessages[fun.LangRU] = fmt.Sprintf("📞❌ Извините, номер *%s* не может совершать звонки на этот WhatsApp.\n\nЕсли у вас возникли проблемы, вы можете связаться с нашей технической поддержкой по номеру: +%s. Спасибо. 🙏",
-					phoneNumber, config.GetConfig().Whatsnyan.WATechnicalSupport)
+					phoneNumber, config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
 				lang := controllers.NewLanguageMsgTranslation(fun.DefaultLang)
 				lang.Texts = langMessages
@@ -1391,7 +1404,7 @@ func (s *server) eventHandler(evt interface{}) {
 		// 💬 Handle replies
 		if ctxInfo != nil && ctxInfo.QuotedMessage != nil && ctxInfo.StanzaID != nil && *ctxInfo.StanzaID != "" {
 			var replyText string
-			waReplyPublicURL := config.GetConfig().Whatsnyan.WAReplyPublicURL + "/" + time.Now().Format(config.DATE_YYYY_MM_DD)
+			waReplyPublicURL := config.ServicePlatform.Get().Whatsnyan.WAReplyPublicURL + "/" + time.Now().Format(config.DATE_YYYY_MM_DD)
 
 			switch {
 
@@ -1582,7 +1595,7 @@ func (s *server) eventHandler(evt interface{}) {
 
 func (s *server) processIncomingWhatsappMessage(v *events.Message) {
 	// Only process messages sent within the tolerance period to avoid processing old replayed messages
-	toleranceHours := config.GetConfig().Whatsnyan.MessageProcessedToleranceHours
+	toleranceHours := config.ServicePlatform.Get().Whatsnyan.MessageProcessedToleranceHours
 	if toleranceHours <= 0 {
 		toleranceHours = 24 // default to 24 hours
 	}
@@ -1753,7 +1766,7 @@ func (s *server) processIncomingWhatsappMessage(v *events.Message) {
 		}
 
 		if exists == 0 {
-			langPrompt := config.GetConfig().Whatsnyan.LanguagePrompt
+			langPrompt := config.ServicePlatform.Get().Whatsnyan.LanguagePrompt
 			if len(langPrompt) == 0 {
 				return
 			} else {
@@ -1769,7 +1782,7 @@ func (s *server) processIncomingWhatsappMessage(v *events.Message) {
 					lang.LanguageCode,
 					s.client, s.rdb, s.db)
 
-				if err := s.rdb.Set(context.Background(), langPromptKey, "true", time.Duration(config.GetConfig().Whatsnyan.LanguagePromptShownExpiry)*time.Second).Err(); err != nil {
+				if err := s.rdb.Set(context.Background(), langPromptKey, "true", time.Duration(config.ServicePlatform.Get().Whatsnyan.LanguagePromptShownExpiry)*time.Second).Err(); err != nil {
 					logrus.Errorf("Failed to set language prompt key: %v", err)
 					return
 				}
@@ -1778,7 +1791,7 @@ func (s *server) processIncomingWhatsappMessage(v *events.Message) {
 	}
 
 	// Processing messages if sender user is verified
-	allowedWAG := config.GetConfig().Whatsnyan.WAGAllowedToInteract
+	allowedWAG := config.ServicePlatform.Get().Whatsnyan.WAGAllowedToInteract
 
 	/* WhatsApp Group Chat */
 	if len(allowedWAG) > 0 {
@@ -1796,7 +1809,7 @@ func (s *server) processIncomingWhatsappMessage(v *events.Message) {
 	var userSanitizeResult *model.WAUsers
 	var shouldProcess bool = true
 
-	if config.GetConfig().Whatsnyan.NeedVerifyAccount {
+	if config.ServicePlatform.Get().Whatsnyan.NeedVerifyAccount {
 		/* WhatSapp Direct Chat */
 
 		// logrus.Debugf("Verifying user %s (JID: %s)...", senderPhoneNumber, originalSenderJID)
@@ -1935,9 +1948,9 @@ func (s *server) processIncomingWhatsappMessage(v *events.Message) {
 					// Get file permission rule for validation
 					fileRules := map[string]controllers.FilePermissionRule{
 						"document": {
-							MaxFileSizeBytes:  int64(config.GetConfig().Whatsnyan.Files.Document.MaxSize) * 1024 * 1024, // max size in MB converted to bytes
-							AllowedExtensions: config.GetConfig().Whatsnyan.Files.Document.AllowedExtensions,            // e.g. []string{".pdf", ".doc", ".docx", ".txt", ".zip"}
-							AllowedMimeTypes:  config.GetConfig().Whatsnyan.Files.Document.AllowedMimeTypes,             // e.g. []string{"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "application/zip"
+							MaxFileSizeBytes:  int64(config.ServicePlatform.Get().Whatsnyan.Files.Document.MaxSize) * 1024 * 1024, // max size in MB converted to bytes
+							AllowedExtensions: config.ServicePlatform.Get().Whatsnyan.Files.Document.AllowedExtensions,            // e.g. []string{".pdf", ".doc", ".docx", ".txt", ".zip"}
+							AllowedMimeTypes:  config.ServicePlatform.Get().Whatsnyan.Files.Document.AllowedMimeTypes,             // e.g. []string{"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "application/zip"
 						},
 					}
 
@@ -1997,12 +2010,10 @@ func (s *server) processIncomingWhatsappMessage(v *events.Message) {
 
 // main is the entry point for the WhatsApp microservice.
 func main() {
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	go config.ServicePlatform.Watch()
 
-	go config.WatchConfig()
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	logger.InitLogrus()
 
@@ -2046,7 +2057,7 @@ func main() {
 					logrus.Info("📲 Enter this code in WhatsApp: Settings > Linked Devices > Link a Device > Link with Phone Number")
 
 					// Notify superuser with pairing code
-					if suPhoneNumber := config.GetConfig().Default.SuperUserPhone; suPhoneNumber != "" {
+					if suPhoneNumber := config.ServicePlatform.Get().Default.SuperUserPhone; suPhoneNumber != "" {
 						// Wrap in panic recovery
 						func() {
 							defer func() {
@@ -2090,7 +2101,7 @@ func main() {
 	// Start metrics server
 	go func() {
 		http.Handle("/whatsapp-metrics", promhttp.Handler())
-		metricsPort := config.GetConfig().Metrics.WhatsAppPort
+		metricsPort := config.ServicePlatform.Get().Metrics.WhatsAppPort
 		logrus.Printf("📊 Metrics server listening on :%d", metricsPort)
 		logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", metricsPort), nil))
 	}()
@@ -2113,7 +2124,7 @@ func main() {
 			time.Sleep(1 * time.Second)
 		}
 
-		suPhoneNumber := config.GetConfig().Default.SuperUserPhone
+		suPhoneNumber := config.ServicePlatform.Get().Default.SuperUserPhone
 		if suPhoneNumber != "" && srv.client != nil && srv.client.IsConnected() && srv.rdb != nil && srv.db != nil {
 			jidStr := fmt.Sprintf("%s@%s", suPhoneNumber, types.DefaultUserServer)
 			langMsg := controllers.NewLanguageMsgTranslation(fun.DefaultLang)
@@ -2144,7 +2155,7 @@ func main() {
 		logrus.Info("🔴 Shutting down WhatsApp gRPC server...")
 
 		// Inform superuser about shutdown (with error recovery)
-		suPhoneNumber := config.GetConfig().Default.SuperUserPhone
+		suPhoneNumber := config.ServicePlatform.Get().Default.SuperUserPhone
 		if suPhoneNumber != "" && srv.client != nil && srv.client.IsConnected() && srv.rdb != nil && srv.db != nil {
 			// Wrap in defer to recover from any panic during shutdown
 			func() {

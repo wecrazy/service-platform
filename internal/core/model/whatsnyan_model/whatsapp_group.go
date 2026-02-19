@@ -24,7 +24,7 @@ type WhatsAppGroup struct {
 
 // TableName overrides the table name used by User to `whatsapp_groups`.
 func (WhatsAppGroup) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBWhatsnyanGroup
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBWhatsnyanGroup
 }
 
 // WhatsAppGroupParticipant represents a participant in a WhatsApp group.
@@ -44,5 +44,5 @@ type WhatsAppGroupParticipant struct {
 
 // TableName overrides the table name used by User to `whatsapp_group_participants`.
 func (WhatsAppGroupParticipant) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBWhatsnyanGroupParticipant
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBWhatsnyanGroupParticipant
 }

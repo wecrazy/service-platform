@@ -11,7 +11,7 @@ import (
 
 // TableExists checks if a table exists in the database
 func TableExists(db *gorm.DB, tableName string) bool {
-	dbType := config.GetConfig().Database.Type
+	dbType := config.ServicePlatform.Get().Database.Type
 	switch strings.ToLower(dbType) {
 	case "postgres", "postgresql":
 		var exists bool

@@ -615,8 +615,8 @@ func GetWhatsAppAutoReplyRules(db *gorm.DB) gin.HandlerFunc {
 		db.Model(&model.WhatsappMessageAutoReply{}).Count(&total)
 
 		// Get table names from config
-		arTable := config.GetConfig().Database.TbWhatsappMessageAutoReply
-		langTable := config.GetConfig().Database.TbLanguage
+		arTable := config.ServicePlatform.Get().Database.TbWhatsappMessageAutoReply
+		langTable := config.ServicePlatform.Get().Database.TbLanguage
 
 		// Get rules with language information
 		result := db.Table(arTable + " as ar").
@@ -716,8 +716,8 @@ func GetWhatsAppAutoReplyRule(db *gorm.DB) gin.HandlerFunc {
 
 		// Now get the rule with language information
 		var rule map[string]interface{}
-		arTable := config.GetConfig().Database.TbWhatsappMessageAutoReply
-		langTable := config.GetConfig().Database.TbLanguage
+		arTable := config.ServicePlatform.Get().Database.TbWhatsappMessageAutoReply
+		langTable := config.ServicePlatform.Get().Database.TbLanguage
 		result := db.Table(arTable+" as ar").
 			Select("ar.id, ar.keywords, ar.reply_text, ar.for_user_type, ar.user_of, ar.language_id, l.name as language, l.code as lang_code").
 			Joins("LEFT JOIN "+langTable+" l ON ar.language_id = l.id").
@@ -926,7 +926,7 @@ func GetWhatsAppContactsCount(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"count":   0, // TODO: Implement actual contacts count from gRPC service
+		"count":   int(hasContactsResp.ContactCount), // Get actual count from gRPC service
 		"message": "Contacts count retrieved",
 	})
 }
@@ -961,7 +961,7 @@ func GetWhatsAppPhoneStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"battery": 0, // TODO: Implement battery level from whatsmeow Store
+		"battery": meResp.Battery, // Battery level from gRPC (0 if not yet tracked)
 		"status":  "Connected",
 		"device":  meResp.Device,
 		"message": "Phone status retrieved",
@@ -980,7 +980,7 @@ func GetWhatsAppLanguages(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var languages []model.Language
 
-		result := db.Table(config.GetConfig().Database.TbLanguage).
+		result := db.Table(config.ServicePlatform.Get().Database.TbLanguage).
 			Select("id, name, code").
 			Order("name ASC").
 			Find(&languages)
@@ -1009,7 +1009,7 @@ func GetWhatsAppLanguagesCount(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var count int64
 
-		db.Table(config.GetConfig().Database.TbLanguage).Count(&count)
+		db.Table(config.ServicePlatform.Get().Database.TbLanguage).Count(&count)
 
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
@@ -1729,7 +1729,7 @@ func ExportWhatsAppUsers(db *gorm.DB) gin.HandlerFunc {
 // @Success      200  {object}   map[string]interface{}
 // @Router       /api/v1/{access}/tab-whatsapp/data-separator [get]
 func GetDataSeparator(c *gin.Context) {
-	separator := config.GetConfig().Default.DataSeparator
+	separator := config.ServicePlatform.Get().Default.DataSeparator
 
 	c.JSON(http.StatusOK, gin.H{
 		"success":   true,

@@ -44,7 +44,7 @@ func HandleTwilioWhatsAppWebhook(db *gorm.DB) gin.HandlerFunc {
 		logrus.Infof("   Body: %s", req.Body)
 		logrus.Infof("   Received at: %s", time.Now().Format(time.RFC3339))
 
-		// TODO: Store message in database
+		// ADD: Store message in database if needed
 		// Example:
 		// incomingMsg := &model.TwilioWhatsAppIncomingMessage{
 		//     MessageSid: req.MessageSid,

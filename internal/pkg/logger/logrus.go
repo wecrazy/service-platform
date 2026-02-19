@@ -17,10 +17,11 @@ import (
 )
 
 var (
-	loggers      = make(map[string]*logrus.Logger)
-	mu           sync.RWMutex
-	fileLoggers  = make(map[string]*lumberjack.Logger)
-	fileLoggerMu sync.RWMutex
+	loggers        = make(map[string]*logrus.Logger)
+	mu             sync.RWMutex
+	fileLoggers    = make(map[string]*lumberjack.Logger)
+	fileLoggerMu   sync.RWMutex
+	initLogrusOnce sync.Once
 )
 
 // DynamicFileHook routes logs to different files based on caller
@@ -43,7 +44,7 @@ func (hook *DynamicFileHook) Fire(entry *logrus.Entry) error {
 
 	// Format the entry
 	formatter := &CSVFormatter{
-		TimestampFormat: config.GetConfig().Default.CSVTimestampFormat,
+		TimestampFormat: config.ServicePlatform.Get().Default.CSVTimestampFormat,
 	}
 	serialized, err := formatter.Format(entry)
 	if err != nil {
@@ -75,7 +76,7 @@ func getOrCreateFileLogger(logFileName string) *lumberjack.Logger {
 		return logger
 	}
 
-	appLogDir := config.GetConfig().App.LogDir
+	appLogDir := config.ServicePlatform.Get().App.LogDir
 	// Resolve absolute path for log directory
 	if resolvedDir, err := fun.GetLogDir(appLogDir); err == nil {
 		appLogDir = resolvedDir
@@ -91,10 +92,10 @@ func getOrCreateFileLogger(logFileName string) *lumberjack.Logger {
 	logPath := filepath.Join(appLogDir, logFileName)
 	fileLogger := &lumberjack.Logger{
 		Filename:   logPath,
-		MaxSize:    config.GetConfig().Default.LogMaxSize,
-		MaxAge:     config.GetConfig().Default.LogMaxAge,
-		MaxBackups: config.GetConfig().Default.LogMaxBackups,
-		Compress:   config.GetConfig().Default.LogCompress,
+		MaxSize:    config.ServicePlatform.Get().Default.LogMaxSize,
+		MaxAge:     config.ServicePlatform.Get().Default.LogMaxAge,
+		MaxBackups: config.ServicePlatform.Get().Default.LogMaxBackups,
+		Compress:   config.ServicePlatform.Get().Default.LogCompress,
 	}
 
 	fileLoggers[logFileName] = fileLogger
@@ -157,53 +158,56 @@ func (f *CSVFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 // Logs from each file automatically go to their own log file
 // Example: logs from scheduler.go → scheduler.log, main.go → main.log
 // Also initializes Loki hook if enabled for centralized log aggregation
+// NOTE: Uses sync.Once to ensure it only runs ONCE globally (safe to call multiple times)
 func InitLogrus() {
-	logLevel := config.GetConfig().App.LogLevel
-	switch strings.ToLower(logLevel) {
-	case "panic":
-		logrus.SetLevel(logrus.PanicLevel)
-	case "fatal":
-		logrus.SetLevel(logrus.FatalLevel)
-	case "error":
-		logrus.SetLevel(logrus.ErrorLevel)
-	case "warn", "warning":
-		logrus.SetLevel(logrus.WarnLevel)
-	case "info":
-		logrus.SetLevel(logrus.InfoLevel)
-	case "debug":
-		logrus.SetLevel(logrus.DebugLevel)
-	case "trace":
-		logrus.SetLevel(logrus.TraceLevel)
-	default:
-		logrus.SetLevel(logrus.TraceLevel)
-	}
+	initLogrusOnce.Do(func() {
+		logLevel := config.ServicePlatform.Get().App.LogLevel
+		switch strings.ToLower(logLevel) {
+		case "panic":
+			logrus.SetLevel(logrus.PanicLevel)
+		case "fatal":
+			logrus.SetLevel(logrus.FatalLevel)
+		case "error":
+			logrus.SetLevel(logrus.ErrorLevel)
+		case "warn", "warning":
+			logrus.SetLevel(logrus.WarnLevel)
+		case "info":
+			logrus.SetLevel(logrus.InfoLevel)
+		case "debug":
+			logrus.SetLevel(logrus.DebugLevel)
+		case "trace":
+			logrus.SetLevel(logrus.TraceLevel)
+		default:
+			logrus.SetLevel(logrus.TraceLevel)
+		}
 
-	// Set report caller to true so we can detect the calling file
-	logrus.SetReportCaller(true)
+		// Set report caller to true so we can detect the calling file
+		logrus.SetReportCaller(true)
 
-	// Add the dynamic file hook (local file logging)
-	logrus.AddHook(&DynamicFileHook{})
+		// Add the dynamic file hook (local file logging)
+		logrus.AddHook(&DynamicFileHook{})
 
-	// Initialize Loki hook (centralized logging) if enabled
-	lokiHook, err := InitLokiHook()
-	if err != nil {
-		log.Printf("⚠️ Loki hook initialization failed: %v", err)
-	} else if lokiHook != nil {
-		logrus.AddHook(lokiHook)
-		log.Printf("✅ Loki hook added to logger pipeline")
-	}
+		// Initialize Loki hook (centralized logging) if enabled
+		lokiHook, err := InitLokiHook()
+		if err != nil {
+			log.Printf("⚠️ Loki hook initialization failed: %v", err)
+		} else if lokiHook != nil {
+			logrus.AddHook(lokiHook)
+			log.Printf("✅ Loki hook added to logger pipeline")
+		}
 
-	// Set a no-op formatter since the hook handles formatting
-	logrus.SetFormatter(&logrus.TextFormatter{
-		DisableColors:          true,
-		DisableTimestamp:       true,
-		DisableLevelTruncation: true,
+		// Set a no-op formatter since the hook handles formatting
+		logrus.SetFormatter(&logrus.TextFormatter{
+			DisableColors:          true,
+			DisableTimestamp:       true,
+			DisableLevelTruncation: true,
+		})
+
+		// Discard default output since we're writing via hooks
+		logrus.SetOutput(io.Discard) // No terminal output, only file logs and Loki
+
+		logrus.Info("🟢 Dynamic logger initialized successfully with Loki support")
 	})
-
-	// Discard default output since we're writing via hooks
-	logrus.SetOutput(io.Discard) // No terminal output, only file logs and Loki
-
-	logrus.Info("🟢 Dynamic logger initialized successfully with Loki support")
 }
 
 // GetLoggerForFile returns a logger instance configured for a specific file
@@ -228,7 +232,7 @@ func GetLoggerForFile(logFileName string) *logrus.Logger {
 
 	logger := logrus.New()
 
-	appLogDir := config.GetConfig().App.LogDir
+	appLogDir := config.ServicePlatform.Get().App.LogDir
 	// Resolve absolute path for log directory
 	if resolvedDir, err := fun.GetLogDir(appLogDir); err == nil {
 		appLogDir = resolvedDir
@@ -243,7 +247,7 @@ func GetLoggerForFile(logFileName string) *logrus.Logger {
 	logPath := filepath.Join(appLogDir, logFileName)
 
 	// Apply same configuration as main logger
-	logLevel := config.GetConfig().App.LogLevel
+	logLevel := config.ServicePlatform.Get().App.LogLevel
 	switch strings.ToLower(logLevel) {
 	case "panic":
 		logger.SetLevel(logrus.PanicLevel)
@@ -263,7 +267,7 @@ func GetLoggerForFile(logFileName string) *logrus.Logger {
 		logger.SetLevel(logrus.TraceLevel)
 	}
 
-	logFormat := config.GetConfig().App.LogFormat
+	logFormat := config.ServicePlatform.Get().App.LogFormat
 	switch strings.ToLower(logFormat) {
 	case "text":
 		logger.SetFormatter(&logrus.TextFormatter{
@@ -279,10 +283,10 @@ func GetLoggerForFile(logFileName string) *logrus.Logger {
 
 	logger.SetOutput(&lumberjack.Logger{
 		Filename:   logPath,
-		MaxSize:    config.GetConfig().Default.LogMaxSize,
-		MaxAge:     config.GetConfig().Default.LogMaxAge,
-		MaxBackups: config.GetConfig().Default.LogMaxBackups,
-		Compress:   config.GetConfig().Default.LogCompress,
+		MaxSize:    config.ServicePlatform.Get().Default.LogMaxSize,
+		MaxAge:     config.ServicePlatform.Get().Default.LogMaxAge,
+		MaxBackups: config.ServicePlatform.Get().Default.LogMaxBackups,
+		Compress:   config.ServicePlatform.Get().Default.LogCompress,
 	})
 	logger.SetReportCaller(true)
 
@@ -296,7 +300,7 @@ func GetLoggerForFile(logFileName string) *logrus.Logger {
 // Example: GetLogger("main") returns logger writing to main.log
 func GetLogger(name string) *logrus.Logger {
 	if name == "" {
-		name = strings.TrimSuffix(config.GetConfig().App.SystemLogFilename, ".log")
+		name = strings.TrimSuffix(config.ServicePlatform.Get().App.SystemLogFilename, ".log")
 	}
 
 	logFileName := name

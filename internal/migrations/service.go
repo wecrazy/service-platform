@@ -13,13 +13,13 @@ import (
 // MigrationService provides database migration functionality with dependency injection.
 // It encapsulates all migration operations and uses injected dependencies instead of global state.
 type MigrationService struct {
-	db     *gorm.DB          // Database connection
-	config config.YamlConfig // Application configuration
-	logger *logrus.Logger    // Logger instance
+	db     *gorm.DB                   // Database connection
+	config config.TypeServicePlatform // Application configuration
+	logger *logrus.Logger             // Logger instance
 }
 
 // NewMigrationService creates a new MigrationService with injected dependencies.
-func NewMigrationService(db *gorm.DB, cfg config.YamlConfig, logger *logrus.Logger) *MigrationService {
+func NewMigrationService(db *gorm.DB, cfg config.TypeServicePlatform, logger *logrus.Logger) *MigrationService {
 	return &MigrationService{
 		db:     db,
 		config: cfg,

@@ -504,12 +504,10 @@ func (s *server) SendVideo(ctx context.Context, req *pb.SendTelegramVideoRequest
 }
 
 func main() {
-	// Load config
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Error loading .yaml conf :%v", err)
-	}
-	go config.WatchConfig()
-	cfg := config.GetConfig()
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	go config.ServicePlatform.Watch()
+
+	cfg := config.ServicePlatform.Get()
 
 	// Initialize logger
 	logger.InitLogrus()

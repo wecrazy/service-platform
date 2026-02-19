@@ -697,7 +697,9 @@ type GetMeResponse struct {
 	// Device information.
 	Device string `protobuf:"bytes,7,opt,name=device,proto3" json:"device,omitempty"`
 	// Platform (e.g., android, iphone, web).
-	Platform      string `protobuf:"bytes,8,opt,name=platform,proto3" json:"platform,omitempty"`
+	Platform string `protobuf:"bytes,8,opt,name=platform,proto3" json:"platform,omitempty"`
+	// Battery percentage (0-100). 0 if not available.
+	Battery       int32 `protobuf:"varint,9,opt,name=battery,proto3" json:"battery,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -786,6 +788,13 @@ func (x *GetMeResponse) GetPlatform() string {
 		return x.Platform
 	}
 	return ""
+}
+
+func (x *GetMeResponse) GetBattery() int32 {
+	if x != nil {
+		return x.Battery
+	}
+	return 0
 }
 
 // GetGroupInfoRequest is the request to get info about a specific group.
@@ -2762,7 +2771,7 @@ const file_proto_whatsapp_proto_rawDesc = "" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x10\n" +
 	"\x03jid\x18\x02 \x01(\tR\x03jid\x12#\n" +
 	"\ris_registered\x18\x03 \x01(\bR\fisRegistered\"\x0e\n" +
-	"\fGetMeRequest\"\xe8\x01\n" +
+	"\fGetMeRequest\"\x82\x02\n" +
 	"\rGetMeResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12\x10\n" +
@@ -2771,7 +2780,8 @@ const file_proto_whatsapp_proto_rawDesc = "" +
 	"\x04name\x18\x05 \x01(\tR\x04name\x12&\n" +
 	"\x0fprofile_pic_url\x18\x06 \x01(\tR\rprofilePicUrl\x12\x16\n" +
 	"\x06device\x18\a \x01(\tR\x06device\x12\x1a\n" +
-	"\bplatform\x18\b \x01(\tR\bplatform\"2\n" +
+	"\bplatform\x18\b \x01(\tR\bplatform\x12\x18\n" +
+	"\abattery\x18\t \x01(\x05R\abattery\"2\n" +
 	"\x13GetGroupInfoRequest\x12\x1b\n" +
 	"\tgroup_jid\x18\x01 \x01(\tR\bgroupJid\"\x8f\x04\n" +
 	"\x14GetGroupInfoResponse\x12\x18\n" +

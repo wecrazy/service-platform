@@ -41,7 +41,7 @@ func InitLokiHook() (*LokiHook, error) {
 	lokiHookMutex.Lock()
 	defer lokiHookMutex.Unlock()
 
-	cfg := config.GetConfig()
+	cfg := config.ServicePlatform.Get()
 
 	// Check if Loki is enabled
 	if !cfg.Observability.Loki.Enabled {

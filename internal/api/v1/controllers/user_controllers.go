@@ -77,7 +77,7 @@ func GetUserProfile(db *gorm.DB) gin.HandlerFunc {
 				"../" + user.ProfileImage,
 				"../../" + user.ProfileImage,
 				"../../../" + user.ProfileImage,
-				config.GetConfig().App.StaticDir + "/" + user.ProfileImage,
+				config.ServicePlatform.Get().App.StaticDir + "/" + user.ProfileImage,
 			}
 			foundPath, err := fun.FindValidFile(dirToSearch)
 			if err != nil {

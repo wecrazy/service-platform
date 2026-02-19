@@ -30,7 +30,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M    # Limit memory usage
+          memory: 256M                          # Limit memory usage
         reservations:
           memory: 128M
 
@@ -98,6 +98,26 @@ services:
         reservations:
           memory: 64M
 
+  # Nginx Prometheus Exporter to expose Nginx metrics
+  nginx-exporter:
+    image: docker.io/nginx/nginx-prometheus-exporter:latest
+    container_name: service-platform-nginx-exporter
+    ports:
+      - "0.0.0.0:9113:9113"                                 # Prometheus scrape target
+    command:
+      - -nginx.scrape-uri=http://nginx-auth/nginx_status
+    networks:
+      - monitoring
+    depends_on:
+      - nginx-auth
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 32M
+
   grafana:
     image: docker.io/grafana/grafana:latest
     container_name: service-platform-grafana
@@ -126,7 +146,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G    # Limit Grafana memory usage
+          memory: 1G                                    # Limit Grafana memory usage
         reservations:
           memory: 512M
 
@@ -158,10 +178,10 @@ services:
     profiles: ["test"]
     container_name: service-platform-k6
     ports:
-      - "0.0.0.0:${K6_PORT:-6680}:6680"              # k6 REST API and Web UI
+      - "0.0.0.0:${K6_PORT:-6680}:6680"               # k6 REST API and Web UI
     volumes:
-      - ../tests/k6:/scripts:ro               # Mount k6 test scripts (read-only)
-      - k6_results:/results                  # Store test results
+      - ../tests/k6:/scripts:ro                       # Mount k6 test scripts (read-only)
+      - k6_results:/results                           # Store test results
     environment:
       - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
       - K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM=true
@@ -175,10 +195,10 @@ services:
       - WHATSAPP_GRPC_URL=host.containers.internal:50042
       - SCHEDULER_GRPC_URL=host.containers.internal:50043
     extra_hosts:
-      - "host.containers.internal:host-gateway"  # Enable access to host services
+      - "host.containers.internal:host-gateway"       # Enable access to host services
     networks:
       - monitoring
-    restart: "no"  # k6 should run on-demand, not continuously
+    restart: "no"                                     # k6 should run on-demand, not continuously
     deploy:
       resources:
         limits:

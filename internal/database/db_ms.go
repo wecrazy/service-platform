@@ -23,7 +23,7 @@ var (
 
 // InitDBMS initializes the Manage Service MySQL database connection
 func InitDBMS() error {
-	cfg := config.GetConfig()
+	cfg := config.ManageService.Get()
 
 	dbCfgMS := DBConfig{
 		Type:              "MySQL",
@@ -87,7 +87,7 @@ func HealthCheckDBMS() error {
 	return HealthCheckDB(
 		MySQLDBMSMiddleware,
 		"mysql",
-		config.GetConfig().MSMiddleware.MySQLDBName,
+		config.ManageService.Get().MSMiddleware.MySQLDBName,
 	)
 }
 
@@ -111,7 +111,7 @@ func MonitorDBMSConnection(interval time.Duration) {
 
 // InitDBTA initializes the Technical Assistance MySQL database connection
 func InitDBTA() error {
-	cfg := config.GetConfig()
+	cfg := config.ManageService.Get()
 
 	dbCfgTA := DBConfig{
 		Type:              "MySQL",
@@ -175,7 +175,7 @@ func HealthCheckDBTA() error {
 	return HealthCheckDB(
 		MySQLDBTA,
 		"mysql",
-		config.GetConfig().TechnicalAssistance.MySQLDBName,
+		config.ManageService.Get().TechnicalAssistance.MySQLDBName,
 	)
 }
 
@@ -199,7 +199,7 @@ func MonitorDBTAConnection(interval time.Duration) {
 
 // InitDBWebPanel initializes the WebPanel MySQL database connection
 func InitDBWebPanel() error {
-	cfg := config.GetConfig()
+	cfg := config.ManageService.Get()
 
 	dbCfgWebPanel := DBConfig{
 		Type:              "MySQL",
@@ -261,7 +261,7 @@ func HealthCheckDBWebPanel() error {
 	return HealthCheckDB(
 		MySQLDBWebPanel,
 		"mysql",
-		config.GetConfig().WebPanelService.MySQLDBName,
+		config.ManageService.Get().WebPanelService.MySQLDBName,
 	)
 }
 

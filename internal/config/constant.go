@@ -13,5 +13,5 @@ const (
 )
 
 var (
-	ACTIVE_DEBUG = false || GetConfig().App.Debug
+	ACTIVE_DEBUG = false || ServicePlatform.Get().App.Debug
 )

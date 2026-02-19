@@ -46,15 +46,17 @@ func GetWebLogin(db *gorm.DB) gin.HandlerFunc {
 			}
 		}
 
+		yamlCfg := config.ServicePlatform.Get()
+
 		parameters := gin.H{
-			"APP_NAME":         config.GetConfig().App.Name,
-			"APP_LOGO":         config.GetConfig().App.Logo,
-			"APP_VERSION":      config.GetConfig().App.Version,
-			"APP_VERSION_NO":   config.GetConfig().App.VersionNo,
-			"APP_VERSION_CODE": config.GetConfig().App.VersionCode,
-			"APP_VERSION_NAME": config.GetConfig().App.VersionName,
+			"APP_NAME":         yamlCfg.App.Name,
+			"APP_LOGO":         yamlCfg.App.Logo,
+			"APP_VERSION":      yamlCfg.App.Version,
+			"APP_VERSION_NO":   yamlCfg.App.VersionNo,
+			"APP_VERSION_CODE": yamlCfg.App.VersionCode,
+			"APP_VERSION_NAME": yamlCfg.App.VersionName,
 			"CAPTCHA_ID":       captcha.New(),
-			"DEBUG":            config.GetConfig().App.Debug,
+			"DEBUG":            yamlCfg.App.Debug,
 		}
 
 		// Check if the credentials cookie is not nil before accessing its value
@@ -157,7 +159,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 			// Lock the account if over the retry limit
 			if user.LoginAttempts >= user.MaxRetry {
-				lockUntil := now.Add(time.Duration(config.GetConfig().App.LoginLockUntil) * time.Minute)
+				lockUntil := now.Add(time.Duration(config.ServicePlatform.Get().App.LoginLockUntil) * time.Minute)
 				user.LockUntil = &lockUntil
 			}
 
@@ -195,7 +197,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		for _, userStatus := range userStatuses {
 			if userStatus.ID == uint(user.Status) {
 				if userStatus.Title != "ACTIVE" {
-					fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, fmt.Sprintf("Please Contact Our Technical Support To Activate your Account @+%s", config.GetConfig().Whatsnyan.WATechnicalSupport))
+					fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, fmt.Sprintf("Please Contact Our Technical Support To Activate your Account @+%s", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport))
 					return
 				}
 			}
@@ -221,10 +223,10 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		}
 
 		if err := db.
-			Table(fmt.Sprintf("%s rp", config.GetConfig().Database.TbRolePrivilege)).
+			Table(fmt.Sprintf("%s rp", config.ServicePlatform.Get().Database.TbRolePrivilege)).
 			Unscoped(). // Disable soft deletes for this query
 			Select("rp.*,f.path").
-			Joins(fmt.Sprintf("LEFT JOIN %s f ON f.id = rp.feature_id", config.GetConfig().Database.TbFeature)).
+			Joins(fmt.Sprintf("LEFT JOIN %s f ON f.id = rp.feature_id", config.ServicePlatform.Get().Database.TbFeature)).
 			Where("rp.role_id = ?", user.Role).
 			// Offset(0).
 			// Limit(1).
@@ -308,7 +310,7 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		}
 
 		// Parse the login time as an integer
-		loginExpiredMinutes := config.GetConfig().App.LoginTimeM
+		loginExpiredMinutes := config.ServicePlatform.Get().App.LoginTimeM
 		if loginExpiredMinutes <= 0 {
 			loginExpiredMinutes = 30
 		}
@@ -321,9 +323,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    authToken,
 			Expires:  expiration,
 			Path:     config.GLOBAL_URL,
-			Domain:   config.GetConfig().App.CookieLoginDomain,
+			Domain:   config.ServicePlatform.Get().App.CookieLoginDomain,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   config.GetConfig().App.CookieLoginSecure,
+			Secure:   config.ServicePlatform.Get().App.CookieLoginSecure,
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, auth)
@@ -334,9 +336,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    randomToken,
 			Expires:  expiration,
 			Path:     config.GLOBAL_URL,
-			Domain:   config.GetConfig().App.CookieLoginDomain,
+			Domain:   config.ServicePlatform.Get().App.CookieLoginDomain,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   config.GetConfig().App.CookieLoginSecure,
+			Secure:   config.ServicePlatform.Get().App.CookieLoginSecure,
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, random)
@@ -347,9 +349,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    tokenString,
 			Expires:  expiration,
 			Path:     config.GLOBAL_URL,
-			Domain:   config.GetConfig().App.CookieLoginDomain,
+			Domain:   config.ServicePlatform.Get().App.CookieLoginDomain,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   config.GetConfig().App.CookieLoginSecure,
+			Secure:   config.ServicePlatform.Get().App.CookieLoginSecure,
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, tokenCookie)
@@ -360,9 +362,9 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Value:    url.QueryEscape(user.Session),
 			Expires:  expiration,
 			Path:     config.GLOBAL_URL,
-			Domain:   config.GetConfig().App.CookieLoginDomain,
+			Domain:   config.ServicePlatform.Get().App.CookieLoginDomain,
 			SameSite: http.SameSiteStrictMode,
-			Secure:   config.GetConfig().App.CookieLoginSecure,
+			Secure:   config.ServicePlatform.Get().App.CookieLoginSecure,
 			HttpOnly: true,
 		}
 		http.SetCookie(c.Writer, credentialsCookie)
@@ -447,13 +449,15 @@ func GetWebForgotPassword(db *gorm.DB) gin.HandlerFunc {
 			}
 		}
 
+		yamlCfg := config.ServicePlatform.Get()
+
 		parameters := gin.H{
-			"APP_NAME":         config.GetConfig().App.Name,
-			"APP_LOGO":         config.GetConfig().App.Logo,
-			"APP_VERSION":      config.GetConfig().App.Version,
-			"APP_VERSION_NO":   config.GetConfig().App.VersionNo,
-			"APP_VERSION_CODE": config.GetConfig().App.VersionCode,
-			"APP_VERSION_NAME": config.GetConfig().App.VersionName,
+			"APP_NAME":         yamlCfg.App.Name,
+			"APP_LOGO":         yamlCfg.App.Logo,
+			"APP_VERSION":      yamlCfg.App.Version,
+			"APP_VERSION_NO":   yamlCfg.App.VersionNo,
+			"APP_VERSION_CODE": yamlCfg.App.VersionCode,
+			"APP_VERSION_NAME": yamlCfg.App.VersionName,
 		}
 		if credentialsCookie != nil {
 			var user model.Users
@@ -496,13 +500,14 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			return
 		}
 
+		yamlCfg := config.ServicePlatform.Get()
 		parameters := gin.H{
-			"APP_NAME":         config.GetConfig().App.Name,
-			"APP_LOGO":         config.GetConfig().App.Logo,
-			"APP_VERSION":      config.GetConfig().App.Version,
-			"APP_VERSION_NO":   config.GetConfig().App.VersionNo,
-			"APP_VERSION_CODE": config.GetConfig().App.VersionCode,
-			"APP_VERSION_NAME": config.GetConfig().App.VersionName,
+			"APP_NAME":         yamlCfg.App.Name,
+			"APP_LOGO":         yamlCfg.App.Logo,
+			"APP_VERSION":      yamlCfg.App.Version,
+			"APP_VERSION_NO":   yamlCfg.App.VersionNo,
+			"APP_VERSION_CODE": yamlCfg.App.VersionCode,
+			"APP_VERSION_NAME": yamlCfg.App.VersionName,
 			"MSG_HEADER":       "Please, Contact Our Technical Support",
 			"EMAIL_DOMAIN":     "",
 			"EMAIL":            email,
@@ -548,10 +553,10 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		// Now you can send the email with the verification link.
 		htmlMailTemplate := `<body style="font-family: Arial, sans-serif; text-align: center;">
 			<div style="background-color: #f4f4f4; padding: 20px;">
-				<img src="` + config.GetConfig().App.WebPublicURL + config.GetConfig().App.Logo + `" alt="logo" width="180" height="101" style="display: block; margin: 0 auto;">
-				<h1 style="color: #4287f5;">` + config.GetConfig().App.Name + ` Reset Password</h1>
+				<img src="` + yamlCfg.App.WebPublicURL + yamlCfg.App.Logo + `" alt="logo" width="180" height="101" style="display: block; margin: 0 auto;">
+				<h1 style="color: #4287f5;">` + yamlCfg.App.Name + ` Reset Password</h1>
 				<p>Please click the button below to verify your email address:</p>
-				<a href="` + config.GetConfig().App.WebPublicURL + `/reset-password/` + user.Email + "/" + randomAccessToken + `" style="text-decoration: none;">
+				<a href="` + yamlCfg.App.WebPublicURL + `/reset-password/` + user.Email + "/" + randomAccessToken + `" style="text-decoration: none;">
 					<button style="background-color: #4287f5; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
 						Reset Password
 					</button>
@@ -560,16 +565,16 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		</body>`
 
 		mailer := gomail.NewMessage()
-		mailer.SetHeader("From", fmt.Sprintf("Email Verificator  <%s>", config.GetConfig().Email.Username))
+		mailer.SetHeader("From", fmt.Sprintf("Email Verificator  <%s>", yamlCfg.Email.Username))
 		mailer.SetHeader("To", user.Email)
 		mailer.SetHeader("Subject", "[noreply] Here Reset Password link")
 		mailer.SetBody("text/html", htmlMailTemplate)
 
 		dialer := gomail.NewDialer(
-			config.GetConfig().Email.Host,
-			config.GetConfig().Email.Port,
-			config.GetConfig().Email.Username,
-			config.GetConfig().Email.Password,
+			yamlCfg.Email.Host,
+			yamlCfg.Email.Port,
+			yamlCfg.Email.Username,
+			yamlCfg.Email.Password,
 		)
 
 		errMailDialer := dialer.DialAndSend(mailer)
@@ -625,13 +630,15 @@ func GetWebResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			return
 		}
 
+		yamlCfg := config.ServicePlatform.Get()
+
 		parameters := gin.H{
-			"APP_NAME":         config.GetConfig().App.Name,
-			"APP_LOGO":         config.GetConfig().App.Logo,
-			"APP_VERSION":      config.GetConfig().App.Version,
-			"APP_VERSION_NO":   config.GetConfig().App.VersionNo,
-			"APP_VERSION_CODE": config.GetConfig().App.VersionCode,
-			"APP_VERSION_NAME": config.GetConfig().App.VersionName,
+			"APP_NAME":         yamlCfg.App.Name,
+			"APP_LOGO":         yamlCfg.App.Logo,
+			"APP_VERSION":      yamlCfg.App.Version,
+			"APP_VERSION_NO":   yamlCfg.App.VersionNo,
+			"APP_VERSION_CODE": yamlCfg.App.VersionCode,
+			"APP_VERSION_NAME": yamlCfg.App.VersionName,
 			"EMAIL":            email,
 			"TOKEN":            tokenData,
 		}
@@ -835,11 +842,13 @@ func MainPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			Icon      string `json:"icon" gorm:"column:icon"`
 		}
 
+		yamlCfg := config.ServicePlatform.Get()
+
 		if err := db.
-			Table(fmt.Sprintf("%s a", config.GetConfig().Database.TbRolePrivilege)).
+			Table(fmt.Sprintf("%s a", yamlCfg.Database.TbRolePrivilege)).
 			Unscoped(). // Disable soft deletes for this query
 			Select("a.*, b.parent_id , b.title , b.path , b.menu_order , b.status , b.level , b.icon").
-			Joins(fmt.Sprintf("LEFT JOIN %s b ON a.feature_id = b.id", config.GetConfig().Database.TbFeature)).
+			Joins(fmt.Sprintf("LEFT JOIN %s b ON a.feature_id = b.id", yamlCfg.Database.TbFeature)).
 			Where("a.role_id = ?", claims["role"]).
 			Order("b.menu_order").
 			Find(&featuresPrivileges).Error; err != nil {
@@ -1001,12 +1010,12 @@ func MainPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			// logrus.Infof("Using role-specific app config for role %d: %s", user.Role, appConfig.AppName)
 		} else {
 			// Fallback to default config
-			appName = config.GetConfig().App.Name
-			appLogo = config.GetConfig().App.Logo
-			appVersion = config.GetConfig().App.Version
-			appVersionNo = strconv.Itoa(config.GetConfig().App.VersionNo)
-			appVersionCode = config.GetConfig().App.VersionCode
-			appVersionName = config.GetConfig().App.VersionName
+			appName = yamlCfg.App.Name
+			appLogo = yamlCfg.App.Logo
+			appVersion = yamlCfg.App.Version
+			appVersionNo = strconv.Itoa(yamlCfg.App.VersionNo)
+			appVersionCode = yamlCfg.App.VersionCode
+			appVersionName = yamlCfg.App.VersionName
 			// logrus.Infof("Using default app config for role %d (no specific config found)", user.Role)
 		}
 
@@ -1026,7 +1035,7 @@ func MainPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			"GLOBAL_URL":       config.GLOBAL_URL,
 			"sidebar":          template.HTML(string(fileContent)),
 			"contents":         template.HTML(string(fileContentTab)),
-			"IsEnableDebug":    config.GetConfig().App.Debug,
+			"IsEnableDebug":    yamlCfg.App.Debug,
 		})
 
 	}
@@ -1190,6 +1199,8 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		var appConfig model.AppConfig
 		var appName, appLogo, appVersion, appVersionNo, appVersionCode, appVersionName string
 
+		yamlCfg := config.ServicePlatform.Get()
+
 		if err := db.Where("role_id = ? AND is_active = ?", user.Role, true).First(&appConfig).Error; err == nil {
 			// Use role-specific app configuration
 			appName = appConfig.AppName
@@ -1201,12 +1212,12 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			// logrus.Infof("Using role-specific app config for role %d: %s", user.Role, appConfig.AppName)
 		} else {
 			// Fallback to default config
-			appName = config.GetConfig().App.Name
-			appLogo = config.GetConfig().App.Logo
-			appVersion = config.GetConfig().App.Version
-			appVersionNo = strconv.Itoa(config.GetConfig().App.VersionNo)
-			appVersionCode = config.GetConfig().App.VersionCode
-			appVersionName = config.GetConfig().App.VersionName
+			appName = yamlCfg.App.Name
+			appLogo = yamlCfg.App.Logo
+			appVersion = yamlCfg.App.Version
+			appVersionNo = strconv.Itoa(yamlCfg.App.VersionNo)
+			appVersionCode = yamlCfg.App.VersionCode
+			appVersionName = yamlCfg.App.VersionName
 			// logrus.Infof("Using default app config for role %d (no specific config found)", user.Role)
 		}
 

@@ -126,8 +126,8 @@ func InitAndCheckDB(
 		var defaultDB *gorm.DB
 		var err error
 
-		maxRetries := config.GetConfig().Database.MaxRetryConnect
-		retryDelay := config.GetConfig().Database.RetryDelay
+		maxRetries := config.ServicePlatform.Get().Database.MaxRetryConnect
+		retryDelay := config.ServicePlatform.Get().Database.RetryDelay
 
 		// Retry connection to default database
 		for attempt := 1; attempt <= maxRetries; attempt++ {
@@ -183,7 +183,7 @@ func InitAndCheckDB(
 		)
 
 		// Configure GORM logger
-		logDir := config.GetConfig().App.LogDir
+		logDir := config.ServicePlatform.Get().App.LogDir
 		if _, err := os.Stat(logDir); os.IsNotExist(err) {
 			// fmt.Println("Cannot find the directory log try dynamic searching")
 			logDir, err = fun.FindValidDirectory([]string{
@@ -207,16 +207,16 @@ func InitAndCheckDB(
 
 		lumberjackLogger := &lumberjack.Logger{
 			Filename:   logFilePath,
-			MaxSize:    config.GetConfig().Default.LogMaxSize,
-			MaxBackups: config.GetConfig().Default.LogMaxBackups,
-			MaxAge:     config.GetConfig().Default.LogMaxAge,
-			Compress:   config.GetConfig().Default.LogCompress,
+			MaxSize:    config.ServicePlatform.Get().Default.LogMaxSize,
+			MaxBackups: config.ServicePlatform.Get().Default.LogMaxBackups,
+			MaxAge:     config.ServicePlatform.Get().Default.LogMaxAge,
+			Compress:   config.ServicePlatform.Get().Default.LogCompress,
 		}
 
 		logLevel := logger.Error
 		ignoreRecordNotFoundError := true
 		includeParams := true
-		if config.GetConfig().App.Debug {
+		if config.ServicePlatform.Get().App.Debug {
 			logLevel = logger.Info
 			ignoreRecordNotFoundError = false
 			includeParams = false
@@ -252,9 +252,9 @@ func InitAndCheckDB(
 		}
 
 		// Set connection pool settings
-		sqlDB.SetMaxIdleConns(config.GetConfig().Database.MaxIdleConnection)
-		sqlDB.SetMaxOpenConns(config.GetConfig().Database.MaxOpenConnection)
-		sqlDB.SetConnMaxLifetime(time.Duration(config.GetConfig().Database.ConnMaxLifeTime) * time.Minute)
+		sqlDB.SetMaxIdleConns(config.ServicePlatform.Get().Database.MaxIdleConnection)
+		sqlDB.SetMaxOpenConns(config.ServicePlatform.Get().Database.MaxOpenConnection)
+		sqlDB.SetConnMaxLifetime(time.Duration(config.ServicePlatform.Get().Database.ConnMaxLifeTime) * time.Minute)
 		fmt.Println("✅ Connected to database: " + dbName)
 
 		// Record successful connection
@@ -269,7 +269,7 @@ func InitAndCheckDB(
 		)
 
 		// Configure GORM logger
-		logDir := config.GetConfig().App.LogDir
+		logDir := config.ServicePlatform.Get().App.LogDir
 		if _, err := os.Stat(logDir); os.IsNotExist(err) {
 			logDir, err = fun.FindValidDirectory([]string{
 				"log",
@@ -292,16 +292,16 @@ func InitAndCheckDB(
 
 		lumberjackLogger := &lumberjack.Logger{
 			Filename:   logFilePath,
-			MaxSize:    config.GetConfig().Default.LogMaxSize,
-			MaxBackups: config.GetConfig().Default.LogMaxBackups,
-			MaxAge:     config.GetConfig().Default.LogMaxAge,
-			Compress:   config.GetConfig().Default.LogCompress,
+			MaxSize:    config.ServicePlatform.Get().Default.LogMaxSize,
+			MaxBackups: config.ServicePlatform.Get().Default.LogMaxBackups,
+			MaxAge:     config.ServicePlatform.Get().Default.LogMaxAge,
+			Compress:   config.ServicePlatform.Get().Default.LogCompress,
 		}
 
 		logLevel := logger.Error
 		ignoreRecordNotFoundError := true
 		includeParams := true
-		if config.GetConfig().App.Debug {
+		if config.ServicePlatform.Get().App.Debug {
 			logLevel = logger.Info
 			ignoreRecordNotFoundError = false
 			includeParams = false
@@ -320,8 +320,8 @@ func InitAndCheckDB(
 
 		var db *gorm.DB
 		var err error
-		maxRetries := config.GetConfig().Database.MaxRetryConnect
-		retryDelay := config.GetConfig().Database.RetryDelay
+		maxRetries := config.ServicePlatform.Get().Database.MaxRetryConnect
+		retryDelay := config.ServicePlatform.Get().Database.RetryDelay
 
 		for attempt := 1; attempt <= maxRetries; attempt++ {
 			db, err = gorm.Open(mysql.Open(dbURI), &gorm.Config{
@@ -345,9 +345,9 @@ func InitAndCheckDB(
 		}
 
 		// Set connection pool settings
-		sqlDB.SetMaxIdleConns(config.GetConfig().Database.MaxIdleConnection)
-		sqlDB.SetMaxOpenConns(config.GetConfig().Database.MaxOpenConnection)
-		sqlDB.SetConnMaxLifetime(time.Duration(config.GetConfig().Database.ConnMaxLifeTime) * time.Minute)
+		sqlDB.SetMaxIdleConns(config.ServicePlatform.Get().Database.MaxIdleConnection)
+		sqlDB.SetMaxOpenConns(config.ServicePlatform.Get().Database.MaxOpenConnection)
+		sqlDB.SetConnMaxLifetime(time.Duration(config.ServicePlatform.Get().Database.ConnMaxLifeTime) * time.Minute)
 		fmt.Println("✅ Connected to MySQL database: " + dbName)
 
 		// Record successful connection
@@ -373,7 +373,7 @@ func InitDBConnection(
 		)
 
 		// Configure GORM logger
-		logDir := config.GetConfig().App.LogDir
+		logDir := config.ServicePlatform.Get().App.LogDir
 		if _, err := os.Stat(logDir); os.IsNotExist(err) {
 			logDir, err = fun.FindValidDirectory([]string{
 				"log",
@@ -396,16 +396,16 @@ func InitDBConnection(
 
 		lumberjackLogger := &lumberjack.Logger{
 			Filename:   logFilePath,
-			MaxSize:    config.GetConfig().Default.LogMaxSize,
-			MaxBackups: config.GetConfig().Default.LogMaxBackups,
-			MaxAge:     config.GetConfig().Default.LogMaxAge,
-			Compress:   config.GetConfig().Default.LogCompress,
+			MaxSize:    config.ServicePlatform.Get().Default.LogMaxSize,
+			MaxBackups: config.ServicePlatform.Get().Default.LogMaxBackups,
+			MaxAge:     config.ServicePlatform.Get().Default.LogMaxAge,
+			Compress:   config.ServicePlatform.Get().Default.LogCompress,
 		}
 
 		logLevel := logger.Error
 		ignoreRecordNotFoundError := true
 		includeParams := true
-		if config.GetConfig().App.Debug {
+		if config.ServicePlatform.Get().App.Debug {
 			logLevel = logger.Info
 			ignoreRecordNotFoundError = false
 			includeParams = false

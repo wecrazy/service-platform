@@ -19,12 +19,12 @@ import (
 
 // MockConfig holds test configuration
 type MockConfig struct {
-	*config.YamlConfig
+	*config.TypeManageService
 }
 
-func createTestConfig() *config.YamlConfig {
-	return &config.YamlConfig{
-		ODOOManageService: struct {
+func createTestConfig() *config.TypeManageService {
+	return &config.TypeManageService{
+		ODOOMS: struct {
 			JsonRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
 			Login          string                         `yaml:"login" validate:"required"`
 			Password       string                         `yaml:"password" validate:"required"`
@@ -157,7 +157,7 @@ func TestGetODOOMSCookies_Success(t *testing.T) {
 	defer server.Close()
 
 	cfg := createTestConfig()
-	cfg.ODOOManageService.URL = server.URL // Use mock server URL
+	cfg.ODOOMS.URL = server.URL // Use mock server URL
 
 	dbTA := database.GetDBTA()
 	dbMSMW := database.GetDBMS()
@@ -178,8 +178,8 @@ func TestGetODOOMSCookies_ServerError(t *testing.T) {
 	defer server.Close()
 
 	cfg := createTestConfig()
-	cfg.ODOOManageService.URL = server.URL
-	cfg.ODOOManageService.MaxRetry = 1 // Reduce retries for faster test
+	cfg.ODOOMS.URL = server.URL
+	cfg.ODOOMS.MaxRetry = 1 // Reduce retries for faster test
 
 	dbTA := database.GetDBTA()
 	dbMSMW := database.GetDBMS()

@@ -552,7 +552,7 @@ func renderVersionCodeAppConfig(fieldValue reflect.Value) string {
 				</div>
 			</div>`,
 			htmlEscape(versionCode),
-			strings.ToUpper(config.GetConfig().App.Version),
+			strings.ToUpper(config.ServicePlatform.Get().App.Version),
 		)
 	}
 	return `<div class="d-flex align-items-center gap-2 p-3 rounded-3 border bg-light opacity-75">

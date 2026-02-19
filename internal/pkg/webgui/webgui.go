@@ -38,7 +38,7 @@ func loadTemplates() (*template.Template, error) {
 	var err error
 
 	// Get the absolute path of the static directory
-	staticPath = config.GetConfig().App.StaticDir
+	staticPath = config.ServicePlatform.Get().App.StaticDir
 	staticPath, err = filepath.Abs(staticPath)
 	if err != nil {
 		fmt.Println("Error getting absolute path:", err)

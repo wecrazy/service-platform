@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -38,8 +39,11 @@ func (suite *APITestSuite) SetupTest() {
 
 	// Load config from conf.yaml
 	var err error
-	err = config.LoadConfig()
-	assert.NoError(suite.T(), err)
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+	if !config.ServicePlatform.IsLoaded() {
+		err = errors.New("failed to load configuration")
+		assert.NoError(suite.T(), err, "Config should be loaded successfully")
+	}
 
 	// Setup test database (SQLite)
 	suite.db, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})

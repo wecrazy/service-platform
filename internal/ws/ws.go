@@ -107,7 +107,7 @@ func CloseWebsocketConnection(clientID string) {
 }
 
 func checkForReconnection(clientID string, db *gorm.DB) {
-	disconectionTime := config.GetConfig().App.MaxDisconnectionTime
+	disconectionTime := config.ServicePlatform.Get().App.MaxDisconnectionTime
 	if disconectionTime <= 0 {
 		disconectionTime = 10 // default to 10 seconds if not set properly
 	}

@@ -12,7 +12,7 @@ type WhatsmeowAppStateMutationMacs struct {
 }
 
 func (WhatsmeowAppStateMutationMacs) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBAppStateMutationMacs
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBAppStateMutationMacs
 }
 
 // WhatsmeowAppStateSyncKeys represents the whatsmeow_app_state_sync_keys table
@@ -25,7 +25,7 @@ type WhatsmeowAppStateSyncKeys struct {
 }
 
 func (WhatsmeowAppStateSyncKeys) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBAppStateSyncKeys
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBAppStateSyncKeys
 }
 
 // WhatsmeowAppStateVersion represents the whatsmeow_app_state_version table
@@ -37,7 +37,7 @@ type WhatsmeowAppStateVersion struct {
 }
 
 func (WhatsmeowAppStateVersion) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBAppStateVersions
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBAppStateVersions
 }
 
 // WhatsmeowChatSettings represents the whatsmeow_chat_settings table
@@ -50,7 +50,7 @@ type WhatsmeowChatSettings struct {
 }
 
 func (WhatsmeowChatSettings) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBChatSettings
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBChatSettings
 }
 
 // WhatsmeowContacts represents the whatsmeow_contacts table
@@ -65,7 +65,7 @@ type WhatsmeowContacts struct {
 }
 
 func (WhatsmeowContacts) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBContacts
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBContacts
 }
 
 // WhatsmeowDevice represents the whatsmeow_device table
@@ -91,7 +91,7 @@ type WhatsmeowDevice struct {
 }
 
 func (WhatsmeowDevice) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBDevice
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBDevice
 }
 
 // WhatsmeowEventBuffer represents the whatsmeow_event_buffer table
@@ -104,7 +104,7 @@ type WhatsmeowEventBuffer struct {
 }
 
 func (WhatsmeowEventBuffer) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBEventBuffer
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBEventBuffer
 }
 
 // WhatsmeowIdentityKeys represents the whatsmeow_identity_keys table
@@ -115,7 +115,7 @@ type WhatsmeowIdentityKeys struct {
 }
 
 func (WhatsmeowIdentityKeys) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBIdentityKeys
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBIdentityKeys
 }
 
 // WhatsmeowLIDMap represents the whatsmeow_lid_map table
@@ -125,7 +125,7 @@ type WhatsmeowLIDMap struct {
 }
 
 func (WhatsmeowLIDMap) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBLIDMap
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBLIDMap
 }
 
 // WhatsmeowMessageSecrets represents the whatsmeow_message_secrets table
@@ -138,7 +138,7 @@ type WhatsmeowMessageSecrets struct {
 }
 
 func (WhatsmeowMessageSecrets) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBMessageSecrets
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBMessageSecrets
 }
 
 // WhatsmeowPreKeys represents the whatsmeow_pre_keys table
@@ -150,7 +150,7 @@ type WhatsmeowPreKeys struct {
 }
 
 func (WhatsmeowPreKeys) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBPreKeys
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBPreKeys
 }
 
 // WhatsmeowPrivacyTokens represents the whatsmeow_privacy_tokens table
@@ -162,7 +162,7 @@ type WhatsmeowPrivacyTokens struct {
 }
 
 func (WhatsmeowPrivacyTokens) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBPrivacyTokens
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBPrivacyTokens
 }
 
 // WhatsmeowSenderKeys represents the whatsmeow_sender_keys table
@@ -174,7 +174,7 @@ type WhatsmeowSenderKeys struct {
 }
 
 func (WhatsmeowSenderKeys) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBSenderKeys
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBSenderKeys
 }
 
 // WhatsmeowSessions represents the whatsmeow_sessions table
@@ -185,7 +185,7 @@ type WhatsmeowSessions struct {
 }
 
 func (WhatsmeowSessions) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBSessions
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBSessions
 }
 
 // WhatsmeowVersion represents the whatsmeow_version table
@@ -195,5 +195,5 @@ type WhatsmeowVersion struct {
 }
 
 func (WhatsmeowVersion) TableName() string {
-	return config.GetConfig().Whatsnyan.Tables.TBVersion
+	return config.ServicePlatform.Get().Whatsnyan.Tables.TBVersion
 }

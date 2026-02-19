@@ -17,20 +17,19 @@ func main() {
 	)
 	flag.Parse()
 
-	// Initialize configuration
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Failed to initialize config: %v", err)
-	}
+	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
+
+	yamlCfg := config.ServicePlatform.Get()
 
 	// Initialize database connection
 	db, err := database.InitAndCheckDB(
-		config.GetConfig().Database.Type,
-		config.GetConfig().Database.Username,
-		config.GetConfig().Database.Password,
-		config.GetConfig().Database.Host,
-		config.GetConfig().Database.Port,
-		config.GetConfig().Database.Name,
-		config.GetConfig().Database.SSLMode,
+		yamlCfg.Database.Type,
+		yamlCfg.Database.Username,
+		yamlCfg.Database.Password,
+		yamlCfg.Database.Host,
+		yamlCfg.Database.Port,
+		yamlCfg.Database.Name,
+		yamlCfg.Database.SSLMode,
 	)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
