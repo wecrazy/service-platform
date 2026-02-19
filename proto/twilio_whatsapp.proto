@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "service-platform/proto";
+
+// TwilioWhatsAppService provides functionality to interact with WhatsApp via Twilio
+service TwilioWhatsAppService {
+  // SendMessage sends a text message via Twilio WhatsApp
+  rpc SendMessage(TwilioSendMessageRequest) returns (TwilioSendMessageResponse);
+  // SendImageMessage sends an image message via Twilio
+  rpc SendImageMessage(TwilioSendImageMessageRequest) returns (TwilioSendMessageResponse);
+  // SendDocumentMessage sends a document message via Twilio
+  rpc SendDocumentMessage(TwilioSendDocumentMessageRequest) returns (TwilioSendMessageResponse);
+  // SendVideoMessage sends a video message via Twilio
+  rpc SendVideoMessage(TwilioSendVideoMessageRequest) returns (TwilioSendMessageResponse);
+  // SendAudioMessage sends an audio/voice message via Twilio
+  rpc SendAudioMessage(TwilioSendAudioMessageRequest) returns (TwilioSendMessageResponse);
+  // SendMediaMessage sends a media message (generic, supports multiple types) via Twilio - DEPRECATED: use specific methods
+  rpc SendMediaMessage(TwilioSendMediaMessageRequest) returns (TwilioSendMessageResponse);
+  // GetMessageStatus retrieves the delivery status of a message
+  rpc GetMessageStatus(TwilioGetMessageStatusRequest) returns (TwilioGetMessageStatusResponse);
+}
+
+// TwilioSendMessageRequest is the request to send a text message via Twilio
+message TwilioSendMessageRequest {
+  // Phone number to send the message to (e.g., "+1234567890")
+  string to = 1;
+  // Message content
+  string body = 2;
+}
+
+// TwilioSendImageMessageRequest is the request to send an image message via Twilio
+message TwilioSendImageMessageRequest {
+  // Phone number to send the message to (e.g., "+1234567890")
+  string to = 1;
+  // URL of the image file (JPG, JPEG, PNG)
+  string image_url = 2;
+  // Optional caption for the image
+  string caption = 3;
+}
+
+// TwilioSendDocumentMessageRequest is the request to send a document message via Twilio
+message TwilioSendDocumentMessageRequest {
+  // Phone number to send the message to (e.g., "+1234567890")
+  string to = 1;
+  // URL of the document file (PDF, DOC, etc. - max 16MB)
+  string document_url = 2;
+  // Optional caption/filename for the document
+  string caption = 3;
+}
+
+// TwilioSendVideoMessageRequest is the request to send a video message via Twilio
+message TwilioSendVideoMessageRequest {
+  // Phone number to send the message to (e.g., "+1234567890")
+  string to = 1;
+  // URL of the video file (MP4, MOV, etc.)
+  string video_url = 2;
+  // Optional caption for the video
+  string caption = 3;
+}
+
+// TwilioSendAudioMessageRequest is the request to send an audio/voice message via Twilio
+message TwilioSendAudioMessageRequest {
+  // Phone number to send the message to (e.g., "+1234567890")
+  string to = 1;
+  // URL of the audio file (MP3, WAV, OGG, etc.)
+  string audio_url = 2;
+}
+
+// TwilioSendMediaMessageRequest is the request to send a generic media message via Twilio - DEPRECATED
+message TwilioSendMediaMessageRequest {
+  // Phone number to send the message to (e.g., "+1234567890")
+  string to = 1;
+  // URL of the media file
+  string media_url = 2;
+  // Optional caption for the media
+  string caption = 3;
+  // Media type: image, video, document, audio
+  string media_type = 4;
+}
+
+// TwilioSendMessageResponse is the response from sending a message via Twilio
+message TwilioSendMessageResponse {
+  // Indicates if the message was sent successfully
+  bool success = 1;
+  // Message describing the result
+  string message = 2;
+  // Twilio Message SID (unique identifier)
+  string message_sid = 3;
+  // Timestamp when the message was sent
+  string timestamp = 4;
+  // Phone number the message was sent to
+  string to = 5;
+}
+
+// TwilioGetMessageStatusRequest is the request to get message status
+message TwilioGetMessageStatusRequest {
+  // Twilio Message SID to check status for
+  string message_sid = 1;
+}
+
+// TwilioGetMessageStatusResponse is the response with message status
+message TwilioGetMessageStatusResponse {
+  // Current status: queued, sending, sent, failed, delivered, undelivered, receiving, received, read
+  string status = 1;
+  // Message SID
+  string message_sid = 2;
+  // Error code (if any)
+  string error_code = 3;
+  // Error message (if any)
+  string error_message = 4;
+  // Account SID
+  string account_sid = 5;
+  // Phone number the message was sent to
+  string to = 6;
+  // Timestamp of the last status update
+  string timestamp = 7;
+}
