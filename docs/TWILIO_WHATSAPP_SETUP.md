@@ -17,7 +17,7 @@ This guide explains how to set up and use the Twilio WhatsApp integration in thi
 
 ### 2. Configure in YAML
 
-Edit `internal/config/config.dev.yaml` (or your environment config file) and update the Twilio section:
+Edit `internal/config/service-platform.dev.yaml` (or your environment config file) and update the Twilio section:
 
 ```yaml
 twilio:
@@ -113,8 +113,8 @@ The Twilio client reads configuration from the YAML config file based on the cur
 4. Defaults to `dev` if not specified
 
 Environmental config files:
-- `internal/config/config.dev.yaml` - Development settings
-- `internal/config/config.prod.yaml` - Production settings (if available)
+- `internal/config/service-platform.dev.yaml` - Development settings
+- `internal/config/service-platform.prod.yaml` - Production settings (if available)
 
 ## Key Features
 

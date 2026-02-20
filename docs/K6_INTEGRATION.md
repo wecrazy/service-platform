@@ -6,9 +6,8 @@ Successfully integrated k6 load testing into Service Platform with Grafana visua
 
 ## Changes Made
 
-### 1. Configuration Files
 - **config.go**: Added `K6` struct with settings for enabled, ports, scripts directory, thresholds, and scenarios
-- **config.dev.yaml**: Added k6 configuration section with:
+- **internal/config/service-platform.dev.yaml**: Added k6 configuration section with:
   - Ports: 6668 (API/UI), 5665 (Prometheus)
   - Default thresholds for HTTP performance
   - 3 pre-configured test scenarios (health check, smoke test, stress test)
@@ -164,7 +163,7 @@ Tests can be configured via environment variables:
 - `GRPC_BASE_URL` - gRPC service URL
 - `K6_PROMETHEUS_RW_SERVER_URL` - Prometheus endpoint
 
-### Thresholds (config.dev.yaml)
+### Thresholds (internal/config/service-platform.dev.yaml)
 ```yaml
 thresholds:
   http_req_duration: "p(95)<500"      # 95% under 500ms
@@ -175,7 +174,7 @@ thresholds:
 ```
 
 ### Test Scenarios
-Pre-configured scenarios in config.dev.yaml:
+Pre-configured scenarios in internal/config/service-platform.dev.yaml:
 1. **health-check-load-test** - Constant 10 VUs for 30s
 2. **api-smoke-test** - Single VU for 1m
 3. **stress-test** - Ramping VUs up to 100 for 5m
@@ -240,7 +239,7 @@ make monitoring-deep-restart
 **Solution**: Check API logs and rate limits
 ```bash
 tail -f log/app.log
-# Adjust rate_limit settings in config.dev.yaml
+# Adjust rate_limit settings in internal/config/service-platform.dev.yaml
 ```
 
 ## Next Steps

@@ -27,7 +27,7 @@ Before running tests, ensure:
    - Set up WhatsApp Sandbox: https://www.twilio.com/console/sms/whatsapp/sandbox
 
 2. **Configuration**:
-   Update `internal/config/config.dev.yaml` with your Twilio credentials:
+   Update `internal/config/service-platform.dev.yaml` with your Twilio credentials:
    ```yaml
    twilio:
      whatsapp:
@@ -97,13 +97,13 @@ For manual integration testing:
 ## Environment Variables
 
 Tests automatically load configuration from:
-- `internal/config/config.dev.yaml` (development)
-- Or specify via `config.yaml` if using production config
+- `internal/config/service-platform.dev.yaml` (development)
+- Or specify via `internal/config/service-platform.prod.yaml` for production overrides
 
 ## Troubleshooting
 
 ### Tests skip with "Twilio credentials not configured"
-- Check credentials in `config.dev.yaml`
+- Check credentials in `internal/config/service-platform.dev.yaml`
 - Verify AccountSID, AuthToken, and WhatsApp number are set
 
 ### Connection refused errors

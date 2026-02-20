@@ -31,7 +31,7 @@ COPY --from=builder /build/api /api
 
 # Copy config files
 COPY --from=builder /build/internal/config/conf.yaml /config/conf.yaml
-COPY --from=builder /build/internal/config/config.dev.yaml /config/config.dev.yaml
+COPY --from=builder /build/internal/config/service-platform.dev.yaml /config/service-platform.dev.yaml
 
 # Copy static files if needed
 COPY --from=builder /build/web /web

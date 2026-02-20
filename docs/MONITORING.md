@@ -67,7 +67,7 @@ make monitoring-cleanup
 
 ### Configurable Settings
 
-The following metrics configuration is already added to `config.dev.yaml`:
+The following metrics configuration is already added to `internal/config/service-platform.dev.yaml`:
 
 ```yaml
 metrics:
@@ -94,7 +94,7 @@ Metrics struct {
 } `yaml:"metrics"`
 ```
 
-When you create `config.prod.yaml`, make sure to include the same `metrics` section with your production port values.
+When you create `internal/config/service-platform.prod.yaml`, make sure to include the same `metrics` section with your production port values.
 
 ## Why Podman?
 
