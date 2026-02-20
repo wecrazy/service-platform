@@ -173,7 +173,7 @@ curl -u admin:admin http://localhost:9180
 | `monitoring/tempo/tempo-config.yml` | Tempo settings | ✅ Simplified |
 | `monitoring/nginx/.htpasswd` | Auth credentials | ✅ Verified |
 | `monitoring/grafana/provisioning/datasources/` | Data sources | ✅ Pre-configured |
-| `internal/config/config.dev.yaml` | App observability | ✅ Ready to use |
+| `internal/config/service-platform.dev.yaml` | App observability | ✅ Ready to use |
 
 ---
 

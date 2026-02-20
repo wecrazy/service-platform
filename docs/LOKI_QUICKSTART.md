@@ -125,7 +125,7 @@ bash scripts/monitoring-quickstart.sh change-password
 
 ## ⚙️ Configuration
 
-Located in `internal/config/config.dev.yaml`:
+Located in `internal/config/service-platform.dev.yaml`:
 
 ```yaml
 observability:

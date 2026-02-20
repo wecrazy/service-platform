@@ -76,7 +76,7 @@ docker-compose -f docker/docker-compose.monitoring.yml logs -f nginx-auth
 ## Configuration
 
 ### Application Configuration
-Add to `internal/config/config.dev.yaml`:
+Add to `internal/config/service-platform.dev.yaml`:
 
 ```yaml
 observability:
