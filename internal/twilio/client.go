@@ -13,8 +13,14 @@ import (
 )
 
 // Client handles WhatsApp messaging via Twilio
+type messageAPI interface {
+	CreateMessage(*openapi.CreateMessageParams) (*openapi.ApiV2010Message, error)
+}
+
+// Client is a wrapper around the Twilio REST client for sending WhatsApp messages. It provides methods to send both text and media messages, and it handles configuration and error logging. The client is designed to be initialized with the necessary Twilio credentials and can be used throughout the application to interact with the Twilio API for WhatsApp messaging.
 type Client struct {
-	client       *twilio.RestClient
+	restClient   *twilio.RestClient
+	api          messageAPI
 	twilioNumber string
 	accountSid   string
 	authToken    string
@@ -29,13 +35,14 @@ func NewClient() (*Client, error) {
 		return nil, fmt.Errorf("missing required Twilio WhatsApp configuration: account_sid, auth_token, whatsapp_number")
 	}
 
-	client := twilio.NewRestClientWithParams(twilio.ClientParams{
+	restClient := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: twilioConfig.AccountSID,
 		Password: twilioConfig.AuthToken,
 	})
 
 	tc := &Client{
-		client:       client,
+		restClient:   restClient,
+		api:          restClient.Api,
 		twilioNumber: twilioConfig.WhatsAppNumber,
 		accountSid:   twilioConfig.AccountSID,
 		authToken:    twilioConfig.AuthToken,
@@ -64,7 +71,7 @@ func (c *Client) SendMessage(to string, message string) (string, error) {
 	params.SetTo(fmt.Sprintf("whatsapp:%s", to))
 	params.SetBody(message)
 
-	resp, err := c.client.Api.CreateMessage(params)
+	resp, err := c.api.CreateMessage(params)
 	if err != nil {
 		logrus.Errorf("❌ Failed to send WhatsApp message to %s: %v", to, err)
 		return "", err
@@ -95,7 +102,7 @@ func (c *Client) SendMediaMessage(to string, mediaUrl string, caption string) (s
 		params.SetBody(caption)
 	}
 
-	resp, err := c.client.Api.CreateMessage(params)
+	resp, err := c.api.CreateMessage(params)
 	if err != nil {
 		logrus.Errorf("❌ Failed to send WhatsApp media message to %s: %v", to, err)
 		return "", err

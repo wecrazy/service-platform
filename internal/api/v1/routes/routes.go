@@ -330,5 +330,6 @@ func HtmlRoutes(
 	// Twilio WhatsApp Webhook - Incoming messages (NOT authenticated)
 	// This receives incoming WhatsApp messages from Twilio Sandbox
 	// Endpoint: POST /twilio_reply
-	router.POST("/twilio_reply", controllers.HandleTwilioWhatsAppWebhook(db))
+	twilioGroup := router.Group("", middleware.TwilioRateLimitMiddleware())
+	twilioGroup.POST("/twilio_reply", controllers.HandleTwilioWhatsAppWebhook(db))
 }
