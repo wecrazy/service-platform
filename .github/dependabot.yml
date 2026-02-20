@@ -17,14 +17,12 @@ updates:
     # Group minor and patch updates together
     groups:
       go-minor-patch:
-        description: "Group minor and patch updates"
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
       go-major:
-        description: "Major updates (reviewed separately)"
         patterns:
           - "*"
         update-types:

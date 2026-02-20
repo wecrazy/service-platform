@@ -32,7 +32,7 @@ require (
 	github.com/twilio/twilio-go v1.30.1
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
-	go.mau.fi/whatsmeow v0.0.0-20260218135554-9cbe80fb25a4
+	go.mau.fi/whatsmeow v0.0.0-20260219150138-7ae702b1eed4
 	go.mongodb.org/mongo-driver v1.17.6
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.39.0
@@ -121,7 +121,7 @@ require (
 	github.com/tom-draper/api-analytics/analytics/go/core v0.0.0-20250423161653-bf0660dc994c // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
-	github.com/vektah/gqlparser/v2 v2.5.31 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.32 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
