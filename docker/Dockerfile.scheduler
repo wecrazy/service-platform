@@ -21,7 +21,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /build/scheduler /scheduler
 COPY --from=builder /build/internal/config/conf.yaml /config/conf.yaml
-COPY --from=builder /build/internal/config/config.dev.yaml /config/config.dev.yaml
+COPY --from=builder /build/internal/config/service-platform.dev.yaml /config/service-platform.dev.yaml
 
 EXPOSE 50053
 

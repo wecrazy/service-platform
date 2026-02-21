@@ -280,9 +280,9 @@ make monitoring-stop
 - Check if monitoring stack is running: `make monitoring-status`
 - Verify ports are not blocked by firewall
 
-### High Error Rates
+- ### High Error Rates
 - Check API logs: `tail -f log/app.log`
-- Verify rate limiting settings in `config.dev.yaml`
+- Verify rate limiting settings in `internal/config/service-platform.dev.yaml`
 - Reduce VUs or increase ramp-up time
 
 ### Metrics Not Showing in Grafana

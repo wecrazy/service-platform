@@ -180,13 +180,8 @@ type TypeServicePlatform struct {
 		GoDocPort         int `yaml:"godoc_port" validate:"required"`
 	} `yaml:"metrics" validate:"required"`
 
-	RateLimit struct {
-		Enabled     bool `yaml:"enabled"`
-		Requests    int  `yaml:"requests" validate:"required"`     // requests per period
-		Period      int  `yaml:"period" validate:"required"`       // period in seconds
-		Burst       int  `yaml:"burst" validate:"required"`        // burst allowance
-		CleanupTime int  `yaml:"cleanup_time" validate:"required"` // cleanup time in seconds
-	} `yaml:"rate_limit" validate:"required"`
+	RateLimit       RateLimitConfig `yaml:"rate_limit" validate:"required"`
+	TwilioRateLimit RateLimitConfig `yaml:"twilio_rate_limit" validate:"required"`
 
 	Monitoring struct {
 		ServiceName string `yaml:"service_name" validate:"required"`
@@ -276,6 +271,20 @@ type TypeServicePlatform struct {
 		GRPCPort       int    `yaml:"grpc_port" validate:"required"`
 		IsDev          bool   `yaml:"is_dev"`
 	} `yaml:"twilio" validate:"required"`
+}
+
+// RateLimitConfig represents the configuration for rate limiting, including whether it is enabled, the number of requests allowed, the period for which the limit applies, the burst size, and the cleanup time for expired keys. This struct can be used to configure rate limiting behavior in the application, such as for API endpoints or specific services like Twilio.
+// - Enabled: A boolean indicating whether rate limiting is enabled.
+// - Requests: The number of requests allowed within the specified period.
+// - Period: The time period (in seconds) for which the request limit applies.
+// - Burst: The maximum burst size, allowing for short-term spikes in traffic.
+// - CleanupTime: The time (in seconds) after which expired keys should be cleaned up from the rate limiter.
+type RateLimitConfig struct {
+	Enabled     bool `yaml:"enabled"`
+	Requests    int  `yaml:"requests" validate:"required"`
+	Period      int  `yaml:"period" validate:"required"`
+	Burst       int  `yaml:"burst" validate:"required"`
+	CleanupTime int  `yaml:"cleanup_time" validate:"required"`
 }
 
 // K6Thresholds represents default thresholds for k6 tests
