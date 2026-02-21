@@ -283,6 +283,12 @@ rate_limit:
   period: 60            # period in seconds (1 minute)
   burst: 20             # burst allowance
   cleanup_time: 3600    # cleanup time in seconds (1 hour)
+twilio_rate_limit:
+  enabled: true
+  requests: 10          # requests per period
+  period: 60            # period in seconds (1 minute)
+  burst: 5              # burst allowance
+  cleanup_time: 3600    # cleanup time in seconds (1 hour)
 monitoring:
   service_name: "monitoring-of-service-platform"
   description: "Service Platform - Monitoring System Service, that monitors various services including API, gRPC, Scheduler, WhatsNyan for WhatsApp integration and LibreTranslate for translation services."

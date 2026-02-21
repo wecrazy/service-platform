@@ -207,14 +207,14 @@ CREATE TABLE schema_migrations (
 ## Environment Configuration
 
 ### Development
-- Uses `config.dev.yaml` configuration
+- Uses `internal/config/service-platform.dev.yaml` configuration
 - Allows all migration operations
 - Suitable for rapid development
 
 ### Production
-- Uses `config.prod.yaml` configuration
+- Uses `internal/config/service-platform.prod.yaml` configuration
 - Should have additional safeguards
-- Requires careful testing before deployment
+- Requires careful testing before production
 
 ## Troubleshooting
 

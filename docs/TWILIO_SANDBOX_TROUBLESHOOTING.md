@@ -119,7 +119,7 @@ go test -v -run TestSendMessage ./tests/twilio/
 
 **Check credentials:**
 ```bash
-grep -A 5 "whatsapp:" internal/config/config.dev.yaml
+grep -A 5 "whatsapp:" internal/config/service-platform.dev.yaml
 
 # Should show SANDBOX credentials (not production):
 # account_sid: "ACxxxxx...sandbox"
@@ -131,7 +131,7 @@ grep -A 5 "whatsapp:" internal/config/config.dev.yaml
 2. Copy your:
    - **Account SID** (starts with `AC`)
    - **Auth Token** (long string)
-3. Update `internal/config/config.dev.yaml`:
+3. Update `internal/config/service-platform.dev.yaml`:
    ```yaml
    twilio:
      whatsapp:

@@ -180,7 +180,7 @@ Before sending real messages:
 - [ ] Verification code was confirmed
 - [ ] Phone number is in E.164 format (`+6285173207755`)
 - [ ] Twilio Account SID and Auth Token are correct
-- [ ] `config.dev.yaml` has real credentials
+- [ ] `internal/config/service-platform.dev.yaml` has real credentials
 
 ## Troubleshooting
 
@@ -207,7 +207,7 @@ Before sending real messages:
 **Fix:**
 - Check Account SID and Auth Token
 - Verify in Twilio Console (not credentials of your account)
-- Ensure they match what's in `config.dev.yaml`
+- Ensure they match what's in `internal/config/service-platform.dev.yaml`
 
 ## Links
 
@@ -222,7 +222,7 @@ Before sending real messages:
 
 ```bash
 # 1. Setup Twilio credentials
-# Edit: internal/config/config.dev.yaml
+# Edit: internal/config/service-platform.dev.yaml
 
 # 2. Run the service
 make run-twilio-whatsapp
