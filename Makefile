@@ -1,4 +1,4 @@
-.PHONY: run-api run-wa run-twilio-whatsapp run-telegram run-scheduler run-grpc run-all build build-api build-wa build-twilio-whatsapp build-telegram build-scheduler build-grpc build-monitoring docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all mongo-up mongo-down mongo-logs mongo-status test test-twilio test-twilio-sandbox test-mongo help
+.PHONY: run-api run-wa run-twilio-whatsapp run-telegram run-scheduler run-grpc run-all build build-api build-wa build-twilio-whatsapp build-telegram build-scheduler build-grpc build-monitoring build-cli cli docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all mongo-up mongo-down mongo-logs mongo-status test test-twilio test-twilio-sandbox test-mongo help
 
 run-api:
 	go run cmd/api/main.go
@@ -50,7 +50,14 @@ build-n8n:
 	mkdir -p bin
 	go build -o bin/n8n cmd/n8n/main.go
 
-build: build-api build-wa build-twilio-whatsapp build-grpc build-monitoring build-n8n
+build-cli:
+	mkdir -p bin
+	go build -o bin/cli cmd/cli/main.go
+
+cli:
+	@go run cmd/cli/main.go
+
+build: build-api build-wa build-twilio-whatsapp build-grpc build-monitoring build-n8n build-cli
 
 test:
 	go test -v -cover ./tests/... ./internal/migrations/...
@@ -448,7 +455,11 @@ help:
 	@echo "  make build-twilio-whatsapp         		- Build Twilio WhatsApp service"
 	@echo "  make build-telegram      			- Build Telegram service"
 	@echo "  make build-monitoring   			- Build monitoring service"
+	@echo "  make build-cli          			- Build interactive CLI (Bubbletea TUI)"
 	@echo "  make build             			- Build all services"
+	@echo ""
+	@echo "🖥️  Interactive CLI:"
+	@echo "  make cli               			- Launch interactive TUI (Bubbletea)"
 	@echo ""
 	@echo "🏃 Run Commands:"
 	@echo "  make run-api            			- Run API service"
