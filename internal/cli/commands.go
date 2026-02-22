@@ -198,6 +198,31 @@ func allCategories() []Category {
 				{Name: "Service Status", Description: "Check service status", MakeTarget: "status-telegram"},
 			},
 		},
+		{
+			Name:        "Docker Compose",
+			Icon:        "🐳",
+			Description: "Full-stack containers (local dev)",
+			Items: []MenuItem{
+				{Name: "Start All", Description: "Infra + all services (docker-up)", MakeTarget: "docker-up"},
+				{Name: "Start Infra Only", Description: "Postgres, Redis, MongoDB", MakeTarget: "docker-up-infra"},
+				{Name: "Start Services Only", Description: "App services (needs infra)", MakeTarget: "docker-up-services"},
+				{Name: "Stop All", Description: "Stop all containers", MakeTarget: "docker-down"},
+				{Name: "Stop + Remove Volumes", Description: "Stop and destroy data", MakeTarget: "docker-down-volumes", Dangerous: true},
+				{Name: "Rebuild Images", Description: "Rebuild all service images", MakeTarget: "docker-build"},
+				{Name: "Rebuild (no cache)", Description: "Rebuild without Docker cache", MakeTarget: "docker-build-no-cache"},
+				{Name: "Status", Description: "Show container status", MakeTarget: "docker-ps"},
+				{Name: "Tail All Logs", Description: "Follow logs from all services", MakeTarget: "docker-logs", LongRunning: true},
+				{Name: "Tail API Logs", Description: "Follow API service logs", MakeTarget: "docker-logs-api", LongRunning: true},
+				{Name: "Tail gRPC Logs", Description: "Follow gRPC service logs", MakeTarget: "docker-logs-grpc", LongRunning: true},
+				{Name: "Tail Scheduler Logs", Description: "Follow Scheduler logs", MakeTarget: "docker-logs-scheduler", LongRunning: true},
+				{Name: "Tail WhatsApp Logs", Description: "Follow WhatsApp logs", MakeTarget: "docker-logs-whatsapp", LongRunning: true},
+				{Name: "Tail Telegram Logs", Description: "Follow Telegram logs", MakeTarget: "docker-logs-telegram", LongRunning: true},
+				{Name: "Tail Twilio WA Logs", Description: "Follow Twilio WhatsApp logs", MakeTarget: "docker-logs-twilio", LongRunning: true},
+				{Name: "Restart All", Description: "Restart full stack (rebuild)", MakeTarget: "docker-restart"},
+				{Name: "Restart API Only", Description: "Rebuild + restart API only", MakeTarget: "docker-restart-api"},
+				{Name: "Pull Base Images", Description: "Pull latest Docker images", MakeTarget: "docker-pull"},
+			},
+		},
 	}
 }
 

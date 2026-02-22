@@ -248,7 +248,7 @@ ResponseBody:
 
 func CacheControlMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Header("Server`", "SWS")
+		c.Header("Server", "SWS")
 
 		hasPrefix := false
 

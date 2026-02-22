@@ -1,4 +1,9 @@
-.PHONY: run-api run-wa run-twilio-whatsapp run-telegram run-scheduler run-grpc run-all build build-api build-wa build-twilio-whatsapp build-telegram build-scheduler build-grpc build-monitoring build-cli cli docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all mongo-up mongo-down mongo-logs mongo-status test test-twilio test-twilio-sandbox test-mongo help
+.PHONY: run-api run-wa run-twilio-whatsapp run-telegram run-scheduler run-grpc run-all build build-api build-wa build-twilio-whatsapp build-telegram build-scheduler build-grpc build-monitoring build-cli cli docs-install docs-grpc docs-serve swagger clean-dashboard config-dev config-prod monitoring-start monitoring-stop monitoring-restart monitoring-deep-restart monitoring-status monitoring-cleanup monitoring-ensure-running monitoring-cleanup-data monitoring-deep-restart-alt monitoring-start-alt monitoring-stop-alt tempo-test observability-verify install-monitoring uninstall-monitoring build-migrate migrate-up migrate-down migrate-status migrate-reset k6-health-check k6-smoke-test k6-login-test k6-stress-test k6-run-script k6-status k6-stop k6-results health-check-all mongo-up mongo-down mongo-logs mongo-status test test-twilio test-twilio-sandbox test-mongo docker-up docker-up-infra docker-up-services docker-down docker-build docker-ps docker-logs docker-logs-api docker-logs-grpc docker-logs-scheduler docker-logs-whatsapp docker-logs-telegram docker-logs-twilio docker-restart docker-restart-api docker-pull help
+
+# ── Container runtime detection ──────────────────────────────────────────────
+# Prefer podman-compose, fall back to docker compose (v2 plugin), then docker-compose (v1)
+COMPOSE_CMD := $(shell command -v podman-compose 2>/dev/null || (docker compose version >/dev/null 2>&1 && echo "docker compose") || command -v docker-compose 2>/dev/null)
+COMPOSE_FILE := docker/docker-compose.yml
 
 run-api:
 	go run cmd/api/main.go
@@ -396,6 +401,84 @@ health-check-all:
 	@echo "🩺 Running comprehensive health check..."
 	@./scripts/health-check-all.sh
 
+# ── Docker Compose (full-stack) ──────────────────────────────────────────────
+
+docker-up: ## Start all services (infra + app)
+	@echo "🐳 Starting full stack (infra + services)..."
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile infra --profile services up -d --build
+	@echo ""
+	@echo "✅ Stack is up. Service endpoints:"
+	@echo "   API Server:       http://localhost:$${API_PORT:-6221}"
+	@echo "   gRPC:             localhost:$${GRPC_PORT:-50041}"
+	@echo "   Scheduler gRPC:   localhost:$${SCHEDULER_PORT:-50043}"
+	@echo "   WhatsApp gRPC:    localhost:$${WHATSAPP_PORT:-50042}"
+	@echo "   Telegram gRPC:    localhost:$${TELEGRAM_PORT:-50044}"
+	@echo "   Twilio WA gRPC:   localhost:$${TWILIO_PORT:-50061}"
+	@echo "   Mongo Express:    http://localhost:$${MONGOEXPRESS_PORT:-8081}"
+
+docker-up-infra: ## Start only infrastructure (Postgres, Redis, MongoDB)
+	@echo "🐳 Starting infrastructure..."
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile infra up -d
+	@echo "✅ Infrastructure ready (Postgres, Redis, MongoDB, Mongo Express)"
+
+docker-up-services: ## Start only application services (requires infra)
+	@echo "🐳 Starting application services..."
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile services up -d --build
+	@echo "✅ Application services started"
+
+docker-down: ## Stop all containers and remove networks
+	@echo "🛑 Stopping full stack..."
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile infra --profile services --profile tools down
+
+docker-down-volumes: ## Stop all and remove volumes (⚠️ destroys data)
+	@echo "⚠️  Stopping full stack and removing volumes..."
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile infra --profile services --profile tools down -v
+
+docker-build: ## Rebuild all service images
+	@echo "🔨 Rebuilding service images..."
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile services build
+
+docker-build-no-cache: ## Rebuild all service images without cache
+	@echo "🔨 Rebuilding service images (no cache)..."
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile services build --no-cache
+
+docker-ps: ## Show status of all containers
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile infra --profile services --profile tools ps -a
+
+docker-logs: ## Tail logs from all services
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile infra --profile services logs -f --tail=50
+
+docker-logs-api: ## Tail API service logs
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) logs -f --tail=100 api
+
+docker-logs-grpc: ## Tail gRPC service logs
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) logs -f --tail=100 grpc
+
+docker-logs-scheduler: ## Tail Scheduler service logs
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) logs -f --tail=100 scheduler
+
+docker-logs-whatsapp: ## Tail WhatsApp service logs
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) logs -f --tail=100 whatsapp
+
+docker-logs-telegram: ## Tail Telegram service logs
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) logs -f --tail=100 telegram
+
+docker-logs-twilio: ## Tail Twilio WhatsApp service logs
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) logs -f --tail=100 twilio-whatsapp
+
+docker-restart: ## Restart all services (rebuild)
+	@echo "🔄 Restarting full stack..."
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile infra --profile services down
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile infra --profile services up -d --build
+
+docker-restart-api: ## Restart only the API service
+	@echo "🔄 Restarting API service..."
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) up -d --build --no-deps api
+
+docker-pull: ## Pull latest base images
+	@echo "📦 Pulling latest base images..."
+	@$(COMPOSE_CMD) -f $(COMPOSE_FILE) --profile infra pull
+
 mongo-up:
 	@echo "🐳 Starting MongoDB container..."
 	@podman-compose -f docker/docker-compose.mongodb.yml up -d
@@ -543,3 +626,23 @@ help:
 	@echo "  make mongo-logs          			- View MongoDB logs"
 	@echo "  make mongo-status        			- Check MongoDB container status"
 	@echo "  make mongo-check         			- Check MongoDB and MongoExpress accessibility"
+	@echo ""
+	@echo "🐳 Docker Compose (full-stack):"
+	@echo "  make docker-up           			- Start full stack (infra + services)"
+	@echo "  make docker-up-infra     			- Start only infrastructure (Postgres, Redis, MongoDB)"
+	@echo "  make docker-up-services  			- Start only application services"
+	@echo "  make docker-down         			- Stop all containers"
+	@echo "  make docker-down-volumes 			- Stop all and remove volumes (⚠️  destroys data)"
+	@echo "  make docker-build        			- Rebuild all service images"
+	@echo "  make docker-build-no-cache 			- Rebuild all without cache"
+	@echo "  make docker-ps           			- Show container status"
+	@echo "  make docker-logs         			- Tail logs from all services"
+	@echo "  make docker-logs-api     			- Tail API logs"
+	@echo "  make docker-logs-grpc    			- Tail gRPC logs"
+	@echo "  make docker-logs-scheduler 			- Tail Scheduler logs"
+	@echo "  make docker-logs-whatsapp 			- Tail WhatsApp logs"
+	@echo "  make docker-logs-telegram 			- Tail Telegram logs"
+	@echo "  make docker-logs-twilio  			- Tail Twilio WhatsApp logs"
+	@echo "  make docker-restart      			- Restart full stack (rebuild)"
+	@echo "  make docker-restart-api  			- Restart only API service"
+	@echo "  make docker-pull         			- Pull latest base images"
