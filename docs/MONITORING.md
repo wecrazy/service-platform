@@ -186,6 +186,9 @@ The following system metrics are collected every 30 seconds:
 
 ## Setup Instructions
 
+> **Note:** The monitoring stack uses its own compose file (`docker/docker-compose.monitoring.yml`).
+> For full-stack local dev (databases + all app services), see `docker/docker-compose.yml` and `make docker-up`.
+
 ### 1. Start Monitoring Stack
 
 The scripts automatically detect and prioritize Podman over Docker:
