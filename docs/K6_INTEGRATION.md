@@ -64,6 +64,10 @@ Added k6 commands:
 
 ## Quick Start
 
+> **Tip:** You can also start all infrastructure + services with `make docker-up`
+> (uses `docker/docker-compose.yml`). The k6 container lives in the monitoring
+> compose file (`docker/docker-compose.monitoring.yml`).
+
 ### 1. Start Monitoring Stack
 ```bash
 make monitoring-start
