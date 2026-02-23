@@ -8,11 +8,14 @@ import (
 
 // MenuItem represents a single executable make target.
 type MenuItem struct {
-	Name        string
-	Description string
-	MakeTarget  string
-	LongRunning bool // Service that runs continuously (uses ExecProcess)
-	Dangerous   bool // Requires y/n confirmation before running
+	Name                 string
+	Description          string
+	MakeTarget           string
+	LongRunning          bool   // Service that runs continuously (uses ExecProcess)
+	Dangerous            bool   // Requires y/n confirmation before running
+	NeedsParameter       bool   // Does this command need user input for a parameter?
+	ParameterName        string // Name of the parameter (e.g., "PKG", "PATTERN")
+	ParameterDescription string // Description to show user (e.g., "Package path (e.g., ./cmd/api)")
 }
 
 // Category groups related commands under a section.
@@ -189,6 +192,22 @@ func allCategories() []Category {
 			},
 		},
 		{
+			Name:        "Code Quality",
+			Icon:        "🎯",
+			Description: "Linting, benchmarks, mocks, and dependency analysis",
+			Items: []MenuItem{
+				{Name: "Revive Linter (All)", Description: "Run revive on all packages", MakeTarget: "revive"},
+				{Name: "Revive Linter (PKG)", Description: "Lint a specific package", MakeTarget: "revive", NeedsParameter: true, ParameterName: "PKG", ParameterDescription: "Package path (e.g., ./cmd/api, ./internal/cli)"},
+				{Name: "Install Revive", Description: "Install revive tool", MakeTarget: "install-revive"},
+				{Name: "Run Benchmarks", Description: "Run all benchmarks", MakeTarget: "benchstat"},
+				{Name: "Install Benchstat", Description: "Install benchstat tool", MakeTarget: "install-benchstat"},
+				{Name: "Generate Mocks", Description: "Auto-generate mocks for interfaces", MakeTarget: "mockery"},
+				{Name: "Install Mockery", Description: "Install mockery tool", MakeTarget: "install-mockery"},
+				{Name: "Module Graph (All)", Description: "Full dependency graph visualization", MakeTarget: "modgraphviz"},
+				{Name: "Module Graph (PKG)", Description: "Graph specific package dependencies", MakeTarget: "modgraphviz", NeedsParameter: true, ParameterName: "PKG", ParameterDescription: "Module path (e.g., github.com/gin-gonic, golang.org/x)"},
+			},
+		},
+		{
 			Name:        "Telegram Service",
 			Icon:        "📱",
 			Description: "Telegram system service management",
@@ -196,6 +215,31 @@ func allCategories() []Category {
 				{Name: "Install Service", Description: "Install as system service", MakeTarget: "install-telegram"},
 				{Name: "Uninstall Service", Description: "Remove system service", MakeTarget: "uninstall-telegram", Dangerous: true},
 				{Name: "Service Status", Description: "Check service status", MakeTarget: "status-telegram"},
+			},
+		},
+		{
+			Name:        "Docker Compose",
+			Icon:        "🐳",
+			Description: "Full-stack containers (local dev)",
+			Items: []MenuItem{
+				{Name: "Start All", Description: "Infra + all services (docker-up)", MakeTarget: "docker-up"},
+				{Name: "Start Infra Only", Description: "Postgres, Redis, MongoDB", MakeTarget: "docker-up-infra"},
+				{Name: "Start Services Only", Description: "App services (needs infra)", MakeTarget: "docker-up-services"},
+				{Name: "Stop All", Description: "Stop all containers", MakeTarget: "docker-down"},
+				{Name: "Stop + Remove Volumes", Description: "Stop and destroy data", MakeTarget: "docker-down-volumes", Dangerous: true},
+				{Name: "Rebuild Images", Description: "Rebuild all service images", MakeTarget: "docker-build"},
+				{Name: "Rebuild (no cache)", Description: "Rebuild without Docker cache", MakeTarget: "docker-build-no-cache"},
+				{Name: "Status", Description: "Show container status", MakeTarget: "docker-ps"},
+				{Name: "Tail All Logs", Description: "Follow logs from all services", MakeTarget: "docker-logs", LongRunning: true},
+				{Name: "Tail API Logs", Description: "Follow API service logs", MakeTarget: "docker-logs-api", LongRunning: true},
+				{Name: "Tail gRPC Logs", Description: "Follow gRPC service logs", MakeTarget: "docker-logs-grpc", LongRunning: true},
+				{Name: "Tail Scheduler Logs", Description: "Follow Scheduler logs", MakeTarget: "docker-logs-scheduler", LongRunning: true},
+				{Name: "Tail WhatsApp Logs", Description: "Follow WhatsApp logs", MakeTarget: "docker-logs-whatsapp", LongRunning: true},
+				{Name: "Tail Telegram Logs", Description: "Follow Telegram logs", MakeTarget: "docker-logs-telegram", LongRunning: true},
+				{Name: "Tail Twilio WA Logs", Description: "Follow Twilio WhatsApp logs", MakeTarget: "docker-logs-twilio", LongRunning: true},
+				{Name: "Restart All", Description: "Restart full stack (rebuild)", MakeTarget: "docker-restart"},
+				{Name: "Restart API Only", Description: "Rebuild + restart API only", MakeTarget: "docker-restart-api"},
+				{Name: "Pull Base Images", Description: "Pull latest Docker images", MakeTarget: "docker-pull"},
 			},
 		},
 	}

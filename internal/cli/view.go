@@ -18,6 +18,8 @@ func (m Model) View() string {
 		return m.renderCategories()
 	case viewCommands:
 		return m.renderCommands()
+	case viewParameterInput:
+		return m.renderParameterInput()
 	case viewRunning:
 		return m.renderRunning()
 	case viewConfirm:
@@ -126,6 +128,45 @@ func (m Model) renderCommands() string {
 	}
 	entries = append(entries, helpPair{"enter", "run"}, helpPair{"/", "search"}, helpPair{"esc", "back"})
 	s.WriteString(renderHelp(entries...))
+	s.WriteString("\n")
+
+	return s.String()
+}
+
+// ── Parameter input view ────────────────────────────────────────────────────
+
+// renderParameterInput builds the string output for the parameter input screen. It shows the command name, parameter description, and an input field for the user to enter the parameter value.
+func (m Model) renderParameterInput() string {
+	var s strings.Builder
+
+	s.WriteString("\n")
+	s.WriteString(titleStyle.Render(fmt.Sprintf("  📝 %s", m.parameterItem.Name)))
+	s.WriteString("\n\n")
+
+	s.WriteString(descStyle.Render(fmt.Sprintf("  %s\n", m.parameterItem.ParameterDescription)))
+	s.WriteString("\n")
+
+	// Input field
+	inputPrompt := fmt.Sprintf("  %s = ", m.parameterItem.ParameterName)
+	cursor := "█"
+
+	// Build the input display with cursor
+	inputDisplay := m.parameterValue
+	if m.parameterCursor <= len(m.parameterValue) {
+		inputDisplay = m.parameterValue[:m.parameterCursor] + cursor + m.parameterValue[m.parameterCursor:]
+	} else {
+		inputDisplay = m.parameterValue + cursor
+	}
+
+	s.WriteString(inputPrompt)
+	s.WriteString(selectedItemStyle.Render(inputDisplay))
+	s.WriteString("\n\n")
+
+	// Help bar
+	s.WriteString(renderHelp(
+		helpPair{"enter", "submit"},
+		helpPair{"esc", "cancel"},
+	))
 	s.WriteString("\n")
 
 	return s.String()
