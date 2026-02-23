@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/agnivade/levenshtein v1.2.1
-	github.com/alicebob/miniredis/v2 v2.35.0
+	github.com/alicebob/miniredis/v2 v2.36.1
 	github.com/charmbracelet/bubbles v1.0.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
@@ -20,33 +20,32 @@ require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.11.2
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/mssola/user_agent v0.6.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
-	github.com/nyaruka/phonenumbers v1.6.8
+	github.com/nyaruka/phonenumbers v1.6.10
 	github.com/prometheus/client_golang v1.23.2
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.1
-	github.com/swaggo/swag v1.16.6
 	github.com/tom-draper/api-analytics/analytics/go/gin v0.0.0-20251222101928-a076bea009fb
-	github.com/twilio/twilio-go v1.30.1
+	github.com/twilio/twilio-go v1.30.2
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
 	go.mau.fi/whatsmeow v0.0.0-20260219150138-7ae702b1eed4
-	go.mongodb.org/mongo-driver v1.17.6
-	go.opentelemetry.io/otel v1.39.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.39.0
-	go.opentelemetry.io/otel/sdk v1.39.0
+	go.mongodb.org/mongo-driver v1.17.9
+	go.opentelemetry.io/otel v1.40.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.40.0
+	go.opentelemetry.io/otel/sdk v1.40.0
 	golang.org/x/sys v0.41.0
-	google.golang.org/grpc v1.78.0
+	google.golang.org/grpc v1.79.1
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/datatypes v1.2.7
-	gorm.io/driver/mysql v1.5.6
+	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
@@ -101,7 +100,7 @@ require (
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.7 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.6.0 // indirect
@@ -137,6 +136,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rs/zerolog v1.34.0 // indirect
+	github.com/swaggo/swag v1.16.6 // indirect
 	github.com/tom-draper/api-analytics/analytics/go/core v0.0.0-20250423161653-bf0660dc994c // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
@@ -151,9 +151,9 @@ require (
 	go.mau.fi/libsignal v0.2.1 // indirect
 	go.mau.fi/util v0.9.6 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.39.0 // indirect
-	go.opentelemetry.io/otel/metric v1.39.0 // indirect
-	go.opentelemetry.io/otel/trace v1.39.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.40.0 // indirect
+	go.opentelemetry.io/otel/metric v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/mock v0.5.0 // indirect
@@ -168,8 +168,8 @@ require (
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260128011058-8636f8732409 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260128011058-8636f8732409 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
