@@ -16,13 +16,13 @@ var (
 	MySQLDBTA           *gorm.DB // MySQLDBTA holds the GORM DB connection for Dashboard Technical Assistance - Manage Service Integration of MySQL database
 	MySQLDBMSMiddleware *gorm.DB // MySQLDBMSMiddleware holds the GORM DB connection for Middleware Microservice of MySQL database
 
-	// TODO: faiz
-	// pakai pakai koneksi db web panel ini untuk langsung query ke db WebPanel.service
+	// TODO: use this connection of WebPanel.service db for Reporting, Dashboard, etc.
 	MySQLDBWebPanel *gorm.DB // MySQLDBWebPanel holds the GORM DB connection for Reporting, Dashboard, Other Function in MySQL Database
 )
 
 // InitDBMS initializes the Manage Service MySQL database connection
 func InitDBMS() error {
+	config.ManageService.MustInit("manage-service")
 	cfg := config.ManageService.Get()
 
 	dbCfgMS := DBConfig{
@@ -111,6 +111,7 @@ func MonitorDBMSConnection(interval time.Duration) {
 
 // InitDBTA initializes the Technical Assistance MySQL database connection
 func InitDBTA() error {
+	config.ManageService.MustInit("manage-service")
 	cfg := config.ManageService.Get()
 
 	dbCfgTA := DBConfig{
