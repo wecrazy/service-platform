@@ -248,7 +248,7 @@ ResponseBody:
 
 func CacheControlMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Header("Server`", "SWS")
+		c.Header("Server", "SWS")
 
 		hasPrefix := false
 
@@ -488,8 +488,9 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		var user model.Users
 		if err := db.Where("id = ? AND session = ?", claims["id"], claims["session"]).First(&user).Error; err != nil {
+			logrus.WithError(err).Warn("WebSession: error querying user")
 			fun.ClearCookiesAndRedirect(c, cookies)
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error querying database: "+err.Error())
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error")
 			return
 
 			// Handle other errors
@@ -521,7 +522,8 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			c.Abort()
 			return
 		} else if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving data from Redis, details: " + err.Error()})
+			logrus.WithError(err).Warn("WebSession: error retrieving data from Redis")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 			c.Abort()
 			return
 		}

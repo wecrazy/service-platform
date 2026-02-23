@@ -1,0 +1,57 @@
+ignoreFailure = false
+
+[rule.blank-imports]
+Arguments = []
+
+[rule.context-as-argument]
+Arguments = []
+
+[rule.cyclomatic]
+Arguments = [15]
+
+[rule.error-return]
+Arguments = []
+
+[rule.error-strings]
+Arguments = []
+
+[rule.error-naming]
+Arguments = []
+
+[rule.exported]
+Arguments = ["disableStutteringCheck"]
+
+[rule.if-return]
+Arguments = []
+
+[rule.increment-decrement]
+Arguments = []
+
+[rule.indent-error-flow]
+Arguments = []
+
+[rule.package-comments]
+Arguments = []
+
+[rule.range]
+Arguments = []
+
+[rule.receiver-naming]
+Arguments = []
+
+[rule.redefines-builtin-id]
+Arguments = []
+
+[rule.superfluous-else]
+Arguments = []
+
+[rule.time-naming]
+Arguments = []
+
+[rule.unused-parameter]
+Arguments = []
+
+[rule.unused-receiver]
+Arguments = []
+
+[rule.var-naming]

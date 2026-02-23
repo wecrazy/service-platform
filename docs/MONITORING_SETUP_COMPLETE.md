@@ -168,7 +168,8 @@ curl -u admin:admin http://localhost:9180
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `docker/docker-compose.monitoring.yml` | Container definitions | ✅ Updated (port 9180) |
+| `docker/docker-compose.monitoring.yml` | Monitoring containers (Prometheus, Loki, Tempo, Grafana, k6) | ✅ Updated (port 9180) |
+| `docker/docker-compose.yml` | Full-stack local dev (Postgres, Redis, MongoDB + all app services) | ✅ New |
 | `monitoring/loki/loki-config.yml` | Loki settings | ✅ Fixed (WAL disabled) |
 | `monitoring/tempo/tempo-config.yml` | Tempo settings | ✅ Simplified |
 | `monitoring/nginx/.htpasswd` | Auth credentials | ✅ Verified |
@@ -183,6 +184,8 @@ curl -u admin:admin http://localhost:9180
 ```bash
 # Start
 bash scripts/monitoring-quickstart.sh start
+# — or via Makefile —
+make monitoring-start
 
 # Stop
 bash scripts/monitoring-quickstart.sh stop

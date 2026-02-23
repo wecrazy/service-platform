@@ -68,3 +68,7 @@ bin/
 docs/docs.go
 docs/swagger.json
 docs/swagger.yaml
+
+# === Dev Files ===
+mocks/
+docs/graphs/
