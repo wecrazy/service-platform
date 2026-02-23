@@ -8,11 +8,14 @@ import (
 
 // MenuItem represents a single executable make target.
 type MenuItem struct {
-	Name        string
-	Description string
-	MakeTarget  string
-	LongRunning bool // Service that runs continuously (uses ExecProcess)
-	Dangerous   bool // Requires y/n confirmation before running
+	Name                 string
+	Description          string
+	MakeTarget           string
+	LongRunning          bool   // Service that runs continuously (uses ExecProcess)
+	Dangerous            bool   // Requires y/n confirmation before running
+	NeedsParameter       bool   // Does this command need user input for a parameter?
+	ParameterName        string // Name of the parameter (e.g., "PKG", "PATTERN")
+	ParameterDescription string // Description to show user (e.g., "Package path (e.g., ./cmd/api)")
 }
 
 // Category groups related commands under a section.
@@ -186,6 +189,22 @@ func allCategories() []Category {
 				{Name: "Test Tempo", Description: "Test Tempo tracing setup", MakeTarget: "tempo-test"},
 				{Name: "Verify Observability", Description: "Verify full observability stack", MakeTarget: "observability-verify"},
 				{Name: "Health Check All", Description: "Comprehensive health check", MakeTarget: "health-check-all"},
+			},
+		},
+		{
+			Name:        "Code Quality",
+			Icon:        "🎯",
+			Description: "Linting, benchmarks, mocks, and dependency analysis",
+			Items: []MenuItem{
+				{Name: "Revive Linter (All)", Description: "Run revive on all packages", MakeTarget: "revive"},
+				{Name: "Revive Linter (PKG)", Description: "Lint a specific package", MakeTarget: "revive", NeedsParameter: true, ParameterName: "PKG", ParameterDescription: "Package path (e.g., ./cmd/api, ./internal/cli)"},
+				{Name: "Install Revive", Description: "Install revive tool", MakeTarget: "install-revive"},
+				{Name: "Run Benchmarks", Description: "Run all benchmarks", MakeTarget: "benchstat"},
+				{Name: "Install Benchstat", Description: "Install benchstat tool", MakeTarget: "install-benchstat"},
+				{Name: "Generate Mocks", Description: "Auto-generate mocks for interfaces", MakeTarget: "mockery"},
+				{Name: "Install Mockery", Description: "Install mockery tool", MakeTarget: "install-mockery"},
+				{Name: "Module Graph (All)", Description: "Full dependency graph visualization", MakeTarget: "modgraphviz"},
+				{Name: "Module Graph (PKG)", Description: "Graph specific package dependencies", MakeTarget: "modgraphviz", NeedsParameter: true, ParameterName: "PKG", ParameterDescription: "Module path (e.g., github.com/gin-gonic, golang.org/x)"},
 			},
 		},
 		{
