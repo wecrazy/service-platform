@@ -16,11 +16,12 @@ import (
 type viewState int
 
 const (
-	viewCategories viewState = iota // Category list view
-	viewCommands                    // Command list for selected category
-	viewRunning                     // Running command output view
-	viewConfirm                     // Confirmation dialog for dangerous actions
-	viewSearch                      // Global search across all commands
+	viewCategories     viewState = iota // Category list view
+	viewCommands                        // Command list for selected category
+	viewParameterInput                  // Parameter input for commands that need them
+	viewRunning                         // Running command output view
+	viewConfirm                         // Confirmation dialog for dangerous actions
+	viewSearch                          // Global search across all commands
 )
 
 // ── Tea messages ────────────────────────────────────────────────────────────
@@ -64,6 +65,11 @@ type Model struct {
 
 	// Confirm dialog
 	confirmItem MenuItem
+
+	// Parameter input state
+	parameterItem   MenuItem // Item that needs parameter input
+	parameterValue  string   // User's entered parameter value
+	parameterCursor int      // Cursor position in input field
 
 	// Search state
 	searchQuery   string         // current search input text
@@ -177,6 +183,8 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.keyCategories(msg.String())
 	case viewCommands:
 		return m.keyCommands(msg.String())
+	case viewParameterInput:
+		return m.keyParameterInput(msg.String())
 	case viewRunning:
 		return m.keyRunning(msg.String())
 	case viewConfirm:
@@ -284,6 +292,15 @@ func (m Model) execSelected() (tea.Model, tea.Cmd) {
 
 	item := cat.Items[m.cmdIdx]
 
+	// Parameter input → collect parameter first
+	if item.NeedsParameter {
+		m.parameterItem = item
+		m.parameterValue = ""
+		m.parameterCursor = 0
+		m.state = viewParameterInput
+		return m, nil
+	}
+
 	// Dangerous → confirm first
 	if item.Dangerous {
 		m.confirmItem = item
@@ -353,6 +370,39 @@ func (m Model) handleResult(msg commandResultMsg) (tea.Model, tea.Cmd) {
 			m.outputLines = append(m.outputLines, successStyle.Render("✓ All tasks completed"))
 		} else {
 			m.outputLines = append(m.outputLines, dangerStyle.Render("✗ Some tasks failed"))
+		}
+	}
+	return m, nil
+}
+
+// ── Parameter input ────────────────────────────────────────────────────────
+
+// keyParameterInput handles text input and submission for commands that need parameters.
+func (m Model) keyParameterInput(key string) (tea.Model, tea.Cmd) {
+	switch key {
+	case "esc":
+		// Cancel parameter input, go back to command list
+		m.state = viewCommands
+		return m, nil
+	case "enter":
+		// Submit the parameter value
+		if m.parameterValue != "" {
+			// Build the target with parameter (e.g., "revive PKG='./cmd/api'")
+			target := fmt.Sprintf("%s %s='%s'", m.parameterItem.MakeTarget, m.parameterItem.ParameterName, m.parameterValue)
+			return m.runBatch([]string{target})
+		}
+		// Empty input - require at least something
+		return m, nil
+	case "backspace":
+		if m.parameterCursor > 0 {
+			m.parameterValue = m.parameterValue[:m.parameterCursor-1] + m.parameterValue[m.parameterCursor:]
+			m.parameterCursor--
+		}
+	default:
+		// Regular character input
+		if len(key) == 1 {
+			m.parameterValue = m.parameterValue[:m.parameterCursor] + key + m.parameterValue[m.parameterCursor:]
+			m.parameterCursor++
 		}
 	}
 	return m, nil

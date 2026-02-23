@@ -1,0 +1,5 @@
+all: true
+recursive: true
+with-expecter: true
+output: mocks
+outpkg: mocks
