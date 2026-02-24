@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 	"strconv"
 	"strings"
 	"sync"
@@ -32,6 +32,7 @@ type bodyLogWriter struct {
 	body *bytes.Buffer
 }
 
+// GetWebSession returns the global sync.Map used to store active web sessions.
 func GetWebSession() *sync.Map {
 	return webSession
 }
@@ -48,28 +49,108 @@ func generateRequestID() string {
 	return hex.EncodeToString(bytes)
 }
 
+// extractSessionInfo extracts the username and session ID from the request cookies.
+func extractSessionInfo(c *gin.Context) (username, sessionID string) {
+	username = "UNKNOWN"
+	sessionID = "NO_SESSION"
+	session := GetWebSession()
+	for _, cookie := range c.Request.Cookies() {
+		if cookie.Name == "credentials" {
+			sessionID = cookie.Value
+			if value, ok := session.Load(cookie.Value); ok {
+				if admin, ok2 := value.(model.Users); ok2 {
+					username = admin.Username
+				}
+			}
+			break
+		}
+	}
+	return username, sessionID
+}
+
+// buildQueryString formats the URL query parameters as a single string.
+func buildQueryString(c *gin.Context) string {
+	var queryStr string
+	for key, values := range c.Request.URL.Query() {
+		for _, value := range values {
+			queryStr += fmt.Sprintf("%s=%s ", key, value)
+		}
+	}
+	queryStr = strings.TrimSpace(queryStr)
+	if queryStr == "" {
+		return "NONE"
+	}
+	return queryStr
+}
+
+// buildRouteParamString formats the route parameters as a single string.
+func buildRouteParamString(c *gin.Context) string {
+	var routeStr string
+	for _, p := range c.Params {
+		routeStr += fmt.Sprintf("%s=%s ", p.Key, p.Value)
+	}
+	routeStr = strings.TrimSpace(routeStr)
+	if routeStr == "" {
+		return "NONE"
+	}
+	return routeStr
+}
+
+// buildHeadersString formats HTTP request headers, masking sensitive ones.
+func buildHeadersString(header http.Header) string {
+	var headersString string
+	for k, v := range header {
+		for _, val := range v {
+			if strings.ToLower(k) == "authorization" || strings.ToLower(k) == "cookie" {
+				headersString += fmt.Sprintf("%s: [MASKED] -- ", k)
+			} else {
+				headersString += fmt.Sprintf("%s: %s -- ", k, val)
+			}
+		}
+	}
+	return strings.TrimSuffix(headersString, " -- ")
+}
+
+// buildCookiesString formats cookies, masking the credentials cookie value.
+func buildCookiesString(cookies []*http.Cookie) string {
+	var cookiesString string
+	for _, cookie := range cookies {
+		if cookie.Name == "credentials" {
+			cookiesString += fmt.Sprintf("%s=[MASKED] ", cookie.Name)
+		} else {
+			cookiesString += fmt.Sprintf("%s=%s ", cookie.Name, cookie.Value)
+		}
+	}
+	cookiesString = strings.TrimSpace(cookiesString)
+	if cookiesString == "" {
+		return "NONE"
+	}
+	return cookiesString
+}
+
+// buildResponseHeadersString formats HTTP response headers as a single string.
+func buildResponseHeadersString(header http.Header) string {
+	var responseHeadersString string
+	for k, v := range header {
+		for _, val := range v {
+			responseHeadersString += fmt.Sprintf("%s: %s -- ", k, val)
+		}
+	}
+	responseHeadersString = strings.TrimSuffix(responseHeadersString, " -- ")
+	if responseHeadersString == "" {
+		return "NONE"
+	}
+	return responseHeadersString
+}
+
+// LoggerMiddleware is a Gin middleware that logs HTTP request and response details.
 func LoggerMiddleware(logWriter io.Writer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Generate unique request ID for tracing
 		requestID := generateRequestID()
 		c.Set("requestID", requestID)
 
-		// Extract user from session (as you already do)
-		webSession := GetWebSession()
-		acessUsername := "UNKNOWN"
-		sessionID := "NO_SESSION"
-		for _, cookie := range c.Request.Cookies() {
-			if cookie.Name == "credentials" {
-				sessionID = cookie.Value
-				if value, ok := webSession.Load(cookie.Value); ok {
-					if admin, ok := value.(model.Users); ok {
-						acessUsername = admin.Username
-					}
-				}
-				break
-			}
-		}
-
+		acessUsername, sessionID := extractSessionInfo(c)
 		start := time.Now()
 
 		// Capture request body
@@ -118,67 +199,11 @@ func LoggerMiddleware(logWriter io.Writer) gin.HandlerFunc {
 			referrer = "NONE"
 		}
 
-		// Query parameters
-		var queryStr string
-		for key, values := range c.Request.URL.Query() {
-			for _, value := range values {
-				queryStr += fmt.Sprintf("%s=%s ", key, value)
-			}
-		}
-		queryStr = strings.TrimSpace(queryStr)
-		if queryStr == "" {
-			queryStr = "NONE"
-		}
-
-		// Format route params
-		var routeStr string
-		for _, p := range c.Params {
-			routeStr += fmt.Sprintf("%s=%s ", p.Key, p.Value)
-		}
-		routeStr = strings.TrimSpace(routeStr)
-		if routeStr == "" {
-			routeStr = "NONE"
-		}
-
-		// All request headers
-		var headersString string
-		for k, v := range c.Request.Header {
-			for _, val := range v {
-				// Mask sensitive headers
-				if strings.ToLower(k) == "authorization" || strings.ToLower(k) == "cookie" {
-					headersString += fmt.Sprintf("%s: [MASKED] -- ", k)
-				} else {
-					headersString += fmt.Sprintf("%s: %s -- ", k, val)
-				}
-			}
-		}
-		headersString = strings.TrimSuffix(headersString, " -- ")
-
-		// All cookies (masked values for security)
-		var cookiesString string
-		for _, cookie := range c.Request.Cookies() {
-			if cookie.Name == "credentials" {
-				cookiesString += fmt.Sprintf("%s=[MASKED] ", cookie.Name)
-			} else {
-				cookiesString += fmt.Sprintf("%s=%s ", cookie.Name, cookie.Value)
-			}
-		}
-		cookiesString = strings.TrimSpace(cookiesString)
-		if cookiesString == "" {
-			cookiesString = "NONE"
-		}
-
-		// Response headers
-		var responseHeadersString string
-		for k, v := range c.Writer.Header() {
-			for _, val := range v {
-				responseHeadersString += fmt.Sprintf("%s: %s -- ", k, val)
-			}
-		}
-		responseHeadersString = strings.TrimSuffix(responseHeadersString, " -- ")
-		if responseHeadersString == "" {
-			responseHeadersString = "NONE"
-		}
+		queryStr := buildQueryString(c)
+		routeStr := buildRouteParamString(c)
+		headersString := buildHeadersString(c.Request.Header)
+		cookiesString := buildCookiesString(c.Request.Cookies())
+		responseHeadersString := buildResponseHeadersString(c.Writer.Header())
 
 		// Response body (truncated for readability)
 		responseBody := blw.body.String()
@@ -246,6 +271,7 @@ ResponseBody:
 	}
 }
 
+// CacheControlMiddleware is a Gin middleware that sets HTTP cache control headers.
 func CacheControlMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Server", "SWS")
@@ -255,20 +281,20 @@ func CacheControlMiddleware() gin.HandlerFunc {
 		if c.Request.Method == "GET" {
 			requestURI := c.Request.RequestURI
 
-			if !strings.HasPrefix(requestURI, config.GLOBAL_URL+"web/") {
+			if !strings.HasPrefix(requestURI, config.GlobalURL+"web/") {
 
 				prefixes := []string{
-					config.GLOBAL_URL + "assets/",
-					config.GLOBAL_URL + "dist/",
-					config.GLOBAL_URL + "fonts/",
-					config.GLOBAL_URL + "js/",
-					config.GLOBAL_URL + "libs/",
-					config.GLOBAL_URL + "scss/",
+					config.GlobalURL + "assets/",
+					config.GlobalURL + "dist/",
+					config.GlobalURL + "fonts/",
+					config.GlobalURL + "js/",
+					config.GlobalURL + "libs/",
+					config.GlobalURL + "scss/",
 				}
 
 				for _, prefix := range prefixes {
 					if strings.HasPrefix(requestURI, prefix) {
-						c.Header("Cache-Control", fmt.Sprintf("public, max-age=%d", config.CACHE_MAX_AGE))
+						c.Header("Cache-Control", fmt.Sprintf("public, max-age=%d", config.CacheMaxAge))
 						c.Next()
 						hasPrefix = true
 						break
@@ -283,6 +309,7 @@ func CacheControlMiddleware() gin.HandlerFunc {
 	}
 }
 
+// SanitizeMiddleware is a Gin middleware that sanitizes request body inputs to prevent injection attacks.
 func SanitizeMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		switch c.Request.Method {
@@ -332,6 +359,7 @@ func SanitizeMiddleware() gin.HandlerFunc {
 	}
 }
 
+// SanitizeCsvMiddleware is a Gin middleware that sanitizes CSV inputs in requests.
 func SanitizeCsvMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		switch c.Request.Method {
@@ -380,6 +408,7 @@ func SanitizeCsvMiddleware() gin.HandlerFunc {
 	}
 }
 
+// SecurityControlMiddleware is a Gin middleware that sets security-related HTTP response headers.
 func SecurityControlMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Content-Security-Policy", "frame-ancestors 'none'")
@@ -392,11 +421,153 @@ func SecurityControlMiddleware() gin.HandlerFunc {
 	}
 }
 
+// resolveAuthClaims extracts and decrypts the auth token cookie, returning the JWT claims.
+func resolveAuthClaims(c *gin.Context, cookies []*http.Cookie) (map[string]interface{}, bool) {
+	tokenString, err := c.Cookie("token")
+	if err != nil {
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return nil, false
+	}
+	tokenString = strings.ReplaceAll(tokenString, " ", "+")
+	decrypted, err := fun.GetAESDecrypted(tokenString)
+	if err != nil {
+		logrus.Warn("Error during decryption", err)
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return nil, false
+	}
+	var claims map[string]interface{}
+	if err = json.Unmarshal(decrypted, &claims); err != nil {
+		logrus.Warn("Error during unmarshalling", err)
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return nil, false
+	}
+	return claims, true
+}
+
+// handleActivityTimeout checks if the session has timed out and invalidates it if so.
+// Returns true if the session is expired (caller should abort).
+func handleActivityTimeout(c *gin.Context, db *gorm.DB, redisDB *redis.Client, emailToken string, loginTime int) bool {
+	lastActivityTimeStr, err := redisDB.Get(context.Background(), "last_activity_time:"+emailToken).Result()
+	if err != nil {
+		lastActivityTimeStr = "0"
+	}
+	lastActivityTime, err := strconv.ParseInt(lastActivityTimeStr, 10, 64)
+	if err != nil {
+		lastActivityTime = 0
+	}
+	if time.Now().UnixMilli()-lastActivityTime <= int64(loginTime*60*1000) {
+		return false
+	}
+	sessEmpty := map[string]any{"session": "", "last_login": nil}
+	result := db.Model(&model.Users{}).Where("email = ?", emailToken).Updates(sessEmpty)
+	if result.Error != nil {
+		fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error")
+	}
+	return true
+}
+
+// validateAuthCookies ensures that the session, auth, and random cookies match the JWT claims.
+func validateAuthCookies(c *gin.Context, claims map[string]interface{}, cookies []*http.Cookie) bool {
+	if !fun.ValidateCookie(c, "credentials", claims["session"]) ||
+		!fun.ValidateCookie(c, "auth", claims["auth"]) ||
+		!fun.ValidateCookie(c, "random", claims["random"]) {
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return false
+	}
+	return true
+}
+
+// loadAndValidateUser fetches the authenticated user from the database and validates the session.
+func loadAndValidateUser(c *gin.Context, db *gorm.DB, claims map[string]interface{}, cookies []*http.Cookie) (model.Users, bool) {
+	var user model.Users
+	if err := db.Where("id = ? AND session = ?", claims["id"], claims["session"]).First(&user).Error; err != nil {
+		logrus.WithError(err).Warn("WebSession: error querying user")
+		fun.ClearCookiesAndRedirect(c, cookies)
+		fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error")
+		return user, false
+	}
+	if user.ID == 0 || user.Session == "" {
+		fun.ClearCookiesAndRedirect(c, cookies)
+		for _, cookie := range cookies {
+			cookie.Expires = time.Now().AddDate(0, 0, -1)
+			http.SetCookie(c.Writer, cookie)
+		}
+		return user, false
+	}
+	return user, true
+}
+
+// getRedisAccess retrieves the access value associated with the given credentials from Redis.
+func getRedisAccess(c *gin.Context, redisDB *redis.Client, credentials string) (string, bool) {
+	data, err := redisDB.Get(context.Background(), "web:"+credentials).Result()
+	if err == redis.Nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No data found for the given credentials"})
+		c.Abort()
+		return "", false
+	} else if err != nil {
+		logrus.WithError(err).Warn("WebSession: error retrieving data from Redis")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		c.Abort()
+		return "", false
+	}
+	return data, true
+}
+
+// httpMethodPermIndex returns the permission bit index for the given HTTP method.
+func httpMethodPermIndex(c *gin.Context) (int, bool) {
+	switch c.Request.Method {
+	case http.MethodGet:
+		return 1, true
+	case http.MethodPost:
+		if strings.Contains(c.Request.URL.Path, "/create") {
+			return 0, true
+		}
+		return 1, true
+	case http.MethodPut, http.MethodPatch:
+		return 2, true
+	case http.MethodDelete:
+		return 3, true
+	default:
+		c.JSON(http.StatusMethodNotAllowed, gin.H{"error": "Method not allowed"})
+		c.Abort()
+		return 0, false
+	}
+}
+
+// authorizeTabAccess checks that the request has permission to access the tab segment in its URL path.
+func authorizeTabAccess(c *gin.Context, claims map[string]interface{}) bool {
+	for _, part := range strings.Split(c.Request.URL.Path, "/") {
+		if !strings.Contains(part, "tab-") {
+			continue
+		}
+		path, ok := claims[part].(string)
+		if !ok {
+			c.JSON(http.StatusNotFound, gin.H{"error": "access tab not found, try to check your permissions or path exists"})
+			c.Abort()
+			return false
+		}
+		if path == "" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return false
+		}
+		index, valid := httpMethodPermIndex(c)
+		if !valid {
+			return false
+		}
+		if string(path[index]) != "1" {
+			c.Abort()
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return false
+		}
+		break
+	}
+	return true
+}
+
+// AuthMiddleware is a Gin middleware that validates session-based authentication and authorization.
 func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userAgent := c.GetHeader("User-Agent")
-
-		if userAgent == "" {
+		if userAgent := c.GetHeader("User-Agent"); userAgent == "" {
 			logrus.Warn("Blocked Because No User-Agent")
 			fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, "Unauthorized")
 			return
@@ -404,27 +575,11 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		cookies := c.Request.Cookies()
 
-		// Parse JWT token from cookie
-		tokenString, err := c.Cookie("token")
-		if err != nil {
-			fun.ClearCookiesAndRedirect(c, cookies)
+		claims, ok := resolveAuthClaims(c, cookies)
+		if !ok {
 			return
 		}
-		tokenString = strings.ReplaceAll(tokenString, " ", "+")
 
-		decrypted, err := fun.GetAESDecrypted(tokenString)
-		if err != nil {
-			logrus.Warn("Error during decryption", err)
-			fun.ClearCookiesAndRedirect(c, cookies)
-			return
-		}
-		var claims map[string]interface{}
-		err = json.Unmarshal(decrypted, &claims)
-		if err != nil {
-			logrus.Warn("Error during unmarshalling", err)
-			fun.ClearCookiesAndRedirect(c, cookies)
-			return
-		}
 		emailToken := claims["email"].(string)
 		if emailToken == "" {
 			fun.ClearCookiesAndRedirect(c, cookies)
@@ -433,78 +588,26 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 
 		loginTime := config.ServicePlatform.Get().App.LoginTimeM
 		if loginTime == 0 {
-			loginTime = 15 // Default to 15 minutes if parsing or env is not set
+			loginTime = 15
 		}
 
-		// Retrieve the last activity time from Redis
-		lastActivityTimeStr, err := redisDB.Get(context.Background(), "last_activity_time:"+emailToken).Result()
-		if err != nil {
-			// Handle missing or erroneous last activity time, default to expired
-			lastActivityTimeStr = "0"
-		}
-
-		// Convert the last activity time to int64 (assuming it's stored as Unix milliseconds)
-		lastActivityTime, err := strconv.ParseInt(lastActivityTimeStr, 10, 64)
-		if err != nil {
-			// If conversion fails, assume the session expired
-			lastActivityTime = 0
-		}
-
-		// Get the current time in Unix milliseconds
-		currentTime := time.Now().UnixMilli()
-
-		// Check if the time difference exceeds the login expiration threshold
-		if currentTime-lastActivityTime > int64(loginTime*60*1000) {
-			sessEmpty := map[string]any{
-				"session":    "",
-				"last_login": nil,
-			}
-
-			// Invalidate the user session
-			result := db.Model(&model.Users{}).Where("email = ?", emailToken).Updates(sessEmpty)
-
-			if result.Error != nil {
-				fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error")
-				return
-			}
-
-			// Close WebSocket connection
-			// ws.CloseWebsocketConnection(emailToken)
+		if handleActivityTimeout(c, db, redisDB, emailToken, loginTime) {
 			return
 		}
-		errSet := redisDB.Set(context.Background(), "last_activity_time:"+emailToken, time.Now().UnixMilli(), 30*time.Minute).Err()
-		if errSet != nil {
+
+		if err := redisDB.Set(context.Background(), "last_activity_time:"+emailToken, time.Now().UnixMilli(), 30*time.Minute).Err(); err != nil {
 			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error")
 			return
 		}
 
-		// Validate additional cookies
-		if !fun.ValidateCookie(c, "credentials", claims["session"]) ||
-			!fun.ValidateCookie(c, "auth", claims["auth"]) ||
-			!fun.ValidateCookie(c, "random", claims["random"]) {
-			fun.ClearCookiesAndRedirect(c, cookies)
+		if !validateAuthCookies(c, claims, cookies) {
 			return
 		}
 
-		var user model.Users
-		if err := db.Where("id = ? AND session = ?", claims["id"], claims["session"]).First(&user).Error; err != nil {
-			logrus.WithError(err).Warn("WebSession: error querying user")
-			fun.ClearCookiesAndRedirect(c, cookies)
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error")
-			return
-
-			// Handle other errors
-		}
-		if user.ID == 0 || user.Session == "" {
-			fun.ClearCookiesAndRedirect(c, cookies)
-			for _, cookie := range cookies {
-				cookie.Expires = time.Now().AddDate(0, 0, -1)
-				http.SetCookie(c.Writer, cookie)
-			}
+		if _, valid := loadAndValidateUser(c, db, claims, cookies); !valid {
 			return
 		}
 
-		// Get the credentials from cookies
 		credentials, err := c.Cookie("credentials")
 		if err != nil {
 			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Missing credentials cookie")
@@ -512,28 +615,12 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			return
 		}
 
-		// Build the Redis key
-		redisKey := "web:" + credentials
-
-		// Check if there is data with the key in Redis
-		data, err := redisDB.Get(context.Background(), redisKey).Result()
-		if err == redis.Nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "No data found for the given credentials"})
-			c.Abort()
-			return
-		} else if err != nil {
-			logrus.WithError(err).Warn("WebSession: error retrieving data from Redis")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-			c.Abort()
+		data, dataOK := getRedisAccess(c, redisDB, credentials)
+		if !dataOK {
 			return
 		}
 
-		// Parse the access from the path
-		access := c.Param("access")
-		access = strings.ReplaceAll(access, "/", "")
-		access = strings.ReplaceAll(access, "..", "")
-
-		// Compare the access value with the data from Redis
+		access := strings.ReplaceAll(strings.ReplaceAll(c.Param("access"), "/", ""), "..", "")
 		if data != access {
 			if config.ServicePlatform.Get().App.Debug {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Access not allowed coz %s != %s", data, access)})
@@ -543,53 +630,11 @@ func AuthMiddleware(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		paths := strings.Split(c.Request.URL.Path, "/")
 
-		// Print the paths
-		for _, part := range paths {
-			// fmt.Printf("Part %d: %s\n", i, part)
-			if strings.Contains(part, "tab-") {
-
-				// fmt.Println("method :", c.Request.Method, "Part :", part)
-				path, ok := claims[part].(string)
-				if !ok {
-					c.JSON(http.StatusNotFound, gin.H{"error": "access tab not found, try to check your permissions or path exists"})
-					c.Abort()
-					return
-				}
-				if path == "" { // check if parsing error
-					c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
-					return
-				}
-				index := 0
-				switch c.Request.Method {
-				case http.MethodGet:
-					index = 1
-				case http.MethodPost:
-					if strings.Contains(c.Request.URL.Path, "/create") {
-						index = 0
-					} else {
-						index = 1
-					}
-				case http.MethodPut, http.MethodPatch:
-					index = 2
-				case http.MethodDelete:
-					index = 3
-				default:
-					c.JSON(http.StatusMethodNotAllowed, gin.H{"error": "Method not allowed"})
-					c.Abort()
-					return
-				}
-
-				if string(path[index]) != "1" {
-					c.Abort()
-					c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
-					return
-				}
-				break
-			}
+		if !authorizeTabAccess(c, claims) {
+			return
 		}
-		// If everything matches, proceed with the request
+
 		c.Next()
 	}
 }

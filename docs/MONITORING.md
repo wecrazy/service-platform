@@ -80,7 +80,7 @@ metrics:
   libretranslate_port: 5004  # LibreTranslate port
 ```
 
-And the corresponding struct is defined in `internal/config/config.go`:
+And the corresponding struct is defined in `internal/config/service-platform_cfg.go`:
 
 ```go
 Metrics struct {

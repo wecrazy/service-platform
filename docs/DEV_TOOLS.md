@@ -124,6 +124,8 @@ make install-revive
 #### Lint all packages (default)
 ```bash
 make revive
+# On success: ✅ No lint issues found!
+# On failure: ❌ Found N lint issue(s).  (exits with code 1)
 ```
 
 #### Lint specific package

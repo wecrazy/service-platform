@@ -3,9 +3,8 @@ package controllers
 import (
 	"net/http"
 	"path/filepath"
+	"service-platform/pkg/fun"
 	"strings"
-
-	"service-platform/internal/pkg/fun"
 
 	"github.com/gin-gonic/gin"
 )

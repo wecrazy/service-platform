@@ -1,3 +1,4 @@
+// Package whatsnyanmodel defines data models for the WhatsApp integration.
 package whatsnyanmodel
 
 import (

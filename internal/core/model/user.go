@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Users represents a registered application user.
 type Users struct {
 	ID uint `json:"id" form:"id" gorm:"column:id;primaryKey;autoIncrement"`
 	gorm.Model
@@ -36,10 +37,12 @@ type Users struct {
 	LastFailedLogin *time.Time `gorm:"column:last_failed_login" json:"last_failed_login"`
 }
 
+// TableName returns the database table name for Users.
 func (Users) TableName() string {
 	return config.ServicePlatform.Get().Database.TbUser
 }
 
+// UserStatus represents the status of a user account.
 type UserStatus struct {
 	ID uint `json:"id" gorm:"column:id;primarykey"`
 	gorm.Model
@@ -48,16 +51,19 @@ type UserStatus struct {
 	ClassName string `json:"class_name" gorm:"column:class_name"`
 }
 
+// TableName returns the database table name for UserStatus.
 func (UserStatus) TableName() string {
 	return config.ServicePlatform.Get().Database.TbUserStatus
 }
 
+// UserPasswordChangeLog records password change history for a user.
 type UserPasswordChangeLog struct {
 	gorm.Model
 	Email    string `json:"email" gorm:"column:email;size:100"`
 	Password string `json:"password" gorm:"column:password;size:100"`
 }
 
+// TableName returns the database table name for UserPasswordChangeLog.
 func (UserPasswordChangeLog) TableName() string {
 	return config.ServicePlatform.Get().Database.TbUserPasswordChangeLog
 }

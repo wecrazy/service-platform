@@ -38,6 +38,8 @@ func upInitialSeed(db *gorm.DB) error {
 }
 
 func downInitialSeed(db *gorm.DB) error {
+	_ = db // for potential future use if we want to implement data cleanup
+
 	// Note: We don't delete seeded data in down migration
 	// as it might be modified by users. Data cleanup should be manual.
 	// This is a no-op rollback for seeding.

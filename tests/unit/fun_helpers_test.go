@@ -1,10 +1,9 @@
 package unit
 
 import (
+	"service-platform/pkg/fun"
 	"testing"
 	"time"
-
-	"service-platform/internal/pkg/fun"
 
 	"github.com/stretchr/testify/assert"
 )

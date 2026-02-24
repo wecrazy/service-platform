@@ -7,7 +7,7 @@ import (
 	"service-platform/internal/api/v1/dto"
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 	"strings"
 	"time"
 
@@ -62,69 +62,9 @@ func TableAppConfig(db *gorm.DB) gin.HandlerFunc {
 
 		// Apply filters
 		if request.Search != "" {
-			for i := 0; i < t.NumField(); i++ {
-				dataField := ""
-				field := t.Field(i)
-				dataType := field.Type.String()
-				jsonKey := field.Tag.Get("json")
-				gormTag := field.Tag.Get("gorm")
-
-				// Initialize a variable to hold the column key
-				columnKey := ""
-
-				// Manually parse the gorm tag to find the column value
-				tags := strings.Split(gormTag, ";")
-				for _, tag := range tags {
-					if strings.HasPrefix(tag, "column:") {
-						columnKey = strings.TrimPrefix(tag, "column:")
-						break
-					}
-				}
-				if jsonKey == "" || jsonKey == "-" {
-					if columnKey == "" || columnKey == "-" {
-						continue
-					} else {
-						dataField = columnKey
-					}
-				} else {
-					dataField = jsonKey
-				}
-				if jsonKey == "" {
-					continue
-				}
-				if dataType != "string" {
-					continue
-				}
-
-				filteredQuery = filteredQuery.Or("`"+dataField+"` LIKE ?", "%"+request.Search+"%")
-			}
-
+			filteredQuery = applyAppConfigSearchFilter(filteredQuery, t, request.Search)
 		} else {
-			for i := 0; i < t.NumField(); i++ {
-				field := t.Field(i)
-				formKey := field.Tag.Get("json")
-
-				if formKey == "" || formKey == "-" {
-					continue
-				}
-
-				formValue := c.PostForm(formKey)
-
-				if formValue != "" {
-					if field.Type.Kind() == reflect.Bool ||
-						(field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Bool) {
-						// Convert formValue "true"/"false" to bool or int
-						boolVal := false
-						if formValue == "true" {
-							boolVal = true
-						}
-						filteredQuery = filteredQuery.Where("`"+formKey+"` = ?", boolVal)
-					} else {
-						// Other fields: use LIKE
-						filteredQuery = filteredQuery.Where("`"+formKey+"` LIKE ?", "%"+formValue+"%")
-					}
-				}
-			}
+			filteredQuery = applyAppConfigFormFilter(filteredQuery, t, c)
 		}
 
 		// Count the total number of records
@@ -180,6 +120,62 @@ func TableAppConfig(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+// applyAppConfigSearchFilter applies an OR LIKE filter across all string fields of AppConfig.
+func applyAppConfigSearchFilter(query *gorm.DB, t reflect.Type, search string) *gorm.DB {
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		dataType := field.Type.String()
+		jsonKey := field.Tag.Get("json")
+		gormTag := field.Tag.Get("gorm")
+
+		columnKey := ""
+		for _, tag := range strings.Split(gormTag, ";") {
+			if strings.HasPrefix(tag, "column:") {
+				columnKey = strings.TrimPrefix(tag, "column:")
+				break
+			}
+		}
+
+		dataField := ""
+		if jsonKey == "" || jsonKey == "-" {
+			if columnKey == "" || columnKey == "-" {
+				continue
+			}
+			dataField = columnKey
+		} else {
+			dataField = jsonKey
+		}
+		if jsonKey == "" || dataType != "string" {
+			continue
+		}
+		query = query.Or("`"+dataField+"` LIKE ?", "%"+search+"%")
+	}
+	return query
+}
+
+// applyAppConfigFormFilter applies WHERE filters from posted form values for each field.
+func applyAppConfigFormFilter(query *gorm.DB, t reflect.Type, c *gin.Context) *gorm.DB {
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		formKey := field.Tag.Get("json")
+		if formKey == "" || formKey == "-" {
+			continue
+		}
+		formValue := c.PostForm(formKey)
+		if formValue == "" {
+			continue
+		}
+		if field.Type.Kind() == reflect.Bool ||
+			(field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Bool) {
+			boolVal := formValue == "true"
+			query = query.Where("`"+formKey+"` = ?", boolVal)
+		} else {
+			query = query.Where("`"+formKey+"` LIKE ?", "%"+formValue+"%")
+		}
+	}
+	return query
+}
+
 // renderFieldAppConfig handles the rendering of different field types for the AppConfig table
 func renderFieldAppConfig(fieldKey string, fieldValue reflect.Value, dataInDB model.AppConfig) interface{} {
 	switch fieldKey {
@@ -226,10 +222,9 @@ func renderTimeFieldAppConfig(fieldValue reflect.Value) interface{} {
 	if fieldValue.Type() == reflect.TypeOf(time.Time{}) {
 		t := fieldValue.Interface().(time.Time)
 		if !t.IsZero() {
-			return fmt.Sprintf(`<span class="text-muted small">%s</span>`, t.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
-		} else {
-			return `<span class="text-muted">-</span>`
+			return fmt.Sprintf(`<span class="text-muted small">%s</span>`, t.Format(config.DateYYYYMMDDHHMMSS))
 		}
+		return `<span class="text-muted">-</span>`
 	}
 	return fieldValue.Interface()
 }
@@ -309,11 +304,11 @@ func renderRoleFieldAppConfig(fieldValue reflect.Value, dataInDB model.AppConfig
 			htmlEscape(icon),                               // Footer icon
 			dataInDB.Role.ID,                               // Footer ID
 		)
-	} else {
-		roleID := fieldValue.Interface().(uint)
-		// Fallback card for missing role data
-		return fmt.Sprintf(
-			`<div class="role-card card border-0 shadow-sm border-danger" style="max-width: 300px;">
+	}
+	roleID := fieldValue.Interface().(uint)
+	// Fallback card for missing role data
+	return fmt.Sprintf(
+		`<div class="role-card card border-0 shadow-sm border-danger" style="max-width: 300px;">
 				<div class="card-body p-3">
 					<div class="d-flex align-items-center mb-2">
 						<div class="avatar avatar-sm me-3">
@@ -347,10 +342,9 @@ func renderRoleFieldAppConfig(fieldValue reflect.Value, dataInDB model.AppConfig
 					</div>
 				</div>
 			</div>`,
-			roleID, // Role ID in subtitle
-			roleID, // Footer ID
-		)
-	}
+		roleID, // Role ID in subtitle
+		roleID, // Footer ID
+	)
 }
 
 // renderAppNameFieldAppConfig renders the app name with enhanced styling

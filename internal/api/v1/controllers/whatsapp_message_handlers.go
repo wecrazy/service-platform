@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 	"time"
 
 	"github.com/go-redis/redis/v8"

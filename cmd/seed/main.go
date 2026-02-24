@@ -1,3 +1,21 @@
+// Package main is the entry point for the database seeding tool.
+//
+// It populates the PostgreSQL database with initial/reference data needed by the
+// Service Platform (roles, features, privileges, users, WhatsApp/Telegram settings,
+// bad-word filters, app config, and Indonesia region data).
+//
+// Seeds can be run selectively via the -only flag or all at once (default).
+//
+// Flags:
+//
+//	-only string   Seed group to run: users, whatsapp, telegram, config, all (default: all)
+//
+// Usage:
+//
+//	go run -tags=seed cmd/seed/main.go               # seed everything
+//	go run -tags=seed cmd/seed/main.go -only=users    # seed user-related tables only
+//	make seed                                          # Makefile shorthand
+//	make seed-whatsapp                                 # seed WhatsApp data only
 package main
 
 import (
@@ -11,6 +29,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// main parses flags, connects to the database, and executes the selected seed
+// group(s). The connection is closed automatically on return.
 func main() {
 	var (
 		only = flag.String("only", "", "Run only specific seed group: users, whatsapp, telegram, config, all")

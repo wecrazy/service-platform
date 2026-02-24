@@ -1,3 +1,4 @@
+// Package ws provides WebSocket connection management and message handling.
 package ws
 
 import (
@@ -15,16 +16,20 @@ import (
 )
 
 var (
+	// Upgrader is the websocket upgrader used to upgrade HTTP connections to WebSocket.
 	Upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
+		CheckOrigin: func(_ *http.Request) bool {
 			return true
 		},
 	}
 
+	// Clients holds all active WebSocket connections, indexed by client ID.
 	Clients = make(map[string]*websocket.Conn)
-	Mutex   = sync.Mutex{}
+	// Mutex protects concurrent access to the Clients map.
+	Mutex = sync.Mutex{}
 )
 
+// HandleWebSocket upgrades an HTTP connection to WebSocket and registers the client connection.
 func HandleWebSocket(w http.ResponseWriter, r *http.Request, clientID string, db *gorm.DB) {
 	conn, err := Upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -39,6 +44,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request, clientID string, db
 	go HandleMessages(clientID, conn, db)
 }
 
+// HandleMessages reads messages from a WebSocket connection and dispatches them to recipients.
 func HandleMessages(clientID string, conn *websocket.Conn, db *gorm.DB) {
 	defer func() {
 		Mutex.Lock()
@@ -65,6 +71,7 @@ func HandleMessages(clientID string, conn *websocket.Conn, db *gorm.DB) {
 	}
 }
 
+// HandleMessage parses and routes a single WebSocket message to the intended recipient.
 func HandleMessage(messageType int, message []byte) {
 	// Example: Assume messages have the format "recipientID:message"
 	parts := strings.SplitN(string(message), ":", 2)
@@ -80,7 +87,8 @@ func HandleMessage(messageType int, message []byte) {
 	SendMessageToRecipient(messageType, actualMessage, recipientID)
 }
 
-// SendMessageToRecipient(1, "the message", "email") //1 is text message, 2 is binary
+// SendMessageToRecipient sends a WebSocket message to a specific recipient by client ID.
+// messageType 1 is text, 2 is binary.
 func SendMessageToRecipient(messageType int, message, recipientID string) {
 	Mutex.Lock()
 	defer Mutex.Unlock()
@@ -95,6 +103,7 @@ func SendMessageToRecipient(messageType int, message, recipientID string) {
 	}
 }
 
+// CloseWebsocketConnection closes and removes a client's WebSocket connection by client ID.
 func CloseWebsocketConnection(clientID string) {
 	Mutex.Lock()
 	if clientConn, ok := Clients[clientID]; ok {
@@ -132,6 +141,7 @@ func checkForReconnection(clientID string, db *gorm.DB) {
 	}
 }
 
+// IsClientConnected reports whether a client with the given ID is currently connected.
 func IsClientConnected(clientID string) bool {
 	Mutex.Lock()
 	defer Mutex.Unlock()

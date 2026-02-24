@@ -1,3 +1,4 @@
+// Package cli implements the interactive command-line interface for service-platform.
 package cli
 
 import (

@@ -1,3 +1,4 @@
+// Package migrations contains tests for database migration scripts.
 package migrations
 
 import (
@@ -280,7 +281,7 @@ func (suite *MigrationTestSuite) TestMigrationFailureHandling() {
 		Up: func(db *gorm.DB) error {
 			return db.Exec("INVALID SQL STATEMENT").Error // This will fail
 		},
-		Down: func(db *gorm.DB) error {
+		Down: func(_ *gorm.DB) error {
 			return nil
 		},
 	}

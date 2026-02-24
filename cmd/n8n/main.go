@@ -1,3 +1,23 @@
+// Package main is the entry point for the n8n WhatsApp bridge service.
+//
+// It manages the n8n workflow-automation container and its Postgres dependency
+// via Podman, and runs an HTTP bridge server that accepts POST /send requests
+// and forwards them to the WhatsApp gRPC service.
+//
+// OpenTelemetry tracing (Tempo) and Loki-based logging are enabled when the
+// corresponding config sections are populated.
+//
+// Commands:
+//
+//	--start    Start the n8n container, Postgres, and the WhatsApp bridge (default)
+//	--stop     Stop n8n and its Postgres container
+//	--help     Show usage
+//
+// Usage:
+//
+//	go run cmd/n8n/main.go
+//	go run cmd/n8n/main.go --stop
+//	make n8n-start
 package main
 
 import (
@@ -12,9 +32,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"service-platform/internal/config"
-	"service-platform/internal/pkg/fun"
-	"service-platform/internal/pkg/logger"
-	"service-platform/internal/pkg/observability"
+	"service-platform/pkg/fun"
+	"service-platform/pkg/logger"
+	"service-platform/pkg/observability"
 	pb "service-platform/proto"
 	"time"
 
@@ -22,10 +42,13 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// main loads configuration and dispatches to startN8n, stopN8n, or printHelp
+// based on CLI arguments. Defaults to startN8n when no arguments are given.
 func main() {
 	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
 
@@ -47,6 +70,8 @@ func main() {
 	}
 }
 
+// startN8n pulls and runs the n8n and Postgres containers via Podman,
+// then starts the WhatsApp HTTP bridge in a background goroutine.
 func startN8n() {
 	fmt.Println("🚀 Starting N8N workflow automation...")
 
@@ -124,6 +149,8 @@ func startN8n() {
 	select {}
 }
 
+// startPostgres launches a Postgres 16 Alpine container on the n8n-net network.
+// If the container is already running the function returns immediately.
 func startPostgres() {
 	if fun.IsContainerRunning("n8n-postgres") {
 		fmt.Println("✅ N8N Postgres is already running")
@@ -148,6 +175,7 @@ func startPostgres() {
 	exec.Command("sleep", "5").Run()
 }
 
+// stopN8n stops both the n8n and n8n-postgres Podman containers.
 func stopN8n() {
 	fmt.Println("🛑 Stopping N8N...")
 	if err := fun.StopContainer("service-platform-n8n"); err != nil {
@@ -159,6 +187,7 @@ func stopN8n() {
 	fmt.Println("✅ N8N stopped successfully")
 }
 
+// printHelp writes usage information to stdout.
 func printHelp() {
 	fmt.Println("Service Platform - N8N Workflow Automation Tool")
 	fmt.Println()
@@ -189,37 +218,9 @@ type WhatsAppBridgeResponse struct {
 	Error   string `json:"error,omitempty"`
 }
 
-// startWhatsAppBridge starts an HTTP server that forwards requests to WhatsApp gRPC service
-func startWhatsAppBridge(cfg *config.TypeServicePlatform) {
-	// Initialize logger with Loki support
-	logger.InitLogrus()
-
-	bridgeServiceName := cfg.N8N.BridgeServiceName
-	if bridgeServiceName == "" {
-		bridgeServiceName = "whatsapp-bridge"
-	}
-	appLogger := logrus.WithField("service", bridgeServiceName)
-
-	// Initialize Tempo tracer
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	shutdown, err := observability.InitTracer(ctx)
-	cancel()
-	if err != nil {
-		appLogger.Warnf("Failed to initialize tracer: %v", err)
-	} else if shutdown != nil {
-		defer func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-			shutdown(ctx)
-		}()
-	}
-
-	tracer := otel.Tracer(bridgeServiceName)
-	bridgeHost := cfg.N8N.BridgeHost
-	bridgePort := cfg.N8N.BridgePort
-	grpcAddr := fmt.Sprintf("%s:%d", cfg.Whatsnyan.GRPCHost, cfg.Whatsnyan.GRPCPort)
-
-	http.HandleFunc("/send", func(w http.ResponseWriter, r *http.Request) {
+// handleWhatsAppSendRequest returns an HTTP handler that forwards WhatsApp send requests via gRPC.
+func handleWhatsAppSendRequest(tracer trace.Tracer, appLogger *logrus.Entry, grpcAddr string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		// Start a span for this request
 		ctx, span := tracer.Start(r.Context(), "whatsapp.send_message")
 		defer span.End()
@@ -293,8 +294,7 @@ func startWhatsAppBridge(cfg *config.TypeServicePlatform) {
 			"message_length": len(req.Message),
 		}).Infof("Processing WhatsApp message")
 
-		// Format phone number with WhatsApp JID format
-		// Remove any non-numeric characters first
+		// Format phone number - remove non-numeric chars
 		phoneClean := ""
 		for _, char := range req.Phone {
 			if char >= '0' && char <= '9' {
@@ -302,7 +302,7 @@ func startWhatsAppBridge(cfg *config.TypeServicePlatform) {
 			}
 		}
 
-		// Ensure phone number has country code (if it starts with 0, replace with country code 62 for Indonesia)
+		// Ensure phone number has country code
 		if len(phoneClean) > 0 && phoneClean[0] == '0' {
 			phoneClean = "62" + phoneClean[1:]
 		}
@@ -325,10 +325,8 @@ func startWhatsAppBridge(cfg *config.TypeServicePlatform) {
 		}
 		defer conn.Close()
 
-		// Create WhatsApp service client
+		// Create WhatsApp service client and send
 		client := pb.NewWhatsAppServiceClient(conn)
-
-		// Create message request
 		msgReq := &pb.SendMessageRequest{
 			To: jid,
 			Content: &pb.MessageContent{
@@ -338,7 +336,6 @@ func startWhatsAppBridge(cfg *config.TypeServicePlatform) {
 			},
 		}
 
-		// Send message via gRPC (with tracing)
 		_, sendSpan := tracer.Start(ctx, "grpc.send_message")
 		resp, err := client.SendMessage(ctx, msgReq)
 		sendSpan.End()
@@ -356,7 +353,6 @@ func startWhatsAppBridge(cfg *config.TypeServicePlatform) {
 			return
 		}
 
-		// Return success response
 		appLogger.WithFields(logrus.Fields{
 			"phone":      req.Phone,
 			"message_id": resp.Id,
@@ -368,7 +364,40 @@ func startWhatsAppBridge(cfg *config.TypeServicePlatform) {
 			Message: resp.Message,
 			ID:      resp.Id,
 		})
-	})
+	}
+}
+
+// startWhatsAppBridge starts an HTTP server that forwards requests to WhatsApp gRPC service
+func startWhatsAppBridge(cfg *config.TypeServicePlatform) {
+	// Initialize logger with Loki support
+	logger.InitLogrus()
+
+	bridgeServiceName := cfg.N8N.BridgeServiceName
+	if bridgeServiceName == "" {
+		bridgeServiceName = "whatsapp-bridge"
+	}
+	appLogger := logrus.WithField("service", bridgeServiceName)
+
+	// Initialize Tempo tracer
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdown, err := observability.InitTracer(ctx)
+	cancel()
+	if err != nil {
+		appLogger.Warnf("Failed to initialize tracer: %v", err)
+	} else if shutdown != nil {
+		defer func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			shutdown(ctx)
+		}()
+	}
+
+	tracer := otel.Tracer(bridgeServiceName)
+	bridgeHost := cfg.N8N.BridgeHost
+	bridgePort := cfg.N8N.BridgePort
+	grpcAddr := fmt.Sprintf("%s:%d", cfg.Whatsnyan.GRPCHost, cfg.Whatsnyan.GRPCPort)
+
+	http.HandleFunc("/send", handleWhatsAppSendRequest(tracer, appLogger, grpcAddr))
 
 	// Health check endpoint
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

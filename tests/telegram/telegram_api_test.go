@@ -11,7 +11,7 @@ import (
 	"service-platform/internal/api/v1/dto"
 	"service-platform/internal/api/v1/routes"
 	"service-platform/internal/config"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/gin-gonic/gin"
@@ -67,7 +67,7 @@ func (suite *TelegramAPITestSuite) SetupTest() {
 	// Setup router with all routes including Telegram
 	suite.router = gin.New()
 	routes.StaticFile(suite.router)
-	routes.HtmlRoutes(suite.db, suite.router, suite.redisClient, suite.systemMonitor)
+	routes.HTMLRoutes(suite.db, suite.router, suite.redisClient, suite.systemMonitor)
 }
 
 // TearDownTest cleans up the Telegram API test suite.
@@ -90,7 +90,7 @@ func (suite *TelegramAPITestSuite) TestSendMessageAPI() {
 	}
 
 	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/"+config.API_URL+TelegramTabAccess+"/tab-telegram/send_message", bytes.NewBuffer(jsonData))
+	req, _ := http.NewRequest("POST", "/"+config.APIURL+TelegramTabAccess+"/tab-telegram/send_message", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -112,7 +112,7 @@ func (suite *TelegramAPITestSuite) TestSendVoiceAPI() {
 	}
 
 	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/"+config.API_URL+TelegramTabAccess+"/tab-telegram/send_voice", bytes.NewBuffer(jsonData))
+	req, _ := http.NewRequest("POST", "/"+config.APIURL+TelegramTabAccess+"/tab-telegram/send_voice", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -131,7 +131,7 @@ func (suite *TelegramAPITestSuite) TestSendDocumentAPI() {
 	}
 
 	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/"+config.API_URL+TelegramTabAccess+"/tab-telegram/send_document", bytes.NewBuffer(jsonData))
+	req, _ := http.NewRequest("POST", "/"+config.APIURL+TelegramTabAccess+"/tab-telegram/send_document", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -150,7 +150,7 @@ func (suite *TelegramAPITestSuite) TestSendPhotoAPI() {
 	}
 
 	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/"+config.API_URL+TelegramTabAccess+"/tab-telegram/send_photo", bytes.NewBuffer(jsonData))
+	req, _ := http.NewRequest("POST", "/"+config.APIURL+TelegramTabAccess+"/tab-telegram/send_photo", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -172,7 +172,7 @@ func (suite *TelegramAPITestSuite) TestSendAudioAPI() {
 	}
 
 	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/"+config.API_URL+TelegramTabAccess+"/tab-telegram/send_audio", bytes.NewBuffer(jsonData))
+	req, _ := http.NewRequest("POST", "/"+config.APIURL+TelegramTabAccess+"/tab-telegram/send_audio", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -192,7 +192,7 @@ func (suite *TelegramAPITestSuite) TestSendVideoAPI() {
 	}
 
 	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/"+config.API_URL+TelegramTabAccess+"/tab-telegram/send_video", bytes.NewBuffer(jsonData))
+	req, _ := http.NewRequest("POST", "/"+config.APIURL+TelegramTabAccess+"/tab-telegram/send_video", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -224,7 +224,7 @@ func (suite *TelegramAPITestSuite) TestSendMessageWithKeyboardAPI() {
 	}
 
 	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/"+config.API_URL+TelegramTabAccess+"/tab-telegram/send_message_with_keyboard", bytes.NewBuffer(jsonData))
+	req, _ := http.NewRequest("POST", "/"+config.APIURL+TelegramTabAccess+"/tab-telegram/send_message_with_keyboard", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -243,7 +243,7 @@ func (suite *TelegramAPITestSuite) TestEditMessageAPI() {
 	}
 
 	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/"+config.API_URL+TelegramTabAccess+"/tab-telegram/edit_message", bytes.NewBuffer(jsonData))
+	req, _ := http.NewRequest("POST", "/"+config.APIURL+TelegramTabAccess+"/tab-telegram/edit_message", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -261,7 +261,7 @@ func (suite *TelegramAPITestSuite) TestAnswerCallbackQueryAPI() {
 	}
 
 	jsonData, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/"+config.API_URL+TelegramTabAccess+"/tab-telegram/answer_callback_query", bytes.NewBuffer(jsonData))
+	req, _ := http.NewRequest("POST", "/"+config.APIURL+TelegramTabAccess+"/tab-telegram/answer_callback_query", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()

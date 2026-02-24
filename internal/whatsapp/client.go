@@ -1,10 +1,23 @@
+// Package whatsapp provides a gRPC client for interacting with the WhatsApp service.
+// It initializes the client connection and provides a global variable for accessing the WhatsApp service methods.
+// The client is initialized in the InitClient function, which should be called at the start of the application.
+// The Close function should be called when the application is shutting down to cleanly close the gRPC connection.
+// This package relies on the configuration settings defined in the service-platform.%s.yaml file, specifically under the "Whatsnyan" section for gRPC host and port.
+// Example usage:
+//
+//	whatsapp.InitClient()
+//	defer whatsapp.Close()
+//	// Now you can use whatsapp.Client to call gRPC methods on the WhatsApp service.
+//
+// Note: If the gRPC connection fails to initialize, the Client variable will be nil, and WhatsApp features will not be available. The application should handle this case gracefully.
+// For more details on the configuration, see the service-platform.%s.yaml file and the config package documentation.
 package whatsapp
 
 import (
 	"fmt"
 
 	"service-platform/internal/config"
-	"service-platform/internal/pkg/logger"
+	"service-platform/pkg/logger"
 	pb "service-platform/proto"
 
 	"github.com/sirupsen/logrus"
@@ -13,8 +26,10 @@ import (
 )
 
 var (
+	// Client is the global gRPC client for the WhatsApp service.
 	Client pb.WhatsAppServiceClient
-	conn   *grpc.ClientConn
+	// gRPC connection, kept for cleanup
+	conn *grpc.ClientConn
 )
 
 // InitClient initializes the WhatsApp gRPC client

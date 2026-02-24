@@ -17,6 +17,7 @@ type IndonesiaRegion struct {
 	SubdistrictRO *int   `gorm:"column:subdistrict_ro" json:"subdistrict_ro"`
 }
 
+// TableName specifies the database table name for the IndonesiaRegion model, which is defined in the configuration file under Database.TbIndonesiaRegion.
 func (IndonesiaRegion) TableName() string {
 	return config.ServicePlatform.Get().Database.TbIndonesiaRegion
 }

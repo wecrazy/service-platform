@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"service-platform/internal/config"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 	"strings"
 	"time"
 
@@ -23,7 +23,7 @@ import (
 )
 
 // HandlePing handles the "ping" command
-func HandlePing(ctx context.Context, v *events.Message, stanzaID string, originalSenderJID string, userLang string, client *whatsmeow.Client, rdb *redis.Client, db *gorm.DB) {
+func HandlePing(_ context.Context, v *events.Message, stanzaID string, originalSenderJID string, userLang string, client *whatsmeow.Client, rdb *redis.Client, db *gorm.DB) {
 	// Prepare localized Pong message
 	langMsg := NewLanguageMsgTranslation(userLang)
 
@@ -211,7 +211,7 @@ func HandlePprof(ctx context.Context, v *events.Message, stanzaID string, origin
 }
 
 // HandleMetrics handles the "get metrics" command
-func HandleMetrics(ctx context.Context, v *events.Message, stanzaID string, originalSenderJID string, userLang string, client *whatsmeow.Client, rdb *redis.Client, db *gorm.DB) {
+func HandleMetrics(_ context.Context, v *events.Message, stanzaID string, originalSenderJID string, userLang string, client *whatsmeow.Client, rdb *redis.Client, db *gorm.DB) {
 	health := fun.GlobalSystemMonitor.GetHealthStatus(db)
 	l1, l5, l15 := fun.GlobalSystemMonitor.GetCPULoad()
 	rx, tx := fun.GlobalSystemMonitor.GetNetworkStats()

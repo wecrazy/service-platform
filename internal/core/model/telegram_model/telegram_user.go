@@ -9,6 +9,7 @@ import (
 // TelegramUserOf defines the type of Telegram user
 type TelegramUserOf string
 
+// CompanyEmployee and related constants define the types of Telegram users by affiliation.
 const (
 	CompanyEmployee TelegramUserOf = "company_employee"
 	ClientEmployee  TelegramUserOf = "client_employee"
@@ -17,6 +18,7 @@ const (
 // TelegramUserType defines the role of Telegram user
 type TelegramUserType string
 
+// CommonUser and related constants define role types for Telegram users.
 const (
 	CommonUser   TelegramUserType = "common"
 	SuperUser    TelegramUserType = "super_user"
@@ -48,6 +50,7 @@ type TelegramUsers struct {
 	// Removed DailyUsageCount, LastQuotaReset - now stored in Redis
 }
 
+// TableName returns the database table name for TelegramUsers.
 func (TelegramUsers) TableName() string {
 	return config.ServicePlatform.Get().Telegram.Tables.TBTelegramUser
 }

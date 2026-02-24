@@ -19,13 +19,13 @@ This guide covers the integrated observability stack with centralized logging (L
 - **Data Storage**: `/var/tempo` volume in container
 
 ### 3. **Nginx Reverse Proxy** (Authentication)
-- **Port**: 8080
+- **Port**: 9180
 - **Purpose**: Secure Grafana, Loki, and Tempo with basic HTTP authentication
 - **Configuration**: `monitoring/nginx/nginx.conf`
 - **Credentials**: `monitoring/nginx/.htpasswd`
 
 ### 4. **Grafana** (Visualization)
-- **Port**: 3063 (direct) or 8080 (via Nginx)
+- **Port**: 3063 (direct) or 9180 (via Nginx)
 - **Datasources**: 
   - Prometheus (metrics)
   - Loki (logs)
@@ -64,14 +64,14 @@ docker-compose -f docker/docker-compose.monitoring.yml logs -f nginx-auth
 - **Prometheus**: http://localhost:9090
 
 ### Via Nginx (With Authentication)
-- **Grafana**: http://localhost:8080
-- **Loki**: http://localhost:8080
-- **Tempo**: http://localhost:8080
-- **Health Check**: http://localhost:8080/health
+- **Grafana**: http://localhost:9180
+- **Loki**: http://localhost:9180
+- **Tempo**: http://localhost:9180
+- **Health Check**: http://localhost:9180/health
 
 ### Credentials
 - **Username**: `admin`
-- **Password**: `admin`
+- **Password**: `Net55206011##`
 
 ## Configuration
 
@@ -111,7 +111,7 @@ The logger automatically:
 3. Supports all existing log levels and formats
 
 ```go
-import "service-platform/internal/pkg/logger"
+import "service-platform/pkg/logger"
 
 // Initialize logger (includes Loki hook if enabled)
 logger.InitLogrus()
@@ -285,7 +285,7 @@ docker-compose -f docker/docker-compose.monitoring.yml logs tempo
 cat monitoring/nginx/.htpasswd
 
 # Test with curl
-curl -u admin:admin http://localhost:8080/health
+curl -u admin:'Net55206011##' http://localhost:9180/health
 ```
 
 ## Next Steps

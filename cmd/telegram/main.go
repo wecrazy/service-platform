@@ -1,3 +1,24 @@
+// Package main is the entry point for the Telegram bot gRPC service.
+//
+// The service wraps the telegram-bot-api library and exposes gRPC RPCs defined
+// in proto/telegram.proto: SendMessage, SendMessageWithKeyboard, EditMessage,
+// AnswerCallbackQuery, SendVoice, SendDocument, SendPhoto, SendAudio, and
+// SendVideo. Every sent/edited message is persisted in the database.
+//
+// A background goroutine polls Telegram for incoming updates. Primary and
+// secondary databases (TA, MS, WebPanel), Redis, and Prometheus metrics are
+// initialised at startup. Graceful shutdown is handled via SIGINT / SIGTERM.
+//
+// Configuration (service-platform.<env>.yaml) sections used:
+//
+//	Telegram.BotToken, Telegram.Debug, Telegram.GRPCPort
+//	Metrics.TelegramPort
+//	Database.*, Redis.*
+//
+// Usage:
+//
+//	go run cmd/telegram/main.go
+//	make build-telegram && ./bin/telegram
 package main
 
 import (
@@ -24,8 +45,8 @@ import (
 	"service-platform/internal/config"
 	telegrammodel "service-platform/internal/core/model/telegram_model"
 	"service-platform/internal/database"
-	"service-platform/internal/pkg/fun"
-	"service-platform/internal/pkg/logger"
+	"service-platform/pkg/fun"
+	"service-platform/pkg/logger"
 	pb "service-platform/proto"
 )
 
@@ -40,7 +61,7 @@ type server struct {
 }
 
 // SendMessage sends a text message to a specified chat.
-func (s *server) SendMessage(ctx context.Context, req *pb.SendTelegramMessageRequest) (*pb.SendTelegramMessageResponse, error) {
+func (s *server) SendMessage(_ context.Context, req *pb.SendTelegramMessageRequest) (*pb.SendTelegramMessageResponse, error) {
 	msg := tgbotapi.NewMessageToChannel(req.ChatId, req.Text)
 	if req.ParseMode != "" {
 		msg.ParseMode = req.ParseMode
@@ -83,7 +104,7 @@ func (s *server) SendMessage(ctx context.Context, req *pb.SendTelegramMessageReq
 }
 
 // SendMessageWithKeyboard sends a text message with an inline keyboard to a specified chat.
-func (s *server) SendMessageWithKeyboard(ctx context.Context, req *pb.SendTelegramMessageWithKeyboardRequest) (*pb.SendTelegramMessageWithKeyboardResponse, error) {
+func (s *server) SendMessageWithKeyboard(_ context.Context, req *pb.SendTelegramMessageWithKeyboardRequest) (*pb.SendTelegramMessageWithKeyboardResponse, error) {
 	msg := tgbotapi.NewMessageToChannel(req.ChatId, req.Text)
 	if req.ParseMode != "" {
 		msg.ParseMode = req.ParseMode
@@ -131,7 +152,7 @@ func (s *server) SendMessageWithKeyboard(ctx context.Context, req *pb.SendTelegr
 }
 
 // EditMessage edits an existing message in a specified chat.
-func (s *server) EditMessage(ctx context.Context, req *pb.EditTelegramMessageRequest) (*pb.EditTelegramMessageResponse, error) {
+func (s *server) EditMessage(_ context.Context, req *pb.EditTelegramMessageRequest) (*pb.EditTelegramMessageResponse, error) {
 	// Parse chat ID - it should be numeric for editing messages
 	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
 	if err != nil {
@@ -201,7 +222,7 @@ func (s *server) EditMessage(ctx context.Context, req *pb.EditTelegramMessageReq
 }
 
 // AnswerCallbackQuery answers a callback query from an inline keyboard button.
-func (s *server) AnswerCallbackQuery(ctx context.Context, req *pb.TelegramAnswerCallbackQueryRequest) (*pb.TelegramAnswerCallbackQueryResponse, error) {
+func (s *server) AnswerCallbackQuery(_ context.Context, req *pb.TelegramAnswerCallbackQueryRequest) (*pb.TelegramAnswerCallbackQueryResponse, error) {
 	callback := tgbotapi.NewCallback(req.CallbackQueryId, req.Text)
 	if req.ShowAlert {
 		callback.ShowAlert = true
@@ -223,7 +244,7 @@ func (s *server) AnswerCallbackQuery(ctx context.Context, req *pb.TelegramAnswer
 }
 
 // SendVoice sends a voice message to a specified chat.
-func (s *server) SendVoice(ctx context.Context, req *pb.SendTelegramVoiceRequest) (*pb.SendTelegramVoiceResponse, error) {
+func (s *server) SendVoice(_ context.Context, req *pb.SendTelegramVoiceRequest) (*pb.SendTelegramVoiceResponse, error) {
 	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
 	if err != nil {
 		return &pb.SendTelegramVoiceResponse{
@@ -279,7 +300,7 @@ func (s *server) SendVoice(ctx context.Context, req *pb.SendTelegramVoiceRequest
 }
 
 // SendDocument sends a document to a specified chat.
-func (s *server) SendDocument(ctx context.Context, req *pb.SendTelegramDocumentRequest) (*pb.SendTelegramDocumentResponse, error) {
+func (s *server) SendDocument(_ context.Context, req *pb.SendTelegramDocumentRequest) (*pb.SendTelegramDocumentResponse, error) {
 	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
 	if err != nil {
 		return &pb.SendTelegramDocumentResponse{
@@ -332,7 +353,7 @@ func (s *server) SendDocument(ctx context.Context, req *pb.SendTelegramDocumentR
 }
 
 // SendPhoto sends a photo to a specified chat.
-func (s *server) SendPhoto(ctx context.Context, req *pb.SendTelegramPhotoRequest) (*pb.SendTelegramPhotoResponse, error) {
+func (s *server) SendPhoto(_ context.Context, req *pb.SendTelegramPhotoRequest) (*pb.SendTelegramPhotoResponse, error) {
 	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
 	if err != nil {
 		return &pb.SendTelegramPhotoResponse{
@@ -385,7 +406,7 @@ func (s *server) SendPhoto(ctx context.Context, req *pb.SendTelegramPhotoRequest
 }
 
 // SendAudio sends an audio file to a specified chat.
-func (s *server) SendAudio(ctx context.Context, req *pb.SendTelegramAudioRequest) (*pb.SendTelegramAudioResponse, error) {
+func (s *server) SendAudio(_ context.Context, req *pb.SendTelegramAudioRequest) (*pb.SendTelegramAudioResponse, error) {
 	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
 	if err != nil {
 		return &pb.SendTelegramAudioResponse{
@@ -447,7 +468,7 @@ func (s *server) SendAudio(ctx context.Context, req *pb.SendTelegramAudioRequest
 }
 
 // SendVideo sends a video to a specified chat.
-func (s *server) SendVideo(ctx context.Context, req *pb.SendTelegramVideoRequest) (*pb.SendTelegramVideoResponse, error) {
+func (s *server) SendVideo(_ context.Context, req *pb.SendTelegramVideoRequest) (*pb.SendTelegramVideoResponse, error) {
 	chatID, err := strconv.ParseInt(req.ChatId, 10, 64)
 	if err != nil {
 		return &pb.SendTelegramVideoResponse{
@@ -503,6 +524,63 @@ func (s *server) SendVideo(ctx context.Context, req *pb.SendTelegramVideoRequest
 	}, nil
 }
 
+// initSecondaryDatabases initializes connections to secondary databases (TA, MS, WebPanel) and logs the results.
+func initSecondaryDatabases() {
+	if err := database.InitDBTA(); err != nil {
+		logrus.WithError(err).Fatal("Failed to initialize TA database")
+	}
+	logrus.Info("✅ Connected to TA database")
+
+	if err := database.InitDBMS(); err != nil {
+		logrus.WithError(err).Fatal("Failed to initialize MS database")
+	}
+	logrus.Info("✅ Connected to MS database")
+
+	if err := database.InitDBWebPanel(); err != nil {
+		logrus.WithError(err).Fatal("Failed to initialize WebPanel database")
+	}
+	logrus.Info("✅ Connected to WebPanel database")
+}
+
+// migrateTelegramModels performs database migrations for Telegram-related models, including dropping old unique indexes on telegram_chat_id if they exist, to ensure the database schema is up-to-date with the latest model definitions.
+func migrateTelegramModels(db *gorm.DB) {
+	// Drop old unique indexes on telegram_chat_id if they exist
+	indexesToDrop := []string{
+		"idx_telegram_incoming_messages_telegram_chat_id",
+		"idx_telegram_messages_telegram_chat_id",
+	}
+	for _, idx := range indexesToDrop {
+		if db.Migrator().HasIndex(&telegrammodel.TelegramIncomingMsg{}, idx) {
+			if err := db.Migrator().DropIndex(&telegrammodel.TelegramIncomingMsg{}, idx); err != nil {
+				logrus.WithError(err).Warn("Failed to drop old index on incoming messages, continuing")
+			}
+		}
+		if db.Migrator().HasIndex(&telegrammodel.TelegramMsg{}, idx) {
+			if err := db.Migrator().DropIndex(&telegrammodel.TelegramMsg{}, idx); err != nil {
+				logrus.WithError(err).Warn("Failed to drop old index on sent messages, continuing")
+			}
+		}
+	}
+	if err := db.AutoMigrate(&telegrammodel.TelegramMsg{}, &telegrammodel.TelegramIncomingMsg{}, &telegrammodel.TelegramUsers{}); err != nil {
+		logrus.WithError(err).Fatal("Failed to migrate Telegram models")
+	}
+	logrus.Info("✅ Migrated Telegram models")
+}
+
+// startTelegramMetricsServer starts an HTTP server to expose Prometheus metrics for the Telegram service on the specified port.
+func startTelegramMetricsServer(port int) {
+	go func() {
+		http.Handle("/telegram-metrics", promhttp.Handler())
+		logrus.Info("✅ Starting metrics server on port ", port)
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
+			logrus.WithError(err).Fatal("Failed to start metrics server")
+		}
+	}()
+}
+
+// main loads configuration, initialises databases / Redis / bot API / Prometheus,
+// starts a Telegram update listener, and serves the Telegram gRPC service until
+// a termination signal is received.
 func main() {
 	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
 	go config.ServicePlatform.Watch()
@@ -527,50 +605,8 @@ func main() {
 	}
 	logrus.Info("✅ Connected to database")
 
-	// #############################################################################
-	// Other databases used ########################################################
-
-	// Initialize TA database
-	if err := database.InitDBTA(); err != nil {
-		logrus.WithError(err).Fatal("Failed to initialize TA database")
-	}
-	logrus.Info("✅ Connected to TA database")
-
-	// Initialize MS database
-	if err := database.InitDBMS(); err != nil {
-		logrus.WithError(err).Fatal("Failed to initialize MS database")
-	}
-	logrus.Info("✅ Connected to MS database")
-
-	// Initialize WebPanel database
-	if err := database.InitDBWebPanel(); err != nil {
-		logrus.WithError(err).Fatal("Failed to initialize WebPanel database")
-	}
-	logrus.Info("✅ Connected to WebPanel database")
-	// #############################################################################
-
-	// Auto-migrate Telegram models
-	// Drop old unique indexes on telegram_chat_id if they exist
-	indexesToDrop := []string{
-		"idx_telegram_incoming_messages_telegram_chat_id",
-		"idx_telegram_messages_telegram_chat_id", // Assuming GORM generates this for TelegramMsg
-	}
-	for _, idx := range indexesToDrop {
-		if db.Migrator().HasIndex(&telegrammodel.TelegramIncomingMsg{}, idx) {
-			if err := db.Migrator().DropIndex(&telegrammodel.TelegramIncomingMsg{}, idx); err != nil {
-				logrus.WithError(err).Warn("Failed to drop old index on incoming messages, continuing")
-			}
-		}
-		if db.Migrator().HasIndex(&telegrammodel.TelegramMsg{}, idx) {
-			if err := db.Migrator().DropIndex(&telegrammodel.TelegramMsg{}, idx); err != nil {
-				logrus.WithError(err).Warn("Failed to drop old index on sent messages, continuing")
-			}
-		}
-	}
-	if err := db.AutoMigrate(&telegrammodel.TelegramMsg{}, &telegrammodel.TelegramIncomingMsg{}, &telegrammodel.TelegramUsers{}); err != nil {
-		logrus.WithError(err).Fatal("Failed to migrate Telegram models")
-	}
-	logrus.Info("✅ Migrated Telegram models")
+	initSecondaryDatabases()
+	migrateTelegramModels(db)
 
 	// Initialize Redis
 	redisClient := redis.NewClient(&redis.Options{
@@ -627,14 +663,7 @@ func main() {
 
 	logrus.Info("✅ Telegram update listener started")
 
-	// Start metrics server
-	go func() {
-		http.Handle("/telegram-metrics", promhttp.Handler())
-		logrus.Info("✅ Starting metrics server on port ", cfg.Metrics.TelegramPort)
-		if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Metrics.TelegramPort), nil); err != nil {
-			logrus.WithError(err).Fatal("Failed to start metrics server")
-		}
-	}()
+	startTelegramMetricsServer(cfg.Metrics.TelegramPort)
 
 	// Handle graceful shutdown
 	go func() {
