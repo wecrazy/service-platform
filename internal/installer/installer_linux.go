@@ -1,5 +1,6 @@
 //go:build linux
 
+// Package installer provides functions to install the service-platform application as a systemd service on Linux. It creates a systemd service file with the appropriate configuration and enables the service to start on boot. The installer checks for root privileges and handles both system-wide and user-level installations based on how the application is run. For more details on how to use this package, see the documentation in the internal/installer package and the main application README.
 package installer
 
 import (
@@ -12,12 +13,14 @@ import (
 	"strings"
 )
 
+// EnsureAdminPrivileges terminates the application if not running as root.
 func EnsureAdminPrivileges() {
 	if os.Geteuid() != 0 {
 		log.Fatalln("❌ This operation requires root privileges. Please run this program with sudo.")
 	}
 }
 
+// Install installs the application as a systemd service on Linux.
 func Install(yamlCfg *config.TypeServicePlatform) {
 	fmt.Println("🐧 Linux detected — running Linux install steps...")
 

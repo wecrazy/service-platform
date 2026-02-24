@@ -25,7 +25,7 @@ import (
 // @Success     200         {string} string      "TwiML XML response"
 // @Failure     400         {string} string      "Invalid request"
 // @Router      /twilio_reply [post]
-func HandleTwilioWhatsAppWebhook(db *gorm.DB) gin.HandlerFunc {
+func HandleTwilioWhatsAppWebhook(_ *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Parse incoming webhook from Twilio
 		var req dto.HandleTwilioWhatsAppWebhookRequest
@@ -124,7 +124,7 @@ func HandleTwilioWhatsAppWebhook(db *gorm.DB) gin.HandlerFunc {
 // @Failure     400  {object} dto.TwilioWhatsAppErrorResponse
 // @Failure     500  {object} dto.TwilioWhatsAppErrorResponse
 // @Router      /api/v1/{access}/tab-twilio-whatsapp/send_message [post]
-func SendTwilioWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
+func SendTwilioWhatsAppMessage(_ *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req dto.SendTwilioWhatsAppMessageRequest
 
@@ -183,7 +183,7 @@ func SendTwilioWhatsAppMessage(db *gorm.DB) gin.HandlerFunc {
 // @Failure     400  {object} dto.TwilioWhatsAppErrorResponse
 // @Failure     500  {object} dto.TwilioWhatsAppErrorResponse
 // @Router      /api/v1/{access}/tab-twilio-whatsapp/send_media_message [post]
-func SendTwilioWhatsAppMediaMessage(db *gorm.DB) gin.HandlerFunc {
+func SendTwilioWhatsAppMediaMessage(_ *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req dto.SendTwilioWhatsAppMediaMessageRequest
 
@@ -209,7 +209,7 @@ func SendTwilioWhatsAppMediaMessage(db *gorm.DB) gin.HandlerFunc {
 		defer client.Close()
 
 		// Send media message
-		messageSID, err := client.SendMediaMessage(req.To, req.MediaUrl, req.Caption)
+		messageSID, err := client.SendMediaMessage(req.To, req.MediaURL, req.Caption)
 		if err != nil {
 			logrus.Errorf("❌ Failed to send WhatsApp media message to %s: %v", req.To, err)
 			c.JSON(http.StatusInternalServerError, dto.TwilioWhatsAppErrorResponse{
@@ -224,7 +224,7 @@ func SendTwilioWhatsAppMediaMessage(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, dto.SendTwilioWhatsAppMediaMessageResponse{
 			MessageSid: messageSID,
 			To:         req.To,
-			MediaUrl:   req.MediaUrl,
+			MediaURL:   req.MediaURL,
 			Status:     "queued",
 			Timestamp:  time.Now(),
 		})
@@ -240,7 +240,7 @@ func SendTwilioWhatsAppMediaMessage(db *gorm.DB) gin.HandlerFunc {
 // @Security    ApiKeyAuth
 // @Success     200 {object} dto.TwilioWhatsAppMessageListResponse
 // @Router      /api/v1/{access}/tab-twilio-whatsapp/messages [get]
-func GetTwilioWhatsAppMessages(db *gorm.DB) gin.HandlerFunc {
+func GetTwilioWhatsAppMessages(_ *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// TODO: Implement message history retrieval from database
 		logrus.Infof("📊 Retrieving sent WhatsApp messages")
@@ -260,7 +260,7 @@ func GetTwilioWhatsAppMessages(db *gorm.DB) gin.HandlerFunc {
 // @Security    ApiKeyAuth
 // @Success     200 {object} dto.TwilioWhatsAppMessageListResponse
 // @Router      /api/v1/{access}/tab-twilio-whatsapp/incoming [get]
-func GetTwilioWhatsAppIncomingMessages(db *gorm.DB) gin.HandlerFunc {
+func GetTwilioWhatsAppIncomingMessages(_ *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// TODO: Implement incoming message history retrieval from database
 		logrus.Infof("📊 Retrieving incoming WhatsApp messages")

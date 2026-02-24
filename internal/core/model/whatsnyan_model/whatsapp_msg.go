@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// WhatsAppMsg represents a WhatsApp message record in the database.
 type WhatsAppMsg struct {
 	gorm.Model
 
@@ -29,6 +30,7 @@ type WhatsAppMsg struct {
 	WhatsappReactedAt     *time.Time `gorm:"column:whatsapp_reacted_at" json:"whatsapp_reacted_at"`
 }
 
+// TableName returns the database table name for WhatsAppMsg.
 func (WhatsAppMsg) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBWhatsnyanMessage
 }

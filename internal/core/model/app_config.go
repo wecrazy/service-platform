@@ -1,3 +1,4 @@
+// Package model defines the core domain models for service-platform.
 package model
 
 import (
@@ -6,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// AppConfig represents the application configuration settings, which include details such as the associated role ID, application name, logo, version information, and a description. The AppConfig model also establishes a relationship with the Role model through the RoleID field. The TableName method specifies the database table name for this model, which is defined in the configuration file under Database.TbWebAppConfig.
 type AppConfig struct {
 	gorm.Model
 	RoleID      uint   `json:"role_id" gorm:"column:role_id;not null"`
@@ -23,6 +25,7 @@ type AppConfig struct {
 	Role Role `gorm:"foreignKey:RoleID;references:ID"`
 }
 
+// TableName specifies the database table name for the AppConfig model, which is defined in the configuration file under Database.TbWebAppConfig.
 func (AppConfig) TableName() string {
 	return config.ServicePlatform.Get().Database.TbWebAppConfig
 }

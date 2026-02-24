@@ -11,6 +11,7 @@ type WhatsmeowAppStateMutationMacs struct {
 	ValueMAC []byte `gorm:"column:value_mac"`
 }
 
+// TableName returns the database table name for WhatsmeowAppStateMutationMacs.
 func (WhatsmeowAppStateMutationMacs) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBAppStateMutationMacs
 }
@@ -24,6 +25,7 @@ type WhatsmeowAppStateSyncKeys struct {
 	Fingerprint []byte `gorm:"column:fingerprint"`
 }
 
+// TableName returns the database table name for WhatsmeowAppStateSyncKeys.
 func (WhatsmeowAppStateSyncKeys) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBAppStateSyncKeys
 }
@@ -36,6 +38,7 @@ type WhatsmeowAppStateVersion struct {
 	Hash    []byte `gorm:"column:hash"`
 }
 
+// TableName returns the database table name for WhatsmeowAppStateVersion.
 func (WhatsmeowAppStateVersion) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBAppStateVersions
 }
@@ -49,6 +52,7 @@ type WhatsmeowChatSettings struct {
 	Archived   bool   `gorm:"column:archived;default:false"`
 }
 
+// TableName returns the database table name for WhatsmeowChatSettings.
 func (WhatsmeowChatSettings) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBChatSettings
 }
@@ -64,6 +68,7 @@ type WhatsmeowContacts struct {
 	RedactedPhone *string `gorm:"column:redacted_phone"`
 }
 
+// TableName returns the database table name for WhatsmeowContacts.
 func (WhatsmeowContacts) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBContacts
 }
@@ -90,6 +95,7 @@ type WhatsmeowDevice struct {
 	LIDMigrationTS   int64   `gorm:"column:lid_migration_ts;default:0"`
 }
 
+// TableName returns the database table name for WhatsmeowDevice.
 func (WhatsmeowDevice) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBDevice
 }
@@ -103,6 +109,7 @@ type WhatsmeowEventBuffer struct {
 	InsertTimestamp int64  `gorm:"column:insert_timestamp"`
 }
 
+// TableName returns the database table name for WhatsmeowEventBuffer.
 func (WhatsmeowEventBuffer) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBEventBuffer
 }
@@ -114,6 +121,7 @@ type WhatsmeowIdentityKeys struct {
 	Identity []byte `gorm:"column:identity"`
 }
 
+// TableName returns the database table name for WhatsmeowIdentityKeys.
 func (WhatsmeowIdentityKeys) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBIdentityKeys
 }
@@ -124,6 +132,7 @@ type WhatsmeowLIDMap struct {
 	PN  string `gorm:"column:pn;unique"`
 }
 
+// TableName returns the database table name for WhatsmeowLIDMap.
 func (WhatsmeowLIDMap) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBLIDMap
 }
@@ -137,6 +146,7 @@ type WhatsmeowMessageSecrets struct {
 	Key       []byte `gorm:"column:key"`
 }
 
+// TableName returns the database table name for WhatsmeowMessageSecrets.
 func (WhatsmeowMessageSecrets) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBMessageSecrets
 }
@@ -149,6 +159,7 @@ type WhatsmeowPreKeys struct {
 	Uploaded bool   `gorm:"column:uploaded"`
 }
 
+// TableName returns the database table name for WhatsmeowPreKeys.
 func (WhatsmeowPreKeys) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBPreKeys
 }
@@ -161,6 +172,7 @@ type WhatsmeowPrivacyTokens struct {
 	Timestamp int64  `gorm:"column:timestamp"`
 }
 
+// TableName returns the database table name for WhatsmeowPrivacyTokens.
 func (WhatsmeowPrivacyTokens) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBPrivacyTokens
 }
@@ -173,6 +185,7 @@ type WhatsmeowSenderKeys struct {
 	SenderKey []byte `gorm:"column:sender_key"`
 }
 
+// TableName returns the database table name for WhatsmeowSenderKeys.
 func (WhatsmeowSenderKeys) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBSenderKeys
 }
@@ -184,6 +197,7 @@ type WhatsmeowSessions struct {
 	Session []byte `gorm:"column:session"`
 }
 
+// TableName returns the database table name for WhatsmeowSessions.
 func (WhatsmeowSessions) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBSessions
 }
@@ -194,6 +208,7 @@ type WhatsmeowVersion struct {
 	Compat  *int32 `gorm:"column:compat"`
 }
 
+// TableName returns the database table name for WhatsmeowVersion.
 func (WhatsmeowVersion) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBVersion
 }

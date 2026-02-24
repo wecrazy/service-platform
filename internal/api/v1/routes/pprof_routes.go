@@ -1,3 +1,4 @@
+// Package routes defines the HTTP route registration for the service-platform API.
 package routes
 
 import (

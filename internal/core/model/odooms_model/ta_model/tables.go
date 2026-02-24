@@ -1,3 +1,4 @@
+// Package tamodel defines database table models for the Odoo integration.
 package tamodel
 
 import (
@@ -15,7 +16,7 @@ type LogAct struct {
 	Problem         string     `gorm:"column:problem;type:varchar(500);not null;default:0" json:"problem"`
 	Type            string     `gorm:"column:type;type:varchar(500);not null;default:0" json:"type"`
 	Type2           string     `gorm:"column:type2;type:varchar(500);not null;default:0" json:"type2"`
-	Sla             string     `gorm:"column:sla;type:varchar(500);not null;default:0" json:"sla"`
+	SLA             string     `gorm:"column:sla;type:varchar(500);not null;default:0" json:"sla"`
 	Rc              string     `gorm:"column:rc;type:varchar(500);not null;default:0" json:"rc"`
 	Tid             string     `gorm:"column:tid;type:varchar(500);not null;default:0" json:"tid"`
 	Keterangan      string     `gorm:"column:keterangan;type:varchar(500);not null;default:0" json:"keterangan"`
@@ -29,6 +30,7 @@ type LogAct struct {
 	LogEdit         string     `gorm:"column:log_edit;type:text" json:"log_edit"`
 }
 
+// TableName returns the database table name for LogAct.
 func (LogAct) TableName() string {
 	return config.ManageService.Get().TechnicalAssistance.Tables.TBLogActivity
 }
@@ -42,7 +44,7 @@ type Pending struct {
 	ReceivedDatetimeSpk string  `gorm:"column:receiveDate;type:varchar(300);not null;default:0" json:"receiveDate"`
 	Type                *string `gorm:"column:type;type:varchar(300);default:null" json:"type"`
 	Type2               *string `gorm:"column:type2;type:varchar(300);default:null" json:"type2"`
-	Sla                 *string `gorm:"column:sla;type:varchar(300);default:null" json:"sla"`
+	SLA                 *string `gorm:"column:sla;type:varchar(300);default:null" json:"sla"`
 	TimeStart           string  `gorm:"column:time_start;type:varchar(50);not null;default:0" json:"time_start"`
 	TimeStop            string  `gorm:"column:time_stop;type:varchar(50);not null;default:0" json:"time_stop"`
 	Keterangan          *string `gorm:"column:keterangan;type:varchar(2000);default:null" json:"keterangan"`
@@ -70,6 +72,7 @@ type Pending struct {
 	Hapus       string     `gorm:"-" json:"hapus"`
 }
 
+// TableName returns the database table name for Pending.
 func (Pending) TableName() string {
 	return config.ManageService.Get().TechnicalAssistance.Tables.TBPending
 }
@@ -83,7 +86,7 @@ type Error struct {
 	ReceivedDatetimeSpk string     `gorm:"column:receiveDate;type:varchar(300);not null;default:0" json:"receiveDate"`
 	Type                *string    `gorm:"column:type;type:varchar(300);default:null" json:"type"`
 	Type2               *string    `gorm:"column:type2;type:varchar(300);default:null" json:"type2"`
-	Sla                 *string    `gorm:"column:sla;type:varchar(300);default:null" json:"sla"`
+	SLA                 *string    `gorm:"column:sla;type:varchar(300);default:null" json:"sla"`
 	TimeStart           string     `gorm:"column:time_start;type:varchar(50);not null;default:0" json:"time_start"`
 	TimeStop            string     `gorm:"column:time_stop;type:varchar(50);not null;default:0" json:"time_stop"`
 	Keterangan          *string    `gorm:"column:keterangan;type:varchar(2000);default:null" json:"keterangan"`
@@ -109,6 +112,7 @@ type Error struct {
 	Hapus               string     `gorm:"-" json:"hapus"`
 }
 
+// TableName returns the database table name for Error.
 func (Error) TableName() string {
 	return config.ManageService.Get().TechnicalAssistance.Tables.TBError
 }

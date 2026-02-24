@@ -2,9 +2,8 @@ package unit
 
 import (
 	"regexp"
+	"service-platform/pkg/fun"
 	"testing"
-
-	"service-platform/internal/pkg/fun"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

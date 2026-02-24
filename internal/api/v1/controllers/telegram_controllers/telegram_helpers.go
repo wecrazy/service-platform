@@ -16,14 +16,15 @@ import (
 
 	"service-platform/internal/config"
 	telegrammodel "service-platform/internal/core/model/telegram_model"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 	pb "service-platform/proto"
 )
 
-const (
-	MaxUnverifiedMessagesSendByTelegram = 25  // Max unverified messages to send
-	MaxDailyQuotaForTelegramMsg         = 100 // Max quota per day for Telegram messages
-)
+// MaxUnverifiedMessagesSendByTelegram is the maximum number of unverified messages to send.
+const MaxUnverifiedMessagesSendByTelegram = 25
+
+// MaxDailyQuotaForTelegramMsg is the maximum daily quota for Telegram messages.
+const MaxDailyQuotaForTelegramMsg = 100
 
 // TelegramHelper contains helper functions for Telegram bot operations
 type TelegramHelper struct {
@@ -82,10 +83,9 @@ func (h *TelegramHelper) verifyAndCheckUser(user *tgbotapi.User, chatID int64) (
 			}
 
 			return false, h.getLocalizedMessage(userLang, "user_created_unverified", h.config.Telegram.TechnicalSupportPhone)
-		} else {
-			logrus.WithError(err).Error("Failed to check user")
-			return false, h.getLocalizedMessage(userLang, "database_error")
 		}
+		logrus.WithError(err).Error("Failed to check user")
+		return false, h.getLocalizedMessage(userLang, "database_error")
 	}
 
 	// Check if user is banned
@@ -168,7 +168,7 @@ func (h *TelegramHelper) isQuotaExceeded(chatID int64, maxQuota int) bool {
 }
 
 // isSameDay checks if two timestamps are on the same day
-func (h *TelegramHelper) isSameDay(t1, t2 time.Time) bool {
+func (*TelegramHelper) isSameDay(t1, t2 time.Time) bool {
 	y1, m1, d1 := t1.Date()
 	y2, m2, d2 := t2.Date()
 	return y1 == y2 && m1 == m2 && d1 == d2
@@ -293,7 +293,7 @@ func (h *TelegramHelper) markMessageAsSeen(messageID int64, chatID string) {
 }
 
 // BuildInlineKeyboard constructs an InlineKeyboardMarkup from the protobuf definition.
-func (h *TelegramHelper) BuildInlineKeyboard(keyboard *pb.InlineKeyboardMarkup) tgbotapi.InlineKeyboardMarkup {
+func (*TelegramHelper) BuildInlineKeyboard(keyboard *pb.InlineKeyboardMarkup) tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
 	for _, row := range keyboard.InlineKeyboard {
 		var buttons []tgbotapi.InlineKeyboardButton
@@ -359,9 +359,10 @@ func (h *TelegramHelper) HandleUpdate(update tgbotapi.Update) {
 	}
 }
 
+// HandleReplyMessage processes reply messages from Telegram.
 // TODO: buat function untuk handle reply dari SP yang dikirim
 // baca message.Chat.ID untuk tau chat id nya, dan hapus dari DB jika diperlukan klo SP yg terkirim sudah dibalas
-func (h *TelegramHelper) HandleReplyMessage(message *tgbotapi.Message) {
+func (*TelegramHelper) HandleReplyMessage(_ *tgbotapi.Message) {
 
 }
 
@@ -435,165 +436,283 @@ func (h *TelegramHelper) HandleMessage(message *tgbotapi.Message) {
 	if message.IsCommand() {
 		h.HandleCommand(message)
 	} else {
-		// Handle regular messages if needed
-		userLang := h.getUserLanguage(message.From.ID, message.From.LanguageCode)
-		logrus.WithFields(logrus.Fields{
-			"chat_id": message.Chat.ID,
-			"user":    message.From.UserName,
-			"text":    message.Text,
-			"lang":    userLang,
-		}).Info("Received message")
+		h.handleRegularMessage(message)
+	}
+}
 
-		// Determine message type and body
-		var msgType telegrammodel.TelegramMessageType
-		var msgBody string
+// handleRegularMessage stores a non-command message in the database and acknowledges receipt.
+func (h *TelegramHelper) handleRegularMessage(message *tgbotapi.Message) {
+	// Handle regular messages if needed
+	userLang := h.getUserLanguage(message.From.ID, message.From.LanguageCode)
+	logrus.WithFields(logrus.Fields{
+		"chat_id": message.Chat.ID,
+		"user":    message.From.UserName,
+		"text":    message.Text,
+		"lang":    userLang,
+	}).Info("Received message")
 
-		if message.Text != "" {
-			msgType = telegrammodel.TelegramTextMessage
-			msgBody = message.Text
-		} else if len(message.Photo) > 0 {
-			msgType = telegrammodel.TelegramImageMessage
-			msgBody = message.Caption // Use caption as body for images
-			if msgBody == "" {
-				msgBody = "Image"
-			}
-		} else if message.Document != nil {
-			msgType = telegrammodel.TelegramDocumentMessage
-			msgBody = message.Document.FileName
-			if message.Caption != "" {
-				msgBody = message.Caption
-			}
-		} else if message.Video != nil {
-			msgType = telegrammodel.TelegramVideoMessage
-			msgBody = message.Caption
-			if msgBody == "" {
-				msgBody = "Video"
-			}
-		} else if message.Audio != nil {
-			msgType = telegrammodel.TelegramAudioMessage
-			msgBody = message.Audio.Title
-			if msgBody == "" && message.Audio.FileName != "" {
-				msgBody = message.Audio.FileName
-			}
-			if msgBody == "" {
-				msgBody = "Audio"
-			}
-		} else if message.Sticker != nil {
-			msgType = telegrammodel.TelegramStickerMessage
-			msgBody = message.Sticker.Emoji
-		} else if message.Location != nil {
-			msgType = telegrammodel.TelegramLocationMessage
-			msgBody = fmt.Sprintf("Location: %.6f, %.6f", message.Location.Latitude, message.Location.Longitude)
-		} else if message.Contact != nil {
-			msgType = telegrammodel.TelegramContactMessage
-			// Extract phone number and other contact details
-			phoneNumber := message.Contact.PhoneNumber
-			firstName := message.Contact.FirstName
-			lastName := message.Contact.LastName
+	// Determine message type and body
+	msgType, msgBody := detectTelegramMsgTypeAndBody(message)
 
-			msgBody = fmt.Sprintf("Contact: %s %s, Phone: %s", firstName, lastName, phoneNumber)
+	// Store incoming message in database
+	var replyToID *int64
+	if message.ReplyToMessage != nil {
+		replyID := int64(message.ReplyToMessage.MessageID)
+		replyToID = &replyID
+	}
 
-			// You can now use the phone number for verification or other purposes
-			logrus.WithFields(logrus.Fields{
-				"chat_id":    message.Chat.ID,
-				"user_id":    message.From.ID,
-				"phone":      phoneNumber,
-				"first_name": firstName,
-				"last_name":  lastName,
-			}).Info("Received contact information")
+	incomingMsg := telegrammodel.TelegramIncomingMsg{
+		ChatID:      fmt.Sprintf("%d", message.Chat.ID),
+		SenderID:    fmt.Sprintf("%d", message.From.ID),
+		SenderName:  message.From.UserName,
+		MessageBody: msgBody,
+		MessageType: msgType,
+		IsGroup:     message.Chat.IsGroup() || message.Chat.IsSuperGroup(),
+		ReceivedAt:  message.Time(),
+		MessageID:   int64(message.MessageID),
+		ReplyToID:   replyToID,
+		MsgStatus:   "seen", // Mark as seen immediately
+	}
+
+	// Check if message already exists to prevent duplicates
+	var existing telegrammodel.TelegramIncomingMsg
+	if err := h.db.Where("telegram_chat_id = ? AND telegram_message_id = ?", incomingMsg.ChatID, incomingMsg.MessageID).First(&existing).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			if err := h.db.Create(&incomingMsg).Error; err != nil {
+				logrus.WithError(err).Error("Failed to store incoming Telegram message")
+			}
 		} else {
-			msgType = telegrammodel.TelegramTextMessage
-			msgBody = "Unsupported message type"
+			logrus.WithError(err).Error("Failed to check existing Telegram message")
 		}
+	} // else message already exists, skip
 
-		// Store incoming message in database
-		var replyToID *int64
-		if message.ReplyToMessage != nil {
-			replyID := int64(message.ReplyToMessage.MessageID)
-			replyToID = &replyID
+	// Check if user is expecting input (WO, TID, etc.)
+	expectedInput, err := h.redis.Get(context.Background(), fmt.Sprintf("telegram:expecting_input:%d", message.Chat.ID)).Result()
+	if err == nil && expectedInput != "" {
+		h.handleMSExpectedInput(message, expectedInput, userLang)
+		return
+	}
+
+	// Send typing indicator before responding
+	h.sendTypingAction(message.Chat.ID)
+
+	// Acknowledge receipt in user's language
+	responseText := fmt.Sprintf(h.getLocalizedMessage(userLang, "message_received"), msgBody)
+	msg := tgbotapi.NewMessage(message.Chat.ID, responseText)
+	h.bot.Send(msg)
+
+	// Increment user quota after successful processing
+	h.incrementUserQuota(message.Chat.ID)
+}
+
+// detectTelegramMsgTypeAndBody inspects a Telegram message and returns its type and body text.
+func detectTelegramMsgTypeAndBody(message *tgbotapi.Message) (telegrammodel.TelegramMessageType, string) {
+	switch {
+	case message.Text != "":
+		return telegrammodel.TelegramTextMessage, message.Text
+	case len(message.Photo) > 0:
+		body := message.Caption
+		if body == "" {
+			body = "Image"
 		}
-
-		incomingMsg := telegrammodel.TelegramIncomingMsg{
-			ChatID:      fmt.Sprintf("%d", message.Chat.ID),
-			SenderID:    fmt.Sprintf("%d", message.From.ID),
-			SenderName:  message.From.UserName,
-			MessageBody: msgBody,
-			MessageType: msgType,
-			IsGroup:     message.Chat.IsGroup() || message.Chat.IsSuperGroup(),
-			ReceivedAt:  message.Time(),
-			MessageID:   int64(message.MessageID),
-			ReplyToID:   replyToID,
-			MsgStatus:   "seen", // Mark as seen immediately
+		return telegrammodel.TelegramImageMessage, body
+	case message.Document != nil:
+		body := message.Document.FileName
+		if message.Caption != "" {
+			body = message.Caption
 		}
+		return telegrammodel.TelegramDocumentMessage, body
+	case message.Video != nil:
+		body := message.Caption
+		if body == "" {
+			body = "Video"
+		}
+		return telegrammodel.TelegramVideoMessage, body
+	case message.Audio != nil:
+		return telegrammodel.TelegramAudioMessage, telegramAudioBody(message.Audio)
+	case message.Sticker != nil:
+		return telegrammodel.TelegramStickerMessage, message.Sticker.Emoji
+	case message.Location != nil:
+		body := fmt.Sprintf("Location: %.6f, %.6f", message.Location.Latitude, message.Location.Longitude)
+		return telegrammodel.TelegramLocationMessage, body
+	case message.Contact != nil:
+		body := fmt.Sprintf("Contact: %s %s, Phone: %s", message.Contact.FirstName, message.Contact.LastName, message.Contact.PhoneNumber)
+		logrus.WithFields(logrus.Fields{
+			"chat_id":    message.Chat.ID,
+			"user_id":    message.From.ID,
+			"phone":      message.Contact.PhoneNumber,
+			"first_name": message.Contact.FirstName,
+			"last_name":  message.Contact.LastName,
+		}).Info("Received contact information")
+		return telegrammodel.TelegramContactMessage, body
+	default:
+		return telegrammodel.TelegramTextMessage, "Unsupported message type"
+	}
+}
 
-		// Check if message already exists to prevent duplicates
-		var existing telegrammodel.TelegramIncomingMsg
-		if err := h.db.Where("telegram_chat_id = ? AND telegram_message_id = ?", incomingMsg.ChatID, incomingMsg.MessageID).First(&existing).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				if err := h.db.Create(&incomingMsg).Error; err != nil {
-					logrus.WithError(err).Error("Failed to store incoming Telegram message")
-				}
-			} else {
-				logrus.WithError(err).Error("Failed to check existing Telegram message")
+// telegramAudioBody returns a display string for an audio message.
+func telegramAudioBody(audio *tgbotapi.Audio) string {
+	if audio.Title != "" {
+		return audio.Title
+	}
+	if audio.FileName != "" {
+		return audio.FileName
+	}
+	return "Audio"
+}
+
+// handleLangCallback handles a "lang_XXX" callback. Returns true if the caller should return early.
+func (h *TelegramHelper) handleLangCallback(callback *tgbotapi.CallbackQuery, langCode, userLang string) bool {
+	var telegramUser telegrammodel.TelegramUsers
+	err := h.db.Where("telegram_chat_id = ?", callback.Message.Chat.ID).First(&telegramUser).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			fullName := callback.From.FirstName
+			if callback.From.LastName != "" {
+				fullName += " " + callback.From.LastName
 			}
-		} // else message already exists, skip
+			newUser := telegrammodel.TelegramUsers{
+				ChatID:        &callback.Message.Chat.ID,
+				FullName:      fullName,
+				Username:      callback.From.UserName,
+				VerifiedUser:  false,
+				IsBanned:      false,
+				UserOf:        telegrammodel.CompanyEmployee,
+				MaxDailyQuota: MaxDailyQuotaForTelegramMsg,
+			}
+			if createErr := h.db.Create(&newUser).Error; createErr != nil {
+				logrus.WithError(createErr).Error("Failed to create user for language selection")
+				editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "error"))
+				h.bot.Send(editMsg)
+				return true
+			}
+			telegramUser = newUser
+		} else {
+			logrus.WithError(err).Error("Failed to find user for language selection")
+			editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "error"))
+			h.bot.Send(editMsg)
+			return true
+		}
+	}
+	if !telegramUser.VerifiedUser {
+		h.startRegistration(callback.Message.Chat.ID, callback.From, langCode)
+		return true
+	}
+	if err = h.setUserLanguage(callback.From.ID, langCode); err != nil {
+		logrus.WithError(err).Error("Failed to set user language")
+		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "language_error"))
+		h.bot.Send(editMsg)
+		return false
+	}
+	responseText := h.getLocalizedMessage(langCode, "language_set")
+	editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, responseText)
+	h.bot.Send(editMsg)
+	return false
+}
 
-		// Check if user is expecting input (WO, TID, etc.)
-		expectedInput, err := h.redis.Get(context.Background(), fmt.Sprintf("telegram:expecting_input:%d", message.Chat.ID)).Result()
-		if err == nil && expectedInput != "" {
-			h.handleMSExpectedInput(message, expectedInput, userLang)
+// handleReactCallback handles a "react_emoji_msgid" callback.
+func (h *TelegramHelper) handleReactCallback(callback *tgbotapi.CallbackQuery, userLang string) {
+	parts := strings.Split(callback.Data, "_")
+	if len(parts) < 3 {
+		return
+	}
+	emoji := parts[1]
+	messageID, err := strconv.ParseInt(parts[2], 10, 64)
+	if err != nil {
+		logrus.WithError(err).Error("Invalid message ID in reaction callback")
+		return
+	}
+	if err := h.db.Model(&telegrammodel.TelegramIncomingMsg{}).
+		Where("telegram_chat_id = ? AND telegram_message_id = ?", fmt.Sprintf("%d", callback.Message.Chat.ID), messageID).
+		Updates(map[string]interface{}{
+			"telegram_reaction_emoji": emoji,
+			"telegram_reacted_by":     callback.From.UserName,
+			"telegram_reacted_at":     time.Now(),
+		}).Error; err != nil {
+		logrus.WithError(err).Error("Failed to update Telegram reaction")
+	}
+	reactionMsg := h.getLocalizedMessage(userLang, "reaction_added")
+	msg := tgbotapi.NewMessage(callback.Message.Chat.ID, fmt.Sprintf(reactionMsg, emoji))
+	h.bot.Send(msg)
+}
+
+// handleStartCallback handles the "start" callback — ensures the user record exists, then shows the start menu.
+func (h *TelegramHelper) handleStartCallback(callback *tgbotapi.CallbackQuery, userLang string) {
+	var telegramUser telegrammodel.TelegramUsers
+	err := h.db.Where("telegram_chat_id = ?", callback.Message.Chat.ID).First(&telegramUser).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			chatID := callback.Message.Chat.ID
+			newUser := telegrammodel.TelegramUsers{
+				ChatID:        &chatID,
+				FullName:      callback.From.FirstName + " " + callback.From.LastName,
+				Username:      callback.From.UserName,
+				UserType:      telegrammodel.CommonUser,
+				UserOf:        telegrammodel.CompanyEmployee,
+				IsBanned:      false,
+				VerifiedUser:  false,
+				MaxDailyQuota: MaxDailyQuotaForTelegramMsg,
+			}
+			if createErr := h.db.Create(&newUser).Error; createErr != nil {
+				logrus.WithError(createErr).Error("Failed to create new Telegram user")
+				editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "database_error"))
+				h.bot.Send(editMsg)
+				return
+			}
+			telegramUser = newUser
+		} else {
+			logrus.WithError(err).Error("Failed to check Telegram user")
+			editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "database_error"))
+			if _, err := h.bot.Send(editMsg); err != nil {
+				logrus.WithError(err).Error("Failed to send database error message")
+			}
 			return
 		}
-
-		// Send typing indicator before responding
-		h.sendTypingAction(message.Chat.ID)
-
-		// Quick response (remove delay for better UX)
-		// time.Sleep(1 * time.Second)
-
-		// Acknowledge receipt in user's language
-		responseText := fmt.Sprintf(h.getLocalizedMessage(userLang, "message_received"), msgBody)
-		msg := tgbotapi.NewMessage(message.Chat.ID, responseText)
-		h.bot.Send(msg)
-
-		// Increment user quota after successful processing
-		h.incrementUserQuota(message.Chat.ID)
 	}
+
+	if !telegramUser.VerifiedUser {
+		h.startRegistration(callback.Message.Chat.ID, callback.From, userLang)
+		return
+	}
+
+	keyboard := h.CreateStartKeyboard(userLang)
+	editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "welcome"))
+	editMsg.ReplyMarkup = &keyboard
+	if _, err := h.bot.Send(editMsg); err != nil {
+		logrus.WithError(err).Error("Failed to send start menu")
+	}
+}
+
+// setExpectedInputAndPrompt stores an expected-input key in Redis and sends a ForceReply prompt.
+func (h *TelegramHelper) setExpectedInputAndPrompt(callback *tgbotapi.CallbackQuery, inputKind, userLang, promptKey, placeholderKey string) {
+	key := fmt.Sprintf("telegram:expecting_input:%d", callback.Message.Chat.ID)
+	h.redis.Set(context.Background(), key, inputKind, 10*time.Minute)
+	msg := tgbotapi.NewMessage(callback.Message.Chat.ID, h.getLocalizedMessage(userLang, promptKey))
+	msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true, InputFieldPlaceholder: h.getLocalizedMessage(userLang, placeholderKey)}
+	h.bot.Send(msg)
+}
+
+// isCallbackActionAllowed reports whether the callback data string corresponds to an action
+// that is permitted even for unverified users.
+func isCallbackActionAllowed(data string) bool {
+	allowedPrefixes := []string{
+		"info", "commands", "language", "start", "help", "lang", "usertype",
+		"technician_commands", "ta_commands", "head_commands",
+		"input_wo", "input_tid", "info_tid", "generate_report_ta", "view_status_sp", "sp_type",
+	}
+	for _, prefix := range allowedPrefixes {
+		if strings.HasPrefix(data, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 // HandleCallbackQuery processes callback queries from inline keyboard buttons
 func (h *TelegramHelper) HandleCallbackQuery(callback *tgbotapi.CallbackQuery) {
 	userLang := h.getUserLanguage(callback.From.ID, callback.From.LanguageCode)
 
-	// Allow certain actions even for unverified users
-	allowedActions := []string{
-		"info",
-		"commands",
-		"language",
-		"start",
-		"help",
-		"lang",
-		"usertype",
-		"technician_commands",
-		"ta_commands",
-		"head_commands",
-		"input_wo",
-		"input_tid",
-		"info_tid",
-		"generate_report_ta",
-		"view_status_sp",
-		"sp_type",
-	}
-
-	isAllowedAction := false
-	for _, action := range allowedActions {
-		if strings.HasPrefix(callback.Data, action) {
-			isAllowedAction = true
-			break
-		}
-	}
-
-	if !isAllowedAction {
+	if !isCallbackActionAllowed(callback.Data) {
 		// For restricted actions, verify user and check quota/ban status
 		allowed, reason := h.verifyAndCheckUser(callback.From, callback.Message.Chat.ID)
 		if !allowed {
@@ -627,245 +746,95 @@ func (h *TelegramHelper) HandleCallbackQuery(callback *tgbotapi.CallbackQuery) {
 	// Send typing indicator before responding
 	h.sendTypingAction(callback.Message.Chat.ID)
 
-	// Quick response (remove delay for better UX)
-	// time.Sleep(300 * time.Millisecond)
+	// Dispatch callback action
+	h.dispatchCallbackAction(callback, userLang)
 
-	// Handle the callback data
+	// Increment user quota after successful callback processing
+	h.incrementUserQuota(callback.Message.Chat.ID)
+}
+
+// dispatchCallbackAction routes callback.Data to the appropriate handler method.
+func (h *TelegramHelper) dispatchCallbackAction(callback *tgbotapi.CallbackQuery, userLang string) {
 	switch callback.Data {
 	case "start":
-		// Check if user exists and is verified
-		var telegramUser telegrammodel.TelegramUsers
-		err := h.db.Where("telegram_chat_id = ?", callback.Message.Chat.ID).First(&telegramUser).Error
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				// Create new user record (unverified by default)
-				chatID := callback.Message.Chat.ID
-				newUser := telegrammodel.TelegramUsers{
-					ChatID:        &chatID,
-					FullName:      callback.From.FirstName + " " + callback.From.LastName,
-					Username:      callback.From.UserName,
-					UserType:      telegrammodel.CommonUser,
-					UserOf:        telegrammodel.CompanyEmployee,
-					IsBanned:      false,
-					VerifiedUser:  false,
-					MaxDailyQuota: MaxDailyQuotaForTelegramMsg,
-				}
-				if err := h.db.Create(&newUser).Error; err != nil {
-					logrus.WithError(err).Error("Failed to create new Telegram user")
-					editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "database_error"))
-					h.bot.Send(editMsg)
-					return
-				}
-				telegramUser = newUser
-			} else {
-				logrus.WithError(err).Error("Failed to check Telegram user")
-				editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "database_error"))
-				if _, err := h.bot.Send(editMsg); err != nil {
-					logrus.WithError(err).Error("Failed to send database error message")
-				}
-				return
-			}
-		}
-
-		if !telegramUser.VerifiedUser {
-			// Start registration process
-			h.startRegistration(callback.Message.Chat.ID, callback.From, userLang)
-			return
-		}
-
-		// User is verified, show start menu
-		keyboard := h.CreateStartKeyboard(userLang)
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "welcome"))
-		editMsg.ReplyMarkup = &keyboard
-		if _, err := h.bot.Send(editMsg); err != nil {
-			logrus.WithError(err).Error("Failed to send start menu")
-		}
-
+		h.handleStartCallback(callback, userLang)
 	case "help":
-		keyboard := h.CreateHelpKeyboard(userLang)
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "help"))
-		editMsg.ReplyMarkup = &keyboard
-		h.bot.Send(editMsg)
-
+		kb := h.CreateHelpKeyboard(userLang)
+		msg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "help"))
+		msg.ReplyMarkup = &kb
+		h.bot.Send(msg)
 	case "info":
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "bot_info"))
-		editMsg.ParseMode = "Markdown"
-		h.bot.Send(editMsg)
-
+		msg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "bot_info"))
+		msg.ParseMode = "Markdown"
+		h.bot.Send(msg)
 	case "commands":
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "commands_list"))
-		editMsg.ParseMode = "Markdown"
-		h.bot.Send(editMsg)
-
+		msg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "commands_list"))
+		msg.ParseMode = "Markdown"
+		h.bot.Send(msg)
 	case "language":
-		keyboard := h.CreateLanguageKeyboard()
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "select_language"))
-		editMsg.ReplyMarkup = &keyboard
-		h.bot.Send(editMsg)
-
-	case "button1":
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "button1"))
-		h.bot.Send(editMsg)
-
-	case "button2":
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "button2"))
-		h.bot.Send(editMsg)
-
-	// Role-based command callbacks
-	case "technician_commands":
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "technician_commands_list"))
-		editMsg.ParseMode = "HTML"
-		h.bot.Send(editMsg)
-
-	case "ta_commands":
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "ta_commands_list"))
-		editMsg.ParseMode = "HTML"
-		h.bot.Send(editMsg)
-
-	case "head_commands":
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "head_commands_list"))
-		editMsg.ParseMode = "HTML"
-		h.bot.Send(editMsg)
-
-	case "input_wo":
-		// TODO: Handle WO input request
-		key := fmt.Sprintf("telegram:expecting_input:%d", callback.Message.Chat.ID)
-		h.redis.Set(context.Background(), key, "wo_number", 10*time.Minute)
-		msg := tgbotapi.NewMessage(callback.Message.Chat.ID, h.getLocalizedMessage(userLang, "input_wo_prompt"))
-		msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true, InputFieldPlaceholder: h.getLocalizedMessage(userLang, "input_wo_placeholder")}
+		kb := h.CreateLanguageKeyboard()
+		msg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "select_language"))
+		msg.ReplyMarkup = &kb
 		h.bot.Send(msg)
-
-	case "input_tid":
-		// TODO: Handle TID input request
-		key := fmt.Sprintf("telegram:expecting_input:%d", callback.Message.Chat.ID)
-		h.redis.Set(context.Background(), key, "tid_number", 10*time.Minute)
-		msg := tgbotapi.NewMessage(callback.Message.Chat.ID, h.getLocalizedMessage(userLang, "input_tid_prompt"))
-		msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true, InputFieldPlaceholder: h.getLocalizedMessage(userLang, "input_tid_placeholder")}
-		h.bot.Send(msg)
-
-	case "info_tid":
-		// TODO: Handle TID info request
-		key := fmt.Sprintf("telegram:expecting_input:%d", callback.Message.Chat.ID)
-		h.redis.Set(context.Background(), key, "tid_info", 10*time.Minute)
-		msg := tgbotapi.NewMessage(callback.Message.Chat.ID, h.getLocalizedMessage(userLang, "info_tid_prompt"))
-		msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true, InputFieldPlaceholder: h.getLocalizedMessage(userLang, "input_tid_info_placeholder")}
-		h.bot.Send(msg)
-
+	case "button1", "button2":
+		h.bot.Send(tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, callback.Data)))
+	case "technician_commands", "ta_commands", "head_commands":
+		h.dispatchRoleCommandCallback(callback, userLang)
+	case "input_wo", "input_tid", "info_tid":
+		h.dispatchInputPromptCallback(callback, userLang)
 	case "generate_report_ta":
-		// TODO: Handle TA report generation
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "generating_report"))
-		h.bot.Send(editMsg)
 		// TODO: Generate and send XLSX report
-
+		h.bot.Send(tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "generating_report")))
 	case "view_status_sp":
-		// TODO: Handle status SP viewing
-		keyboard := h.CreateStatusSPSelectionKeyboard(userLang)
-		editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "select_sp_type"))
-		editMsg.ReplyMarkup = &keyboard
-		h.bot.Send(editMsg)
-
+		kb := h.CreateStatusSPSelectionKeyboard(userLang)
+		msg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "select_sp_type"))
+		msg.ReplyMarkup = &kb
+		h.bot.Send(msg)
 	case "sp_type_technician", "sp_type_spl", "sp_type_sac":
-		// TODO: Handle SP type selection and prompt for name input
 		spType := strings.TrimPrefix(callback.Data, "sp_type_")
 		key := fmt.Sprintf("telegram:expecting_sp_name:%d", callback.Message.Chat.ID)
 		h.redis.Set(context.Background(), key, spType, 10*time.Minute)
 		msg := tgbotapi.NewMessage(callback.Message.Chat.ID, fmt.Sprintf(h.getLocalizedMessage(userLang, "input_sp_name_prompt"), spType))
 		msg.ReplyMarkup = tgbotapi.ForceReply{ForceReply: true, InputFieldPlaceholder: h.getLocalizedMessage(userLang, "input_sp_name_placeholder")}
 		h.bot.Send(msg)
-
 	default:
-		// Check if it's a language selection
 		if strings.HasPrefix(callback.Data, "lang_") {
 			langCode := strings.TrimPrefix(callback.Data, "lang_")
-
-			// Check if user exists and is verified
-			var telegramUser telegrammodel.TelegramUsers
-			err := h.db.Where("telegram_chat_id = ?", callback.Message.Chat.ID).First(&telegramUser).Error
-			if err != nil {
-				if err == gorm.ErrRecordNotFound {
-					// Create new user record
-					fullName := callback.From.FirstName
-					if callback.From.LastName != "" {
-						fullName += " " + callback.From.LastName
-					}
-					newUser := telegrammodel.TelegramUsers{
-						ChatID:        &callback.Message.Chat.ID,
-						FullName:      fullName,
-						Username:      callback.From.UserName,
-						VerifiedUser:  false,
-						IsBanned:      false,
-						UserOf:        telegrammodel.CompanyEmployee,
-						MaxDailyQuota: MaxDailyQuotaForTelegramMsg,
-					}
-					if createErr := h.db.Create(&newUser).Error; createErr != nil {
-						logrus.WithError(createErr).Error("Failed to create user for language selection")
-						editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "error"))
-						h.bot.Send(editMsg)
-						return
-					}
-					telegramUser = newUser
-				} else {
-					logrus.WithError(err).Error("Failed to find user for language selection")
-					editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "error"))
-					h.bot.Send(editMsg)
-					return
-				}
-			}
-
-			if !telegramUser.VerifiedUser {
-				// Start registration process
-				h.startRegistration(callback.Message.Chat.ID, callback.From, langCode)
-				return
-			}
-
-			err = h.setUserLanguage(callback.From.ID, langCode)
-			if err != nil {
-				logrus.WithError(err).Error("Failed to set user language")
-				editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "language_error"))
-				h.bot.Send(editMsg)
-				return
-			}
-
-			responseText := h.getLocalizedMessage(langCode, "language_set")
-			editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, responseText)
-			h.bot.Send(editMsg)
+			h.handleLangCallback(callback, langCode, userLang)
 		} else if strings.HasPrefix(callback.Data, "react_") {
-			// Handle reaction callback (e.g., "react_emoji_messageid")
-			parts := strings.Split(callback.Data, "_")
-			if len(parts) >= 3 {
-				emoji := parts[1]
-				messageIDStr := parts[2]
-				messageID, err := strconv.ParseInt(messageIDStr, 10, 64)
-				if err != nil {
-					logrus.WithError(err).Error("Invalid message ID in reaction callback")
-					return
-				}
-
-				// Update reaction in database
-				if err := h.db.Model(&telegrammodel.TelegramIncomingMsg{}).
-					Where("telegram_chat_id = ? AND telegram_message_id = ?", fmt.Sprintf("%d", callback.Message.Chat.ID), messageID).
-					Updates(map[string]interface{}{
-						"telegram_reaction_emoji": emoji,
-						"telegram_reacted_by":     callback.From.UserName,
-						"telegram_reacted_at":     time.Now(),
-					}).Error; err != nil {
-					logrus.WithError(err).Error("Failed to update Telegram reaction")
-				}
-
-				// Send confirmation
-				reactionMsg := h.getLocalizedMessage(userLang, "reaction_added")
-				responseText := fmt.Sprintf(reactionMsg, emoji)
-				msg := tgbotapi.NewMessage(callback.Message.Chat.ID, responseText)
-				h.bot.Send(msg)
-			}
+			h.handleReactCallback(callback, userLang)
 		} else {
-			editMsg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "unknown_button"))
-			h.bot.Send(editMsg)
+			h.bot.Send(tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, "unknown_button")))
 		}
 	}
+}
 
-	// Increment user quota after successful callback processing
-	h.incrementUserQuota(callback.Message.Chat.ID)
+// dispatchRoleCommandCallback handles role-specific command list callbacks.
+func (h *TelegramHelper) dispatchRoleCommandCallback(callback *tgbotapi.CallbackQuery, userLang string) {
+	var msgKey string
+	switch callback.Data {
+	case "technician_commands":
+		msgKey = "technician_commands_list"
+	case "ta_commands":
+		msgKey = "ta_commands_list"
+	default: // head_commands
+		msgKey = "head_commands_list"
+	}
+	msg := tgbotapi.NewEditMessageText(callback.Message.Chat.ID, callback.Message.MessageID, h.getLocalizedMessage(userLang, msgKey))
+	msg.ParseMode = "HTML"
+	h.bot.Send(msg)
+}
+
+// dispatchInputPromptCallback handles input request callbacks (WO number, TID, etc.).
+func (h *TelegramHelper) dispatchInputPromptCallback(callback *tgbotapi.CallbackQuery, userLang string) {
+	switch callback.Data {
+	case "input_wo":
+		h.setExpectedInputAndPrompt(callback, "wo_number", userLang, "input_wo_prompt", "input_wo_placeholder")
+	case "input_tid":
+		h.setExpectedInputAndPrompt(callback, "tid_number", userLang, "input_tid_prompt", "input_tid_placeholder")
+	default: // info_tid
+		h.setExpectedInputAndPrompt(callback, "tid_info", userLang, "info_tid_prompt", "input_tid_info_placeholder")
+	}
 }
 
 // CreateStartKeyboard creates the inline keyboard for the start menu
@@ -909,7 +878,7 @@ func (h *TelegramHelper) CreateHelpKeyboard(lang string) tgbotapi.InlineKeyboard
 }
 
 // CreateLanguageKeyboard creates the inline keyboard for language selection
-func (h *TelegramHelper) CreateLanguageKeyboard() tgbotapi.InlineKeyboardMarkup {
+func (*TelegramHelper) CreateLanguageKeyboard() tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🇮🇩 Indonesia", "lang_id"),
@@ -935,7 +904,7 @@ func (h *TelegramHelper) CreateLanguageKeyboard() tgbotapi.InlineKeyboardMarkup 
 }
 
 // isValidUserType validates if the given usertype string matches one of the defined TelegramUserType constants
-func (h *TelegramHelper) isValidUserType(usertype string) bool {
+func (*TelegramHelper) isValidUserType(usertype string) bool {
 	validTypes := []string{
 		string(telegrammodel.CommonUser),
 		string(telegrammodel.SuperUser),
@@ -956,7 +925,7 @@ func (h *TelegramHelper) isValidUserType(usertype string) bool {
 }
 
 // getCountryCodeFromLanguage maps language code to country code for phone validation
-func (h *TelegramHelper) getCountryCodeFromLanguage(lang string) string {
+func (*TelegramHelper) getCountryCodeFromLanguage(lang string) string {
 	countryMap := map[string]string{
 		fun.LangID: "ID", // Indonesia
 		fun.LangEN: "US", // United States (default for English)

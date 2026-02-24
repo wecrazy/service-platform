@@ -194,7 +194,7 @@ type TypeServicePlatform struct {
 		BridgeHost        string `yaml:"bridge_host" validate:"required"`
 		BridgePort        int    `yaml:"bridge_port" validate:"required"`
 		BridgeServiceName string `yaml:"bridge_service_name" validate:"required"`
-		ApiKey            string `yaml:"api_key"`
+		APIKey            string `yaml:"api_key"`
 	} `yaml:"n8n" validate:"required"`
 
 	LibreTranslate struct {

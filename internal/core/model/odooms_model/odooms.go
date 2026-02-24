@@ -1,6 +1,11 @@
+// Package odoomsmodel defines the data structures for ODOO Manage Service (ODOOMS) like:
+// - ODOOMSTechnicianItem: Represents a technician item in the ODOO Manage Service system, that get from fs.technician model
+// These models are used to unmarshal JSON responses from ODOO's API and to work with ODOO data within the service-platform application.
+// The fields in these models use fun.NullAble types to handle nullable values from ODOO, which can be null or false in the JSON response.
+// For more details on how to use these models, see the documentation for the ODOOMS integration in the service-platform application.
 package odoomsmodel
 
-import "service-platform/internal/pkg/fun"
+import "service-platform/pkg/fun"
 
 // ODOOMSTechnicianItem represents a technician item in the ODOO Manage Service system, that get from fs.technician model
 type ODOOMSTechnicianItem struct {
@@ -16,10 +21,10 @@ type ODOOMSTechnicianItem struct {
 	DownloadIDs                  []fun.NullAbleFloat   `json:"download_ids"`
 	EmployeeIDs                  []fun.NullAbleFloat   `json:"employee_ids"`
 	CreatedOn                    fun.NullAbleString    `json:"create_date"`
-	CreatedUid                   fun.NullAbleInterface `json:"create_uid"`
+	CreatedUID                   fun.NullAbleInterface `json:"create_uid"`
 	WriteDate                    fun.NullAbleString    `json:"write_date"` // last updated time
-	WriteUid                     fun.NullAbleInterface `json:"write_uid"`
-	JobGroupId                   fun.NullAbleInterface `json:"job_group_id"`
+	WriteUID                     fun.NullAbleInterface `json:"write_uid"`
+	JobGroupID                   fun.NullAbleInterface `json:"job_group_id"`
 	NIK                          fun.NullAbleString    `json:"nik"`
 	Alamat                       fun.NullAbleString    `json:"address"`
 	Area                         fun.NullAbleString    `json:"area"`

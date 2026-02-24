@@ -58,7 +58,7 @@ func TestCacheControlMiddleware_StaticAsset(t *testing.T) {
 	req := httptest.NewRequest("GET", "/assets/app.js", nil)
 	r.ServeHTTP(w, req)
 
-	want := fmt.Sprintf("public, max-age=%d", config.CACHE_MAX_AGE)
+	want := fmt.Sprintf("public, max-age=%d", config.CacheMaxAge)
 	assert.Equal(t, want, w.Header().Get("Cache-Control"))
 	assert.Equal(t, "SWS", w.Header().Get("Server"))
 }

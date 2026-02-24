@@ -1,3 +1,23 @@
+// Package main is the entry point for the Twilio WhatsApp gRPC service.
+//
+// It wraps the Twilio REST API via the internal/twilio client and exposes gRPC
+// RPCs defined in proto/twilio_whatsapp.proto: SendMessage, SendImageMessage,
+// SendDocumentMessage, SendVideoMessage, SendAudioMessage, SendMediaMessage
+// (deprecated), and GetMessageStatus.
+//
+// In dev mode (Twilio.IsDev=true), additional debug logging is emitted.
+// Prometheus metrics are served on Metrics.TwilioPort with a /health endpoint.
+// Graceful shutdown is handled via SIGINT / SIGTERM.
+//
+// Configuration (service-platform.<env>.yaml) sections used:
+//
+//	Twilio.Host, Twilio.GRPCPort, Twilio.IsDev, Twilio.AccountSID, …
+//	Metrics.TwilioPort
+//
+// Usage:
+//
+//	go run cmd/twilio/whatsapp/main.go
+//	make build-twilio-whatsapp && ./bin/twilio-whatsapp
 package main
 
 import (
@@ -16,8 +36,8 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"service-platform/internal/config"
-	"service-platform/internal/pkg/logger"
 	"service-platform/internal/twilio"
+	"service-platform/pkg/logger"
 	pb "service-platform/proto"
 )
 
@@ -46,6 +66,7 @@ func (s *TwilioWhatsAppServer) logDebugError(msgType string, format string, args
 
 // logError logs error messages in all modes (important for production monitoring)
 func (s *TwilioWhatsAppServer) logError(msgType string, format string, args ...interface{}) {
+	_ = s // for potential future use if we want to include more context in logs
 	logrus.Errorf("[%s] "+format, append([]interface{}{msgType}, args...)...)
 }
 
@@ -58,7 +79,7 @@ func (s *TwilioWhatsAppServer) logSuccess(msgType string, to string, sid string)
 }
 
 // SendMessage handles text message sending via Twilio
-func (s *TwilioWhatsAppServer) SendMessage(ctx context.Context, req *pb.TwilioSendMessageRequest) (*pb.TwilioSendMessageResponse, error) {
+func (s *TwilioWhatsAppServer) SendMessage(_ context.Context, req *pb.TwilioSendMessageRequest) (*pb.TwilioSendMessageResponse, error) {
 	if s.twilioClient == nil {
 		s.logError("TEXT MSG", "Twilio client not initialized")
 		return &pb.TwilioSendMessageResponse{
@@ -89,7 +110,7 @@ func (s *TwilioWhatsAppServer) SendMessage(ctx context.Context, req *pb.TwilioSe
 }
 
 // SendImageMessage handles image message sending via Twilio
-func (s *TwilioWhatsAppServer) SendImageMessage(ctx context.Context, req *pb.TwilioSendImageMessageRequest) (*pb.TwilioSendMessageResponse, error) {
+func (s *TwilioWhatsAppServer) SendImageMessage(_ context.Context, req *pb.TwilioSendImageMessageRequest) (*pb.TwilioSendMessageResponse, error) {
 	if s.twilioClient == nil {
 		s.logError("IMAGE MSG", "Twilio client not initialized")
 		return &pb.TwilioSendMessageResponse{
@@ -120,7 +141,7 @@ func (s *TwilioWhatsAppServer) SendImageMessage(ctx context.Context, req *pb.Twi
 }
 
 // SendDocumentMessage handles document message sending via Twilio
-func (s *TwilioWhatsAppServer) SendDocumentMessage(ctx context.Context, req *pb.TwilioSendDocumentMessageRequest) (*pb.TwilioSendMessageResponse, error) {
+func (s *TwilioWhatsAppServer) SendDocumentMessage(_ context.Context, req *pb.TwilioSendDocumentMessageRequest) (*pb.TwilioSendMessageResponse, error) {
 	if s.twilioClient == nil {
 		s.logError("DOCUMENT MSG", "Twilio client not initialized")
 		return &pb.TwilioSendMessageResponse{
@@ -151,7 +172,7 @@ func (s *TwilioWhatsAppServer) SendDocumentMessage(ctx context.Context, req *pb.
 }
 
 // SendVideoMessage handles video message sending via Twilio
-func (s *TwilioWhatsAppServer) SendVideoMessage(ctx context.Context, req *pb.TwilioSendVideoMessageRequest) (*pb.TwilioSendMessageResponse, error) {
+func (s *TwilioWhatsAppServer) SendVideoMessage(_ context.Context, req *pb.TwilioSendVideoMessageRequest) (*pb.TwilioSendMessageResponse, error) {
 	if s.twilioClient == nil {
 		s.logError("VIDEO MSG", "Twilio client not initialized")
 		return &pb.TwilioSendMessageResponse{
@@ -182,7 +203,7 @@ func (s *TwilioWhatsAppServer) SendVideoMessage(ctx context.Context, req *pb.Twi
 }
 
 // SendAudioMessage handles audio/voice message sending via Twilio
-func (s *TwilioWhatsAppServer) SendAudioMessage(ctx context.Context, req *pb.TwilioSendAudioMessageRequest) (*pb.TwilioSendMessageResponse, error) {
+func (s *TwilioWhatsAppServer) SendAudioMessage(_ context.Context, req *pb.TwilioSendAudioMessageRequest) (*pb.TwilioSendMessageResponse, error) {
 	if s.twilioClient == nil {
 		s.logError("AUDIO MSG", "Twilio client not initialized")
 		return &pb.TwilioSendMessageResponse{
@@ -213,7 +234,7 @@ func (s *TwilioWhatsAppServer) SendAudioMessage(ctx context.Context, req *pb.Twi
 }
 
 // SendMediaMessage handles generic media message sending via Twilio (DEPRECATED: use specific methods)
-func (s *TwilioWhatsAppServer) SendMediaMessage(ctx context.Context, req *pb.TwilioSendMediaMessageRequest) (*pb.TwilioSendMessageResponse, error) {
+func (s *TwilioWhatsAppServer) SendMediaMessage(_ context.Context, req *pb.TwilioSendMediaMessageRequest) (*pb.TwilioSendMessageResponse, error) {
 	if s.twilioClient == nil {
 		s.logError("MEDIA MSG", "Twilio client not initialized")
 		return &pb.TwilioSendMessageResponse{
@@ -244,7 +265,7 @@ func (s *TwilioWhatsAppServer) SendMediaMessage(ctx context.Context, req *pb.Twi
 }
 
 // GetMessageStatus retrieves the delivery status of a message
-func (s *TwilioWhatsAppServer) GetMessageStatus(ctx context.Context, req *pb.TwilioGetMessageStatusRequest) (*pb.TwilioGetMessageStatusResponse, error) {
+func (s *TwilioWhatsAppServer) GetMessageStatus(_ context.Context, req *pb.TwilioGetMessageStatusRequest) (*pb.TwilioGetMessageStatusResponse, error) {
 	if s.twilioClient == nil {
 		return &pb.TwilioGetMessageStatusResponse{
 			Status: "error",
@@ -257,6 +278,9 @@ func (s *TwilioWhatsAppServer) GetMessageStatus(ctx context.Context, req *pb.Twi
 	}, nil
 }
 
+// main loads configuration, initialises the Twilio client and logger, starts
+// the Prometheus metrics HTTP server, and serves the TwilioWhatsApp gRPC service
+// until a termination signal is received.
 func main() {
 	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
 	go config.ServicePlatform.Watch()
@@ -304,7 +328,7 @@ func main() {
 	metricsAddr := fmt.Sprintf(":%d", cfg.Metrics.TwilioPort)
 	go func() {
 		http.Handle("/metrics", promhttp.Handler())
-		http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		http.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("OK"))
 		})

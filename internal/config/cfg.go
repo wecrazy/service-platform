@@ -1,3 +1,4 @@
+// Package config provides configuration loading and management for the service-platform application.
 package config
 
 import (

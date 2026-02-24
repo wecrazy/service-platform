@@ -25,7 +25,7 @@ type MockConfig struct {
 func createTestConfig() *config.TypeManageService {
 	return &config.TypeManageService{
 		ODOOMS: struct {
-			JsonRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
+			JSONRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
 			Login          string                         `yaml:"login" validate:"required"`
 			Password       string                         `yaml:"password" validate:"required"`
 			DB             string                         `yaml:"db" validate:"required"`
@@ -41,7 +41,7 @@ func createTestConfig() *config.TypeManageService {
 			SkipSSLVerify  bool                           `yaml:"skip_ssl_verify"`
 			SACData        map[string]config.ODOOMSACData `yaml:"sac" validate:"required"`
 		}{
-			JsonRPCVersion: "2.0",
+			JSONRPCVersion: "2.0",
 			Login:          "test@example.com",
 			Password:       "testpass",
 			DB:             "test_db",
@@ -172,7 +172,7 @@ func TestGetODOOMSCookies_Success(t *testing.T) {
 }
 
 func TestGetODOOMSCookies_ServerError(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer server.Close()
@@ -390,34 +390,7 @@ func BenchmarkIsSessionCacheValid(b *testing.B) {
 
 // Helper function for testing (same as user's function but adapted for testing)
 func checkExistingTechnicianInODOOMS(name, email, phoneNumber string) (bool, error) {
-	odooModel := "fs.technician"
-	// Build the OR domain dynamically: x_no_telp ilike phoneNumber OR x_technician_name ilike name OR email ilike email
-	odooDomain := []interface{}{
-		"|",
-		[]interface{}{"x_no_telp", "ilike", phoneNumber},
-		"|",
-		[]interface{}{"x_technician_name", "ilike", name},
-		[]interface{}{"email", "ilike", email},
-	}
-	odooFields := []string{
-		"id",
-		"email",
-		"x_no_telp",
-		"x_technician_name",
-	}
-	odooOrder := "id desc"
-
-	odooParams := map[string]interface{}{
-		"model":  odooModel,
-		"domain": odooDomain,
-		"fields": odooFields,
-		"order":  odooOrder,
-	}
-
-	payload := map[string]interface{}{
-		"jsonrpc": "2.0",
-		"params":  odooParams,
-	}
+	payload := buildTechnicianPayload(name, email, phoneNumber)
 
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
@@ -438,44 +411,60 @@ func checkExistingTechnicianInODOOMS(name, email, phoneNumber string) (bool, err
 		return false, err
 	}
 
-	if errorResponse, ok := jsonResponse["error"].(map[string]interface{}); ok {
-		if errorMessage, ok := errorResponse["message"].(string); ok && errorMessage == "Odoo Session Expired" {
-			return false, errors.New("odoo Session Expired")
-		} else {
-			return false, errors.New("odoo Error: " + errorMessage)
-		}
+	if err := checkODOOMSError(jsonResponse); err != nil {
+		return false, err
 	}
 
-	if result, ok := jsonResponse["result"].(map[string]interface{}); ok {
-		if _, ok := result["message"].(string); ok {
-			if success, successOk := result["success"]; successOk && success == true {
-				// Log success message
-			}
-		}
-	}
+	return parseODOOMSTechnicianResult(jsonResponse)
+}
 
-	// Check for the existence and validity of the "result" field
+func buildTechnicianPayload(name, email, phoneNumber string) map[string]interface{} {
+	ododomain := []interface{}{
+		"|",
+		[]interface{}{"x_no_telp", "ilike", phoneNumber},
+		"|",
+		[]interface{}{"x_technician_name", "ilike", name},
+		[]interface{}{"email", "ilike", email},
+	}
+	return map[string]interface{}{
+		"jsonrpc": "2.0",
+		"params": map[string]interface{}{
+			"model":  "fs.technician",
+			"domain": ododomain,
+			"fields": []string{"id", "email", "x_no_telp", "x_technician_name"},
+			"order":  "id desc",
+		},
+	}
+}
+
+func checkODOOMSError(jsonResponse map[string]interface{}) error {
+	errorResponse, ok := jsonResponse["error"].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	errorMessage, _ := errorResponse["message"].(string)
+	if errorMessage == "Odoo Session Expired" {
+		return errors.New("odoo Session Expired")
+	}
+	return errors.New("odoo Error: " + errorMessage)
+}
+
+func parseODOOMSTechnicianResult(jsonResponse map[string]interface{}) (bool, error) {
 	result, resultExists := jsonResponse["result"]
 	if !resultExists {
 		return false, errors.New("'result' field not found in the response")
 	}
 
-	// Check if the result is an array and ensure it's not empty
 	resultArray, ok := result.([]interface{})
 	if !ok || len(resultArray) == 0 {
 		return false, errors.New("'result' is not an array or is empty")
 	}
 
-	// Take only the first item
-	firstItem := resultArray[0]
-
-	// Check that the first item is a map
-	itemMap, ok := firstItem.(map[string]interface{})
+	itemMap, ok := resultArray[0].(map[string]interface{})
 	if !ok {
 		return false, errors.New("first item is not a map")
 	}
 
-	// Parse into struct
 	var odooData odoomsmodel.ODOOMSTechnicianItem
 	jsonData, err := json.Marshal(itemMap)
 	if err != nil {
@@ -487,6 +476,5 @@ func checkExistingTechnicianInODOOMS(name, email, phoneNumber string) (bool, err
 		return false, errors.New("error unmarshalling first item")
 	}
 
-	// Data exists
 	return true, nil
 }

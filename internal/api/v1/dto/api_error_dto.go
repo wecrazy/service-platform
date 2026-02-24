@@ -1,3 +1,4 @@
+// Package dto defines data transfer objects used by the API layer.
 package dto
 
 // APIErrorResponse represents the standardized error payload returned by API endpoints

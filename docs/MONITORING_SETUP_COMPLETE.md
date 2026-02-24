@@ -12,7 +12,7 @@ All services are running and verified:
 ```
 ✅ Prometheus    → http://localhost:9090    (Metrics)
 ✅ Loki          → http://localhost:3100    (Logs)
-✅ Tempo         → http://localhost:3200    (Traces)  
+✅ Tempo         → http://localhost:3200    (Traces)
 ✅ Grafana       → http://localhost:3063    (Dashboard)
 ✅ Nginx         → http://localhost:9180    (Auth Proxy)
 ```
@@ -22,11 +22,13 @@ All services are running and verified:
 ## 🔑 Authentication
 
 ### Grafana Direct Access (No Auth Required)
+
 - **URL:** http://localhost:3063
 - **Admin Password:** `Net55206011##`
 - **Use for:** Creating dashboards, alerts, managing data sources
 
 ### Grafana via Nginx Proxy (HTTP Basic Auth)
+
 - **URL:** http://localhost:9180
 - **Username:** `admin`
 - **Password:** `admin`
@@ -81,6 +83,7 @@ Your API automatically sends logs to both destinations:
 ## 🔍 Issues Fixed
 
 ### 1. Loki Push Error ✅
+
 **Problem:** `connection reset by peer` when API pushes logs
 
 **Cause:** Loki crashed due to WAL (Write-Ahead Log) permission errors
@@ -88,13 +91,15 @@ Your API automatically sends logs to both destinations:
 **Solution:** Disabled WAL in ingester config (safe for development)
 
 **File:** `monitoring/loki/loki-config.yml`
+
 ```yaml
 ingester:
   wal:
-    enabled: false  # ← CRITICAL FIX
+    enabled: false # ← CRITICAL FIX
 ```
 
 ### 2. Tempo Configuration Error ✅
+
 **Problem:** Tempo exiting immediately with config field errors
 
 **Cause:** Config had invalid OpenTelemetry sections (receivers, processors, exporters)
@@ -104,15 +109,18 @@ ingester:
 **File:** `monitoring/tempo/tempo-config.yml`
 
 ### 3. Nginx Authentication Confusion ✅
+
 **Problem:** Wrong passwords being used for different services
 
 **Solution:** Clarified password mapping:
+
 - **Nginx Auth:** admin / Net55206011## (HTTP basic auth)
 - **Grafana:** Net55206011## (Grafana admin user)
 
 **File:** `monitoring/nginx/.htpasswd`
 
 ### 4. Nginx Port Conflict ✅
+
 **Problem:** Port 8080 and 80 unavailable
 
 **Solution:** Changed Nginx to port 9180
@@ -124,16 +132,19 @@ ingester:
 ## 🚀 Quick Start
 
 ### Start Monitoring Stack
+
 ```bash
 bash scripts/monitoring-quickstart.sh start
 ```
 
 ### Run Your API
+
 ```bash
 go run ./cmd/api/main.go
 ```
 
 ### View Logs
+
 ```
 http://localhost:3063 → Explore → Loki → {service="service-platform"}
 ```
@@ -143,21 +154,25 @@ http://localhost:3063 → Explore → Loki → {service="service-platform"}
 ## 🧪 Testing
 
 ### Test Loki Connection
+
 ```bash
 curl http://localhost:3100/api/v1/labels
 ```
 
 ### Test Grafana
+
 ```bash
 curl http://localhost:3063
 ```
 
 ### Test Tempo
+
 ```bash
 curl http://localhost:3200/api/search
 ```
 
 ### Test Nginx Auth
+
 ```bash
 curl -u admin:admin http://localhost:9180
 ```
@@ -166,21 +181,22 @@ curl -u admin:admin http://localhost:9180
 
 ## 📁 Configuration Files
 
-| File | Purpose | Status |
-|------|---------|--------|
-| `docker/docker-compose.monitoring.yml` | Monitoring containers (Prometheus, Loki, Tempo, Grafana, k6) | ✅ Updated (port 9180) |
-| `docker/docker-compose.yml` | Full-stack local dev (Postgres, Redis, MongoDB + all app services) | ✅ New |
-| `monitoring/loki/loki-config.yml` | Loki settings | ✅ Fixed (WAL disabled) |
-| `monitoring/tempo/tempo-config.yml` | Tempo settings | ✅ Simplified |
-| `monitoring/nginx/.htpasswd` | Auth credentials | ✅ Verified |
-| `monitoring/grafana/provisioning/datasources/` | Data sources | ✅ Pre-configured |
-| `internal/config/service-platform.dev.yaml` | App observability | ✅ Ready to use |
+| File                                           | Purpose                                                            | Status                  |
+| ---------------------------------------------- | ------------------------------------------------------------------ | ----------------------- |
+| `docker/docker-compose.monitoring.yml`         | Monitoring containers (Prometheus, Loki, Tempo, Grafana, k6)       | ✅ Updated (port 9180)  |
+| `docker/docker-compose.yml`                    | Full-stack local dev (Postgres, Redis, MongoDB + all app services) | ✅ New                  |
+| `monitoring/loki/loki-config.yml`              | Loki settings                                                      | ✅ Fixed (WAL disabled) |
+| `monitoring/tempo/tempo-config.yml`            | Tempo settings                                                     | ✅ Simplified           |
+| `monitoring/nginx/.htpasswd`                   | Auth credentials                                                   | ✅ Verified             |
+| `monitoring/grafana/provisioning/datasources/` | Data sources                                                       | ✅ Pre-configured       |
+| `internal/config/service-platform.dev.yaml`    | App observability                                                  | ✅ Ready to use         |
 
 ---
 
 ## 📚 Management Commands
 
 ### Monitoring Stack Operations
+
 ```bash
 # Start
 bash scripts/monitoring-quickstart.sh start
@@ -271,6 +287,7 @@ bash scripts/monitoring-quickstart.sh change-password
 ## ✨ Everything is Ready!
 
 Your monitoring infrastructure is:
+
 - ✅ Fully deployed
 - ✅ Properly configured
 - ✅ Tested and verified
@@ -283,6 +300,7 @@ go run ./cmd/api/main.go
 ```
 
 Questions? Check the documentation files or review the logs:
+
 ```bash
 bash scripts/monitoring-quickstart.sh logs loki
 bash scripts/monitoring-quickstart.sh logs tempo

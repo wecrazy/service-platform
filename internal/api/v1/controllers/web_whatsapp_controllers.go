@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -9,8 +10,8 @@ import (
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
 	whatsnyanmodel "service-platform/internal/core/model/whatsnyan_model"
-	"service-platform/internal/pkg/fun"
 	"service-platform/internal/whatsapp"
+	"service-platform/pkg/fun"
 	pb "service-platform/proto"
 	"strconv"
 	"strings"
@@ -296,133 +297,135 @@ func GetWhatsAppGroupByJID(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		jid := c.Param("jid")
 
-		// First, try to get basic info from database
+		groupData := defaultGroupData(jid)
+
+		// Populate from database if available
 		var dbGroup whatsnyanmodel.WhatsAppGroup
-		dbResult := db.Preload("Participants").Where("jid = ?", jid).First(&dbGroup)
-
-		// Initialize with database data
-		groupData := map[string]interface{}{
-			"jid":                  jid,
-			"name":                 "-",
-			"owner_jid":            "-",
-			"topic":                "-",
-			"topic_set_at":         nil,
-			"topic_set_by":         "-",
-			"linked_parent_jid":    "-",
-			"is_default_sub_group": false,
-			"is_parent":            false,
-			"description":          "-",
-			"photo_url":            "",
-			"participants":         []map[string]interface{}{},
-			"participant_count":    0,
-			"settings": map[string]interface{}{
-				"locked":                  false,
-				"announcement_only":       false,
-				"no_frequently_forwarded": false,
-				"ephemeral":               false,
-				"ephemeral_duration":      0,
-			},
+		if db.Preload("Participants").Where("jid = ?", jid).First(&dbGroup).Error == nil {
+			applyDBGroupData(groupData, &dbGroup)
 		}
 
-		if dbResult.Error == nil {
-			// Populate with database data
-			groupData["name"] = dbGroup.Name
-			groupData["owner_jid"] = dbGroup.OwnerJID
-			groupData["topic"] = dbGroup.Topic
-			if dbGroup.TopicSetAt.Unix() > 0 {
-				groupData["topic_set_at"] = dbGroup.TopicSetAt.Unix()
-			}
-			groupData["topic_set_by"] = dbGroup.TopicSetBy
-			groupData["linked_parent_jid"] = dbGroup.LinkedParentJID
-			groupData["is_default_sub_group"] = dbGroup.IsDefaultSubGroup
-			groupData["is_parent"] = dbGroup.IsParent
-
-			// Participants from database
-			participants := make([]map[string]interface{}, len(dbGroup.Participants))
-			for i, p := range dbGroup.Participants {
-				participants[i] = map[string]interface{}{
-					"jid":                 p.UserJID,
-					"is_admin":            p.IsAdmin,
-					"is_super_admin":      p.IsSuperAdmin,
-					"lid":                 p.LID,
-					"display_name":        p.DisplayName,
-					"profile_picture_url": p.ProfilePictureURL,
-					"phone_number":        p.PhoneNumber,
-				}
-			}
-			groupData["participants"] = participants
-			groupData["participant_count"] = len(participants)
-		}
-
-		// Now try to get live data from WhatsApp
+		// Overlay with live WhatsApp data if available
 		if whatsapp.Client != nil {
-			ctx := c.Request.Context()
-			groupResp, err := whatsapp.Client.GetGroupInfo(ctx, &pb.GetGroupInfoRequest{
-				GroupJid: jid,
-			})
-
-			if err == nil && groupResp.Success {
-				// Update with live data
-				if groupResp.Name != "" {
-					groupData["name"] = groupResp.Name
-				}
-				if groupResp.Jid != "" {
-					groupData["jid"] = groupResp.Jid
-				}
-				if groupResp.OwnerJid != "" {
-					groupData["owner_jid"] = groupResp.OwnerJid
-				}
-				if groupResp.Topic != "" {
-					groupData["topic"] = groupResp.Topic
-					groupData["description"] = groupResp.Topic // Use topic as description
-				}
-				if groupResp.TopicSetAt > 0 {
-					groupData["topic_set_at"] = groupResp.TopicSetAt
-				}
-				if groupResp.TopicSetBy != "" {
-					groupData["topic_set_by"] = groupResp.TopicSetBy
-				}
-				if groupResp.LinkedParentJid != "" {
-					groupData["linked_parent_jid"] = groupResp.LinkedParentJid
-				}
-				groupData["is_default_sub_group"] = groupResp.IsDefaultSubGroup
-				groupData["is_parent"] = groupResp.IsParent
-				if groupResp.PhotoUrl != "" {
-					groupData["photo_url"] = groupResp.PhotoUrl
-				}
-
-				// Live participants
-				if len(groupResp.Participants) > 0 {
-					participants := make([]map[string]interface{}, len(groupResp.Participants))
-					for i, p := range groupResp.Participants {
-						participants[i] = map[string]interface{}{
-							"jid":                 p.Jid,
-							"is_admin":            p.IsAdmin,
-							"is_super_admin":      p.IsSuperAdmin,
-							"lid":                 p.Lid,
-							"display_name":        p.DisplayName,
-							"profile_picture_url": p.ProfilePictureUrl,
-							"phone_number":        p.PhoneNumber,
-						}
-					}
-					groupData["participants"] = participants
-					groupData["participant_count"] = len(participants)
-				}
-
-				// Settings
-				if groupResp.Settings != nil {
-					groupData["settings"] = map[string]interface{}{
-						"locked":                  groupResp.Settings.Locked,
-						"announcement_only":       groupResp.Settings.AnnouncementOnly,
-						"no_frequently_forwarded": groupResp.Settings.NoFrequentlyForwarded,
-						"ephemeral":               groupResp.Settings.Ephemeral,
-						"ephemeral_duration":      groupResp.Settings.EphemeralDuration,
-					}
-				}
+			if groupResp, err := whatsapp.Client.GetGroupInfo(c.Request.Context(), &pb.GetGroupInfoRequest{GroupJid: jid}); err == nil && groupResp.Success {
+				applyLiveGroupData(groupData, groupResp)
 			}
 		}
 
 		c.JSON(http.StatusOK, groupData)
+	}
+}
+
+// defaultGroupData returns a group data map pre-filled with placeholder values.
+func defaultGroupData(jid string) map[string]interface{} {
+	return map[string]interface{}{
+		"jid":                  jid,
+		"name":                 "-",
+		"owner_jid":            "-",
+		"topic":                "-",
+		"topic_set_at":         nil,
+		"topic_set_by":         "-",
+		"linked_parent_jid":    "-",
+		"is_default_sub_group": false,
+		"is_parent":            false,
+		"description":          "-",
+		"photo_url":            "",
+		"participants":         []map[string]interface{}{},
+		"participant_count":    0,
+		"settings": map[string]interface{}{
+			"locked":                  false,
+			"announcement_only":       false,
+			"no_frequently_forwarded": false,
+			"ephemeral":               false,
+			"ephemeral_duration":      0,
+		},
+	}
+}
+
+// applyDBGroupData overlays database group data onto groupData.
+func applyDBGroupData(groupData map[string]interface{}, dbGroup *whatsnyanmodel.WhatsAppGroup) {
+	groupData["name"] = dbGroup.Name
+	groupData["owner_jid"] = dbGroup.OwnerJID
+	groupData["topic"] = dbGroup.Topic
+	if dbGroup.TopicSetAt.Unix() > 0 {
+		groupData["topic_set_at"] = dbGroup.TopicSetAt.Unix()
+	}
+	groupData["topic_set_by"] = dbGroup.TopicSetBy
+	groupData["linked_parent_jid"] = dbGroup.LinkedParentJID
+	groupData["is_default_sub_group"] = dbGroup.IsDefaultSubGroup
+	groupData["is_parent"] = dbGroup.IsParent
+
+	participants := make([]map[string]interface{}, len(dbGroup.Participants))
+	for i, p := range dbGroup.Participants {
+		participants[i] = map[string]interface{}{
+			"jid":                 p.UserJID,
+			"is_admin":            p.IsAdmin,
+			"is_super_admin":      p.IsSuperAdmin,
+			"lid":                 p.LID,
+			"display_name":        p.DisplayName,
+			"profile_picture_url": p.ProfilePictureURL,
+			"phone_number":        p.PhoneNumber,
+		}
+	}
+	groupData["participants"] = participants
+	groupData["participant_count"] = len(participants)
+}
+
+// applyLiveGroupData overlays live gRPC group data onto groupData.
+func applyLiveGroupData(groupData map[string]interface{}, groupResp *pb.GetGroupInfoResponse) {
+	if groupResp.Name != "" {
+		groupData["name"] = groupResp.Name
+	}
+	if groupResp.Jid != "" {
+		groupData["jid"] = groupResp.Jid
+	}
+	if groupResp.OwnerJid != "" {
+		groupData["owner_jid"] = groupResp.OwnerJid
+	}
+	if groupResp.Topic != "" {
+		groupData["topic"] = groupResp.Topic
+		groupData["description"] = groupResp.Topic
+	}
+	if groupResp.TopicSetAt > 0 {
+		groupData["topic_set_at"] = groupResp.TopicSetAt
+	}
+	if groupResp.TopicSetBy != "" {
+		groupData["topic_set_by"] = groupResp.TopicSetBy
+	}
+	if groupResp.LinkedParentJid != "" {
+		groupData["linked_parent_jid"] = groupResp.LinkedParentJid
+	}
+	groupData["is_default_sub_group"] = groupResp.IsDefaultSubGroup
+	groupData["is_parent"] = groupResp.IsParent
+	if groupResp.PhotoUrl != "" {
+		groupData["photo_url"] = groupResp.PhotoUrl
+	}
+
+	if len(groupResp.Participants) > 0 {
+		participants := make([]map[string]interface{}, len(groupResp.Participants))
+		for i, p := range groupResp.Participants {
+			participants[i] = map[string]interface{}{
+				"jid":                 p.Jid,
+				"is_admin":            p.IsAdmin,
+				"is_super_admin":      p.IsSuperAdmin,
+				"lid":                 p.Lid,
+				"display_name":        p.DisplayName,
+				"profile_picture_url": p.ProfilePictureUrl,
+				"phone_number":        p.PhoneNumber,
+			}
+		}
+		groupData["participants"] = participants
+		groupData["participant_count"] = len(participants)
+	}
+
+	if groupResp.Settings != nil {
+		groupData["settings"] = map[string]interface{}{
+			"locked":                  groupResp.Settings.Locked,
+			"announcement_only":       groupResp.Settings.AnnouncementOnly,
+			"no_frequently_forwarded": groupResp.Settings.NoFrequentlyForwarded,
+			"ephemeral":               groupResp.Settings.Ephemeral,
+			"ephemeral_duration":      groupResp.Settings.EphemeralDuration,
+		}
 	}
 }
 
@@ -1737,7 +1740,6 @@ func GetDataSeparator(c *gin.Context) {
 	})
 }
 
-// ImportWhatsAppUsers godoc
 // GetImportTemplate godoc
 // @Summary      Get CSV Import Template with valid options
 // @Description  Returns CSV template data with valid values for user_type, user_of, allowed_chats, and allowed_types
@@ -1748,6 +1750,8 @@ func GetDataSeparator(c *gin.Context) {
 // @Router       /api/v1/{access}/tab-whatsapp-user-management/users/import-template [get]
 func GetImportTemplate(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		_ = db // For future use if needed, currently not used in this handler
+
 		// Build valid options from model constants
 		userTypes := []string{
 			string(model.CommonUser),
@@ -1851,7 +1855,8 @@ func GetImportTemplate(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// @Summary      Import WhatsApp Users from CSV
+// ImportWhatsAppUsers imports users from a CSV file and creates or updates them based on phone numbers.
+// @Summary      ImportWhatsAppUsers from CSV
 // @Description  Imports users from CSV file, creates new users and updates existing ones based on phone numbers
 // @Tags         WhatsApp User Management
 // @Accept       multipart/form-data
@@ -1863,58 +1868,39 @@ func ImportWhatsAppUsers(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		file, err := c.FormFile("file")
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"success": false,
-				"message": "No file uploaded",
-			})
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "No file uploaded"})
 			return
 		}
 
-		// Open the uploaded file
 		src, err := file.Open()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
-				"message": "Failed to open file",
-			})
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Failed to open file"})
 			return
 		}
 		defer src.Close()
 
-		// Parse CSV
-		reader := csv.NewReader(src)
-		records, err := reader.ReadAll()
+		records, err := csv.NewReader(src).ReadAll()
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"success": false,
-				"message": "Failed to parse CSV file",
-			})
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Failed to parse CSV file"})
 			return
 		}
-
 		if len(records) < 2 {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"success": false,
-				"message": "CSV file is empty or has no data rows",
-			})
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "CSV file is empty or has no data rows"})
 			return
 		}
 
-		// Check if gRPC client is available for phone validation
 		if whatsapp.Client == nil {
 			logrus.Warn("WhatsApp gRPC client not available for phone validation")
 		}
 
 		ctx := c.Request.Context()
-		created := 0
-		updated := 0
-		failed := 0
+		created, updated, failed := 0, 0, 0
 
-		// Skip header row, process data rows
 		for i, record := range records[1:] {
+			rowIdx := i + 2
 			if len(record) < 3 {
 				failed++
-				logrus.Warnf("Row %d: insufficient columns", i+2)
+				logrus.Warnf("Row %d: insufficient columns", rowIdx)
 				continue
 			}
 
@@ -1922,142 +1908,23 @@ func ImportWhatsAppUsers(db *gorm.DB) gin.HandlerFunc {
 			email := strings.TrimSpace(record[1])
 			phoneNumber := strings.TrimSpace(record[2])
 
-			// Basic validation
 			if fullName == "" || email == "" || phoneNumber == "" {
 				failed++
-				logrus.Warnf("Row %d: missing required fields", i+2)
+				logrus.Warnf("Row %d: missing required fields", rowIdx)
 				continue
 			}
 
-			// Format phone number - remove non-digits
-			re := regexp.MustCompile(`\D`)
-			phoneNumber = re.ReplaceAllString(phoneNumber, "")
-
-			// Ensure it starts with 62 (Indonesia)
-			if !strings.HasPrefix(phoneNumber, "62") {
-				if strings.HasPrefix(phoneNumber, "0") {
-					phoneNumber = "62" + phoneNumber[1:]
-				} else if strings.HasPrefix(phoneNumber, "8") {
-					phoneNumber = "62" + phoneNumber
-				} else {
-					failed++
-					logrus.Warnf("Row %d: invalid phone number format: %s", i+2, phoneNumber)
-					continue
-				}
+			validatedPhone, ok := parseAndValidateWAPhoneNumber(ctx, phoneNumber, rowIdx)
+			if !ok {
+				failed++
+				continue
 			}
 
-			// Validate phone with WhatsApp if available
-			var validatedPhone string
-			if whatsapp.Client != nil {
-				waResp, err := whatsapp.Client.IsOnWhatsApp(ctx, &pb.IsOnWhatsAppRequest{
-					PhoneNumbers: []string{phoneNumber},
-				})
-
-				if err != nil || !waResp.Success || len(waResp.Results) == 0 || !waResp.Results[0].IsRegistered {
-					failed++
-					logrus.Warnf("Row %d: phone number not registered on WhatsApp: %s", i+2, phoneNumber)
-					continue
-				}
-
-				// Extract phone from JID (format: 628xxx@s.whatsapp.net)
-				jidParts := strings.Split(waResp.Results[0].Jid, "@")
-				if len(jidParts) > 0 {
-					validatedPhone = jidParts[0]
-				} else {
-					validatedPhone = phoneNumber
-				}
-			} else {
-				validatedPhone = phoneNumber
-			}
-
-			// Check if user exists by phone number
-			var existingUser model.WAUsers
-			err := db.Where("phone_number = ?", validatedPhone).First(&existingUser).Error
-
-			user := model.WAUsers{
-				FullName:    fullName,
-				Email:       email,
-				PhoneNumber: validatedPhone,
-			}
-
-			// Parse optional fields
-			if len(record) > 3 && strings.TrimSpace(record[3]) != "" {
-				user.UserType = model.WAUserType(strings.TrimSpace(record[3]))
-			} else {
-				user.UserType = model.CommonUser
-			}
-
-			if len(record) > 4 && strings.TrimSpace(record[4]) != "" {
-				user.UserOf = model.WAUserOf(strings.TrimSpace(record[4]))
-			} else {
-				user.UserOf = model.CompanyEmployee
-			}
-
-			if len(record) > 5 && strings.TrimSpace(record[5]) != "" {
-				user.AllowedChats = model.WAAllowedChatMode(strings.TrimSpace(record[5]))
-			} else {
-				user.AllowedChats = model.BothChat
-			}
-
-			if len(record) > 6 && strings.TrimSpace(record[6]) != "" {
-				if quota, err := strconv.Atoi(strings.TrimSpace(record[6])); err == nil {
-					user.MaxDailyQuota = quota
-				}
-			} else {
-				user.MaxDailyQuota = 10
-			}
-
-			if len(record) > 7 && strings.TrimSpace(record[7]) != "" {
-				user.AllowedToCall = strings.ToLower(strings.TrimSpace(record[7])) == "true"
-			}
-
-			if len(record) > 8 && strings.TrimSpace(record[8]) != "" {
-				user.UseBot = strings.ToLower(strings.TrimSpace(record[8])) == "true"
-			} else {
-				user.UseBot = true
-			}
-
-			// Handle AllowedTypes as JSON
-			if len(record) > 9 && strings.TrimSpace(record[9]) != "" {
-				allowedTypesStr := strings.TrimSpace(record[9])
-				// Convert pipe-separated or comma-separated to JSON array
-				types := strings.Split(strings.ReplaceAll(allowedTypesStr, "|", ","), ",")
-				for i := range types {
-					types[i] = strings.TrimSpace(types[i])
-				}
-				if typesJSON, err := json.Marshal(types); err == nil {
-					user.AllowedTypes = typesJSON
-				} else {
-					defaultTypes, _ := json.Marshal([]string{"text"})
-					user.AllowedTypes = defaultTypes
-				}
-			} else {
-				defaultTypes, _ := json.Marshal([]string{"text"})
-				user.AllowedTypes = defaultTypes
-			}
-
-			if len(record) > 10 {
-				user.Description = strings.TrimSpace(record[10])
-			}
-
-			if err == gorm.ErrRecordNotFound {
-				// Create new user
-				if err := db.Create(&user).Error; err != nil {
-					failed++
-					logrus.Warnf("Row %d: failed to create user: %v", i+2, err)
-				} else {
-					created++
-				}
-			} else {
-				// Update existing user
-				user.ID = existingUser.ID
-				if err := db.Model(&existingUser).Updates(&user).Error; err != nil {
-					failed++
-					logrus.Warnf("Row %d: failed to update user: %v", i+2, err)
-				} else {
-					updated++
-				}
-			}
+			user := buildWAUserFromRecord(record, validatedPhone, fullName, email)
+			rowCreated, rowUpdated, rowFailed := upsertWAUser(db, user, rowIdx)
+			created += rowCreated
+			updated += rowUpdated
+			failed += rowFailed
 		}
 
 		c.JSON(http.StatusOK, gin.H{
@@ -2068,6 +1935,123 @@ func ImportWhatsAppUsers(db *gorm.DB) gin.HandlerFunc {
 			"failed":  failed,
 		})
 	}
+}
+
+// parseAndValidateWAPhoneNumber normalises phoneNumber to E.164 Indonesian format and
+// verifies it is registered on WhatsApp. Returns (phone, true) on success.
+func parseAndValidateWAPhoneNumber(ctx context.Context, phoneNumber string, rowIdx int) (string, bool) {
+	re := regexp.MustCompile(`\D`)
+	phoneNumber = re.ReplaceAllString(phoneNumber, "")
+
+	if strings.HasPrefix(phoneNumber, "62") {
+		// already ok
+	} else if strings.HasPrefix(phoneNumber, "0") {
+		phoneNumber = "62" + phoneNumber[1:]
+	} else if strings.HasPrefix(phoneNumber, "8") {
+		phoneNumber = "62" + phoneNumber
+	} else {
+		logrus.Warnf("Row %d: invalid phone number format: %s", rowIdx, phoneNumber)
+		return "", false
+	}
+
+	if whatsapp.Client == nil {
+		return phoneNumber, true
+	}
+
+	waResp, err := whatsapp.Client.IsOnWhatsApp(ctx, &pb.IsOnWhatsAppRequest{PhoneNumbers: []string{phoneNumber}})
+	if err != nil || !waResp.Success || len(waResp.Results) == 0 || !waResp.Results[0].IsRegistered {
+		logrus.Warnf("Row %d: phone number not registered on WhatsApp: %s", rowIdx, phoneNumber)
+		return "", false
+	}
+
+	jidParts := strings.Split(waResp.Results[0].Jid, "@")
+	if len(jidParts) > 0 {
+		return jidParts[0], true
+	}
+	return phoneNumber, true
+}
+
+// buildWAUserFromRecord constructs a model.WAUsers from a CSV record row.
+func buildWAUserFromRecord(record []string, phone, fullName, email string) model.WAUsers {
+	user := model.WAUsers{FullName: fullName, Email: email, PhoneNumber: phone}
+	applyWAUserOptionalFields(record, &user)
+	return user
+}
+
+// applyWAUserOptionalFields sets optional CSV columns (indices 3-10) onto a WAUsers struct.
+func applyWAUserOptionalFields(record []string, user *model.WAUsers) {
+	col := func(i int) string {
+		if len(record) > i {
+			return strings.TrimSpace(record[i])
+		}
+		return ""
+	}
+	if v := col(3); v != "" {
+		user.UserType = model.WAUserType(v)
+	} else {
+		user.UserType = model.CommonUser
+	}
+	if v := col(4); v != "" {
+		user.UserOf = model.WAUserOf(v)
+	} else {
+		user.UserOf = model.CompanyEmployee
+	}
+	if v := col(5); v != "" {
+		user.AllowedChats = model.WAAllowedChatMode(v)
+	} else {
+		user.AllowedChats = model.BothChat
+	}
+	if v := col(6); v != "" {
+		if quota, err := strconv.Atoi(v); err == nil {
+			user.MaxDailyQuota = quota
+		}
+	} else {
+		user.MaxDailyQuota = 10
+	}
+	if v := col(7); v != "" {
+		user.AllowedToCall = strings.ToLower(v) == "true"
+	}
+	if v := col(8); v != "" {
+		user.UseBot = strings.ToLower(v) == "true"
+	} else {
+		user.UseBot = true
+	}
+	if v := col(9); v != "" {
+		types := strings.Split(strings.ReplaceAll(v, "|", ","), ",")
+		for i := range types {
+			types[i] = strings.TrimSpace(types[i])
+		}
+		if b, err := json.Marshal(types); err == nil {
+			user.AllowedTypes = b
+		}
+	}
+	if user.AllowedTypes == nil {
+		b, _ := json.Marshal([]string{"text"})
+		user.AllowedTypes = b
+	}
+	if v := col(10); v != "" {
+		user.Description = v
+	}
+}
+
+// upsertWAUser creates or updates a WAUsers record in the database.
+// Returns increments for (created, updated, failed).
+func upsertWAUser(db *gorm.DB, user model.WAUsers, rowIdx int) (int, int, int) {
+	var existing model.WAUsers
+	err := db.Where("phone_number = ?", user.PhoneNumber).First(&existing).Error
+	if err == gorm.ErrRecordNotFound {
+		if err := db.Create(&user).Error; err != nil {
+			logrus.Warnf("Row %d: failed to create user: %v", rowIdx, err)
+			return 0, 0, 1
+		}
+		return 1, 0, 0
+	}
+	user.ID = existing.ID
+	if err := db.Model(&existing).Updates(&user).Error; err != nil {
+		logrus.Warnf("Row %d: failed to update user: %v", rowIdx, err)
+		return 0, 0, 1
+	}
+	return 0, 1, 0
 }
 
 // GetWhatsAppProfilePicture godoc

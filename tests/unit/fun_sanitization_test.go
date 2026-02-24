@@ -1,9 +1,8 @@
 package unit
 
 import (
+	"service-platform/pkg/fun"
 	"testing"
-
-	"service-platform/internal/pkg/fun"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/stretchr/testify/assert"

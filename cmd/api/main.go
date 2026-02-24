@@ -1,3 +1,27 @@
+// Package main is the entry point for the Service Platform API/Dashboard server.
+//
+// It initialises the full HTTP stack including Gin middleware (CORS, rate-limiting,
+// caching, sanitisation, security headers, request logging), Swagger documentation,
+// static file serving, and HTML template routes. On the backend side it connects to
+// PostgreSQL (with health monitoring and automatic reconnection), Redis (with retry
+// and reconnect logic), and establishes gRPC clients for the WhatsApp, Telegram, and
+// Scheduler microservices.
+//
+// On graceful shutdown (SIGINT / SIGTERM) the server sends a multilingual WhatsApp
+// notification to the configured superuser phone number.
+//
+// Configuration is loaded from service-platform.<env>.yaml via the config package.
+//
+// Usage:
+//
+//	# Run directly
+//	go run cmd/api/main.go
+//
+//	# Build and run
+//	make build-api && ./bin/api
+//
+//	# Install as a system service
+//	./bin/api --install
 package main
 
 import (
@@ -16,9 +40,9 @@ import (
 	"service-platform/internal/database"
 	"service-platform/internal/installer"
 	"service-platform/internal/middleware"
-	"service-platform/internal/pkg/fun"
-	"service-platform/internal/pkg/logger"
 	"service-platform/internal/scheduler"
+	"service-platform/pkg/fun"
+	"service-platform/pkg/logger"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -400,7 +424,7 @@ func startWebServer(
 
 	routes.StaticFile(r)
 
-	routes.HtmlRoutes(GlobalDB, r, getRedisClient(), systemMonitor)
+	routes.HTMLRoutes(GlobalDB, r, getRedisClient(), systemMonitor)
 
 	listenAddr := fmt.Sprintf(":%d", webHostPort)
 	printHostInfo(yamlCfg, listenAddr)

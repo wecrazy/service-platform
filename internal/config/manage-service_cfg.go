@@ -3,10 +3,11 @@ package config
 // ManageService holds the configuration of ODOO MS. It is initialized as a pointer to an empty struct of TypeManageService, which will be populated with the actual configuration values when the configuration files are loaded. This allows other parts of the application to access the ODOO MS configuration through this variable.
 var ManageService = &configs[TypeManageService]{}
 
+// TypeManageService holds the configuration structure for the ODOO Manage Service integration.
 type TypeManageService struct {
 	// ODOOMS holds configuration for ODOO Manage Service integration
 	ODOOMS struct {
-		JsonRPCVersion string                  `yaml:"jsonrpc_version" validate:"required"`
+		JSONRPCVersion string                  `yaml:"jsonrpc_version" validate:"required"`
 		Login          string                  `yaml:"login" validate:"required"`
 		Password       string                  `yaml:"password" validate:"required"`
 		DB             string                  `yaml:"db" validate:"required"`
