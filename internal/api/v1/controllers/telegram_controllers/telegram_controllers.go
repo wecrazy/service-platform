@@ -3,8 +3,8 @@ package telegramcontrollers
 import (
 	"net/http"
 	"service-platform/internal/api/v1/dto"
-	"service-platform/internal/pkg/fun"
 	"service-platform/internal/telegram"
+	"service-platform/pkg/fun"
 
 	pb "service-platform/proto"
 
@@ -23,7 +23,7 @@ import (
 // @Success      200  {object}   map[string]interface{}
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Router       /api/v1/{access}/tab-telegram/send_message [post]
-func SendTelegramMessage(db interface{}) gin.HandlerFunc {
+func SendTelegramMessage(_ interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if telegram.Client == nil {
 			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "Telegram service not available")
@@ -80,7 +80,7 @@ func SendTelegramMessage(db interface{}) gin.HandlerFunc {
 // @Success      200  {object}   map[string]interface{}
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Router       /api/v1/{access}/tab-telegram/send_message_with_keyboard [post]
-func SendMessageWithKeyboard(db interface{}) gin.HandlerFunc {
+func SendMessageWithKeyboard(_ interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if telegram.Client == nil {
 			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "Telegram service not available")
@@ -144,7 +144,7 @@ func SendMessageWithKeyboard(db interface{}) gin.HandlerFunc {
 // @Success      200  {object}   map[string]interface{}
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Router       /api/v1/{access}/tab-telegram/edit_message [post]
-func EditTelegramMessage(db interface{}) gin.HandlerFunc {
+func EditTelegramMessage(_ interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if telegram.Client == nil {
 			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "Telegram service not available")
@@ -208,7 +208,7 @@ func EditTelegramMessage(db interface{}) gin.HandlerFunc {
 // @Success      200  {object}   map[string]interface{}
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Router       /api/v1/{access}/tab-telegram/answer_callback_query [post]
-func AnswerCallbackQuery(db interface{}) gin.HandlerFunc {
+func AnswerCallbackQuery(_ interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if telegram.Client == nil {
 			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "Telegram service not available")
@@ -287,7 +287,7 @@ func convertDTOKeyboardToProto(dtoKeyboard *dto.InlineKeyboardMarkup) *pb.Inline
 // @Success      200  {object}   map[string]interface{}
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Router       /api/v1/{access}/tab-telegram/send_voice [post]
-func SendTelegramVoice(db interface{}) gin.HandlerFunc {
+func SendTelegramVoice(_ interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if telegram.Client == nil {
 			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "Telegram service not available")
@@ -346,7 +346,7 @@ func SendTelegramVoice(db interface{}) gin.HandlerFunc {
 // @Success      200  {object}   map[string]interface{}
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Router       /api/v1/{access}/tab-telegram/send_document [post]
-func SendTelegramDocument(db interface{}) gin.HandlerFunc {
+func SendTelegramDocument(_ interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if telegram.Client == nil {
 			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "Telegram service not available")
@@ -404,7 +404,7 @@ func SendTelegramDocument(db interface{}) gin.HandlerFunc {
 // @Success      200  {object}   map[string]interface{}
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Router       /api/v1/{access}/tab-telegram/send_photo [post]
-func SendTelegramPhoto(db interface{}) gin.HandlerFunc {
+func SendTelegramPhoto(_ interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if telegram.Client == nil {
 			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "Telegram service not available")
@@ -462,7 +462,7 @@ func SendTelegramPhoto(db interface{}) gin.HandlerFunc {
 // @Success      200  {object}   map[string]interface{}
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Router       /api/v1/{access}/tab-telegram/send_audio [post]
-func SendTelegramAudio(db interface{}) gin.HandlerFunc {
+func SendTelegramAudio(_ interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if telegram.Client == nil {
 			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "Telegram service not available")
@@ -523,7 +523,7 @@ func SendTelegramAudio(db interface{}) gin.HandlerFunc {
 // @Success      200  {object}   map[string]interface{}
 // @Failure      503  {object}   dto.APIErrorResponse "Service Unavailable"
 // @Router       /api/v1/{access}/tab-telegram/send_video [post]
-func SendTelegramVideo(db interface{}) gin.HandlerFunc {
+func SendTelegramVideo(_ interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if telegram.Client == nil {
 			fun.HandleAPIErrorSimple(c, http.StatusServiceUnavailable, "Telegram service not available")

@@ -15,12 +15,12 @@ The Service Platform uses a custom migration system that leverages GORM's AutoMi
 ## Architecture
 
 ### Migration Registry
-- **Location**: `internal/database/migrations/registry.go`
+- **Location**: `internal/migrations/registry.go`
 - **Purpose**: Manages migration registration and execution
 - **Features**: Automatic sorting, status tracking, rollback support
 
 ### Migration Files
-- **Location**: `internal/database/migrations/`
+- **Location**: `internal/database/migrations/` (registered via `init()` functions)
 - **Naming**: `001_description.go`, `002_description.go`, etc.
 - **Structure**: Each migration is a Go file with Up/Down functions
 

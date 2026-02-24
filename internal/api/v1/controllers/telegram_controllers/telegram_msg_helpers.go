@@ -2,11 +2,11 @@ package telegramcontrollers
 
 import (
 	"fmt"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 )
 
 // getLocalizedMessage returns the localized message based on language
-func (h *TelegramHelper) getLocalizedMessage(lang, key string, args ...interface{}) string {
+func (*TelegramHelper) getLocalizedMessage(lang, key string, args ...interface{}) string {
 	messages := map[string]map[string]string{
 		fun.LangID: {
 			"welcome":                                 "Selamat datang di Bot Telegram! Pilih opsi:",

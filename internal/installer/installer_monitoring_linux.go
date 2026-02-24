@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// InstallMonitoring sets up a systemd service for the monitoring component of the application. It creates a service file with the appropriate configuration and enables it to start on boot. The function checks for root privileges and handles both system-wide and user-level installations based on how the application is run. For more details on how to use this function, see the documentation in the internal/installer package and the main application README.
 func InstallMonitoring(yamlCfg *config.TypeServicePlatform) {
 	fmt.Println("🐧 Linux detected — installing monitoring service...")
 
@@ -109,6 +110,7 @@ RemainAfterExit=yes
 	}
 }
 
+// UninstallMonitoring removes the systemd service for the monitoring component of the application. It stops the service if it's running, disables it from starting on boot, and deletes the service file. The function checks for root privileges and handles both system-wide and user-level uninstallations based on how the application is run. For more details on how to use this function, see the documentation in the internal/installer package and the main application README.
 func UninstallMonitoring(yamlCfg *config.TypeServicePlatform) {
 	fmt.Println("🐧 Linux detected — uninstalling monitoring service...")
 

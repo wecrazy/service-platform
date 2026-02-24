@@ -11,8 +11,8 @@ import (
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
 	whatsnyanmodel "service-platform/internal/core/model/whatsnyan_model"
-	"service-platform/internal/pkg/fun"
 	"service-platform/internal/whatsapp"
+	"service-platform/pkg/fun"
 	pb "service-platform/proto"
 	"strings"
 	"time"
@@ -30,13 +30,13 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// LanguageTranslation: structure for multi-language text messages
+// LanguageTranslation is a structure for multi-language text messages.
 type LanguageTranslation struct {
 	LanguageCode string            // e.g. "en", "id"
 	Texts        map[string]string // Langcode -> Text , e.g. "en" -> "Hello", "id" -> "Halo"
 }
 
-// FilePermissionRule: rules for file/document handling
+// FilePermissionRule defines rules for file/document handling.
 type FilePermissionRule struct {
 	AllowFunc         func(user *model.WAUsers) (bool, LanguageTranslation) // returns: (allowed, deny message)
 	DenyMessage       LanguageTranslation
@@ -64,7 +64,7 @@ type PromptPermissionResult struct {
 	CooldownLeft int // seconds left before allowed again
 }
 
-// PromptPermissionRule: rules for prompt/command handling
+// PromptPermissionRule defines rules for prompt/command handling.
 type PromptPermissionRule struct {
 	AllowFunc       func(user *model.WAUsers) (bool, LanguageTranslation) // returns: (allowed, deny message)
 	DenyMessage     LanguageTranslation
@@ -339,11 +339,81 @@ func SetUserLang(jid, lang string, rdb *redis.Client) error {
 	).Err()
 }
 
+// NewLanguageMsgTranslation creates a new LanguageTranslation with the given language code.
 func NewLanguageMsgTranslation(code string) LanguageTranslation {
 	return LanguageTranslation{
 		LanguageCode: code,
 		Texts:        make(map[string]string),
 	}
+}
+
+// resolveEffectiveLangCode resolves the effective language code for a JID from Redis,
+// falling back to the provided langCode or the default language.
+func resolveEffectiveLangCode(jid string, langCode string, rdb *redis.Client) string {
+	userLang, err := GetUserLang(jid, rdb)
+	if err != nil {
+		logrus.Errorf("SendLangWhatsAppMsg: failed to get user lang for %s: %v", jid, err)
+		return fun.DefaultLang
+	}
+	if userLang != "" {
+		return userLang
+	}
+	return langCode
+}
+
+// markIncomingMsgReadAndComposing marks an incoming WhatsApp message as read and sets composing presence.
+func markIncomingMsgReadAndComposing(client *whatsmeow.Client, v *events.Message) {
+	if v == nil {
+		return
+	}
+	if !v.Info.IsFromMe {
+		if err := client.MarkRead(context.Background(), []types.MessageID{types.MessageID(v.Info.ID)}, time.Now(), v.Info.Chat, v.Info.Sender); err != nil {
+			logrus.Errorf("Failed to mark message as read: %v", err)
+		}
+	}
+	client.SendChatPresence(context.Background(), v.Info.Chat, types.ChatPresenceComposing, types.ChatPresenceMediaText)
+}
+
+// isBotOwnNumber returns true when the target JID matches the WhatsApp client's own number.
+func isBotOwnNumber(jid string, client *whatsmeow.Client) bool {
+	jidNorm := NormalizeSenderJID(jid)
+	jidNorm = strings.ReplaceAll(jidNorm, fmt.Sprintf("@%s", types.DefaultUserServer), "")
+	storeNorm := client.Store.ID.String()
+	storeNorm = strings.ReplaceAll(storeNorm, fmt.Sprintf("@%s", types.DefaultUserServer), "")
+	parts := strings.SplitN(storeNorm, ":", 2)
+	storeNorm = parts[0]
+	return jidNorm == storeNorm
+}
+
+// sendWATextOrQuoted sends a WhatsApp text message, quoting the original if stanzaID is set.
+// Returns (SendResponse, sent bool, error). sent==false means the send was intentionally skipped.
+func sendWATextOrQuoted(client *whatsmeow.Client, jid, stanzaID, text string, userJID types.JID, v *events.Message, botNumber bool) (whatsmeow.SendResponse, bool, error) {
+	if stanzaID != "" && v != nil {
+		quotedMsg := &waE2E.ContextInfo{
+			StanzaID:      &stanzaID,
+			Participant:   &jid,
+			QuotedMessage: v.Message,
+		}
+		if botNumber {
+			logrus.Warnf("SendLangWhatsAppMsg: skipping quoted message send because jid is bot's own number")
+			return whatsmeow.SendResponse{}, false, nil
+		}
+		resp, err := client.SendMessage(context.Background(), v.Info.Chat, &waE2E.Message{
+			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+				Text:        &text,
+				ContextInfo: quotedMsg,
+			},
+		})
+		return resp, true, err
+	}
+	if botNumber {
+		logrus.Warnf("SendLangWhatsAppMsg: skipping message send because jid is bot's own number")
+		return whatsmeow.SendResponse{}, false, nil
+	}
+	resp, err := client.SendMessage(context.Background(), userJID, &waE2E.Message{
+		Conversation: proto.String(text),
+	})
+	return resp, true, err
 }
 
 // SendLangWhatsAppTextMsg sends a WhatsApp text message to a user in their preferred language.
@@ -375,15 +445,7 @@ func SendLangWhatsAppTextMsg(jid, stanzaID string, v *events.Message, lang Langu
 		return
 	}
 
-	userLang, err := GetUserLang(jid, rdb)
-	if err != nil {
-		logrus.Errorf("SendLangWhatsAppMsg: failed to get user lang for %s: %v", jid, err)
-		langCode = fun.DefaultLang
-	} else {
-		if userLang != "" {
-			langCode = userLang
-		}
-	}
+	langCode = resolveEffectiveLangCode(jid, langCode, rdb)
 
 	parseJID, err := types.ParseJID(jid)
 	if err != nil {
@@ -396,72 +458,25 @@ func SendLangWhatsAppTextMsg(jid, stanzaID string, v *events.Message, lang Langu
 		Server: parseJID.Server,
 	}
 
-	if v != nil {
-		// Automatically mark incoming messages as read to trigger blue ticks on the sender's side
-		if !v.Info.IsFromMe {
-			err := client.MarkRead(context.Background(), []types.MessageID{types.MessageID(v.Info.ID)}, time.Now(), v.Info.Chat, v.Info.Sender)
-			if err != nil {
-				logrus.Errorf("Failed to mark message as read: %v", err)
-			}
-		}
-		// Set chat presence to composing e.g. typing...
-		client.SendChatPresence(context.Background(), v.Info.Chat, types.ChatPresenceComposing, types.ChatPresenceMediaText)
-	}
-
-	defaultLangCode := fun.DefaultLang
+	markIncomingMsgReadAndComposing(client, v)
 
 	text, exists := lang.Texts[langCode]
 	if !exists {
-		text, exists = lang.Texts[defaultLangCode]
+		text, exists = lang.Texts[fun.DefaultLang]
 		if !exists {
-			logrus.Errorf("SendLangWhatsAppMsg: no text available for lang %s or default '%s'. Available keys: %v", langCode, defaultLangCode, getMapKeys(lang.Texts))
+			logrus.Errorf("SendLangWhatsAppMsg: no text available for lang %s or default '%s'. Available keys: %v", langCode, fun.DefaultLang, getMapKeys(lang.Texts))
 			return
 		}
 	}
 
-	var resp whatsmeow.SendResponse
-	var waErr error
-	isBotNumber := false
-
-	// Try find the jid that will send to and the store ID
-	jidNormalized := NormalizeSenderJID(jid)
-	jidNormalized = strings.ReplaceAll(jidNormalized, fmt.Sprintf("@%s", types.DefaultUserServer), "")
-	storeIDNormalized := client.Store.ID.String()
-	storeIDNormalized = strings.ReplaceAll(storeIDNormalized, fmt.Sprintf("@%s", types.DefaultUserServer), "")
-	parts := strings.SplitN(storeIDNormalized, ":", 2)
-	storeIDNormalized = parts[0]
-
-	if jidNormalized == storeIDNormalized {
+	botNumber := isBotOwnNumber(jid, client)
+	if botNumber {
 		logrus.Warnf("SendLangWhatsAppMsg: jid %s is the bot's own number, skipping message send", jid)
-		isBotNumber = true
 	}
 
-	if stanzaID != "" && v != nil {
-		quotedMsg := &waE2E.ContextInfo{
-			StanzaID:      &stanzaID,
-			Participant:   &jid,
-			QuotedMessage: v.Message,
-		}
-
-		if !isBotNumber {
-			resp, waErr = client.SendMessage(context.Background(), v.Info.Chat, &waE2E.Message{
-				ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-					Text:        &text,
-					ContextInfo: quotedMsg,
-				},
-			})
-		} else {
-			logrus.Warnf("SendLangWhatsAppMsg: skipping quoted message send because jid is bot's own number")
-		}
-	} else {
-		if !isBotNumber {
-			resp, waErr = client.SendMessage(context.Background(), userJID, &waE2E.Message{
-				Conversation: proto.String(text),
-			})
-		} else {
-			logrus.Warnf("SendLangWhatsAppMsg: skipping message send because jid is bot's own number")
-			return
-		}
+	resp, sent, waErr := sendWATextOrQuoted(client, jid, stanzaID, text, userJID, v, botNumber)
+	if !sent {
+		return
 	}
 
 	if waErr != nil {
@@ -532,9 +547,8 @@ func CheckWAPhoneNumberIsRegistered() gin.HandlerFunc {
 		if err != nil {
 			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
-		} else {
-			sanitizedPhoneNumber = config.ServicePlatform.Get().Default.DialingCodeDefault + sanitizedPhoneNumber
 		}
+		sanitizedPhoneNumber = config.ServicePlatform.Get().Default.DialingCodeDefault + sanitizedPhoneNumber
 
 		jid := sanitizedPhoneNumber + "@" + types.DefaultUserServer
 		resp, err := whatsapp.Client.IsOnWhatsApp(context.Background(), &pb.IsOnWhatsAppRequest{
@@ -566,14 +580,12 @@ func CheckWAPhoneNumberIsRegistered() gin.HandlerFunc {
 			if !contact.IsRegistered {
 				c.Status(http.StatusBadRequest)
 				return
-			} else {
-				c.Status(http.StatusOK)
-				return
 			}
-		} else {
-			c.Status(http.StatusBadRequest)
+			c.Status(http.StatusOK)
 			return
 		}
+		c.Status(http.StatusBadRequest)
+		return
 
 	}
 }
@@ -797,6 +809,118 @@ func ContainsJID(groupList []string, jid types.JID) bool {
 // Returns:
 //   - *model.WAUsers: The WAUsers record if the phone number is registered.
 //   - error: An error if the phone number is not registered or if any other issue occurs.
+//
+// suppressedNotRegisteredReturn returns (nil, errorMsgs) on first encounter of a
+// "not registered" phone (setting a Redis dedup key) and (nil, nil) on subsequent
+// encounters to avoid spamming the user with the same error message.
+func suppressedNotRegisteredReturn(jid string, errorInLanguages map[string]string, rdb *redis.Client) (*model.WAUsers, map[string]string) {
+	expireDuration := config.ServicePlatform.Get().Whatsnyan.NotRegisteredPhoneExpiry
+	if expireDuration <= 0 {
+		expireDuration = 3600 // default to 1 hour
+	}
+	notRegisteredKey := "not_registered_phone_" + jid
+	exists, err := rdb.Exists(context.Background(), notRegisteredKey).Result()
+	if err != nil {
+		logrus.Errorf("ValidateUserToUseBotWhatsapp: redis exists check failed for key %s: %v", notRegisteredKey, err)
+	}
+	if exists == 0 {
+		rdb.Set(context.Background(), notRegisteredKey, "true", time.Duration(expireDuration)*time.Second)
+		return nil, errorInLanguages
+	}
+	// Avoid spamming the user with the same error message
+	return nil, nil
+}
+
+// validateChatTypeForUser validates whether the user is allowed to use the given chat type.
+// Returns nil if allowed (or model.BothChat), a zero-length map for BothChat immediate return,
+// or a populated error map if not allowed.
+func validateChatTypeForUser(waUser model.WAUsers, isGroup bool) map[string]string {
+	switch waUser.AllowedChats {
+	case model.DirectChat:
+		if isGroup {
+			return map[string]string{
+				fun.LangID: "Maaf, Anda hanya diizinkan untuk menggunakan chat pribadi dengan bot ini.",
+				fun.LangEN: "Sorry, you are only allowed to use direct chat with this bot.",
+				fun.LangES: "Lo siento, solo se le permite usar el chat directo con este bot.",
+				fun.LangFR: "Désolé, vous n'êtes autorisé à utiliser que le chat direct avec ce bot.",
+				fun.LangDE: "Entschuldigung, Sie dürfen nur den Direktchat mit diesem Bot verwenden.",
+				fun.LangPT: "Desculpe, você só tem permissão para usar o chat direto com este bot.",
+				fun.LangRU: "Извините, вам разрешено использовать только прямой чат с этим ботом.",
+				fun.LangJP: "申し訳ありませんが、このボットとの直接チャットのみが許可されています。",
+				fun.LangCN: "抱歉，您只能与此机器人进行直接聊天。",
+				fun.LangAR: "عذرًا، يُسمح لك فقط باستخدام الدردشة المباشرة مع هذا الروبوت.",
+			}
+		}
+		return nil
+	case model.GroupChat:
+		if !isGroup {
+			return map[string]string{
+				fun.LangID: "Maaf, Anda hanya diizinkan untuk menggunakan chat grup dengan bot ini.",
+				fun.LangEN: "Sorry, you are only allowed to use group chat with this bot.",
+				fun.LangES: "Lo siento, solo se le permite usar el chat grupal con este bot.",
+				fun.LangFR: "Désolé, vous n'êtes autorisé à utiliser que le chat de groupe avec ce bot.",
+				fun.LangDE: "Entschuldigung, Sie dürfen nur den Gruppenchat mit diesem Bot verwenden.",
+				fun.LangPT: "Desculpe, você só tem permissão para usar o chat em grupo com este bot.",
+				fun.LangRU: "Извините, вам разрешено использовать только групповой чат с этим ботом.",
+				fun.LangJP: "申し訳ありませんが、このボットとのグループチャットのみが許可されています。",
+				fun.LangCN: "抱歉，您只能与此机器人进行群聊。",
+				fun.LangAR: "عذرًا، يُسمح لك فقط باستخدام الدردشة الجماعية مع هذا الروبوت.",
+			}
+		}
+		return nil
+	case model.BothChat:
+		// Signal immediate allow via empty (non-nil) map
+		return map[string]string{}
+	default:
+		return map[string]string{
+			fun.LangID: "Jenis obrolan yang diizinkan tidak valid.",
+			fun.LangEN: "The allowed chat type is not valid.",
+			fun.LangES: "El tipo de chat permitido no es válido.",
+			fun.LangFR: "Le type de chat autorisé n'est pas valide.",
+			fun.LangDE: "Der erlaubte Chat-Typ ist nicht gültig.",
+			fun.LangPT: "O tipo de chat permitido não é válido.",
+			fun.LangRU: "Разрешенный тип чата недействителен.",
+			fun.LangJP: "許可されたチャットタイプが無効です。",
+			fun.LangCN: "允许的聊天类型无效。",
+			fun.LangAR: "نوع الدردشة المسموح به غير صالح.",
+		}
+	}
+}
+
+// findMatchingAutoReply scans autoReplies for an exact or fuzzy keyword match.
+// Returns (matchedReply, closestKeyword, minDistance).
+func findMatchingAutoReply(autoReplies []model.WhatsappMessageAutoReply, lowerMsgText, dataSeparator string) (*model.WhatsappMessageAutoReply, string, int) {
+	var matchedReply *model.WhatsappMessageAutoReply
+	var closestKeyword string
+	minDistance := 100
+
+	for _, reply := range autoReplies {
+		reply := reply // capture
+		keywords := strings.Split(reply.Keywords, dataSeparator)
+		for _, k := range keywords {
+			k = strings.TrimSpace(strings.ToLower(k))
+			if k == "" {
+				continue
+			}
+			if k == lowerMsgText {
+				matchedReply = &reply
+				break
+			}
+			dist := levenshtein.ComputeDistance(lowerMsgText, k)
+			if dist < minDistance {
+				minDistance = dist
+				closestKeyword = k
+			}
+		}
+		if matchedReply != nil {
+			break
+		}
+	}
+	return matchedReply, closestKeyword, minDistance
+}
+
+// ValidateUserToUseBotWhatsapp checks whether a phone number is authorised to use the WhatsApp bot.
+// It looks up the user record, validates their chat type, message type allowance and registration status.
 func ValidateUserToUseBotWhatsapp(phoneNumber, jid string, isGroup bool, msgType string, client *whatsmeow.Client, rdb *redis.Client, db *gorm.DB) (*model.WAUsers, map[string]string) {
 	if rdb == nil {
 		logrus.Error("ValidateUserToUseBotWhatsapp: redis client is nil")
@@ -830,23 +954,7 @@ func ValidateUserToUseBotWhatsapp(phoneNumber, jid string, isGroup bool, msgType
 			errorInLanguages[fun.LangCN] = fmt.Sprintf("抱歉，您的号码未注册使用此服务。请联系 +%s 的技术支持。", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 			errorInLanguages[fun.LangAR] = fmt.Sprintf("عذرًا، رقمك غير مسجل لاستخدام هذه الخدمة. يرجى الاتصال بدعمنا الفني على +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
-			expireDuration := config.ServicePlatform.Get().Whatsnyan.NotRegisteredPhoneExpiry
-			if expireDuration <= 0 {
-				expireDuration = 3600 // default to 1 hour
-			}
-			notRegisteredKey := "not_registered_phone_" + jid
-			exists, err := rdb.Exists(context.Background(), notRegisteredKey).Result()
-			if err != nil {
-				logrus.Errorf("ValidateUserToUseBotWhatsapp: redis exists check failed for key %s: %v", notRegisteredKey, err)
-			}
-
-			if exists == 0 {
-				rdb.Set(context.Background(), notRegisteredKey, "true", time.Duration(expireDuration)*time.Second)
-				return nil, errorInLanguages
-			} else {
-				// Avoid spamming the user with the same error message
-				return nil, nil
-			}
+			return suppressedNotRegisteredReturn(jid, errorInLanguages, rdb)
 		}
 
 		errorInLanguages[fun.LangID] = fmt.Sprintf("Terjadi kesalahan saat mencoba untuk memperiksa nomor Anda. Detail error: %v", err)
@@ -906,91 +1014,42 @@ func ValidateUserToUseBotWhatsapp(phoneNumber, jid string, isGroup bool, msgType
 		errorInLanguages[fun.LangCN] = fmt.Sprintf("抱歉，您的号码未注册使用此服务。请联系 +%s 的技术支持。", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 		errorInLanguages[fun.LangAR] = fmt.Sprintf("عذرًا، رقمك غير مسجل لاستخدام هذه الخدمة. يرجى الاتصال بدعمنا الفني على +%s.", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport)
 
-		expireDuration := config.ServicePlatform.Get().Whatsnyan.NotRegisteredPhoneExpiry
-		if expireDuration <= 0 {
-			expireDuration = 3600 // default to 1 hour
-		}
-		notRegisteredKey := "not_registered_phone_" + jid
-		exists, err := rdb.Exists(context.Background(), notRegisteredKey).Result()
-		if err != nil {
-			logrus.Errorf("ValidateUserToUseBotWhatsapp: redis exists check failed for key %s: %v", notRegisteredKey, err)
-		}
-
-		if exists == 0 {
-			rdb.Set(context.Background(), notRegisteredKey, "true", time.Duration(expireDuration)*time.Second)
-			return nil, errorInLanguages
-		} else {
-			// Avoid spamming the user with the same error message
-			return nil, nil
-		}
+		return suppressedNotRegisteredReturn(jid, errorInLanguages, rdb)
 	}
 
-	switch waUser.AllowedChats {
-	case model.DirectChat:
-		if isGroup {
-			errorInLanguages[fun.LangID] = "Maaf, Anda hanya diizinkan untuk menggunakan chat pribadi dengan bot ini."
-			errorInLanguages[fun.LangEN] = "Sorry, you are only allowed to use direct chat with this bot."
-			errorInLanguages[fun.LangES] = "Lo siento, solo se le permite usar el chat directo con este bot."
-			errorInLanguages[fun.LangFR] = "Désolé, vous n'êtes autorisé à utiliser que le chat direct avec ce bot."
-			errorInLanguages[fun.LangDE] = "Entschuldigung, Sie dürfen nur den Direktchat mit diesem Bot verwenden."
-			errorInLanguages[fun.LangPT] = "Desculpe, você só tem permissão para usar o chat direto com este bot."
-			errorInLanguages[fun.LangRU] = "Извините, вам разрешено использовать только прямой чат с этим ботом."
-			errorInLanguages[fun.LangJP] = "申し訳ありませんが、このボットとの直接チャットのみが許可されています。"
-			errorInLanguages[fun.LangCN] = "抱歉，您只能与此机器人进行直接聊天。"
-			errorInLanguages[fun.LangAR] = "عذرًا، يُسمح لك فقط باستخدام الدردشة المباشرة مع هذا الروبوت."
-
-			return nil, errorInLanguages
+	if chatErr := validateChatTypeForUser(waUser, isGroup); chatErr != nil {
+		if len(chatErr) == 0 {
+			return &waUser, nil
 		}
-	case model.GroupChat:
-		// Allowed in groups only, no direct chat
-		if !isGroup {
-			errorInLanguages[fun.LangID] = "Maaf, Anda hanya diizinkan untuk menggunakan chat grup dengan bot ini."
-			errorInLanguages[fun.LangEN] = "Sorry, you are only allowed to use group chat with this bot."
-			errorInLanguages[fun.LangES] = "Lo siento, solo se le permite usar el chat grupal con este bot."
-			errorInLanguages[fun.LangFR] = "Désolé, vous n'êtes autorisé à utiliser que le chat de groupe avec ce bot."
-			errorInLanguages[fun.LangDE] = "Entschuldigung, Sie dürfen nur den Gruppenchat mit diesem Bot verwenden."
-			errorInLanguages[fun.LangPT] = "Desculpe, você só tem permissão para usar o chat em grupo com este bot."
-			errorInLanguages[fun.LangRU] = "Извините, вам разрешено использовать только групповой чат с этим ботом."
-			errorInLanguages[fun.LangJP] = "申し訳ありませんが、このボットとのグループチャットのみが許可されています。"
-			errorInLanguages[fun.LangCN] = "抱歉，您只能与此机器人进行群聊。"
-			errorInLanguages[fun.LangAR] = "عذرًا، يُسمح لك فقط باستخدام الدردشة الجماعية مع هذا الروبوت."
-
-			return nil, errorInLanguages
-		}
-	case model.BothChat:
-		return &waUser, nil
-	default:
-		errorInLanguages[fun.LangID] = "Jenis obrolan yang diizinkan tidak valid."
-		errorInLanguages[fun.LangEN] = "The allowed chat type is not valid."
-		errorInLanguages[fun.LangES] = "El tipo de chat permitido no es válido."
-		errorInLanguages[fun.LangFR] = "Le type de chat autorisé n'est pas valide."
-		errorInLanguages[fun.LangDE] = "Der erlaubte Chat-Typ ist nicht gültig."
-		errorInLanguages[fun.LangPT] = "O tipo de chat permitido não é válido."
-		errorInLanguages[fun.LangRU] = "Разрешенный тип чата недействителен."
-		errorInLanguages[fun.LangJP] = "許可されたチャットタイプが無効です。"
-		errorInLanguages[fun.LangCN] = "允许的聊天类型无效。"
-		errorInLanguages[fun.LangAR] = "نوع الدردشة المسموح به غير صالح."
-
-		return nil, errorInLanguages
+		return nil, chatErr
 	}
 
-	// Check message type restrictions
+	if errMap := validateAllowedMsgType(waUser, msgType); errMap != nil {
+		return nil, errMap
+	}
+
+	return &waUser, nil
+}
+
+// validateAllowedMsgType checks whether msgType is in waUser.AllowedTypes.
+// Returns nil when the message type is permitted, or an error map when it is not.
+func validateAllowedMsgType(waUser model.WAUsers, msgType string) map[string]string {
 	var allowedMsgTypes []model.WAMessageType
 	if len(waUser.AllowedTypes) > 0 {
 		if err := json.Unmarshal(waUser.AllowedTypes, &allowedMsgTypes); err != nil {
-			logrus.Errorf("ValidateUserToUseBotWhatsapp: failed to unmarshal allowed message types for user %s: %v", waUser.PhoneNumber, err)
-			errorInLanguages[fun.LangID] = fmt.Sprintf("Terjadi kesalahan saat coba memeriksa jenis pesan yang diizinkan dari jenis %s: %v", msgType, err)
-			errorInLanguages[fun.LangEN] = fmt.Sprintf("An error occurred while trying to verify allowed message types from type %s: %v", msgType, err)
-			errorInLanguages[fun.LangES] = fmt.Sprintf("Se produjo un error al intentar verificar los tipos de mensajes permitidos del tipo %s: %v", msgType, err)
-			errorInLanguages[fun.LangFR] = fmt.Sprintf("Une erreur s'est produite lors de la tentative de vérification des types de messages autorisés à partir du type %s : %v", msgType, err)
-			errorInLanguages[fun.LangDE] = fmt.Sprintf("Beim Versuch, die zulässigen Nachrichtentypen vom Typ %s zu überprüfen, ist ein Fehler aufgetreten: %v", msgType, err)
-			errorInLanguages[fun.LangPT] = fmt.Sprintf("Ocorreu um erro ao tentar verificar os tipos de mensagens permitidos do tipo %s: %v", msgType, err)
-			errorInLanguages[fun.LangRU] = fmt.Sprintf("Произошла ошибка при попытке проверить разрешенные типы сообщений из типа %s: %v", msgType, err)
-			errorInLanguages[fun.LangJP] = fmt.Sprintf("タイプ %s から許可されたメッセージタイプを確認しようとしたときにエラーが発生しました: %v", msgType, err)
-			errorInLanguages[fun.LangCN] = fmt.Sprintf("尝试验证类型 %s 的允许消息类型时发生错误：%v", msgType, err)
-			errorInLanguages[fun.LangAR] = fmt.Sprintf("حدث خطأ أثناء محاولة التحقق من أنواع الرسائل المسموح بها من النوع %s: %v", msgType, err)
-
-			return nil, errorInLanguages
+			logrus.Errorf("validateAllowedMsgType: failed to unmarshal allowed message types for user %s: %v", waUser.PhoneNumber, err)
+			return map[string]string{
+				fun.LangID: fmt.Sprintf("Terjadi kesalahan saat coba memeriksa jenis pesan yang diizinkan dari jenis %s: %v", msgType, err),
+				fun.LangEN: fmt.Sprintf("An error occurred while trying to verify allowed message types from type %s: %v", msgType, err),
+				fun.LangES: fmt.Sprintf("Se produjo un error al intentar verificar los tipos de mensajes permitidos del tipo %s: %v", msgType, err),
+				fun.LangFR: fmt.Sprintf("Une erreur s'est produite lors de la tentative de vérification des types de messages autorisés à partir du type %s : %v", msgType, err),
+				fun.LangDE: fmt.Sprintf("Beim Versuch, die zulässigen Nachrichtentypen vom Typ %s zu überprüfen, ist ein Fehler aufgetreten: %v", msgType, err),
+				fun.LangPT: fmt.Sprintf("Ocorreu um erro ao tentar verificar os tipos de mensagens permitidos do tipo %s: %v", msgType, err),
+				fun.LangRU: fmt.Sprintf("Произошла ошибка при попытке проверить разрешенные типы сообщений из типа %s: %v", msgType, err),
+				fun.LangJP: fmt.Sprintf("タイプ %s から許可されたメッセージタイプを確認しようとしたときにエラーが発生しました: %v", msgType, err),
+				fun.LangCN: fmt.Sprintf("尝试验证类型 %s 的允许消息类型时发生错误：%v", msgType, err),
+				fun.LangAR: fmt.Sprintf("حدث خطأ أثناء محاولة التحقق من أنواع الرسائل المسموح بها من النوع %s: %v", msgType, err),
+			}
 		}
 	}
 
@@ -1002,21 +1061,20 @@ func ValidateUserToUseBotWhatsapp(phoneNumber, jid string, isGroup bool, msgType
 		}
 	}
 	if !allowedType && len(allowedMsgTypes) > 0 {
-		errorInLanguages[fun.LangID] = fmt.Sprintf("Jenis pesan '%s' tidak diizinkan untuk digunakan.", msgType)
-		errorInLanguages[fun.LangEN] = fmt.Sprintf("Message type '%s' is not allowed to be used.", msgType)
-		errorInLanguages[fun.LangES] = fmt.Sprintf("El tipo de mensaje '%s' no está permitido para su uso.", msgType)
-		errorInLanguages[fun.LangFR] = fmt.Sprintf("Le type de message '%s' n'est pas autorisé à être utilisé.", msgType)
-		errorInLanguages[fun.LangDE] = fmt.Sprintf("Der Nachrichtentyp '%s' ist nicht zur Verwendung erlaubt.", msgType)
-		errorInLanguages[fun.LangPT] = fmt.Sprintf("O tipo de mensagem '%s' não é permitido para uso.", msgType)
-		errorInLanguages[fun.LangRU] = fmt.Sprintf("Тип сообщения '%s' не разрешен для использования.", msgType)
-		errorInLanguages[fun.LangJP] = fmt.Sprintf("メッセージタイプ '%s' は使用できません。", msgType)
-		errorInLanguages[fun.LangCN] = fmt.Sprintf("不允许使用消息类型 '%s'。", msgType)
-		errorInLanguages[fun.LangAR] = fmt.Sprintf("نوع الرسالة '%s' غير مسموح به للاستخدام.", msgType)
-
-		return nil, errorInLanguages
+		return map[string]string{
+			fun.LangID: fmt.Sprintf("Jenis pesan '%s' tidak diizinkan untuk digunakan.", msgType),
+			fun.LangEN: fmt.Sprintf("Message type '%s' is not allowed to be used.", msgType),
+			fun.LangES: fmt.Sprintf("El tipo de mensaje '%s' no está permitido para su uso.", msgType),
+			fun.LangFR: fmt.Sprintf("Le type de message '%s' n'est pas autorisé à être utilisé.", msgType),
+			fun.LangDE: fmt.Sprintf("Der Nachrichtentyp '%s' ist nicht zur Verwendung erlaubt.", msgType),
+			fun.LangPT: fmt.Sprintf("O tipo de mensagem '%s' não é permitido para uso.", msgType),
+			fun.LangRU: fmt.Sprintf("Тип сообщения '%s' не разрешен для использования.", msgType),
+			fun.LangJP: fmt.Sprintf("メッセージタイプ '%s' は使用できません。", msgType),
+			fun.LangCN: fmt.Sprintf("不允许使用消息类型 '%s'。", msgType),
+			fun.LangAR: fmt.Sprintf("نوع الرسالة '%s' غير مسموح به للاستخدام.", msgType),
+		}
 	}
-
-	return &waUser, nil
+	return nil
 }
 
 // CheckAndNotifyQuotaLimit checks if a user has exceeded their daily message quota.
@@ -1038,7 +1096,7 @@ func ValidateUserToUseBotWhatsapp(phoneNumber, jid string, isGroup bool, msgType
 //   - error: An error if any issues occur during processing.
 func CheckAndNotifyQuotaLimit(userID uint, useBot bool, jid string, maxQuota int, client *whatsmeow.Client, rdb *redis.Client, db *gorm.DB) (bool, error) {
 	if useBot {
-		quotaMsgKey := fmt.Sprintf("wa_msg_quota:%d:%s", userID, time.Now().Format(config.DATE_YYYY_MM_DD))
+		quotaMsgKey := fmt.Sprintf("wa_msg_quota:%d:%s", userID, time.Now().Format(config.DateYYYYMMDD))
 		// Increment counter
 		quotaMsgCount, err := rdb.Incr(context.Background(), quotaMsgKey).Result()
 		if err != nil {
@@ -1060,7 +1118,7 @@ func CheckAndNotifyQuotaLimit(userID uint, useBot bool, jid string, maxQuota int
 		// Over quota?
 		if int(quotaMsgCount) > maxQuota {
 			// Check if we've already warned today
-			warnKey := fmt.Sprintf("quota_warned:%d:%s", userID, time.Now().Format(config.DATE_YYYY_MM_DD))
+			warnKey := fmt.Sprintf("quota_warned:%d:%s", userID, time.Now().Format(config.DateYYYYMMDD))
 			isWarned, err := rdb.Exists(context.Background(), warnKey).Result()
 			if err != nil {
 				logrus.Errorf("Failed to check warnKey: %v", err)
@@ -1346,7 +1404,7 @@ func getCooldownKey(prefix string, userID uint) string {
 
 // getUsageKey generates a Redis key for tracking daily usage based on prefix, userID, and current date.
 func getUsageKey(prefix string, userID uint) string {
-	return fmt.Sprintf("perm:usage:%s:%d:%s", prefix, userID, time.Now().Format(config.DATE_YYYY_MM_DD))
+	return fmt.Sprintf("perm:usage:%s:%d:%s", prefix, userID, time.Now().Format(config.DateYYYYMMDD))
 }
 
 // ValidateFileProperties validates file properties like size, extension, and MIME type
@@ -1444,9 +1502,9 @@ func ValidateFileProperties(filename string, fileSize int64, mimeType string, ru
 }
 
 // CheckFilePermission checks if a user is allowed to send a specific file type
-func CheckFilePermission(ctx context.Context, v *events.Message, msgType string, waUser *model.WAUsers, userLang string, rdb *redis.Client) FilePermissionResult {
-	// Define file permission rules for different message types
-	fileRules := map[string]FilePermissionRule{
+// getFilePermissionRules returns the file permission rules for each supported file type.
+func getFilePermissionRules(userLang string) map[string]FilePermissionRule {
+	return map[string]FilePermissionRule{
 		"image": {
 			AllowFunc: func(u *model.WAUsers) (bool, LanguageTranslation) {
 				if u.IsBanned {
@@ -1551,6 +1609,7 @@ func CheckFilePermission(ctx context.Context, v *events.Message, msgType string,
 		},
 		"document": {
 			AllowFunc: func(u *model.WAUsers) (bool, LanguageTranslation) {
+				_ = u // currently not used, but can be used for future permission checks based on user type, organization, etc.
 				// Permission check is done later in SanitizeAndFilterDocument
 				return true, LanguageTranslation{}
 			},
@@ -1619,6 +1678,123 @@ func CheckFilePermission(ctx context.Context, v *events.Message, msgType string,
 		},
 	}
 
+}
+
+// getPromptPermissionRules returns the prompt/command permission rules for each supported command.
+func getPromptPermissionRules(userLang string) map[string]PromptPermissionRule {
+	return map[string]PromptPermissionRule{
+		"ping": {
+			AllowFunc: func(u *model.WAUsers) (bool, LanguageTranslation) {
+				_ = u // no specific permission check, allow all users
+				return true, NewLanguageMsgTranslation(userLang)
+			},
+			MaxDailyQuota:   50,
+			CooldownSeconds: 5,
+			DenyMessage: LanguageTranslation{
+				LanguageCode: userLang,
+				Texts: map[string]string{
+					fun.LangID: "❌ Anda tidak memiliki izin, kuota habis, atau terlalu cepat.",
+					fun.LangEN: "❌ You're not allowed, quota exceeded, or too fast.",
+					fun.LangES: "❌ No tienes permiso, cuota excedida o demasiado rápido.",
+					fun.LangFR: "❌ Vous n'êtes pas autorisé, quota dépassé ou trop rapide.",
+					fun.LangDE: "❌ Sie sind nicht berechtigt, Kontingent überschritten oder zu schnell.",
+					fun.LangPT: "❌ Você não tem permissão, cota excedida ou muito rápido.",
+					fun.LangRU: "❌ Вам не разрешено, квота превышена или слишком быстро.",
+					fun.LangJP: "❌ 許可されていません、クォータ超過、または速すぎます。",
+					fun.LangCN: "❌ 您未被允许，配额超出或太快。",
+					fun.LangAR: "❌ غير مسموح لك، تم تجاوز الحصة، أو سريع جدًا.",
+				},
+			},
+		},
+		"get pprof": {
+			AllowFunc: func(u *model.WAUsers) (bool, LanguageTranslation) {
+				if u.UserType == model.SuperUser {
+					return true, NewLanguageMsgTranslation(userLang)
+				}
+				return false, LanguageTranslation{
+					LanguageCode: userLang,
+					Texts: map[string]string{
+						fun.LangID: "❌ Anda tidak memiliki izin untuk menggunakan perintah ini.",
+						fun.LangEN: "❌ You do not have permission to use this command.",
+						fun.LangES: "❌ No tienes permiso para usar este comando.",
+						fun.LangFR: "❌ Vous n'avez pas la permission d'utiliser cette commande.",
+						fun.LangDE: "❌ Sie haben keine Berechtigung, diesen Befehl zu verwenden.",
+						fun.LangPT: "❌ Você não tem permissão para usar este comando.",
+						fun.LangRU: "❌ У вас нет разрешения на использование этой команды.",
+						fun.LangJP: "❌ このコマンドを使用する権限がありません。",
+						fun.LangCN: "❌ 您没有权限使用此命令。",
+						fun.LangAR: "❌ ليس لديك إذن لاستخدام هذا الأمر.",
+					},
+				}
+			},
+			MaxDailyQuota:   20,
+			CooldownSeconds: 60,
+			DenyMessage: LanguageTranslation{
+				LanguageCode: userLang,
+				Texts: map[string]string{
+					fun.LangID: "❌ Anda tidak memiliki izin, kuota habis, atau terlalu cepat.",
+					fun.LangEN: "❌ You're not allowed, quota exceeded, or too fast.",
+					fun.LangES: "❌ No tienes permiso, cuota excedida o demasiado rápido.",
+					fun.LangFR: "❌ Vous n'êtes pas autorisé, quota dépassé ou trop rapide.",
+					fun.LangDE: "❌ Sie sind nicht berechtigt, Kontingent überschritten oder zu schnell.",
+					fun.LangPT: "❌ Você não tem permissão, cota excedida ou muito rápido.",
+					fun.LangRU: "❌ Вам не разрешено, квота превышена или слишком быстро.",
+					fun.LangJP: "❌ 許可されていません、クォータ超過、または速すぎます。",
+					fun.LangCN: "❌ 您未被允许，配额超出或太快。",
+					fun.LangAR: "❌ غير مسموح لك، تم تجاوز الحصة، أو سريع جدًا.",
+				},
+			},
+		},
+		"get metrics": {
+			AllowFunc: func(u *model.WAUsers) (bool, LanguageTranslation) {
+				if u.UserType == model.SuperUser {
+					return true, NewLanguageMsgTranslation(userLang)
+				}
+				return false, LanguageTranslation{
+					LanguageCode: userLang,
+					Texts: map[string]string{
+						fun.LangID: "❌ Anda tidak memiliki izin untuk melihat metrik server.",
+						fun.LangEN: "❌ You do not have permission to view server metrics.",
+						fun.LangES: "❌ No tienes permiso para ver las métricas del servidor.",
+						fun.LangFR: "❌ Vous n'avez pas la permission de voir les métriques du serveur.",
+						fun.LangDE: "❌ Sie haben keine Berechtigung, Servermetriken anzuzeigen.",
+						fun.LangPT: "❌ Você não tem permissão para ver as métricas do servidor.",
+						fun.LangRU: "❌ У вас нет разрешения на просмотр метрик сервера.",
+						fun.LangJP: "❌ サーバーメトリクスを表示する権限がありません。",
+						fun.LangCN: "❌ 您没有权限查看服务器指标。",
+						fun.LangAR: "❌ ليس لديك إذن لعرض مقاييس الخادم.",
+					},
+				}
+			},
+			MaxDailyQuota:   50,
+			CooldownSeconds: 10,
+			DenyMessage: LanguageTranslation{
+				LanguageCode: userLang,
+				Texts: map[string]string{
+					fun.LangID: "❌ Anda tidak memiliki izin, kuota habis, atau terlalu cepat.",
+					fun.LangEN: "❌ You're not allowed, quota exceeded, or too fast.",
+					fun.LangES: "❌ No tienes permiso, cuota excedida o demasiado rápido.",
+					fun.LangFR: "❌ Vous n'êtes pas autorisé, quota dépassé ou trop rapide.",
+					fun.LangDE: "❌ Sie sind nicht berechtigt, Kontingent überschritten oder zu schnell.",
+					fun.LangPT: "❌ Você não tem permissão, cota excedida ou muito rápido.",
+					fun.LangRU: "❌ Вам не разрешено, квота превышена или слишком быстро.",
+					fun.LangJP: "❌ 許可されていません、クォータ超過、または速すぎます。",
+					fun.LangCN: "❌ 您未被允许，配额超出或太快。",
+					fun.LangAR: "❌ غير مسموح لك، تم تجاوز الحصة، أو سريع جدًا.",
+				},
+			},
+		},
+	}
+
+}
+
+// CheckFilePermission validates whether the given WAUser is permitted to send a file of the specified msgType.
+// It returns a FilePermissionResult indicating whether the action is allowed and any relevant response message.
+func CheckFilePermission(ctx context.Context, v *events.Message, msgType string, waUser *model.WAUsers, userLang string, rdb *redis.Client) FilePermissionResult {
+	_ = v // for now we don't use the message content for permission checks, but it can be used in the future for more complex rules (e.g. checking message history, content analysis, etc.)
+
+	// Define file permission rules for different message types
+	fileRules := getFilePermissionRules(userLang)
 	rule, ok := fileRules[msgType]
 	if !ok {
 		// Unsupported file type
@@ -1757,109 +1933,9 @@ func CheckFilePermission(ctx context.Context, v *events.Message, msgType string,
 
 // CheckPromptPermission checks if a user is allowed to use a specific command/prompt
 func CheckPromptPermission(ctx context.Context, v *events.Message, cmd string, waUser *model.WAUsers, userLang string, rdb *redis.Client, db *gorm.DB) PromptPermissionResult {
-	rules := map[string]PromptPermissionRule{
-		"ping": {
-			AllowFunc: func(u *model.WAUsers) (bool, LanguageTranslation) {
-				return true, NewLanguageMsgTranslation(userLang)
-			},
-			MaxDailyQuota:   50,
-			CooldownSeconds: 5,
-			DenyMessage: LanguageTranslation{
-				LanguageCode: userLang,
-				Texts: map[string]string{
-					fun.LangID: "❌ Anda tidak memiliki izin, kuota habis, atau terlalu cepat.",
-					fun.LangEN: "❌ You're not allowed, quota exceeded, or too fast.",
-					fun.LangES: "❌ No tienes permiso, cuota excedida o demasiado rápido.",
-					fun.LangFR: "❌ Vous n'êtes pas autorisé, quota dépassé ou trop rapide.",
-					fun.LangDE: "❌ Sie sind nicht berechtigt, Kontingent überschritten oder zu schnell.",
-					fun.LangPT: "❌ Você não tem permissão, cota excedida ou muito rápido.",
-					fun.LangRU: "❌ Вам не разрешено, квота превышена или слишком быстро.",
-					fun.LangJP: "❌ 許可されていません、クォータ超過、または速すぎます。",
-					fun.LangCN: "❌ 您未被允许，配额超出或太快。",
-					fun.LangAR: "❌ غير مسموح لك، تم تجاوز الحصة، أو سريع جدًا.",
-				},
-			},
-		},
-		"get pprof": {
-			AllowFunc: func(u *model.WAUsers) (bool, LanguageTranslation) {
-				if u.UserType == model.SuperUser {
-					return true, NewLanguageMsgTranslation(userLang)
-				}
-				return false, LanguageTranslation{
-					LanguageCode: userLang,
-					Texts: map[string]string{
-						fun.LangID: "❌ Anda tidak memiliki izin untuk menggunakan perintah ini.",
-						fun.LangEN: "❌ You do not have permission to use this command.",
-						fun.LangES: "❌ No tienes permiso para usar este comando.",
-						fun.LangFR: "❌ Vous n'avez pas la permission d'utiliser cette commande.",
-						fun.LangDE: "❌ Sie haben keine Berechtigung, diesen Befehl zu verwenden.",
-						fun.LangPT: "❌ Você não tem permissão para usar este comando.",
-						fun.LangRU: "❌ У вас нет разрешения на использование этой команды.",
-						fun.LangJP: "❌ このコマンドを使用する権限がありません。",
-						fun.LangCN: "❌ 您没有权限使用此命令。",
-						fun.LangAR: "❌ ليس لديك إذن لاستخدام هذا الأمر.",
-					},
-				}
-			},
-			MaxDailyQuota:   20,
-			CooldownSeconds: 60,
-			DenyMessage: LanguageTranslation{
-				LanguageCode: userLang,
-				Texts: map[string]string{
-					fun.LangID: "❌ Anda tidak memiliki izin, kuota habis, atau terlalu cepat.",
-					fun.LangEN: "❌ You're not allowed, quota exceeded, or too fast.",
-					fun.LangES: "❌ No tienes permiso, cuota excedida o demasiado rápido.",
-					fun.LangFR: "❌ Vous n'êtes pas autorisé, quota dépassé ou trop rapide.",
-					fun.LangDE: "❌ Sie sind nicht berechtigt, Kontingent überschritten oder zu schnell.",
-					fun.LangPT: "❌ Você não tem permissão, cota excedida ou muito rápido.",
-					fun.LangRU: "❌ Вам не разрешено, квота превышена или слишком быстро.",
-					fun.LangJP: "❌ 許可されていません、クォータ超過、または速すぎます。",
-					fun.LangCN: "❌ 您未被允许，配额超出或太快。",
-					fun.LangAR: "❌ غير مسموح لك، تم تجاوز الحصة، أو سريع جدًا.",
-				},
-			},
-		},
-		"get metrics": {
-			AllowFunc: func(u *model.WAUsers) (bool, LanguageTranslation) {
-				if u.UserType == model.SuperUser {
-					return true, NewLanguageMsgTranslation(userLang)
-				}
-				return false, LanguageTranslation{
-					LanguageCode: userLang,
-					Texts: map[string]string{
-						fun.LangID: "❌ Anda tidak memiliki izin untuk melihat metrik server.",
-						fun.LangEN: "❌ You do not have permission to view server metrics.",
-						fun.LangES: "❌ No tienes permiso para ver las métricas del servidor.",
-						fun.LangFR: "❌ Vous n'avez pas la permission de voir les métriques du serveur.",
-						fun.LangDE: "❌ Sie haben keine Berechtigung, Servermetriken anzuzeigen.",
-						fun.LangPT: "❌ Você não tem permissão para ver as métricas do servidor.",
-						fun.LangRU: "❌ У вас нет разрешения на просмотр метрик сервера.",
-						fun.LangJP: "❌ サーバーメトリクスを表示する権限がありません。",
-						fun.LangCN: "❌ 您没有权限查看服务器指标。",
-						fun.LangAR: "❌ ليس لديك إذن لعرض مقاييس الخادم.",
-					},
-				}
-			},
-			MaxDailyQuota:   50,
-			CooldownSeconds: 10,
-			DenyMessage: LanguageTranslation{
-				LanguageCode: userLang,
-				Texts: map[string]string{
-					fun.LangID: "❌ Anda tidak memiliki izin, kuota habis, atau terlalu cepat.",
-					fun.LangEN: "❌ You're not allowed, quota exceeded, or too fast.",
-					fun.LangES: "❌ No tienes permiso, cuota excedida o demasiado rápido.",
-					fun.LangFR: "❌ Vous n'êtes pas autorisé, quota dépassé ou trop rapide.",
-					fun.LangDE: "❌ Sie sind nicht berechtigt, Kontingent überschritten oder zu schnell.",
-					fun.LangPT: "❌ Você não tem permissão, cota excedida ou muito rápido.",
-					fun.LangRU: "❌ Вам не разрешено, квота превышена или слишком быстро.",
-					fun.LangJP: "❌ 許可されていません、クォータ超過、または速すぎます。",
-					fun.LangCN: "❌ 您未被允许，配额超出或太快。",
-					fun.LangAR: "❌ غير مسموح لك، تم تجاوز الحصة، أو سريع جدًا.",
-				},
-			},
-		},
-	}
+	_ = v // currently not used, but can be used soon if we want to implement context-aware permissions (e.g. based on chat type, group vs private, etc)
 
+	rules := getPromptPermissionRules(userLang)
 	var matchedRule string
 	if strings.Contains(cmd, "get pprof") {
 		matchedRule = "get pprof"
@@ -1886,76 +1962,18 @@ func CheckPromptPermission(ctx context.Context, v *events.Message, cmd string, w
 
 	userID := waUser.ID
 	usesLeft := rule.MaxDailyQuota
-	cooldownLeft := 0
 
 	// FIRST: Check cooldown
-	if rule.CooldownSeconds > 0 {
-		cooldownKey := getCooldownKey("cmd_"+cmd, userID)
-		ttl, _ := rdb.TTL(ctx, cooldownKey).Result()
-		if ttl > 0 {
-			cooldownLeft = int(ttl.Seconds())
-
-			cooldownMessages := map[string]string{
-				fun.LangID: "⏱ Tunggu %d detik sebelum menggunakan perintah *%s* lagi.",
-				fun.LangEN: "⏱ Please wait %d seconds before using *%s* command again.",
-				fun.LangES: "⏱ Por favor espere %d segundos antes de usar el comando *%s* nuevamente.",
-				fun.LangFR: "⏱ Veuillez attendre %d secondes avant d'utiliser à nouveau la commande *%s*.",
-				fun.LangDE: "⏱ Bitte warten Sie %d Sekunden, bevor Sie den Befehl *%s* erneut verwenden.",
-				fun.LangPT: "⏱ Por favor, aguarde %d segundos antes de usar o comando *%s* novamente.",
-				fun.LangRU: "⏱ Пожалуйста, подождите %d секунд перед повторным использованием команды *%s*.",
-				fun.LangJP: "⏱ コマンド *%[2]s* を再度使用する前に %[1]d 秒お待ちください。",
-				fun.LangCN: "⏱ 请等待 %d 秒后再使用命令 *%s*。",
-				fun.LangAR: "⏱ يرجى الانتظار %d ثانية قبل استخدام الأمر *%s* مرة أخرى.",
-			}
-
-			formattedMessages := make(map[string]string)
-			for code, format := range cooldownMessages {
-				formattedMessages[code] = fmt.Sprintf(format, cooldownLeft, cmd)
-			}
-
-			return PromptPermissionResult{
-				Allowed:      false,
-				Message:      LanguageTranslation{Texts: formattedMessages},
-				CooldownLeft: cooldownLeft,
-			}
-		}
+	if result, shouldReturn := checkCmdCooldown(ctx, rule, cmd, userID, rdb); shouldReturn {
+		return result
 	}
 
 	// SECOND: Check quota
-	if rule.MaxDailyQuota > 0 {
-		usageKey := getUsageKey("cmd_"+cmd, userID)
-		count, _ := rdb.Get(ctx, usageKey).Int()
-		usesLeft = rule.MaxDailyQuota - count
-		if count >= rule.MaxDailyQuota {
-			ttl, _ := rdb.TTL(ctx, usageKey).Result()
-			hours := int(ttl.Hours())
-			minutes := int(ttl.Minutes()) % 60
-
-			quotaMessages := map[string]string{
-				fun.LangID: "🚫 Anda telah mencapai batas harian untuk perintah *%s*. Coba lagi dalam %dj %dm.",
-				fun.LangEN: "🚫 You have reached your daily limit for command *%s*. Try again in %dh %dm.",
-				fun.LangES: "🚫 Ha alcanzado su límite diario para el comando *%s*. Inténtelo de nuevo en %dh %dm.",
-				fun.LangFR: "🚫 Vous avez atteint votre limite quotidienne pour la commande *%s*. Réessayez dans %dh %dm.",
-				fun.LangDE: "🚫 Sie haben Ihr tägliches Limit für den Befehl *%s* erreicht. Versuchen Sie es in %dh %dm erneut.",
-				fun.LangPT: "🚫 Você atingiu seu limite diário para o comando *%s*. Tente novamente em %dh %dm.",
-				fun.LangRU: "🚫 Вы достигли дневного лимита для команды *%s*. Попробуйте снова через %dч %dм.",
-				fun.LangJP: "🚫 コマンド *%s* の1日の制限に達しました。%d時間 %d分後に再試行してください。",
-				fun.LangCN: "🚫 您已达到命令 *%s* 的每日限制。请在 %d小时 %d分钟后重试。",
-				fun.LangAR: "🚫 لقد وصلت إلى الحد اليومي للأمر *%s*. حاول مرة أخرى خلال %d ساعة و %d دقيقة.",
-			}
-
-			formattedMessages := make(map[string]string)
-			for code, format := range quotaMessages {
-				formattedMessages[code] = fmt.Sprintf(format, cmd, hours, minutes)
-			}
-
-			return PromptPermissionResult{
-				Allowed:  false,
-				Message:  LanguageTranslation{Texts: formattedMessages},
-				UsesLeft: 0,
-			}
-		}
+	quotaResult, quotaExceeded, newUsesLeft := checkCmdQuota(ctx, rule, cmd, userID, rdb)
+	if quotaExceeded {
+		return quotaResult
 	}
+	usesLeft = newUsesLeft
 
 	// THIRD: Check user permission
 	allowed, denyLang := rule.AllowFunc(waUser)
@@ -1989,6 +2007,82 @@ func CheckPromptPermission(ctx context.Context, v *events.Message, cmd string, w
 	}
 }
 
+// checkCmdCooldown returns (result, true) when the command is still in cooldown,
+// or (zero, false) when the user may proceed.
+func checkCmdCooldown(ctx context.Context, rule PromptPermissionRule, cmd string, userID uint, rdb *redis.Client) (PromptPermissionResult, bool) {
+	if rule.CooldownSeconds <= 0 {
+		return PromptPermissionResult{}, false
+	}
+	cooldownKey := getCooldownKey("cmd_"+cmd, userID)
+	ttl, _ := rdb.TTL(ctx, cooldownKey).Result()
+	if ttl <= 0 {
+		return PromptPermissionResult{}, false
+	}
+	cooldownLeft := int(ttl.Seconds())
+	cooldownMessages := map[string]string{
+		fun.LangID: "⏱ Tunggu %d detik sebelum menggunakan perintah *%s* lagi.",
+		fun.LangEN: "⏱ Please wait %d seconds before using *%s* command again.",
+		fun.LangES: "⏱ Por favor espere %d segundos antes de usar el comando *%s* nuevamente.",
+		fun.LangFR: "⏱ Veuillez attendre %d secondes avant d'utiliser à nouveau la commande *%s*.",
+		fun.LangDE: "⏱ Bitte warten Sie %d Sekunden, bevor Sie den Befehl *%s* erneut verwenden.",
+		fun.LangPT: "⏱ Por favor, aguarde %d segundos antes de usar o comando *%s* novamente.",
+		fun.LangRU: "⏱ Пожалуйста, подождите %d секунд перед повторным использованием команды *%s*.",
+		fun.LangJP: "⏱ コマンド *%[2]s* を再度使用する前に %[1]d 秒お待ちください。",
+		fun.LangCN: "⏱ 请等待 %d 秒后再使用命令 *%s*。",
+		fun.LangAR: "⏱ يرجى الانتظار %d ثانية قبل استخدام الأمر *%s* مرة أخرى.",
+	}
+	formattedMessages := make(map[string]string)
+	for code, format := range cooldownMessages {
+		formattedMessages[code] = fmt.Sprintf(format, cooldownLeft, cmd)
+	}
+	return PromptPermissionResult{
+		Allowed:      false,
+		Message:      LanguageTranslation{Texts: formattedMessages},
+		CooldownLeft: cooldownLeft,
+	}, true
+}
+
+// checkCmdQuota returns (result, exceeded, usesLeft).
+// When exceeded is true the caller should return result immediately.
+// usesLeft reflects the remaining quota after the current usage.
+func checkCmdQuota(ctx context.Context, rule PromptPermissionRule, cmd string, userID uint, rdb *redis.Client) (PromptPermissionResult, bool, int) {
+	usesLeft := rule.MaxDailyQuota
+	if rule.MaxDailyQuota <= 0 {
+		return PromptPermissionResult{}, false, usesLeft
+	}
+	usageKey := getUsageKey("cmd_"+cmd, userID)
+	count, _ := rdb.Get(ctx, usageKey).Int()
+	usesLeft = rule.MaxDailyQuota - count
+	if count < rule.MaxDailyQuota {
+		return PromptPermissionResult{}, false, usesLeft
+	}
+	ttl, _ := rdb.TTL(ctx, usageKey).Result()
+	hours := int(ttl.Hours())
+	minutes := int(ttl.Minutes()) % 60
+	quotaMessages := map[string]string{
+		fun.LangID: "🚫 Anda telah mencapai batas harian untuk perintah *%s*. Coba lagi dalam %dj %dm.",
+		fun.LangEN: "🚫 You have reached your daily limit for command *%s*. Try again in %dh %dm.",
+		fun.LangES: "🚫 Ha alcanzado su límite diario para el comando *%s*. Inténtelo de nuevo en %dh %dm.",
+		fun.LangFR: "🚫 Vous avez atteint votre limite quotidienne pour la commande *%s*. Réessayez dans %dh %dm.",
+		fun.LangDE: "🚫 Sie haben Ihr tägliches Limit für den Befehl *%s* erreicht. Versuchen Sie es in %dh %dm erneut.",
+		fun.LangPT: "🚫 Você atingiu seu limite diário para o comando *%s*. Tente novamente em %dh %dm.",
+		fun.LangRU: "🚫 Вы достигли дневного лимита для команды *%s*. Попробуйте снова через %dч %dм.",
+		fun.LangJP: "🚫 コマンド *%s* の1日の制限に達しました。%d時間 %d分後に再試行してください。",
+		fun.LangCN: "🚫 您已达到命令 *%s* 的每日限制。请在 %d小时 %d分钟后重试。",
+		fun.LangAR: "🚫 لقد وصلت إلى الحد اليومي للأمر *%s*. حاول مرة أخرى خلال %d ساعة و %d دقيقة.",
+	}
+	formattedMessages := make(map[string]string)
+	for code, format := range quotaMessages {
+		formattedMessages[code] = fmt.Sprintf(format, cmd, hours, minutes)
+	}
+	return PromptPermissionResult{
+		Allowed:  false,
+		Message:  LanguageTranslation{Texts: formattedMessages},
+		UsesLeft: 0,
+	}, true, 0
+}
+
+// CheckBadWords checks the message for bad words and applies warning/ban logic.
 func CheckBadWords(ctx context.Context, cmd string, waUser *model.WAUsers, userLang string, rdb *redis.Client, db *gorm.DB) *PromptPermissionResult {
 	var badWords []model.BadWord
 	if err := db.Where("is_enabled = ?", true).Find(&badWords).Error; err == nil {
@@ -2025,30 +2119,29 @@ func CheckBadWords(ctx context.Context, cmd string, waUser *model.WAUsers, userL
 							},
 						},
 					}
-				} else {
-					waUser.IsBanned = true
-					waUser.AllowedToCall = false
-					if err := db.Save(waUser).Error; err != nil {
-						logrus.Errorf("Failed to ban user %d: %v", waUser.ID, err)
-					}
-					return &PromptPermissionResult{
-						Allowed: false,
-						Message: LanguageTranslation{
-							LanguageCode: userLang,
-							Texts: map[string]string{
-								fun.LangID: "🚫 Akun Anda telah diblokir karena penggunaan kata-kata kasar yang berlebihan.",
-								fun.LangEN: "🚫 Your account has been banned due to excessive use of bad words.",
-								fun.LangES: "🚫 Su cuenta ha sido bloqueada debido al uso excesivo de malas palabras.",
-								fun.LangFR: "🚫 Votre compte a été banni en raison de l'utilisation excessive de gros mots.",
-								fun.LangDE: "🚫 Ihr Konto wurde wegen übermäßiger Verwendung von Schimpfwörtern gesperrt.",
-								fun.LangPT: "🚫 Sua conta foi banida devido ao uso excessivo de palavrões.",
-								fun.LangRU: "🚫 Ваша учетная запись была заблокирована из-за чрезмерного использования ругательств.",
-								fun.LangJP: "🚫 不適切な言葉の過度な使用により、アカウントが停止されました。",
-								fun.LangCN: "🚫 由于过度使用脏话，您的帐户已被封禁。",
-								fun.LangAR: "🚫 تم حظر حسابك بسبب الاستخدام المفرط للكلمات السيئة.",
-							},
+				}
+				waUser.IsBanned = true
+				waUser.AllowedToCall = false
+				if err := db.Save(waUser).Error; err != nil {
+					logrus.Errorf("Failed to ban user %d: %v", waUser.ID, err)
+				}
+				return &PromptPermissionResult{
+					Allowed: false,
+					Message: LanguageTranslation{
+						LanguageCode: userLang,
+						Texts: map[string]string{
+							fun.LangID: "🚫 Akun Anda telah diblokir karena penggunaan kata-kata kasar yang berlebihan.",
+							fun.LangEN: "🚫 Your account has been banned due to excessive use of bad words.",
+							fun.LangES: "🚫 Su cuenta ha sido bloqueada debido al uso excesivo de malas palabras.",
+							fun.LangFR: "🚫 Votre compte a été banni en raison de l'utilisation excessive de gros mots.",
+							fun.LangDE: "🚫 Ihr Konto wurde wegen übermäßiger Verwendung von Schimpfwörtern gesperrt.",
+							fun.LangPT: "🚫 Sua conta foi banida devido ao uso excessivo de palavrões.",
+							fun.LangRU: "🚫 Ваша учетная запись была заблокирована из-за чрезмерного использования ругательств.",
+							fun.LangJP: "🚫 不適切な言葉の過度な使用により、アカウントが停止されました。",
+							fun.LangCN: "🚫 由于过度使用脏话，您的帐户已被封禁。",
+							fun.LangAR: "🚫 تم حظر حسابك بسبب الاستخدام المفرط للكلمات السيئة.",
 						},
-					}
+					},
 				}
 			}
 		}
@@ -2058,6 +2151,8 @@ func CheckBadWords(ctx context.Context, cmd string, waUser *model.WAUsers, userL
 
 // HandleKeywordSearch handles the keyword search logic for auto-replies
 func HandleKeywordSearch(ctx context.Context, v *events.Message, stanzaID string, lowerMsgText, originalSenderJID, userLang string, userSanitizeResult *model.WAUsers, client *whatsmeow.Client, rdb *redis.Client, db *gorm.DB) {
+	_ = ctx // currently not used, but can be utilized for timeout/cancellation if needed in the future
+
 	var lang model.Language
 	if err := db.Where("code = ?", userLang).First(&lang).Error; err != nil {
 		db.Where("code = ?", fun.DefaultLang).First(&lang)
@@ -2081,32 +2176,7 @@ func HandleKeywordSearch(ctx context.Context, v *events.Message, stanzaID string
 				dataSeparator = "|"
 			}
 
-			var matchedReply *model.WhatsappMessageAutoReply
-			var closestKeyword string
-			minDistance := 100 // Initialize with a high value
-
-			for _, reply := range autoReplies {
-				keywords := strings.Split(reply.Keywords, dataSeparator)
-				for _, k := range keywords {
-					k = strings.TrimSpace(strings.ToLower(k))
-					if k != "" {
-						if k == lowerMsgText {
-							matchedReply = &reply
-							break
-						}
-
-						// Calculate Levenshtein distance
-						dist := levenshtein.ComputeDistance(lowerMsgText, k)
-						if dist < minDistance {
-							minDistance = dist
-							closestKeyword = k
-						}
-					}
-				}
-				if matchedReply != nil {
-					break
-				}
-			}
+			matchedReply, closestKeyword, minDistance := findMatchingAutoReply(autoReplies, lowerMsgText, dataSeparator)
 
 			if matchedReply != nil {
 				replyMsg := LanguageTranslation{
@@ -2117,48 +2187,47 @@ func HandleKeywordSearch(ctx context.Context, v *events.Message, stanzaID string
 				}
 				SendLangWhatsAppTextMsg(originalSenderJID, stanzaID, v, replyMsg, userLang, client, rdb, db)
 				return
-			} else {
-				// Suggest closest keyword if distance is reasonable
-				// For short words (len <= 3), allow max 1 edit.
-				// For medium words (4 <= len <= 5), allow max 2 edits.
-				// For longer words, allow max 3 edits.
-				threshold := 3
-				if len(lowerMsgText) <= 3 {
-					threshold = 1
-				} else if len(lowerMsgText) <= 5 {
-					threshold = 2
+			}
+			// Suggest closest keyword if distance is reasonable
+			// For short words (len <= 3), allow max 1 edit.
+			// For medium words (4 <= len <= 5), allow max 2 edits.
+			// For longer words, allow max 3 edits.
+			threshold := 3
+			if len(lowerMsgText) <= 3 {
+				threshold = 1
+			} else if len(lowerMsgText) <= 5 {
+				threshold = 2
+			}
+
+			if closestKeyword != "" && minDistance <= threshold {
+				prefixMap := map[string]string{
+					fun.LangID: "Mungkin maksud Anda:",
+					fun.LangEN: "Did you mean:",
+					fun.LangES: "¿Quiso decir:",
+					fun.LangFR: "Vouliez-vous dire :",
+					fun.LangDE: "Meinten Sie:",
+					fun.LangPT: "Você quis dizer:",
+					fun.LangRU: "Вы имели в виду:",
+					fun.LangJP: "もしかして：",
+					fun.LangCN: "你的意思是：",
+					fun.LangAR: "هل تقصد:",
 				}
 
-				if closestKeyword != "" && minDistance <= threshold {
-					prefixMap := map[string]string{
-						fun.LangID: "Mungkin maksud Anda:",
-						fun.LangEN: "Did you mean:",
-						fun.LangES: "¿Quiso decir:",
-						fun.LangFR: "Vouliez-vous dire :",
-						fun.LangDE: "Meinten Sie:",
-						fun.LangPT: "Você quis dizer:",
-						fun.LangRU: "Вы имели в виду:",
-						fun.LangJP: "もしかして：",
-						fun.LangCN: "你的意思是：",
-						fun.LangAR: "هل تقصد:",
-					}
-
-					prefix, ok := prefixMap[userLang]
-					if !ok {
-						prefix = prefixMap[fun.DefaultLang]
-					}
-
-					msg := fmt.Sprintf("%s *%s* ?", prefix, closestKeyword)
-
-					suggestionMsg := LanguageTranslation{
-						LanguageCode: userLang,
-						Texts: map[string]string{
-							userLang: msg,
-						},
-					}
-					SendLangWhatsAppTextMsg(originalSenderJID, stanzaID, v, suggestionMsg, userLang, client, rdb, db)
-					return
+				prefix, ok := prefixMap[userLang]
+				if !ok {
+					prefix = prefixMap[fun.DefaultLang]
 				}
+
+				msg := fmt.Sprintf("%s *%s* ?", prefix, closestKeyword)
+
+				suggestionMsg := LanguageTranslation{
+					LanguageCode: userLang,
+					Texts: map[string]string{
+						userLang: msg,
+					},
+				}
+				SendLangWhatsAppTextMsg(originalSenderJID, stanzaID, v, suggestionMsg, userLang, client, rdb, db)
+				return
 			}
 		}
 	}

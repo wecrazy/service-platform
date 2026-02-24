@@ -19,10 +19,10 @@ import (
 	"os"
 	"path/filepath"
 	"service-platform/internal/config"
+	"service-platform/pkg/fun"
 
 	// _ "service-platform/internal/database/migrations" // Import migrations to register them
 	"service-platform/internal/migrations"
-	"service-platform/internal/pkg/fun"
 	"strings"
 	"time"
 
@@ -82,281 +82,173 @@ type DBConfig struct {
 	ConnMaxLifeTime   int
 }
 
-// InitAndCheckDB initializes and validates a PostgreSQL database connection.
-//
-// This function performs the following operations:
-// 1. Connects to the default 'postgres' database to check/create the target database
-// 2. Creates the target database if it doesn't exist
-// 3. Sets the database timezone to UTC
-// 4. Establishes connection to the target database with proper configuration
-// 5. Sets up connection pooling and logging
-//
-// Parameters:
-//   - dbType: Database type (currently only "postgres" is supported)
-//   - dbUser: Database username
-//   - dbPass: Database password
-//   - dbHost: Database host address
-//   - dbPort: Database port number
-//   - dbName: Target database name
-//   - dbSSLMode: SSL mode for database connection
-//
-// Returns:
-//   - *gorm.DB: Configured GORM database instance
-//   - error: Any error encountered during initialization
-//
-// The function implements retry logic for initial connection attempts and
-// configures GORM with appropriate logging and connection pooling settings.
+// newGORMLogger creates a GORM logger configured with lumberjack file rotation.
+func newGORMLogger(logFileName string) logger.Interface {
+logDir := config.ServicePlatform.Get().App.LogDir
+if _, err := os.Stat(logDir); os.IsNotExist(err) {
+var findErr error
+logDir, findErr = fun.FindValidDirectory([]string{"log", "../log", "../../log", "../../../log"})
+if findErr != nil {
+fmt.Printf("Failed to find a valid log directory for db logger: %v\n", findErr)
+os.Exit(1)
+}
+}
+if err := os.MkdirAll(logDir, 0755); err != nil {
+fmt.Printf("Failed to create log directory: %v\n", err)
+}
+cfg := config.ServicePlatform.Get()
+lj := &lumberjack.Logger{
+Filename:   filepath.Join(logDir, logFileName),
+MaxSize:    cfg.Default.LogMaxSize,
+MaxBackups: cfg.Default.LogMaxBackups,
+MaxAge:     cfg.Default.LogMaxAge,
+Compress:   cfg.Default.LogCompress,
+}
+logLevel := logger.Error
+ignoreRecordNotFoundError := true
+includeParams := true
+if cfg.App.Debug {
+logLevel = logger.Info
+ignoreRecordNotFoundError = false
+includeParams = false
+}
+return logger.New(
+log.New(lj, "\r\n", log.LstdFlags),
+logger.Config{
+SlowThreshold:             time.Second,
+LogLevel:                  logLevel,
+IgnoreRecordNotFoundError: ignoreRecordNotFoundError,
+ParameterizedQueries:      includeParams,
+Colorful:                  false,
+},
+)
+}
+
+// ensurePostgresDBExists checks if the target database exists and creates it if not, then sets the timezone.
+func ensurePostgresDBExists(defaultDB *gorm.DB, dbName string) error {
+var dbExists bool
+query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = '%s')", dbName)
+if err := defaultDB.Raw(query).Scan(&dbExists).Error; err != nil {
+return fmt.Errorf("failed to check if database exists: %v", err)
+}
+if !dbExists {
+if err := defaultDB.Exec(fmt.Sprintf("CREATE DATABASE %s", dbName)).Error; err != nil {
+return fmt.Errorf("failed to create database %s: %v", dbName, err)
+}
+fmt.Printf("Database %s created successfully.\n", dbName)
+}
+if err := defaultDB.Exec(fmt.Sprintf("ALTER DATABASE %s SET timezone = 'UTC'", dbName)).Error; err != nil {
+return fmt.Errorf("failed to set database timezone to UTC: %v", err)
+}
+fmt.Printf("\u2705 Database %s timezone set to UTC.\n", dbName)
+return nil
+}
+
+// initPostgresDB handles the full PostgreSQL database initialization flow.
+func initPostgresDB(dbUser, dbPass, dbHost string, dbPort int, dbName, dbSSLMode string) (*gorm.DB, error) {
+cfg := config.ServicePlatform.Get()
+defaultDBURI := fmt.Sprintf(
+"host=%s user=%s password=%s dbname=postgres port=%d sslmode=%s TimeZone=UTC",
+dbHost, dbUser, dbPass, dbPort, dbSSLMode,
+)
+var defaultDB *gorm.DB
+var err error
+for attempt := 1; attempt <= cfg.Database.MaxRetryConnect; attempt++ {
+defaultDB, err = gorm.Open(postgres.Open(defaultDBURI), &gorm.Config{})
+if err == nil {
+break
+}
+fmt.Printf("Attempt %d: failed to connect to postgres database: %v\n", attempt, err)
+time.Sleep(time.Duration(cfg.Database.RetryDelay) * time.Second)
+}
+if err != nil || defaultDB == nil {
+return nil, fmt.Errorf("failed to connect to postgres database after %d attempts: %v", cfg.Database.MaxRetryConnect, err)
+}
+if err = ensurePostgresDBExists(defaultDB, dbName); err != nil {
+return nil, err
+}
+dbSQL, err := defaultDB.DB()
+if err != nil {
+return nil, fmt.Errorf("failed to get sql.DB from gorm DB: %v", err)
+}
+defer dbSQL.Close()
+dbURI := fmt.Sprintf(
+"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=UTC",
+dbHost, dbUser, dbPass, dbName, dbPort, dbSSLMode,
+)
+db, openErr := gorm.Open(postgres.Open(dbURI), &gorm.Config{Logger: newGORMLogger("gorm_query.log")})
+if openErr != nil {
+dbConnectionErrorsTotal.WithLabelValues("postgres", dbName).Inc()
+return nil, fmt.Errorf("failed to connect to database %s: %v", dbName, openErr)
+}
+if err := db.Exec("SET timezone = 'UTC'").Error; err != nil {
+return nil, fmt.Errorf("failed to set timezone to UTC: %v", err)
+}
+sqlDB, err := db.DB()
+if err != nil {
+return nil, fmt.Errorf("failed to get sql.DB from gorm DB: %v", err)
+}
+sqlDB.SetMaxIdleConns(cfg.Database.MaxIdleConnection)
+sqlDB.SetMaxOpenConns(cfg.Database.MaxOpenConnection)
+sqlDB.SetConnMaxLifetime(time.Duration(cfg.Database.ConnMaxLifeTime) * time.Minute)
+fmt.Println("\u2705 Connected to database: " + dbName)
+dbConnectionsTotal.WithLabelValues("postgres", dbName).Inc()
+return db, nil
+}
+
+// initMySQLMainDB handles the full MySQL database initialization flow.
+func initMySQLMainDB(dbUser, dbPass, dbHost string, dbPort int, dbName string) (*gorm.DB, error) {
+cfg := config.ServicePlatform.Get()
+dbURI := fmt.Sprintf(
+"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+dbUser, dbPass, dbHost, dbPort, dbName,
+)
+newLogger := newGORMLogger("gorm_mysql_query.log")
+var db *gorm.DB
+var err error
+for attempt := 1; attempt <= cfg.Database.MaxRetryConnect; attempt++ {
+db, err = gorm.Open(mysql.Open(dbURI), &gorm.Config{Logger: newLogger})
+if err == nil {
+break
+}
+fmt.Printf("Attempt %d: failed to connect to MySQL database: %v\n", attempt, err)
+dbConnectionErrorsTotal.WithLabelValues("mysql", dbName).Inc()
+time.Sleep(time.Duration(cfg.Database.RetryDelay) * time.Second)
+}
+if err != nil {
+return nil, fmt.Errorf("failed to connect to MySQL database after %d attempts: %v", cfg.Database.MaxRetryConnect, err)
+}
+sqlDB, err := db.DB()
+if err != nil {
+return nil, fmt.Errorf("failed to get sql.DB from gorm DB: %v", err)
+}
+sqlDB.SetMaxIdleConns(cfg.Database.MaxIdleConnection)
+sqlDB.SetMaxOpenConns(cfg.Database.MaxOpenConnection)
+sqlDB.SetConnMaxLifetime(time.Duration(cfg.Database.ConnMaxLifeTime) * time.Minute)
+fmt.Println("\u2705 Connected to MySQL database: " + dbName)
+dbConnectionsTotal.WithLabelValues("mysql", dbName).Inc()
+return db, nil
+}
+
+// InitAndCheckDB initializes and validates a database connection, creating the database if it does not exist.
+// Supports "postgres"/"postgresql" and "mysql" database types.
 func InitAndCheckDB(
-	dbType,
-	dbUser,
-	dbPass,
-	dbHost string,
-	dbPort int,
-	dbName,
-	dbSSLMode string,
+dbType,
+dbUser,
+dbPass,
+dbHost string,
+dbPort int,
+dbName,
+dbSSLMode string,
 ) (*gorm.DB, error) {
-	switch strings.ToLower(dbType) {
-	case "postgres", "postgresql":
-		// Connect to the default 'postgres' database to check and create the target database
-		defaultDBURI := fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=postgres port=%d sslmode=%s TimeZone=UTC",
-			dbHost, dbUser, dbPass, dbPort, dbSSLMode,
-		)
-
-		var defaultDB *gorm.DB
-		var err error
-
-		maxRetries := config.ServicePlatform.Get().Database.MaxRetryConnect
-		retryDelay := config.ServicePlatform.Get().Database.RetryDelay
-
-		// Retry connection to default database
-		for attempt := 1; attempt <= maxRetries; attempt++ {
-			defaultDB, err = gorm.Open(postgres.Open(defaultDBURI), &gorm.Config{})
-			if err == nil {
-				break
-			}
-			fmt.Printf("Attempt %d: failed to connect to postgres database: %v\n", attempt, err)
-			time.Sleep(time.Duration(retryDelay) * time.Second)
-		}
-
-		// Check for failure after all attempts
-		if err != nil || defaultDB == nil {
-			return nil, fmt.Errorf("failed to connect to postgres database after %d attempts: %v", maxRetries, err)
-		}
-
-		// Check if the target db exists
-		var dbExists bool
-		query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = '%s')", dbName)
-		err = defaultDB.Raw(query).Scan(&dbExists).Error
-		if err != nil {
-			return nil, fmt.Errorf("failed to check if database exists: %v", err)
-		}
-
-		if !dbExists {
-			createDBQuery := fmt.Sprintf("CREATE DATABASE %s", dbName)
-			err = defaultDB.Exec(createDBQuery).Error
-			if err != nil {
-				return nil, fmt.Errorf("failed to create database %s: %v", dbName, err)
-			}
-			fmt.Printf("Database %s created successfully.\n", dbName)
-		}
-
-		// Set the database's default timezone to UTC (for both new and existing databases)
-		alterTZQuery := fmt.Sprintf("ALTER DATABASE %s SET timezone = 'UTC'", dbName)
-		err = defaultDB.Exec(alterTZQuery).Error
-		if err != nil {
-			return nil, fmt.Errorf("failed to set database timezone to UTC: %v", err)
-		}
-		fmt.Printf("✅ Database %s timezone set to UTC.\n", dbName)
-
-		// Close the connection to the default database
-		dbSQL, err := defaultDB.DB()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get sql.DB from gorm DB: %v", err)
-		}
-		defer dbSQL.Close()
-
-		// Connect to the actual target database
-		dbURI := fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=UTC",
-			dbHost, dbUser, dbPass, dbName, dbPort, dbSSLMode,
-		)
-
-		// Configure GORM logger
-		logDir := config.ServicePlatform.Get().App.LogDir
-		if _, err := os.Stat(logDir); os.IsNotExist(err) {
-			// fmt.Println("Cannot find the directory log try dynamic searching")
-			logDir, err = fun.FindValidDirectory([]string{
-				"log",
-				"../log",
-				"../../log",
-				"../../../log",
-			})
-			if err != nil {
-				fmt.Printf("Failed to find a valid log directory for db logger: %v\n", err)
-				os.Exit(1)
-			}
-		}
-
-		// Ensure log directory exists
-		if err := os.MkdirAll(logDir, 0755); err != nil {
-			fmt.Printf("Failed to create log directory: %v\n", err)
-		}
-
-		logFilePath := filepath.Join(logDir, "gorm_query.log")
-
-		lumberjackLogger := &lumberjack.Logger{
-			Filename:   logFilePath,
-			MaxSize:    config.ServicePlatform.Get().Default.LogMaxSize,
-			MaxBackups: config.ServicePlatform.Get().Default.LogMaxBackups,
-			MaxAge:     config.ServicePlatform.Get().Default.LogMaxAge,
-			Compress:   config.ServicePlatform.Get().Default.LogCompress,
-		}
-
-		logLevel := logger.Error
-		ignoreRecordNotFoundError := true
-		includeParams := true
-		if config.ServicePlatform.Get().App.Debug {
-			logLevel = logger.Info
-			ignoreRecordNotFoundError = false
-			includeParams = false
-		}
-
-		newLogger := logger.New(
-			log.New(lumberjackLogger, "\r\n", log.LstdFlags), // io writer
-			logger.Config{
-				SlowThreshold:             time.Second,               // Slow SQL threshold
-				LogLevel:                  logLevel,                  // Log level
-				IgnoreRecordNotFoundError: ignoreRecordNotFoundError, // Ignore ErrRecordNotFound error for logger
-				ParameterizedQueries:      includeParams,             // Include params in the SQL log
-				Colorful:                  false,                     // Disable color
-			},
-		)
-
-		db, err := gorm.Open(postgres.Open(dbURI), &gorm.Config{
-			Logger: newLogger,
-		})
-		if err != nil {
-			dbConnectionErrorsTotal.WithLabelValues("postgres", dbName).Inc()
-			return nil, fmt.Errorf("failed to connect to database %s: %v", dbName, err)
-		}
-
-		// Ensure timezone is set to UTC
-		if err := db.Exec("SET timezone = 'UTC'").Error; err != nil {
-			return nil, fmt.Errorf("failed to set timezone to UTC: %v", err)
-		}
-
-		sqlDB, err := db.DB()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get sql.DB from gorm DB: %v", err)
-		}
-
-		// Set connection pool settings
-		sqlDB.SetMaxIdleConns(config.ServicePlatform.Get().Database.MaxIdleConnection)
-		sqlDB.SetMaxOpenConns(config.ServicePlatform.Get().Database.MaxOpenConnection)
-		sqlDB.SetConnMaxLifetime(time.Duration(config.ServicePlatform.Get().Database.ConnMaxLifeTime) * time.Minute)
-		fmt.Println("✅ Connected to database: " + dbName)
-
-		// Record successful connection
-		dbConnectionsTotal.WithLabelValues("postgres", dbName).Inc()
-
-		return db, nil
-	case "mysql":
-		// MySQL connection string
-		dbURI := fmt.Sprintf(
-			"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-			dbUser, dbPass, dbHost, dbPort, dbName,
-		)
-
-		// Configure GORM logger
-		logDir := config.ServicePlatform.Get().App.LogDir
-		if _, err := os.Stat(logDir); os.IsNotExist(err) {
-			logDir, err = fun.FindValidDirectory([]string{
-				"log",
-				"../log",
-				"../../log",
-				"../../../log",
-			})
-			if err != nil {
-				fmt.Printf("Failed to find a valid log directory for db logger: %v\n", err)
-				os.Exit(1)
-			}
-		}
-
-		// Ensure log directory exists
-		if err := os.MkdirAll(logDir, 0755); err != nil {
-			fmt.Printf("Failed to create log directory: %v\n", err)
-		}
-
-		logFilePath := filepath.Join(logDir, "gorm_mysql_query.log")
-
-		lumberjackLogger := &lumberjack.Logger{
-			Filename:   logFilePath,
-			MaxSize:    config.ServicePlatform.Get().Default.LogMaxSize,
-			MaxBackups: config.ServicePlatform.Get().Default.LogMaxBackups,
-			MaxAge:     config.ServicePlatform.Get().Default.LogMaxAge,
-			Compress:   config.ServicePlatform.Get().Default.LogCompress,
-		}
-
-		logLevel := logger.Error
-		ignoreRecordNotFoundError := true
-		includeParams := true
-		if config.ServicePlatform.Get().App.Debug {
-			logLevel = logger.Info
-			ignoreRecordNotFoundError = false
-			includeParams = false
-		}
-
-		newLogger := logger.New(
-			log.New(lumberjackLogger, "\r\n", log.LstdFlags),
-			logger.Config{
-				SlowThreshold:             time.Second,
-				LogLevel:                  logLevel,
-				IgnoreRecordNotFoundError: ignoreRecordNotFoundError,
-				ParameterizedQueries:      includeParams,
-				Colorful:                  false,
-			},
-		)
-
-		var db *gorm.DB
-		var err error
-		maxRetries := config.ServicePlatform.Get().Database.MaxRetryConnect
-		retryDelay := config.ServicePlatform.Get().Database.RetryDelay
-
-		for attempt := 1; attempt <= maxRetries; attempt++ {
-			db, err = gorm.Open(mysql.Open(dbURI), &gorm.Config{
-				Logger: newLogger,
-			})
-			if err == nil {
-				break
-			}
-			fmt.Printf("Attempt %d: failed to connect to MySQL database: %v\n", attempt, err)
-			dbConnectionErrorsTotal.WithLabelValues("mysql", dbName).Inc()
-			time.Sleep(time.Duration(retryDelay) * time.Second)
-		}
-
-		if err != nil {
-			return nil, fmt.Errorf("failed to connect to MySQL database after %d attempts: %v", maxRetries, err)
-		}
-
-		sqlDB, err := db.DB()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get sql.DB from gorm DB: %v", err)
-		}
-
-		// Set connection pool settings
-		sqlDB.SetMaxIdleConns(config.ServicePlatform.Get().Database.MaxIdleConnection)
-		sqlDB.SetMaxOpenConns(config.ServicePlatform.Get().Database.MaxOpenConnection)
-		sqlDB.SetConnMaxLifetime(time.Duration(config.ServicePlatform.Get().Database.ConnMaxLifeTime) * time.Minute)
-		fmt.Println("✅ Connected to MySQL database: " + dbName)
-
-		// Record successful connection
-		dbConnectionsTotal.WithLabelValues("mysql", dbName).Inc()
-
-		return db, nil
-	default:
-		return nil, errors.New("unsupported database type: " + dbType)
-	}
+switch strings.ToLower(dbType) {
+case "postgres", "postgresql":
+return initPostgresDB(dbUser, dbPass, dbHost, dbPort, dbName, dbSSLMode)
+case "mysql":
+return initMySQLMainDB(dbUser, dbPass, dbHost, dbPort, dbName)
+default:
+return nil, errors.New("unsupported database type: " + dbType)
+}
 }
 
 // InitDBConnection initializes a database connection without creating the database.
@@ -463,7 +355,7 @@ func InitDBConnection(
 	}
 }
 
-// This function replaces the traditional GORM AutoMigrate approach with a
+// AutoMigrateDB replaces the traditional GORM AutoMigrate approach with a
 // version-controlled migration system that provides:
 //
 // - Schema change tracking and versioning

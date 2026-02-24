@@ -13,7 +13,7 @@ type SendTwilioWhatsAppMessageRequest struct {
 // SendTwilioWhatsAppMediaMessageRequest represents a request to send a WhatsApp media message
 type SendTwilioWhatsAppMediaMessageRequest struct {
 	To       string `json:"to" binding:"required" example:"+6285173207755" description:"Recipient phone number in E.164 format"`
-	MediaUrl string `json:"media_url" binding:"required" example:"https://example.com/image.jpg" description:"URL to media file"`
+	MediaURL string `json:"media_url" binding:"required" example:"https://example.com/image.jpg" description:"URL to media file"`
 	Caption  string `json:"caption" example:"Check this out!" description:"Optional caption for the media"`
 }
 
@@ -39,7 +39,7 @@ type SendTwilioWhatsAppMessageResponse struct {
 type SendTwilioWhatsAppMediaMessageResponse struct {
 	MessageSid string    `json:"message_sid" example:"SMxxxxxxxxxxxxxxxxxxxxxxxxxx" description:"Twilio Message SID"`
 	To         string    `json:"to" example:"+6285173207755" description:"Recipient phone number"`
-	MediaUrl   string    `json:"media_url" description:"URL of the media that was sent"`
+	MediaURL   string    `json:"media_url" description:"URL of the media that was sent"`
 	Status     string    `json:"status" example:"queued" description:"Current message status (queued, sent, delivered, failed)"`
 	Timestamp  time.Time `json:"timestamp" description:"When the message was sent"`
 }

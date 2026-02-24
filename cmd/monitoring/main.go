@@ -1,3 +1,24 @@
+// Package main is the entry point for the monitoring management tool.
+//
+// It orchestrates Prometheus, Grafana, Loki, and Tempo via shell scripts located
+// in the scripts/ directory. The tool can also install/uninstall itself as a
+// system service.
+//
+// When invoked without arguments it behaves like --ensure-running.
+//
+// Commands:
+//
+//	--install          Install monitoring as a system service (requires root)
+//	--uninstall        Uninstall the system service (aliases: --delete, --remove)
+//	--ensure-running   Start monitoring if not already running (default)
+//	--stop             Stop monitoring services
+//	--help, -h         Show help
+//
+// Usage:
+//
+//	go run cmd/monitoring/main.go --install
+//	make monitoring-start
+//	./bin/monitoring --stop
 package main
 
 import (
@@ -8,9 +29,11 @@ import (
 	"path/filepath"
 	"service-platform/internal/config"
 	"service-platform/internal/installer"
-	"service-platform/internal/pkg/logger"
+	"service-platform/pkg/logger"
 )
 
+// main loads configuration, then dispatches to the appropriate sub-command
+// based on CLI arguments. Defaults to ensureMonitoringRunning when no args given.
 func main() {
 	// Load config
 	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
@@ -52,12 +75,14 @@ func main() {
 	ensureMonitoringRunning()
 }
 
+// ensureMonitoringRunning starts monitoring services if they are not already running.
 func ensureMonitoringRunning() {
 	fmt.Println("🚀 Starting Service Platform Monitoring...")
 	startMonitoring()
 	fmt.Println("✅ Monitoring started successfully")
 }
 
+// cleanupMonitoring runs the cleanup-monitoring.sh script to remove stale data.
 func cleanupMonitoring() {
 	scriptPath := filepath.Join(getProjectRoot(), "scripts", "cleanup-monitoring.sh")
 	cmd := exec.Command("/bin/bash", scriptPath)
@@ -68,6 +93,7 @@ func cleanupMonitoring() {
 	}
 }
 
+// startMonitoring executes scripts/start-monitoring.sh to launch all monitoring containers.
 func startMonitoring() {
 	scriptPath := filepath.Join(getProjectRoot(), "scripts", "start-monitoring.sh")
 	cmd := exec.Command("/bin/bash", scriptPath)
@@ -78,6 +104,7 @@ func startMonitoring() {
 	}
 }
 
+// stopMonitoring executes scripts/stop-monitoring.sh to gracefully stop all monitoring containers.
 func stopMonitoring() {
 	fmt.Println("🛑 Stopping Service Platform Monitoring...")
 	scriptPath := filepath.Join(getProjectRoot(), "scripts", "stop-monitoring.sh")
@@ -90,6 +117,8 @@ func stopMonitoring() {
 	fmt.Println("✅ Monitoring stopped successfully")
 }
 
+// getProjectRoot returns the project root directory by inspecting the executable
+// path. If the binary lives in a "bin" sub-directory, the parent is returned.
 func getProjectRoot() string {
 	execPath, err := os.Executable()
 	if err != nil {
@@ -103,6 +132,7 @@ func getProjectRoot() string {
 	return workingDir
 }
 
+// printHelp writes usage information to stdout.
 func printHelp() {
 	fmt.Println("Service Platform - Monitoring Tool")
 	fmt.Println()

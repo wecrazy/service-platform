@@ -1,3 +1,4 @@
+// Package middleware provides HTTP middleware for the service-platform API.
 package middleware
 
 import (
@@ -6,7 +7,7 @@ import (
 	"time"
 
 	"service-platform/internal/config"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"

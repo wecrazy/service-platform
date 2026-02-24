@@ -10,7 +10,7 @@ import (
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
 	"service-platform/internal/middleware"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/gin-gonic/gin"
@@ -87,7 +87,7 @@ func (suite *APITestSuite) SetupTest() {
 	// Setup router
 	suite.router = gin.New()
 	routes.StaticFile(suite.router)
-	routes.HtmlRoutes(suite.db, suite.router, suite.redisClient, suite.systemMonitor)
+	routes.HTMLRoutes(suite.db, suite.router, suite.redisClient, suite.systemMonitor)
 }
 
 // TearDownTest cleans up test resources including database connections and Redis instances.

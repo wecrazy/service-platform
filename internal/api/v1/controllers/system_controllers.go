@@ -2,8 +2,7 @@ package controllers
 
 import (
 	"net/http"
-
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 
 	"github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
@@ -81,6 +80,6 @@ func GetNewCaptcha(c *gin.Context) {
 // @Param        id   path      string  true  "Captcha ID"
 // @Success      200  {file}     file
 // @Router       /captcha/{id}.png [get]
-func GetCaptchaImage(c *gin.Context) {
+func GetCaptchaImage(_ *gin.Context) {
 	// This is a wrapper, actual implementation is handled by captcha.Server
 }

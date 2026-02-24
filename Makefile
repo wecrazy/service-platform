@@ -462,18 +462,27 @@ revive: install-revive
 	if [ -f ".revive.toml" ]; then \
 		if [ -z "$(PKG)" ]; then \
 			echo "📦 Linting all packages..."; \
-			"$$GOBIN/revive" -config .revive.toml ./...; \
+			OUTPUT=$$("$$GOBIN/revive" -config .revive.toml ./... 2>&1); \
 		else \
 			echo "📦 Linting specific package: $(PKG)"; \
-			"$$GOBIN/revive" -config .revive.toml "$(PKG)"; \
+			OUTPUT=$$("$$GOBIN/revive" -config .revive.toml "$(PKG)" 2>&1); \
 		fi; \
 	else \
 		echo "⚠️  .revive.toml not found, using default rules..."; \
 		if [ -z "$(PKG)" ]; then \
-			"$$GOBIN/revive" ./...; \
+			OUTPUT=$$("$$GOBIN/revive" ./... 2>&1); \
 		else \
-			"$$GOBIN/revive" "$(PKG)"; \
+			OUTPUT=$$("$$GOBIN/revive" "$(PKG)" 2>&1); \
 		fi; \
+	fi; \
+	if [ -z "$$OUTPUT" ]; then \
+		echo "✅ No lint issues found!"; \
+	else \
+		echo "$$OUTPUT"; \
+		echo ""; \
+		ISSUE_COUNT=$$(echo "$$OUTPUT" | wc -l); \
+		echo "❌ Found $$ISSUE_COUNT lint issue(s)."; \
+		exit 1; \
 	fi
 
 install-mockery:

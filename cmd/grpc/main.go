@@ -1,3 +1,20 @@
+// Package main is the entry point for the gRPC authentication service.
+//
+// The service exposes Login and Logout RPCs defined in proto/auth.proto.
+// Login validates a captcha, checks credentials against PostgreSQL (via GORM),
+// locks the account after 5 consecutive failures (15-minute cool-down), and
+// stores a random session token in Redis with a 7-day TTL.
+// Logout simply removes the session key from Redis.
+//
+// A Prometheus metrics endpoint is served on a separate HTTP port.
+//
+// Configuration is loaded from service-platform.<env>.yaml. Required sections:
+// Database, Redis, GRPC.Port, Metrics.GRPCPort.
+//
+// Usage:
+//
+//	go run cmd/grpc/main.go
+//	make build-grpc && ./bin/grpc
 package main
 
 import (
@@ -8,8 +25,8 @@ import (
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
 	"service-platform/internal/database"
-	"service-platform/internal/pkg/fun"
-	"service-platform/internal/pkg/logger"
+	"service-platform/pkg/fun"
+	"service-platform/pkg/logger"
 	"service-platform/proto"
 	"strings"
 	"time"
@@ -23,12 +40,18 @@ import (
 	"gorm.io/gorm"
 )
 
+// authServer implements proto.AuthServiceServer using PostgreSQL for user
+// storage and Redis for session management.
 type authServer struct {
 	proto.UnimplementedAuthServiceServer
 	db    *gorm.DB
 	redis *redis.Client
 }
 
+// Login authenticates a user by email or username. It verifies the captcha,
+// looks up the user in the database, checks the password, and returns a
+// session token stored in Redis. Accounts are locked for 15 minutes after
+// 5 consecutive failed attempts.
 func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto.LoginResponse, error) {
 	// Validate captcha (skip validation if both are "test" for development)
 	if req.CaptchaId != "test" && req.Captcha != "test" {
@@ -81,11 +104,14 @@ func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto
 	return &proto.LoginResponse{Success: true, Message: "Login successful", Token: token}, nil
 }
 
+// Logout invalidates the session by removing the token key from Redis.
 func (s *authServer) Logout(ctx context.Context, req *proto.LogoutRequest) (*proto.LogoutResponse, error) {
 	s.redis.Del(ctx, "session:"+req.Token)
 	return &proto.LogoutResponse{Success: true, Message: "Logged out"}, nil
 }
 
+// main loads configuration, initialises the database and Redis connections,
+// starts the Prometheus metrics HTTP server, and serves the Auth gRPC service.
 func main() {
 	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"
 	yamlCfg := config.ServicePlatform.Get()

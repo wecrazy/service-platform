@@ -15,7 +15,7 @@
 | Twilio WhatsApp | `cmd/twilio/whatsapp/main.go` | gRPC + Twilio SDK | ✅ Rich media + rate limits (see docs)
 | Telegram | `cmd/telegram/main.go` | gRPC + Bot API | 📱 Telegram bot service
 | Scheduler | `cmd/scheduler/main.go` | Cron jobs | ⏱️ Cron-based jobs from `internal/scheduler`
-| Monitoring | `cmd/monitoring/main.go` | Grafana/Grafana/Tempo | [monitoring guide](docs/MONITORING.md)
+| Monitoring | `cmd/monitoring/main.go` | Prometheus/Grafana/Tempo | [monitoring guide](docs/MONITORING.md)
 | n8n | `cmd/n8n/main.go` | Workflow automation | Integrations via [docs/N8N_TESTING_GUIDE.md](docs/N8N_TESTING_GUIDE.md)
 | CLI (TUI) | `cmd/cli/main.go` | Bubbletea TUI | 🖥️ Interactive + non-interactive CLI
 

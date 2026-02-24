@@ -1,3 +1,4 @@
+// Package twilio provides a client for interacting with the Twilio API.
 package twilio
 
 import (
@@ -85,7 +86,7 @@ func (c *Client) SendMessage(to string, message string) (string, error) {
 // Supported media types: JPG, JPEG, PNG, audio files, PDF (max 16MB)
 // Prerequisites: Same as SendMessage (E.164 format, sandbox approval required)
 // https://www.twilio.com/docs/whatsapp/api
-func (c *Client) SendMediaMessage(to string, mediaUrl string, caption string) (string, error) {
+func (c *Client) SendMediaMessage(to string, mediaURL string, caption string) (string, error) {
 	// Validate phone number format
 	if !isValidPhoneNumber(to) {
 		err := fmt.Errorf("invalid phone number format: %s (use E.164 format like +6285173207755)", to)
@@ -96,7 +97,7 @@ func (c *Client) SendMediaMessage(to string, mediaUrl string, caption string) (s
 	params := &openapi.CreateMessageParams{}
 	params.SetFrom(c.twilioNumber)
 	params.SetTo(fmt.Sprintf("whatsapp:%s", to))
-	params.SetMediaUrl([]string{mediaUrl})
+	params.SetMediaUrl([]string{mediaURL})
 
 	if caption != "" {
 		params.SetBody(caption)
@@ -109,16 +110,17 @@ func (c *Client) SendMediaMessage(to string, mediaUrl string, caption string) (s
 	}
 
 	logrus.Infof("✅ WhatsApp media message sent successfully to %s. SID: %s | Media: %s | Status: %s",
-		to, *resp.Sid, mediaUrl, *resp.Status)
+		to, *resp.Sid, mediaURL, *resp.Status)
 	return *resp.Sid, nil
 }
 
 // Close closes the Twilio client connection
 func (c *Client) Close() {
+	c.restClient = nil
 	logrus.Info("🔌 Twilio WhatsApp client closed")
 }
 
-// Example usage function
+// ExampleSendWhatsAppMessage demonstrates how to use the Twilio WhatsApp client to send messages.
 func ExampleSendWhatsAppMessage() {
 	client, err := NewClient()
 	if err != nil {

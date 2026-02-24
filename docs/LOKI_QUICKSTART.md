@@ -173,7 +173,7 @@ bash scripts/monitoring-quickstart.sh logs loki
 curl http://localhost:3063
 
 # Via Nginx (with auth)
-curl -u admin:admin http://localhost:8080
+curl -u admin:'Net55206011##' http://localhost:9180
 ```
 
 **Logs not appearing in Grafana?**

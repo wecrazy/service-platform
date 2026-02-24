@@ -1,3 +1,19 @@
+// Package main is the entry point for the service-platform interactive CLI.
+//
+// When invoked without arguments it launches a full-screen TUI (built with
+// Bubbletea) for managing the service-platform: WhatsApp integration, database
+// operations, configuration, and more. When invoked with arguments it dispatches
+// to the corresponding command in non-interactive (direct) mode.
+//
+// Build:
+//
+//	make build-cli   # produces ./bin/cli
+//
+// Usage:
+//
+//	./bin/cli                 # interactive TUI
+//	./bin/cli <command> ...   # non-interactive mode
+//	go run cmd/cli/main.go    # run without building
 package main
 
 import (
@@ -9,6 +25,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// main checks runtime dependencies, then either launches the interactive TUI
+// (no arguments) or delegates to cli.RunDirect for non-interactive execution.
 func main() {
 	if err := cli.CheckDependencies(); err != nil {
 		fmt.Fprintf(os.Stderr, "❌ %v\n", err)

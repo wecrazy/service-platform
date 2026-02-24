@@ -1,3 +1,22 @@
+// Package main is the entry point for the scheduler gRPC service.
+//
+// The service uses gocron to manage cron/scheduled jobs defined in the
+// configuration file and exposes gRPC RPCs (defined in proto/scheduler.proto)
+// to register, unregister, list, trigger, inspect, and hot-reload jobs at
+// runtime. Prometheus metrics are served on a separate HTTP port.
+//
+// Configuration (service-platform.<env>.yaml) sections used:
+//
+//	Schedules.Port       gRPC listen port
+//	Schedules.Timezone   IANA timezone for the scheduler (e.g. "Asia/Jakarta")
+//	Schedules.List       Array of job definitions (name, every, at, weekly, …)
+//	Metrics.SchedulerPort  HTTP port for /scheduler-metrics
+//	Database.*           PostgreSQL connection details
+//
+// Usage:
+//
+//	go run cmd/scheduler/main.go
+//	make build-scheduler && ./bin/scheduler
 package main
 
 import (
@@ -8,8 +27,8 @@ import (
 	"net/http"
 	"service-platform/internal/config"
 	"service-platform/internal/database"
-	"service-platform/internal/pkg/logger"
 	"service-platform/internal/scheduler"
+	"service-platform/pkg/logger"
 	"service-platform/proto"
 
 	"github.com/go-co-op/gocron"
@@ -20,6 +39,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// schedulerServer implements proto.SchedulerServiceServer backed by gocron
+// and a PostgreSQL database for persistent job metadata.
 type schedulerServer struct {
 	proto.UnimplementedSchedulerServiceServer
 	db        *gorm.DB
@@ -27,7 +48,8 @@ type schedulerServer struct {
 	cfg       *config.TypeServicePlatform
 }
 
-func (s *schedulerServer) RegisterJob(ctx context.Context, req *proto.RegisterJobRequest) (*proto.RegisterJobResponse, error) {
+// RegisterJob handles a gRPC request to register a new scheduled job by name.
+func (*schedulerServer) RegisterJob(_ context.Context, req *proto.RegisterJobRequest) (*proto.RegisterJobResponse, error) {
 	log.Printf("Job registration requested: %s", req.Name)
 	return &proto.RegisterJobResponse{
 		Success: true,
@@ -35,7 +57,8 @@ func (s *schedulerServer) RegisterJob(ctx context.Context, req *proto.RegisterJo
 	}, nil
 }
 
-func (s *schedulerServer) UnregisterJob(ctx context.Context, req *proto.UnregisterJobRequest) (*proto.UnregisterJobResponse, error) {
+// UnregisterJob removes a previously registered job from the scheduler.
+func (*schedulerServer) UnregisterJob(_ context.Context, req *proto.UnregisterJobRequest) (*proto.UnregisterJobResponse, error) {
 	log.Printf("Job unregistration requested: %s", req.Name)
 	scheduler.UnregisterJob(req.Name)
 	return &proto.UnregisterJobResponse{
@@ -44,7 +67,9 @@ func (s *schedulerServer) UnregisterJob(ctx context.Context, req *proto.Unregist
 	}, nil
 }
 
-func (s *schedulerServer) ListJobs(ctx context.Context, req *proto.ListJobsRequest) (*proto.ListJobsResponse, error) {
+// ListJobs returns information about all currently registered jobs including
+// their name, description, and human-readable schedule string.
+func (s *schedulerServer) ListJobs(_ context.Context, _ *proto.ListJobsRequest) (*proto.ListJobsResponse, error) {
 	jobs := scheduler.GetAllJobs()
 	jobInfos := make([]*proto.JobInfo, 0, len(jobs))
 
@@ -87,7 +112,8 @@ func (s *schedulerServer) ListJobs(ctx context.Context, req *proto.ListJobsReque
 	return &proto.ListJobsResponse{Jobs: jobInfos}, nil
 }
 
-func (s *schedulerServer) TriggerJob(ctx context.Context, req *proto.TriggerJobRequest) (*proto.TriggerJobResponse, error) {
+// TriggerJob immediately executes a registered job outside of its normal schedule.
+func (*schedulerServer) TriggerJob(_ context.Context, req *proto.TriggerJobRequest) (*proto.TriggerJobResponse, error) {
 	err := scheduler.TriggerJob(req.Name)
 	if err != nil {
 		return &proto.TriggerJobResponse{
@@ -101,7 +127,9 @@ func (s *schedulerServer) TriggerJob(ctx context.Context, req *proto.TriggerJobR
 	}, nil
 }
 
-func (s *schedulerServer) GetJobStatus(ctx context.Context, req *proto.GetJobStatusRequest) (*proto.GetJobStatusResponse, error) {
+// GetJobStatus checks whether a job exists and returns its metadata (name,
+// description, schedule) from the configuration.
+func (s *schedulerServer) GetJobStatus(_ context.Context, req *proto.GetJobStatusRequest) (*proto.GetJobStatusResponse, error) {
 	exists := scheduler.JobExists(req.Name)
 	if !exists {
 		return &proto.GetJobStatusResponse{Exists: false}, nil
@@ -143,7 +171,9 @@ func (s *schedulerServer) GetJobStatus(ctx context.Context, req *proto.GetJobSta
 	}, nil
 }
 
-func (s *schedulerServer) ReloadScheduler(ctx context.Context, req *proto.ReloadSchedulerRequest) (*proto.ReloadSchedulerResponse, error) {
+// ReloadScheduler stops the current gocron instance, re-reads the configuration
+// file, reloads the timezone, and starts a fresh scheduler with the updated jobs.
+func (s *schedulerServer) ReloadScheduler(_ context.Context, _ *proto.ReloadSchedulerRequest) (*proto.ReloadSchedulerResponse, error) {
 	if s.scheduler != nil {
 		s.scheduler.Stop()
 	}
@@ -168,6 +198,8 @@ func (s *schedulerServer) ReloadScheduler(ctx context.Context, req *proto.Reload
 	}, nil
 }
 
+// main loads configuration, connects to the database, starts the gocron scheduler,
+// launches the Prometheus metrics HTTP server, and serves the Scheduler gRPC service.
 func main() {
 
 	config.ServicePlatform.MustInit("service-platform") // Load config with name "service-platform.%s.yaml"

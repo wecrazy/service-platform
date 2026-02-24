@@ -9,7 +9,7 @@ import (
 	"service-platform/internal/api/v1/controllers"
 	"service-platform/internal/config"
 	"service-platform/internal/middleware"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 	"strings"
 
 	"github.com/dchest/captcha"
@@ -24,6 +24,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// StaticFile registers routes for serving static files from the configured static directory.
 func StaticFile(router *gin.Engine) {
 	staticPath := config.ServicePlatform.Get().App.StaticDir
 	publishedDir := config.ServicePlatform.Get().App.PublishedDir
@@ -80,7 +81,7 @@ func StaticFile(router *gin.Engine) {
 			}
 
 			// Serve static files under constructed URL
-			urlPath := path.Join(config.GLOBAL_URL, cleanDir)
+			urlPath := path.Join(config.GlobalURL, cleanDir)
 			router.Static(urlPath, staticDirPath)
 
 			fmt.Println("📂 Published static dir:", staticDirPath, "at", urlPath)
@@ -129,18 +130,19 @@ func StaticFile(router *gin.Engine) {
 	// router.Static("/media", "./web/assets/whatsapp_media") // Serve WhatsApp media files
 }
 
-func HtmlRoutes(
+// HTMLRoutes registers all HTML page routes for the web application.
+func HTMLRoutes(
 	db *gorm.DB,
 	router *gin.Engine,
 	redisDB *redis.Client,
 	systemMonitor *fun.SystemResourceMonitor) {
 
-	globalURL := config.GLOBAL_URL
+	globalURL := config.GlobalURL
 	if globalURL == "" {
 		logrus.Fatal("no global URL set in config")
 	}
 
-	apiURL := config.API_URL
+	apiURL := config.APIURL
 	if apiURL == "" {
 		logrus.Fatal("no API URL set in config")
 	}

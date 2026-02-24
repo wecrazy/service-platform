@@ -239,7 +239,7 @@ func (h *ODOOMSAPIHelper) getODOOMSCookies(email, password string) ([]*http.Cook
 		}
 	}`
 
-	rawJSON := fmt.Sprintf(requestJSON, odooConfig.JsonRPCVersion, odooConfig.DB, email, password)
+	rawJSON := fmt.Sprintf(requestJSON, odooConfig.JSONRPCVersion, odooConfig.DB, email, password)
 
 	maxRetries := odooConfig.MaxRetry
 	if maxRetries <= 0 {
@@ -315,6 +315,7 @@ func (h *ODOOMSAPIHelper) getODOOMSCookies(email, password string) ([]*http.Cook
 //	fmt.Printf("Cache valid: %v, Age: %.1fs\n",
 //	    stats["cache_valid"], stats["cache_age_seconds"])
 func (h *ODOOMSAPIHelper) GetSessionCacheStats() map[string]interface{} {
+	_ = h // for potential future use if we want to include more context in stats
 	odoomsSessionMutex.RLock()
 	defer odoomsSessionMutex.RUnlock()
 
@@ -341,6 +342,8 @@ func (h *ODOOMSAPIHelper) GetSessionCacheStats() map[string]interface{} {
 //
 //	helper.ClearSessionCache() // Force next call to re-authenticate
 func (h *ODOOMSAPIHelper) ClearSessionCache() {
+	_ = h // for potential future use if we want to include more context in logs
+
 	odoomsSessionMutex.Lock()
 	defer odoomsSessionMutex.Unlock()
 
@@ -365,6 +368,8 @@ func (h *ODOOMSAPIHelper) ClearSessionCache() {
 //	    fmt.Println("Cache expired, next call will re-authenticate")
 //	}
 func (h *ODOOMSAPIHelper) IsSessionCacheValid() bool {
+	_ = h // for potential future use if we want to include more context in logs
+
 	odoomsSessionMutex.RLock()
 	defer odoomsSessionMutex.RUnlock()
 
@@ -375,6 +380,24 @@ func (h *ODOOMSAPIHelper) IsSessionCacheValid() bool {
 // This function should only be used in test environments.
 func SetTestHelper(helper *ODOOMSAPIHelper) {
 	odoomsHelper = helper
+}
+
+// initODOOMSRetryConfig returns normalized retry configuration values from the ODOOMS config.
+func initODOOMSRetryConfig(cfg config.TypeManageService) (maxRetries, retryDelay int, reqTimeout time.Duration) {
+	odooConfig := cfg.ODOOMS
+	maxRetries = odooConfig.MaxRetry
+	if maxRetries <= 0 {
+		maxRetries = 3
+	}
+	retryDelay = odooConfig.RetryDelay
+	if retryDelay <= 0 {
+		retryDelay = 3
+	}
+	reqTimeout = time.Duration(odooConfig.DataTimeout) * time.Second
+	if reqTimeout <= 0 {
+		reqTimeout = 5 * time.Minute
+	}
+	return
 }
 
 // FetchODOOMS performs authenticated HTTP requests to ODOO Management Service endpoints.
@@ -425,22 +448,7 @@ func FetchODOOMS(url, method, req string) ([]byte, error) {
 	}
 
 	// Use ODOOManageService config instead of non-existent ApiODOO
-	odooConfig := yamlCfg.ODOOMS
-
-	maxRetries := odooConfig.MaxRetry
-	if maxRetries <= 0 {
-		maxRetries = 3
-	}
-
-	retryDelay := odooConfig.RetryDelay
-	if retryDelay <= 0 {
-		retryDelay = 3
-	}
-
-	reqTimeout := time.Duration(odooConfig.DataTimeout) * time.Second
-	if reqTimeout <= 0 {
-		reqTimeout = 5 * time.Minute // 300 seconds default
-	}
+	maxRetries, retryDelay, reqTimeout := initODOOMSRetryConfig(yamlCfg)
 
 	var lastErr error
 	var response *http.Response
@@ -454,7 +462,7 @@ func FetchODOOMS(url, method, req string) ([]byte, error) {
 		request.Header.Set("Content-Type", "application/json")
 
 		// Get session cookies using the cached helper
-		sessionCookies, err := odoomsHelper.GetODOOMSCookies(odooConfig.Login, odooConfig.Password)
+		sessionCookies, err := odoomsHelper.GetODOOMSCookies(yamlCfg.ODOOMS.Login, yamlCfg.ODOOMS.Password)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to get ODOO session cookies")
 			return nil, fmt.Errorf("failed to get session cookies: %w", err)
@@ -481,16 +489,15 @@ func FetchODOOMS(url, method, req string) ([]byte, error) {
 		// Check if the response is successful
 		if response.StatusCode == http.StatusOK {
 			break
-		} else {
-			logrus.Warningf("Bad ODOO response: %d (attempt %d/%d) for %s",
-				response.StatusCode, attempts, maxRetries, url)
-			lastErr = fmt.Errorf("request failed with status: %d", response.StatusCode)
-			if attempts < maxRetries {
-				response.Body.Close()
-				time.Sleep(time.Duration(retryDelay) * time.Second)
-			}
-			continue
 		}
+		logrus.Warningf("Bad ODOO response: %d (attempt %d/%d) for %s",
+			response.StatusCode, attempts, maxRetries, url)
+		lastErr = fmt.Errorf("request failed with status: %d", response.StatusCode)
+		if attempts < maxRetries {
+			response.Body.Close()
+			time.Sleep(time.Duration(retryDelay) * time.Second)
+		}
+		continue
 	}
 
 	if response == nil {

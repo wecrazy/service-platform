@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// LogActivity represents a log of user activities in the application, including details such as the user ID, full name, email, action performed, status of the action, log message, user agent, request method, IP address, and request URI. The TableName method specifies the database table name for this model, which is defined in the configuration file under Database.TbLogActivity.
 type LogActivity struct {
 	ID uint `json:"id" gorm:"column:id;primarykey"`
 	gorm.Model
@@ -19,9 +20,10 @@ type LogActivity struct {
 	UserAgent string `json:"user_agent" gorm:"column:user_agent"`
 	ReqMethod string `json:"req_method" gorm:"column:req_method"`
 	IP        string `json:"ip" gorm:"column:ip"`
-	ReqUri    string `json:"req_uri" gorm:"column:req_uri"`
+	ReqURI    string `json:"req_uri" gorm:"column:req_uri"`
 }
 
+// TableName specifies the database table name for the LogActivity model, which is defined in the configuration file under Database.TbLogActivity.
 func (LogActivity) TableName() string {
 	return config.ServicePlatform.Get().Database.TbLogActivity
 }

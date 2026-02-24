@@ -22,7 +22,7 @@ type TwilioWhatsAppServer struct {
 }
 
 // SendMessage handles text message sending via Twilio
-func (s *TwilioWhatsAppServer) SendMessage(ctx context.Context, req *pb.TwilioSendMessageRequest) (*pb.TwilioSendMessageResponse, error) {
+func (s *TwilioWhatsAppServer) SendMessage(_ context.Context, req *pb.TwilioSendMessageRequest) (*pb.TwilioSendMessageResponse, error) {
 	if s.twilioClient == nil {
 		return &pb.TwilioSendMessageResponse{
 			Success: false,
@@ -47,7 +47,7 @@ func (s *TwilioWhatsAppServer) SendMessage(ctx context.Context, req *pb.TwilioSe
 }
 
 // SendMediaMessage handles media message sending via Twilio
-func (s *TwilioWhatsAppServer) SendMediaMessage(ctx context.Context, req *pb.TwilioSendMediaMessageRequest) (*pb.TwilioSendMessageResponse, error) {
+func (s *TwilioWhatsAppServer) SendMediaMessage(_ context.Context, req *pb.TwilioSendMediaMessageRequest) (*pb.TwilioSendMessageResponse, error) {
 	if s.twilioClient == nil {
 		return &pb.TwilioSendMessageResponse{
 			Success: false,
@@ -72,7 +72,7 @@ func (s *TwilioWhatsAppServer) SendMediaMessage(ctx context.Context, req *pb.Twi
 }
 
 // GetMessageStatus retrieves the delivery status of a message
-func (s *TwilioWhatsAppServer) GetMessageStatus(ctx context.Context, req *pb.TwilioGetMessageStatusRequest) (*pb.TwilioGetMessageStatusResponse, error) {
+func (s *TwilioWhatsAppServer) GetMessageStatus(_ context.Context, req *pb.TwilioGetMessageStatusRequest) (*pb.TwilioGetMessageStatusResponse, error) {
 	if s.twilioClient == nil {
 		return &pb.TwilioGetMessageStatusResponse{
 			Status: "error",
