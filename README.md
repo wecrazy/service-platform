@@ -5,6 +5,7 @@
 ![Podman](https://img.shields.io/badge/containerized%20with-Podman-blue?logo=podman)
 ![License](https://img.shields.io/badge/license-Apache%202.0-lightgrey)
 ![CI](https://img.shields.io/github/actions/workflow/status/wecrazy/service-platform/ci.yml?label=GitHub%20CI)
+![Vibe Coded](https://img.shields.io/badge/Vibe%20Coded-✨%20with%20Copilot-blueviolet?logo=github-copilot)
 
 ## ⚙️ Live at a glance
 
