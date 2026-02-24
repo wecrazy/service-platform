@@ -114,7 +114,7 @@ schedules:
       at: ["04:00"]
     # =========================================================================================
 api:
-  analytics_dev_api_key: "c4004d75-3d23-4fb7-beca-33218961a8ed"
+  analytics_dev_api_key: "6c61f3ff-028f-4bb6-9f4d-7ce685d1d662"
 email:
   host: "smtp.gmail.com"
   port: 587 # 463
