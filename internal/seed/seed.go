@@ -463,7 +463,7 @@ func getRolePermissions(roleName, featurePath string) (RolePermission, bool) {
 // SeedUser creates default system users with appropriate roles and credentials.
 //
 // This function creates initial users required for system operation:
-//   - RM Developer (Super User): Full system access for development/administration
+//   - Wegil (Super User): Full system access for development/administration
 //   - Admin Client Company: Administrative access for client companies
 //   - Client Company User: Standard user access for client companies
 //
@@ -503,7 +503,7 @@ func SeedUser(db *gorm.DB) {
 
 	var users = []model.Users{
 		{
-			Fullname:     "RM Developer",
+			Fullname:     "Wegil",
 			Username:     "rm_dev",
 			Phone:        config.ServicePlatform.Get().Default.SuperUserPhone,
 			Email:        config.ServicePlatform.Get().Default.SuperUserEmail,
@@ -779,7 +779,7 @@ func SeedWhatsappUser(db *gorm.DB) {
 
 		users := []model.WAUsers{
 			{
-				FullName:      "RM Developer",
+				FullName:      "Wegil",
 				Email:         config.ServicePlatform.Get().Default.SuperUserEmail,
 				PhoneNumber:   config.ServicePlatform.Get().Default.SuperUserPhone,
 				IsRegistered:  true,
