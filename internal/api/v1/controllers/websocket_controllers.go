@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"service-platform/internal/core/model"
-	"service-platform/internal/pkg/fun"
 	"service-platform/internal/ws"
+	"service-platform/pkg/fun"
 	"strings"
 
 	"github.com/gin-gonic/gin"

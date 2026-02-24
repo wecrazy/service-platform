@@ -18,7 +18,7 @@ import (
 func createTestConfigODOOMSAPIHelper() *config.TypeManageService {
 	return &config.TypeManageService{
 		ODOOMS: struct {
-			JsonRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
+			JSONRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
 			Login          string                         `yaml:"login" validate:"required"`
 			Password       string                         `yaml:"password" validate:"required"`
 			DB             string                         `yaml:"db" validate:"required"`
@@ -34,7 +34,7 @@ func createTestConfigODOOMSAPIHelper() *config.TypeManageService {
 			SkipSSLVerify  bool                           `yaml:"skip_ssl_verify"`
 			SACData        map[string]config.ODOOMSACData `yaml:"sac" validate:"required"`
 		}{
-			JsonRPCVersion: "2.0",
+			JSONRPCVersion: "2.0",
 			Login:          "desta@smartwebdindonesia.com",
 			Password:       "Makan198",
 			DB:             "gsa_db",
@@ -129,7 +129,7 @@ func TestCheckExistingTechnicianInODOOMS_NotFound(t *testing.T) {
 // TestCheckExistingTechnicianInODOOMS_ServerError tests server error handling
 func TestCheckExistingTechnicianInODOOMS_ServerError(t *testing.T) {
 	// Create mock server that returns server error
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`Internal Server Error`))
 	}))

@@ -228,6 +228,34 @@ func (m Model) keyCategories(key string) (tea.Model, tea.Cmd) {
 // ── Commands ────────────────────────────────────────────────────────────────
 
 // keyCommands handles key input when viewing a category's command list (navigate, multi-select, execute, search).
+// handleSpaceKey toggles selection of the current item in multi-select mode.
+func (m Model) handleSpaceKey(cat Category) Model {
+	if !cat.MultiSelect {
+		return m
+	}
+	if m.selected[m.cmdIdx] {
+		delete(m.selected, m.cmdIdx)
+	} else {
+		m.selected[m.cmdIdx] = true
+	}
+	return m
+}
+
+// handleSelectAll toggles selection of all items in multi-select mode.
+func (m Model) handleSelectAll(cat Category) Model {
+	if !cat.MultiSelect {
+		return m
+	}
+	if len(m.selected) == len(cat.Items) {
+		m.selected = make(map[int]bool)
+	} else {
+		for i := range cat.Items {
+			m.selected[i] = true
+		}
+	}
+	return m
+}
+
 func (m Model) keyCommands(key string) (tea.Model, tea.Cmd) {
 	cat := m.cats[m.activeCat]
 
@@ -252,23 +280,9 @@ func (m Model) keyCommands(key string) (tea.Model, tea.Cmd) {
 	case "end", "G":
 		m.cmdIdx = len(cat.Items) - 1
 	case " ":
-		if cat.MultiSelect {
-			if m.selected[m.cmdIdx] {
-				delete(m.selected, m.cmdIdx)
-			} else {
-				m.selected[m.cmdIdx] = true
-			}
-		}
+		m = m.handleSpaceKey(cat)
 	case "a":
-		if cat.MultiSelect {
-			if len(m.selected) == len(cat.Items) {
-				m.selected = make(map[int]bool)
-			} else {
-				for i := range cat.Items {
-					m.selected[i] = true
-				}
-			}
-		}
+		m = m.handleSelectAll(cat)
 	case "enter":
 		return m.execSelected()
 	}
@@ -494,29 +508,7 @@ func (m Model) keySearch(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "enter":
-		if len(m.searchResults) == 0 {
-			return m, nil
-		}
-		result := m.searchResults[m.searchIdx]
-		item := result.item
-
-		// Dangerous → confirm first
-		if item.Dangerous {
-			m.confirmItem = item
-			m.state = viewConfirm
-			return m, nil
-		}
-
-		// Long-running → hand off terminal
-		if item.LongRunning {
-			c := exec.Command(m.makeCmd, item.MakeTarget) //nolint:gosec
-			return m, tea.ExecProcess(c, func(err error) tea.Msg {
-				return execDoneMsg{err: err}
-			})
-		}
-
-		// One-shot command
-		return m.runBatch([]string{item.MakeTarget})
+		return m.execSearchResult()
 
 	default:
 		// Only accept printable single characters for the search query
@@ -527,6 +519,26 @@ func (m Model) keySearch(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	}
+}
+
+// execSearchResult executes the currently highlighted search result.
+func (m Model) execSearchResult() (tea.Model, tea.Cmd) {
+	if len(m.searchResults) == 0 {
+		return m, nil
+	}
+	item := m.searchResults[m.searchIdx].item
+	if item.Dangerous {
+		m.confirmItem = item
+		m.state = viewConfirm
+		return m, nil
+	}
+	if item.LongRunning {
+		c := exec.Command(m.makeCmd, item.MakeTarget) //nolint:gosec
+		return m, tea.ExecProcess(c, func(err error) tea.Msg {
+			return execDoneMsg{err: err}
+		})
+	}
+	return m.runBatch([]string{item.MakeTarget})
 }
 
 // filterCommands returns all commands across all categories that match the query.

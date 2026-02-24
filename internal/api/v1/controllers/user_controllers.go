@@ -4,7 +4,7 @@ import (
 	"os"
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

@@ -1,3 +1,11 @@
+// Package migrations contains database migration scripts for the service-platform application.
+// Each migration is defined as a struct with an ID, Timestamp, Up function to apply the migration, and Down function to revert it.
+// Migrations are registered in the init function and can be run using the migration tool provided in the application.
+// This file defines the initial schema for the database, creating all necessary tables for users, roles, features, logs, languages, bad words, app config, WhatsApp and Telegram models.
+// The Up function uses GORM's AutoMigrate to create tables based on the defined models, ensuring that column names and types are consistent with the application's GORM configuration.
+// The Down function drops the tables in reverse order to handle foreign key constraints, using the actual table names defined in the configuration.
+// Note: When running the migrations, ensure that the database connection is properly configured and that you have the necessary permissions to create and drop tables. Always back up your database before applying migrations, especially when running the Down function, as it will result in data loss.
+// For more information on how to use the migration tool, see the documentation in the internal/migrations package and the main application README.
 package migrations
 
 import (

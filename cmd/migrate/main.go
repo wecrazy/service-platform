@@ -1,3 +1,24 @@
+// Package main is the entry point for the database migration CLI tool.
+//
+// It supports four actions: up (apply pending migrations), down (rollback N steps),
+// status (list applied/pending migrations), and reset (rollback everything after
+// interactive confirmation).
+//
+// Migrations are registered via init() functions in internal/database/migrations
+// and executed through the MigrationService in internal/migrations.
+//
+// Flags:
+//
+//	-action string   Migration action: up, down, status, reset (default "up")
+//	-steps  int      Number of migrations to rollback for "down" (default 1)
+//
+// Usage:
+//
+//	go run cmd/migrate/main.go -action up
+//	go run cmd/migrate/main.go -action down -steps 2
+//	go run cmd/migrate/main.go -action status
+//	make migrate-up          # shorthand via Makefile
+//	make migrate-down        # rolls back 1 step
 package main
 
 import (

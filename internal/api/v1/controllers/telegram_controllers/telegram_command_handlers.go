@@ -1,3 +1,4 @@
+// Package telegramcontrollers provides Telegram bot command and message handling logic.
 package telegramcontrollers
 
 import (
@@ -7,7 +8,7 @@ import (
 	"service-platform/internal/config"
 	telegrammodel "service-platform/internal/core/model/telegram_model"
 	"service-platform/internal/database"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 	"strings"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 )
 
 // canAccessCommand checks if user type can access specific commands
-func (h *TelegramHelper) canAccessCommand(userType telegrammodel.TelegramUserType, allowedTypes []telegrammodel.TelegramUserType) bool {
+func (*TelegramHelper) canAccessCommand(userType telegrammodel.TelegramUserType, allowedTypes []telegrammodel.TelegramUserType) bool {
 	for _, allowedType := range allowedTypes {
 		if userType == allowedType {
 			return true
@@ -27,7 +28,7 @@ func (h *TelegramHelper) canAccessCommand(userType telegrammodel.TelegramUserTyp
 }
 
 // isValidCommandForUserType checks if a command is valid for the given user type
-func (h *TelegramHelper) isValidCommandForUserType(command string, userType telegrammodel.TelegramUserType) bool {
+func (*TelegramHelper) isValidCommandForUserType(command string, userType telegrammodel.TelegramUserType) bool {
 	validCommands := map[telegrammodel.TelegramUserType][]string{
 		telegrammodel.CommonUser: {
 			"start", "help",
@@ -183,36 +184,7 @@ func (h *TelegramHelper) HandleCommand(message *tgbotapi.Message) {
 	}).Info("Received command")
 
 	// Store command message in database
-	var replyToID *int64
-	if message.ReplyToMessage != nil {
-		replyID := int64(message.ReplyToMessage.MessageID)
-		replyToID = &replyID
-	}
-
-	incomingMsg := telegrammodel.TelegramIncomingMsg{
-		ChatID:      fmt.Sprintf("%d", message.Chat.ID),
-		SenderID:    fmt.Sprintf("%d", message.From.ID),
-		SenderName:  message.From.UserName,
-		MessageBody: message.Text, // Store the full command text
-		MessageType: telegrammodel.TelegramTextMessage,
-		IsGroup:     message.Chat.IsGroup() || message.Chat.IsSuperGroup(),
-		ReceivedAt:  message.Time(),
-		MessageID:   int64(message.MessageID),
-		ReplyToID:   replyToID,
-		MsgStatus:   "seen", // Mark as seen immediately
-	}
-
-	// Check if command message already exists to prevent duplicates
-	var existing telegrammodel.TelegramIncomingMsg
-	if err := h.db.Where("telegram_chat_id = ? AND telegram_message_id = ?", incomingMsg.ChatID, incomingMsg.MessageID).First(&existing).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			if err := h.db.Create(&incomingMsg).Error; err != nil {
-				logrus.WithError(err).Error("Failed to store incoming Telegram command")
-			}
-		} else {
-			logrus.WithError(err).Error("Failed to check existing Telegram command")
-		}
-	} // else command already exists, skip
+	h.storeCommandMessage(message)
 
 	// Send typing indicator before responding
 	h.sendTypingAction(message.Chat.ID)
@@ -248,38 +220,64 @@ func (h *TelegramHelper) HandleCommand(message *tgbotapi.Message) {
 	}
 
 	// Route commands based on user type
+	h.routeCommand(message, telegramUser, userLang)
+
+	// Increment user quota after successful command processing
+	h.incrementUserQuota(message.Chat.ID)
+}
+
+// storeCommandMessage stores an incoming command message in the database, avoiding duplicates.
+func (h *TelegramHelper) storeCommandMessage(message *tgbotapi.Message) {
+	var replyToID *int64
+	if message.ReplyToMessage != nil {
+		replyID := int64(message.ReplyToMessage.MessageID)
+		replyToID = &replyID
+	}
+
+	incomingMsg := telegrammodel.TelegramIncomingMsg{
+		ChatID:      fmt.Sprintf("%d", message.Chat.ID),
+		SenderID:    fmt.Sprintf("%d", message.From.ID),
+		SenderName:  message.From.UserName,
+		MessageBody: message.Text,
+		MessageType: telegrammodel.TelegramTextMessage,
+		IsGroup:     message.Chat.IsGroup() || message.Chat.IsSuperGroup(),
+		ReceivedAt:  message.Time(),
+		MessageID:   int64(message.MessageID),
+		ReplyToID:   replyToID,
+		MsgStatus:   "seen",
+	}
+
+	var existing telegrammodel.TelegramIncomingMsg
+	if err := h.db.Where("telegram_chat_id = ? AND telegram_message_id = ?", incomingMsg.ChatID, incomingMsg.MessageID).First(&existing).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			if err := h.db.Create(&incomingMsg).Error; err != nil {
+				logrus.WithError(err).Error("Failed to store incoming Telegram command")
+			}
+		} else {
+			logrus.WithError(err).Error("Failed to check existing Telegram command")
+		}
+	}
+}
+
+// routeCommand dispatches the command to the correct handler based on its name.
+func (h *TelegramHelper) routeCommand(message *tgbotapi.Message, telegramUser telegrammodel.TelegramUsers, userLang string) {
+	command := message.Command()
 	switch command {
 	case "start":
 		h.handleStartCommand(message, telegramUser, userLang)
-
 	case "help":
 		h.handleHelpCommand(message, telegramUser, userLang)
-
-	// Technician MS Commands
 	case "input_wo":
 		h.handleTechnicianInputWO(message, telegramUser, userLang)
-
 	case "input_tid":
 		h.handleTechnicianInputTID(message, telegramUser, userLang)
-
 	case "info_tid":
 		h.handleTechnicianInfoTID(message, telegramUser, userLang)
-
-	// TODO: add SPL & SAC here if exitst !!!!!!!
-	// SPL MS Commands
-
-	// SAC MS Commands
-
-	// TA MS Commands
 	case "generate_report_ta":
 		h.handleTAGenerateReport(message, telegramUser, userLang)
-
-	// Head MS Commands
 	case "view_status_sp":
 		h.handleHeadViewStatusSP(message, telegramUser, userLang)
-
 	default:
-		// Check if it's a valid command for the user's role
 		if h.isValidCommandForUserType(command, telegramUser.UserType) {
 			msg := tgbotapi.NewMessage(message.Chat.ID, h.getLocalizedMessage(userLang, "command_not_implemented"))
 			msg.ReplyToMessageID = message.MessageID
@@ -290,12 +288,8 @@ func (h *TelegramHelper) HandleCommand(message *tgbotapi.Message) {
 			h.bot.Send(msg)
 		}
 	}
-
-	// Increment user quota after successful command processing
-	h.incrementUserQuota(message.Chat.ID)
 }
 
-// handleTechnicianInputWO handles WO input for technician MS
 func (h *TelegramHelper) handleTechnicianInputWO(message *tgbotapi.Message, telegramUser telegrammodel.TelegramUsers, userLang string) {
 	if !h.canAccessCommand(
 		telegramUser.UserType,

@@ -1,3 +1,5 @@
+// Package controllers provides HTTP handler functions for the web GUI,
+// API endpoints, and service integrations used by the service-platform application.
 package controllers
 
 import (
@@ -11,8 +13,8 @@ import (
 	"service-platform/internal/api/v1/dto"
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
-	"service-platform/internal/pkg/fun"
-	"service-platform/internal/pkg/webguibuilder"
+	"service-platform/pkg/fun"
+	"service-platform/pkg/webguibuilder"
 	"strconv"
 	"strings"
 	"time"
@@ -70,7 +72,7 @@ func GetWebLogin(db *gorm.DB) gin.HandlerFunc {
 				c.HTML(http.StatusOK, "login.html", parameters)
 				return
 			}
-			c.Redirect(http.StatusFound, config.GLOBAL_URL+"page")
+			c.Redirect(http.StatusFound, config.GlobalURL+"page")
 		} else {
 			for _, cookie := range cookies {
 				cookie.Expires = time.Now().AddDate(0, 0, -1)
@@ -107,284 +109,66 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		}
 
 		var loginForm dto.LoginRequest
-
-		// Bind form data to the LoginForm struct
 		if err := c.ShouldBind(&loginForm); err != nil {
 			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		// Validate captcha
-		// Allow client-side verified CAPTCHA when frontend sends client_captcha_valid=1
-		clientCaptcha := c.PostForm("client_captcha_valid")
-		if clientCaptcha != "1" {
+		if clientCaptcha := c.PostForm("client_captcha_valid"); clientCaptcha != "1" {
 			if !captcha.VerifyString(loginForm.CaptchaID, loginForm.Captcha) {
 				fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, "Invalid captcha")
 				return
 			}
 		}
 
-		var user model.Users
-
-		// Check if the login is attempted with an email or username
-		whereQuery := ""
-		if strings.Contains(loginForm.EmailUsername, "@") {
-			whereQuery = "Email = ? "
-		} else {
-			whereQuery = "Username = ? "
-
-		}
-		if err := db.Where(whereQuery, loginForm.EmailUsername).First(&user).Error; err != nil {
+		user, ok := lookupLoginUser(db, loginForm.EmailUsername)
+		if !ok {
 			fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, "Wrong Username or Password")
 			return
 		}
 
-		// Reset attempts if lockout period has passed
-		if user.LockUntil != nil && user.LockUntil.Before(time.Now()) {
-			user.LoginAttempts = 0
-			user.LockUntil = nil
-			db.Save(&user)
-		}
-
-		// Check if account is currently locked
-		if user.LockUntil != nil && user.LockUntil.After(time.Now()) {
-			fun.HandleAPIErrorSimple(c, http.StatusTooManyRequests, "Account locked. Try again at "+user.LockUntil.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
+		if locked, msg := checkAccountLockout(db, &user); locked {
+			fun.HandleAPIErrorSimple(c, http.StatusTooManyRequests, msg)
 			return
 		}
 
 		if !fun.IsPasswordMatched(loginForm.Password, user.Password) {
-			user.LoginAttempts++
-			now := time.Now()
-			user.LastFailedLogin = &now
-
-			// Lock the account if over the retry limit
-			if user.LoginAttempts >= user.MaxRetry {
-				lockUntil := now.Add(time.Duration(config.ServicePlatform.Get().App.LoginLockUntil) * time.Minute)
-				user.LockUntil = &lockUntil
-			}
-
-			db.Save(&user)
-
-			locked := ""
-			if user.LockUntil != nil && user.LockUntil.After(time.Now()) {
-				locked = fmt.Sprintf(" Account locked until %s.", user.LockUntil.Format(config.DATE_YYYY_MM_DD_HH_MM_SS))
-			}
-
-			errorMessage := fmt.Sprintf(
-				"Wrong Username or Password or Captcha. Attempt %d of %d.%s",
-				user.LoginAttempts, user.MaxRetry, locked,
-			)
-
-			fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, errorMessage)
+			msg := recordFailedLoginAttempt(db, &user)
+			fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, msg)
 			return
 		}
 
-		// LINE AFTER USER VERIFIED LOGIN...__________________________________________________________________________
-
-		// Reset failed login attempts and lock
+		// User verified — reset lockout state
 		user.LoginAttempts = 0
 		user.LockUntil = nil
 
-		errSet := redisDB.Set(context.Background(), "last_activity_time:"+user.Email, time.Now().UnixMilli(), 30*time.Minute).Err()
-		if errSet != nil {
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error, Error Saving to Memory : "+errSet.Error())
+		if err := redisDB.Set(context.Background(), "last_activity_time:"+user.Email, time.Now().UnixMilli(), 30*time.Minute).Err(); err != nil {
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Internal Server Error, Error Saving to Memory : "+err.Error())
 			return
 		}
 
-		// Check if its being activated
-		var userStatuses []model.UserStatus
-		db.Find(&userStatuses)
-		for _, userStatus := range userStatuses {
-			if userStatus.ID == uint(user.Status) {
-				if userStatus.Title != "ACTIVE" {
-					fun.HandleAPIErrorSimple(c, http.StatusUnauthorized, fmt.Sprintf("Please Contact Our Technical Support To Activate your Account @+%s", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport))
-					return
-				}
-			}
+		if !isUserAccountActive(c, db, user) {
+			return
 		}
 
-		// Set session expiration time (e.g., 7 days in the future)
-		currentUnixTime := time.Now().Unix() * 1000               // Convert to milliseconds
-		futureTime := currentUnixTime + (7 * 24 * 60 * 60 * 1000) // 7 days in milliseconds
-		user.SessionExpired = futureTime
+		// Refresh session
+		currentUnixTime := time.Now().Unix() * 1000
+		user.SessionExpired = currentUnixTime + (7 * 24 * 60 * 60 * 1000)
 		user.Session = fun.GenerateRandomString(40)
 		user.UpdatedAt = time.Now()
-
-		// SAVE LOGIN SESSION
 		if err := db.Save(&user).Error; err != nil {
 			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Failed to update user: "+err.Error())
 			return
 		}
-		// ws.CloseWebsocketConnection(user.Email)
 
-		var user_roles []struct {
-			model.RolePrivilege
-			Path string `json:"path" gorm:"column:path"`
-		}
-
-		if err := db.
-			Table(fmt.Sprintf("%s rp", config.ServicePlatform.Get().Database.TbRolePrivilege)).
-			Unscoped(). // Disable soft deletes for this query
-			Select("rp.*,f.path").
-			Joins(fmt.Sprintf("LEFT JOIN %s f ON f.id = rp.feature_id", config.ServicePlatform.Get().Database.TbFeature)).
-			Where("rp.role_id = ?", user.Role).
-			// Offset(0).
-			// Limit(1).
-			Find(&user_roles).Error; err != nil {
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error querying database: "+err.Error())
-			return
-		}
-
-		// Initialize the dynamic map
-		roleData := make(map[string]interface{})
-
-		// Populate the map with path and privilege string
-		for _, role := range user_roles {
-			privilege := strconv.Itoa(int(role.CanCreate)) + strconv.Itoa(int(role.CanRead)) + strconv.Itoa(int(role.CanUpdate)) + strconv.Itoa(int(role.CanDelete))
-			roleData[role.Path] = privilege
-		}
-
-		var roles model.Role
-		if err := db.Where("id = ?", user.Role).First(&roles).Error; err != nil {
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error querying database: "+err.Error())
-			return
-		}
-		authToken := fun.GenerateRandomString(40 + rand.Intn(25) + 1)
-		randomToken := fun.GenerateRandomString(40 + rand.Intn(25) + 1)
-
-		profile_image := "/assets/img/avatars/default.jpg"
-		if user.ProfileImage != "" {
-			profile_image = user.ProfileImage
-		}
-		imageMaps := map[string]interface{}{
-			"t":  fun.GenerateRandomString(3),
-			"id": user.ID,
-		}
-		pathString, err := fun.GetAESEcryptedURLfromJSON(imageMaps)
+		tokenString, authToken, randomToken, err := buildLoginToken(c, db, &user)
 		if err != nil {
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Could not encripting image "+err.Error())
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		// Only override profile_image if the user doesn't have a custom one
-		if user.ProfileImage == "" {
-			profile_image = "/profile/default.jpg?f=" + pathString
-		}
+		setLoginCookies(c, authToken, randomToken, tokenString, user.Session)
 
-		// Create jwt.MapClaims and merge with roleData
-		claims := map[string]interface{}{
-			"id":              user.ID,
-			"fullname":        user.Fullname,
-			"username":        user.Username,
-			"phone":           user.Phone,
-			"email":           user.Email,
-			"password":        user.Password,
-			"type":            user.Type,
-			"role":            user.Role,
-			"role_name":       roles.RoleName,
-			"profile_image":   profile_image,
-			"status":          user.Status,
-			"status_name":     "",
-			"last_login":      time.Now(),
-			"session":         user.Session,
-			"session_expired": user.SessionExpired,
-			"random":          randomToken,
-			"auth":            authToken,
-			"ip":              user.IP,
-		}
-
-		// Merge roleData into claims
-		for k, v := range roleData {
-			claims[k] = v
-		}
-
-		jsonText, err := json.Marshal(claims)
-		if err != nil {
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Could not string token "+err.Error())
-			return
-		}
-		tokenString, err := fun.GetAESEncrypted(string(jsonText))
-		if err != nil {
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Could not encripting token "+err.Error())
-			return
-		}
-
-		// Parse the login time as an integer
-		loginExpiredMinutes := config.ServicePlatform.Get().App.LoginTimeM
-		if loginExpiredMinutes <= 0 {
-			loginExpiredMinutes = 30
-		}
-
-		// Calculate the expiration time by adding loginExpiredMinutes to the current time
-		expiration := time.Now().Add(time.Duration(loginExpiredMinutes) * time.Minute)
-		// Set random token as cookie
-		auth := &http.Cookie{
-			Name:     "auth",
-			Value:    authToken,
-			Expires:  expiration,
-			Path:     config.GLOBAL_URL,
-			Domain:   config.ServicePlatform.Get().App.CookieLoginDomain,
-			SameSite: http.SameSiteStrictMode,
-			Secure:   config.ServicePlatform.Get().App.CookieLoginSecure,
-			HttpOnly: true,
-		}
-		http.SetCookie(c.Writer, auth)
-
-		// Set random token as cookie
-		random := &http.Cookie{
-			Name:     "random",
-			Value:    randomToken,
-			Expires:  expiration,
-			Path:     config.GLOBAL_URL,
-			Domain:   config.ServicePlatform.Get().App.CookieLoginDomain,
-			SameSite: http.SameSiteStrictMode,
-			Secure:   config.ServicePlatform.Get().App.CookieLoginSecure,
-			HttpOnly: true,
-		}
-		http.SetCookie(c.Writer, random)
-
-		// Set JWT token as cookie
-		tokenCookie := &http.Cookie{
-			Name:     "token",
-			Value:    tokenString,
-			Expires:  expiration,
-			Path:     config.GLOBAL_URL,
-			Domain:   config.ServicePlatform.Get().App.CookieLoginDomain,
-			SameSite: http.SameSiteStrictMode,
-			Secure:   config.ServicePlatform.Get().App.CookieLoginSecure,
-			HttpOnly: true,
-		}
-		http.SetCookie(c.Writer, tokenCookie)
-
-		// Create and set the "credentials" cookie
-		credentialsCookie := &http.Cookie{
-			Name:     "credentials",
-			Value:    url.QueryEscape(user.Session),
-			Expires:  expiration,
-			Path:     config.GLOBAL_URL,
-			Domain:   config.ServicePlatform.Get().App.CookieLoginDomain,
-			SameSite: http.SameSiteStrictMode,
-			Secure:   config.ServicePlatform.Get().App.CookieLoginSecure,
-			HttpOnly: true,
-		}
-		http.SetCookie(c.Writer, credentialsCookie)
-
-		// syncCookie := &http.Cookie{
-		// 	Name:     "jm_id",
-		// 	Value:    url.QueryEscape(user.Session),
-		// 	Expires:  expiration,
-		// 	Path:     config.GLOBAL_URL,
-		// 	Domain:   config.GetConfig().App.CookieLoginDomain,
-		// 	SameSite: http.SameSiteLaxMode,
-		// 	Secure:   config.GetConfig().App.CookieLoginSecure,
-		// 	HttpOnly: false,
-		// }
-		// http.SetCookie(c.Writer, syncCookie)
-		// c.SecureJSON(http.StatusOK, gin.H{
-		// 	"status": "01",
-		// })
-
-		// Save the newLog to the database
 		db.Create(&model.LogActivity{
 			UserID:    user.ID,
 			FullName:  user.Fullname,
@@ -394,12 +178,145 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			IP:        c.ClientIP(),
 			UserAgent: c.Request.UserAgent(),
 			ReqMethod: c.Request.Method,
-			ReqUri:    c.Request.RequestURI,
+			ReqURI:    c.Request.RequestURI,
 		})
 
-		c.Redirect(http.StatusSeeOther, config.GLOBAL_URL+"page")
+		c.Redirect(http.StatusSeeOther, config.GlobalURL+"page")
 		c.Abort()
 	}
+}
+
+// lookupLoginUser finds a user by email or username.
+func lookupLoginUser(db *gorm.DB, emailUsername string) (model.Users, bool) {
+	whereQuery := "Username = ? "
+	if strings.Contains(emailUsername, "@") {
+		whereQuery = "Email = ? "
+	}
+	var user model.Users
+	if err := db.Where(whereQuery, emailUsername).First(&user).Error; err != nil {
+		return user, false
+	}
+	return user, true
+}
+
+// checkAccountLockout resets expired lockouts and returns (true, message) when account is still locked.
+func checkAccountLockout(db *gorm.DB, user *model.Users) (bool, string) {
+	if user.LockUntil != nil && user.LockUntil.Before(time.Now()) {
+		user.LoginAttempts = 0
+		user.LockUntil = nil
+		db.Save(user)
+	}
+	if user.LockUntil != nil && user.LockUntil.After(time.Now()) {
+		return true, "Account locked. Try again at " + user.LockUntil.Format(config.DateYYYYMMDDHHMMSS)
+	}
+	return false, ""
+}
+
+// recordFailedLoginAttempt increments the attempt counter, locks if needed, and returns the error message.
+func recordFailedLoginAttempt(db *gorm.DB, user *model.Users) string {
+	user.LoginAttempts++
+	now := time.Now()
+	user.LastFailedLogin = &now
+	if user.LoginAttempts >= user.MaxRetry {
+		lockUntil := now.Add(time.Duration(config.ServicePlatform.Get().App.LoginLockUntil) * time.Minute)
+		user.LockUntil = &lockUntil
+	}
+	db.Save(user)
+	locked := ""
+	if user.LockUntil != nil && user.LockUntil.After(time.Now()) {
+		locked = fmt.Sprintf(" Account locked until %s.", user.LockUntil.Format(config.DateYYYYMMDDHHMMSS))
+	}
+	return fmt.Sprintf("Wrong Username or Password or Captcha. Attempt %d of %d.%s", user.LoginAttempts, user.MaxRetry, locked)
+}
+
+// isUserAccountActive returns true when the user has ACTIVE status; false + responds with error when not.
+func isUserAccountActive(c *gin.Context, db *gorm.DB, user model.Users) bool {
+	var userStatuses []model.UserStatus
+	db.Find(&userStatuses)
+	for _, us := range userStatuses {
+		if us.ID == uint(user.Status) && us.Title != "ACTIVE" {
+			fun.HandleAPIErrorSimple(c, http.StatusUnauthorized,
+				fmt.Sprintf("Please Contact Our Technical Support To Activate your Account @+%s", config.ServicePlatform.Get().Whatsnyan.WATechnicalSupport))
+			return false
+		}
+	}
+	return true
+}
+
+// buildLoginToken builds the encrypted token string plus auth and random tokens.
+func buildLoginToken(c *gin.Context, db *gorm.DB, user *model.Users) (tokenString, authToken, randomToken string, err error) {
+	roleData, err := loadRoleData(db, user.Role)
+	if err != nil {
+		return "", "", "", fmt.Errorf("Error querying database: %w", err)
+	}
+	var roles model.Role
+	if err := db.Where("id = ?", user.Role).First(&roles).Error; err != nil {
+		return "", "", "", fmt.Errorf("Error querying database: %w", err)
+	}
+	authToken = fun.GenerateRandomString(40 + rand.Intn(25) + 1)
+	randomToken = fun.GenerateRandomString(40 + rand.Intn(25) + 1)
+
+	profileImage, err := resolveLoginProfileImage(user)
+	if err != nil {
+		return "", "", "", fmt.Errorf("Could not encripting image %w", err)
+	}
+
+	claims := map[string]interface{}{
+		"id": user.ID, "fullname": user.Fullname, "username": user.Username,
+		"phone": user.Phone, "email": user.Email, "password": user.Password,
+		"type": user.Type, "role": user.Role, "role_name": roles.RoleName,
+		"profile_image": profileImage, "status": user.Status, "status_name": "",
+		"last_login": time.Now(), "session": user.Session, "session_expired": user.SessionExpired,
+		"random": randomToken, "auth": authToken, "ip": user.IP,
+	}
+	for k, v := range roleData {
+		claims[k] = v
+	}
+	jsonText, err := json.Marshal(claims)
+	if err != nil {
+		return "", "", "", fmt.Errorf("Could not string token %w", err)
+	}
+	tokenString, err = fun.GetAESEncrypted(string(jsonText))
+	if err != nil {
+		return "", "", "", fmt.Errorf("Could not encripting token %w", err)
+	}
+	_ = c
+	return tokenString, authToken, randomToken, nil
+}
+
+// resolveLoginProfileImage returns a profile image URL for the user.
+func resolveLoginProfileImage(user *model.Users) (string, error) {
+	if user.ProfileImage != "" {
+		return user.ProfileImage, nil
+	}
+	imageMaps := map[string]interface{}{"t": fun.GenerateRandomString(3), "id": user.ID}
+	pathString, err := fun.GetAESEcryptedURLfromJSON(imageMaps)
+	if err != nil {
+		return "", err
+	}
+	return "/profile/default.jpg?f=" + pathString, nil
+}
+
+// setLoginCookies writes auth, random, token, and credentials cookies to the response.
+func setLoginCookies(c *gin.Context, authToken, randomToken, tokenString, session string) {
+	cfg := config.ServicePlatform.Get().App
+	loginExpiredMinutes := cfg.LoginTimeM
+	if loginExpiredMinutes <= 0 {
+		loginExpiredMinutes = 30
+	}
+	expiration := time.Now().Add(time.Duration(loginExpiredMinutes) * time.Minute)
+	makeCookie := func(name, value string, httpOnly bool) *http.Cookie {
+		return &http.Cookie{
+			Name: name, Value: value, Expires: expiration,
+			Path: config.GlobalURL, Domain: cfg.CookieLoginDomain,
+			SameSite: http.SameSiteStrictMode, Secure: cfg.CookieLoginSecure,
+			HttpOnly: httpOnly,
+		}
+	}
+	http.SetCookie(c.Writer, makeCookie("auth", authToken, true))
+	http.SetCookie(c.Writer, makeCookie("random", randomToken, true))
+	http.SetCookie(c.Writer, makeCookie("token", tokenString, true))
+	http.SetCookie(c.Writer, makeCookie("credentials", url.QueryEscape(session), true))
 }
 
 // VerifyCaptcha godoc
@@ -414,6 +331,8 @@ func PostWebLogin(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 // @Router       /verify-captcha [post]
 func VerifyCaptcha(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		_ = db // Currently not used, but kept for potential future use or consistency with other handlers
+
 		var captchaForm dto.CaptchaRequest
 
 		if err := c.ShouldBind(&captchaForm); err != nil {
@@ -465,7 +384,7 @@ func GetWebForgotPassword(db *gorm.DB) gin.HandlerFunc {
 				c.HTML(http.StatusOK, "forgot-password.html", parameters)
 				return
 			}
-			c.Redirect(http.StatusFound, config.GLOBAL_URL+"page")
+			c.Redirect(http.StatusFound, config.GlobalURL+"page")
 		} else {
 			c.HTML(http.StatusOK, "forgot-password.html", parameters)
 		}
@@ -605,6 +524,8 @@ func PostForgotPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 // @Router       /reset-password/{email}/{token_data} [get]
 func GetWebResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		_ = db // Currently not used, but kept for potential future use or consistency with other handlers
+
 		// Extract email and token_data from URL parameters
 		email := c.Param("email")
 		tokenData := c.Param("token_data")
@@ -685,9 +606,9 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		}
 
 		numberOfPreviousPasswordsToCheck := 4
-		var check_user_password_changelogs []model.UserPasswordChangeLog
-		db.Where("email = ?", email).Order("created_at desc").Find(&check_user_password_changelogs)
-		for _, data := range check_user_password_changelogs {
+		var checkUserPasswordChangelogs []model.UserPasswordChangeLog
+		db.Where("email = ?", email).Order("created_at desc").Find(&checkUserPasswordChangelogs)
+		for _, data := range checkUserPasswordChangelogs {
 			if fun.IsPasswordMatched(password, data.Password) {
 				fun.HandleAPIErrorSimple(c, http.StatusBadRequest, fmt.Sprintf("You cannot reuse one of your last %d passwords. Please choose a different password", numberOfPreviousPasswordsToCheck))
 				return
@@ -730,28 +651,9 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			return
 		}
 
-		var user_password_changelog model.UserPasswordChangeLog
-		user_password_changelog.Email = user.Email
-		user_password_changelog.Password = user.Password
-		if err := db.Create(&user_password_changelog).Error; err != nil {
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error updating password changelog"+err.Error())
+		if err := savePasswordChangelog(db, user, numberOfPreviousPasswordsToCheck); err != nil {
+			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, err.Error())
 			return
-		}
-		var user_password_changelogs []model.UserPasswordChangeLog
-
-		// Fetch the password change logs sorted by CreatedAt in ascending order
-		if err := db.Where("email = ?", user.Email).
-			Order("created_at asc").
-			Find(&user_password_changelogs).Error; err != nil {
-			fun.HandleAPIErrorSimple(c, http.StatusBadRequest, "Email not found")
-			return
-		}
-
-		// If there are more than %d records, delete the oldest ones
-		if len(user_password_changelogs) > numberOfPreviousPasswordsToCheck {
-			for i := 0; i < len(user_password_changelogs)-numberOfPreviousPasswordsToCheck; i++ {
-				db.Delete(&user_password_changelogs[i])
-			}
 		}
 		// Remove the token from Redis
 		if err := redisDB.Del(context.Background(), redisKey).Err(); err != nil {
@@ -776,248 +678,35 @@ func PostResetPassword(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 func MainPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookies := c.Request.Cookies()
-
-		// Parse JWT token from cookie
-		tokenString, err := c.Cookie("token")
-		if err != nil {
-			fun.ClearCookiesAndRedirect(c, cookies)
-			return
-		}
-		tokenString = strings.ReplaceAll(tokenString, " ", "+")
-
-		decrypted, err := fun.GetAESDecrypted(tokenString)
-		if err != nil {
-			fmt.Println("Error during decryption", err)
-			fun.ClearCookiesAndRedirect(c, cookies)
-			return
-		}
-		var claims map[string]interface{}
-		err = json.Unmarshal(decrypted, &claims)
-		if err != nil {
-			fmt.Printf("Error converting JSON to map: %v", err)
-			fun.ClearCookiesAndRedirect(c, cookies)
-			return
-		}
-		emailToken := claims["email"].(string)
-		if emailToken == "" {
-			fun.ClearCookiesAndRedirect(c, cookies)
-			return
-		}
-		// Validate additional cookies
-		if !fun.ValidateCookie(c, "credentials", claims["session"]) ||
-			!fun.ValidateCookie(c, "auth", claims["auth"]) ||
-			!fun.ValidateCookie(c, "random", claims["random"]) {
-			fun.RemoveEmailSession(db, emailToken)
-			fun.ClearCookiesAndRedirect(c, cookies)
-			return
-		}
-		session, ok := claims["session"].(string)
+		user, session, claims, ok := validateMainPageSession(c, db, cookies)
 		if !ok {
-			fun.RemoveEmailSession(db, emailToken)
-			fun.ClearCookiesAndRedirect(c, cookies)
 			return
-		}
-		var user model.Users
-		resultAdmin := db.Where("id = ?", claims["id"]).First(&user)
-		if resultAdmin.Error != nil {
-			fun.RemoveEmailSession(db, emailToken)
-			fun.ClearCookiesAndRedirect(c, cookies)
-			return
-		}
-
-		if user.Session != session {
-			fun.RemoveEmailSession(db, emailToken)
-			fun.ClearCookiesAndRedirect(c, cookies)
-			return
-		}
-
-		var featuresPrivileges []struct {
-			model.RolePrivilege
-			ParentID  uint   `json:"parent_id" gorm:"column:parent_id"`
-			Title     string `json:"title" gorm:"column:title"`
-			Path      string `json:"path" gorm:"column:path"`
-			MenuOrder uint   `json:"menu_order" gorm:"column:menu_order"`
-			Status    uint   `json:"status" gorm:"column:status"`
-			Level     uint   `json:"level" gorm:"column:level"`
-			Icon      string `json:"icon" gorm:"column:icon"`
 		}
 
 		yamlCfg := config.ServicePlatform.Get()
-
-		if err := db.
-			Table(fmt.Sprintf("%s a", yamlCfg.Database.TbRolePrivilege)).
-			Unscoped(). // Disable soft deletes for this query
-			Select("a.*, b.parent_id , b.title , b.path , b.menu_order , b.status , b.level , b.icon").
-			Joins(fmt.Sprintf("LEFT JOIN %s b ON a.feature_id = b.id", yamlCfg.Database.TbFeature)).
-			Where("a.role_id = ?", claims["role"]).
-			Order("b.menu_order").
-			Find(&featuresPrivileges).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				fun.RemoveEmailSession(db, emailToken)
-				fun.ClearCookiesAndRedirect(c, cookies)
-				return
-			}
-
-			// Handle other errors
-			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error querying database: "+err.Error())
-			fun.RemoveEmailSession(db, emailToken)
-			fun.ClearCookiesAndRedirect(c, cookies)
+		featuresPrivileges, ok := loadMainPagePrivileges(c, db, emailToken(claims), cookies, claims["role"])
+		if !ok {
 			return
 		}
 
-		fileContent := ""
-
-		fileContentTab := ""
-		for _, featurePrivilegeParent := range featuresPrivileges {
-			fileContentChild := ""
-			menuToggle := ""
-
-			if len(strings.TrimSpace(featurePrivilegeParent.Path)) == 0 {
-				// Check if this parent has any accessible children before processing
-				hasAccessibleChildren := false
-				for _, featurePrivilege := range featuresPrivileges {
-					if featurePrivilege.ParentID == featurePrivilegeParent.MenuOrder {
-						// Check if the child has any permissions (at least read access)
-						if featurePrivilege.CanCreate == 1 ||
-							featurePrivilege.CanRead == 1 ||
-							featurePrivilege.CanUpdate == 1 ||
-							featurePrivilege.CanDelete == 1 {
-							hasAccessibleChildren = true
-							break
-						}
-					}
-				}
-
-				// If no accessible children, skip this parent menu entirely
-				if !hasAccessibleChildren {
-					continue
-				}
-
-				// Build child menu items only for accessible children
-				for _, featurePrivilege := range featuresPrivileges {
-					if featurePrivilege.ParentID == featurePrivilegeParent.MenuOrder {
-						// Check if the child has any permissions (at least read access)
-						if featurePrivilege.CanCreate == 0 &&
-							featurePrivilege.CanRead == 0 &&
-							featurePrivilege.CanUpdate == 0 &&
-							featurePrivilege.CanDelete == 0 {
-							continue // Skip this child menu if no permissions
-						}
-						// Use a stable i18n key for dynamic menu entries (derived from path when available)
-						// Keep the original title as the visible fallback text so pages still render
-						privKey := "menu." + strings.ReplaceAll(strings.Trim(featurePrivilege.Path, "/ "), "/", ".")
-						if strings.TrimSpace(privKey) == "menu." {
-							// Fallback: slugify the title if path is empty
-							privKey = "menu." + strings.ToLower(strings.ReplaceAll(featurePrivilege.Title, " ", "_"))
-						}
-						fileContentChild += `        
-						<li class="menu-item">
-							<a href="#` + featurePrivilege.Path + `" 
-							class="menu-link" 
-							data-bs-toggle="tooltip" 
-							data-bs-placement="right" 
-							data-bs-original-title="` + featurePrivilege.Title + `">
-								<div class="text-truncate" data-i18n="` + privKey + `">` + featurePrivilege.Title + `</div>
-							</a>
-						</li>`
-					}
-				}
-
-				if len(fileContentChild) > 0 {
-					fileContentChild = `<ul class="menu-sub">` + fileContentChild + `</ul>`
-					menuToggle = "menu-toggle"
-				}
-			}
-
-			if featurePrivilegeParent.Level == 0 && featurePrivilegeParent.Status == 1 {
-				hrefPath := ""
-				if len(featurePrivilegeParent.Path) != 0 {
-					if featurePrivilegeParent.CanCreate == 0 &&
-						featurePrivilegeParent.CanRead == 0 &&
-						featurePrivilegeParent.CanUpdate == 0 &&
-						featurePrivilegeParent.CanDelete == 0 {
-						continue
-					}
-					hrefPath = `href="#` + featurePrivilegeParent.Path + `"`
-				} else {
-					if len(fileContentChild) == 0 {
-						if featurePrivilegeParent.CanCreate == 0 &&
-							featurePrivilegeParent.CanRead == 0 &&
-							featurePrivilegeParent.CanUpdate == 0 &&
-							featurePrivilegeParent.CanDelete == 0 {
-							continue
-						}
-					}
-				}
-
-				fileContent += `
-					<li class="menu-item ">
-						<a ` + hrefPath + ` 
-						class="menu-link ` + menuToggle + `"
-						data-bs-toggle="tooltip" 
-						data-bs-placement="right" 
-						data-bs-original-title="` + featurePrivilegeParent.Title + `">
-							<i class="menu-icon tf-icons ` + featurePrivilegeParent.Icon + `"></i>
-							` + func() string {
-					// Derive an i18n key for parent menu entries as well
-					parentKey := "menu." + strings.ReplaceAll(strings.Trim(featurePrivilegeParent.Path, "/ "), "/", ".")
-					if strings.TrimSpace(parentKey) == "menu." {
-						parentKey = "menu." + strings.ToLower(strings.ReplaceAll(featurePrivilegeParent.Title, " ", "_"))
-					}
-					return `<div class="text-truncate" data-i18n="` + parentKey + `">` + featurePrivilegeParent.Title + `</div>`
-				}() + `
-						</a>
-						` + fileContentChild + `
-					</li>`
-
-			}
-
-			if len(featurePrivilegeParent.Path) > 0 {
-				fileContentTab += `<div id="` + featurePrivilegeParent.Path + `" class="tab-content flex-grow-1 container-p-y d-none h-100"></div>` //` + string(fileContent) + `
-			}
-		}
+		fileContent, fileContentTab := buildMainPageMenuHTML(featuresPrivileges)
 
 		randomAccessToken := fun.GenerateRandomString(20 + rand.Intn(30) + 1)
-		err = redisDB.Set(context.Background(), "web:"+session, randomAccessToken, 0).Err()
-		if err != nil {
-			fun.RemoveEmailSession(db, emailToken)
+		if err := redisDB.Set(context.Background(), "web:"+session, randomAccessToken, 0).Err(); err != nil {
+			fun.RemoveEmailSession(db, emailToken(claims))
 			fun.ClearCookiesAndRedirect(c, cookies)
 			return
 		}
-		imageMaps := map[string]interface{}{
-			"t":  fun.GenerateRandomString(3),
-			"id": user.ID,
-		}
+
+		imageMaps := map[string]interface{}{"t": fun.GenerateRandomString(3), "id": user.ID}
 		pathString, err := fun.GetAESEcryptedURLfromJSON(imageMaps)
 		if err != nil {
 			fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Could not encripting image "+err.Error())
 			return
 		}
-		profile_image := config.GLOBAL_URL + "profile/default.jpg?f=" + pathString
+		profileImage := config.GlobalURL + "profile/default.jpg?f=" + pathString
 
-		// Check if user role has specific app configuration
-		var appConfig model.AppConfig
-		var appName, appLogo, appVersion, appVersionNo, appVersionCode, appVersionName string
-
-		if err := db.Where("role_id = ? AND is_active = ?", user.Role, true).First(&appConfig).Error; err == nil {
-			// Use role-specific app configuration
-			appName = appConfig.AppName
-			appLogo = appConfig.AppLogo
-			appVersion = appConfig.AppVersion
-			appVersionNo = appConfig.VersionNo
-			appVersionCode = appConfig.VersionCode
-			appVersionName = appConfig.VersionName
-			// logrus.Infof("Using role-specific app config for role %d: %s", user.Role, appConfig.AppName)
-		} else {
-			// Fallback to default config
-			appName = yamlCfg.App.Name
-			appLogo = yamlCfg.App.Logo
-			appVersion = yamlCfg.App.Version
-			appVersionNo = strconv.Itoa(yamlCfg.App.VersionNo)
-			appVersionCode = yamlCfg.App.VersionCode
-			appVersionName = yamlCfg.App.VersionName
-			// logrus.Infof("Using default app config for role %d (no specific config found)", user.Role)
-		}
+		appName, appLogo, appVersion, appVersionNo, appVersionCode, appVersionName := resolveAppConfig(db, user.Role, yamlCfg)
 
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"APP_NAME":         appName,
@@ -1026,19 +715,219 @@ func MainPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			"APP_VERSION_NO":   appVersionNo,
 			"APP_VERSION_CODE": appVersionCode,
 			"APP_VERSION_NAME": appVersionName,
-			"ACCESS":           config.API_URL + randomAccessToken,
+			"ACCESS":           config.APIURL + randomAccessToken,
 			"username":         claims["username"],
 			"role":             claims["role_name"],
 			"fullname":         claims["fullname"],
 			"email":            claims["email"],
-			"profile_image":    profile_image,
-			"GLOBAL_URL":       config.GLOBAL_URL,
-			"sidebar":          template.HTML(string(fileContent)),
-			"contents":         template.HTML(string(fileContentTab)),
+			"profile_image":    profileImage,
+			"GLOBAL_URL":       config.GlobalURL,
+			"sidebar":          template.HTML(fileContent),
+			"contents":         template.HTML(fileContentTab),
 			"IsEnableDebug":    yamlCfg.App.Debug,
 		})
-
 	}
+}
+
+// menuPrivilege is a flattened row of role privilege joined with feature metadata.
+type menuPrivilege struct {
+	model.RolePrivilege
+	ParentID  uint   `json:"parent_id" gorm:"column:parent_id"`
+	Title     string `json:"title" gorm:"column:title"`
+	Path      string `json:"path" gorm:"column:path"`
+	MenuOrder uint   `json:"menu_order" gorm:"column:menu_order"`
+	Status    uint   `json:"status" gorm:"column:status"`
+	Level     uint   `json:"level" gorm:"column:level"`
+	Icon      string `json:"icon" gorm:"column:icon"`
+}
+
+func emailToken(claims map[string]interface{}) string {
+	if v, ok := claims["email"].(string); ok {
+		return v
+	}
+	return ""
+}
+
+// validateMainPageSession validates the token cookie, additional cookies and DB session.
+// Returns (user, session, claims, true) on success and responds+redirects on failure.
+func validateMainPageSession(c *gin.Context, db *gorm.DB, cookies []*http.Cookie) (model.Users, string, map[string]interface{}, bool) {
+	var empty model.Users
+	tokenString, err := c.Cookie("token")
+	if err != nil {
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return empty, "", nil, false
+	}
+	tokenString = strings.ReplaceAll(tokenString, " ", "+")
+
+	decrypted, err := fun.GetAESDecrypted(tokenString)
+	if err != nil {
+		fmt.Println("Error during decryption", err)
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return empty, "", nil, false
+	}
+	var claims map[string]interface{}
+	if err = json.Unmarshal(decrypted, &claims); err != nil {
+		fmt.Printf("Error converting JSON to map: %v", err)
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return empty, "", nil, false
+	}
+	email := emailToken(claims)
+	if email == "" {
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return empty, "", nil, false
+	}
+	if !fun.ValidateCookie(c, "credentials", claims["session"]) ||
+		!fun.ValidateCookie(c, "auth", claims["auth"]) ||
+		!fun.ValidateCookie(c, "random", claims["random"]) {
+		fun.RemoveEmailSession(db, email)
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return empty, "", nil, false
+	}
+	session, ok := claims["session"].(string)
+	if !ok {
+		fun.RemoveEmailSession(db, email)
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return empty, "", nil, false
+	}
+	var user model.Users
+	if err := db.Where("id = ?", claims["id"]).First(&user).Error; err != nil {
+		fun.RemoveEmailSession(db, email)
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return empty, "", nil, false
+	}
+	if user.Session != session {
+		fun.RemoveEmailSession(db, email)
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return empty, "", nil, false
+	}
+	return user, session, claims, true
+}
+
+// loadMainPagePrivileges queries role privileges for the main page menu.
+func loadMainPagePrivileges(c *gin.Context, db *gorm.DB, email string, cookies []*http.Cookie, roleID interface{}) ([]menuPrivilege, bool) {
+	yamlCfg := config.ServicePlatform.Get()
+	var featuresPrivileges []menuPrivilege
+	err := db.
+		Table(fmt.Sprintf("%s a", yamlCfg.Database.TbRolePrivilege)).
+		Unscoped().
+		Select("a.*, b.parent_id, b.title, b.path, b.menu_order, b.status, b.level, b.icon").
+		Joins(fmt.Sprintf("LEFT JOIN %s b ON a.feature_id = b.id", yamlCfg.Database.TbFeature)).
+		Where("a.role_id = ?", roleID).
+		Order("b.menu_order").
+		Find(&featuresPrivileges).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			fun.RemoveEmailSession(db, email)
+			fun.ClearCookiesAndRedirect(c, cookies)
+			return nil, false
+		}
+		fun.HandleAPIErrorSimple(c, http.StatusInternalServerError, "Error querying database: "+err.Error())
+		fun.RemoveEmailSession(db, email)
+		fun.ClearCookiesAndRedirect(c, cookies)
+		return nil, false
+	}
+	return featuresPrivileges, true
+}
+
+// menuI18nKey derives a stable i18n key from a feature path or title.
+func menuI18nKey(path, title string) string {
+	key := "menu." + strings.ReplaceAll(strings.Trim(path, "/ "), "/", ".")
+	if strings.TrimSpace(key) == "menu." {
+		key = "menu." + strings.ToLower(strings.ReplaceAll(title, " ", "_"))
+	}
+	return key
+}
+
+// hasMenuPermission returns true when at least one CRUD bit is set.
+func hasMenuPermission(p menuPrivilege) bool {
+	return p.CanCreate == 1 || p.CanRead == 1 || p.CanUpdate == 1 || p.CanDelete == 1
+}
+
+// buildChildMenuItems builds the <ul class="menu-sub"> HTML for children of a parent menu entry.
+// Returns (html, hasChildren).
+func buildChildMenuItems(all []menuPrivilege, parentMenuOrder uint) (string, bool) {
+	hasAccessible := false
+	for _, fp := range all {
+		if fp.ParentID == parentMenuOrder && hasMenuPermission(fp) {
+			hasAccessible = true
+			break
+		}
+	}
+	if !hasAccessible {
+		return "", false
+	}
+	childHTML := ""
+	for _, fp := range all {
+		if fp.ParentID != parentMenuOrder || !hasMenuPermission(fp) {
+			continue
+		}
+		privKey := menuI18nKey(fp.Path, fp.Title)
+		childHTML += `        
+						<li class="menu-item">
+							<a href="#` + fp.Path + `" 
+							class="menu-link" 
+							data-bs-toggle="tooltip" 
+							data-bs-placement="right" 
+							data-bs-original-title="` + fp.Title + `">
+								<div class="text-truncate" data-i18n="` + privKey + `">` + fp.Title + `</div>
+							</a>
+						</li>`
+	}
+	return `<ul class="menu-sub">` + childHTML + `</ul>`, true
+}
+
+// buildMainPageMenuHTML iterates over privileges and builds sidebar + tab HTML.
+func buildMainPageMenuHTML(all []menuPrivilege) (sidebar, tabs string) {
+	for _, parent := range all {
+		childHTML := ""
+		menuToggle := ""
+		if strings.TrimSpace(parent.Path) == "" {
+			var hasChildren bool
+			childHTML, hasChildren = buildChildMenuItems(all, parent.MenuOrder)
+			if !hasChildren {
+				continue
+			}
+			if childHTML != "" {
+				menuToggle = "menu-toggle"
+			}
+		}
+
+		if parent.Level != 0 || parent.Status != 1 {
+			if parent.Path != "" {
+				tabs += `<div id="` + parent.Path + `" class="tab-content flex-grow-1 container-p-y d-none h-100"></div>`
+			}
+			continue
+		}
+
+		hrefPath := ""
+		if parent.Path != "" {
+			if !hasMenuPermission(parent) {
+				continue
+			}
+			hrefPath = `href="#` + parent.Path + `"`
+		} else if childHTML == "" && !hasMenuPermission(parent) {
+			continue
+		}
+
+		parentKey := menuI18nKey(parent.Path, parent.Title)
+		sidebar += `
+					<li class="menu-item ">
+						<a ` + hrefPath + ` 
+						class="menu-link ` + menuToggle + `"
+						data-bs-toggle="tooltip" 
+						data-bs-placement="right" 
+						data-bs-original-title="` + parent.Title + `">
+							<i class="menu-icon tf-icons ` + parent.Icon + `"></i>
+							<div class="text-truncate" data-i18n="` + parentKey + `">` + parent.Title + `</div>
+						</a>
+						` + childHTML + `
+					</li>`
+
+		if parent.Path != "" {
+			tabs += `<div id="` + parent.Path + `" class="tab-content flex-grow-1 container-p-y d-none h-100"></div>`
+		}
+	}
+	return sidebar, tabs
 }
 
 // GetWebLogout godoc
@@ -1087,7 +976,7 @@ func GetWebLogout(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Redirect to the login page
-		c.Redirect(http.StatusFound, config.GLOBAL_URL+"login")
+		c.Redirect(http.StatusFound, config.GlobalURL+"login")
 
 		// Save the newLog to the database
 		db.Create(&model.LogActivity{
@@ -1099,7 +988,7 @@ func GetWebLogout(db *gorm.DB) gin.HandlerFunc {
 			IP:        c.ClientIP(),
 			UserAgent: c.Request.UserAgent(),
 			ReqMethod: c.Request.Method,
-			ReqUri:    c.Request.RequestURI,
+			ReqURI:    c.Request.RequestURI,
 		})
 	}
 }
@@ -1123,7 +1012,7 @@ func htmlEscape(s string) string {
 // @Router       /api/v1/{access}/components/{component} [get]
 func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		globalURL := config.GLOBAL_URL
+		globalURL := config.GlobalURL
 		if globalURL == "" {
 			logrus.Fatal("no global URL set in config")
 		}
@@ -1183,7 +1072,7 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not encripting image " + err.Error()})
 			return
 		}
-		profile_image := "/profile/default.jpg?f=" + pathString
+		profileImage := "/profile/default.jpg?f=" + pathString
 
 		var userStatusData model.UserStatus
 		if err := db.First(&userStatusData, user.Status).Error; err != nil {
@@ -1195,31 +1084,8 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 		sb.WriteString("</div>")
 		userStatusHTML := sb.String()
 
-		// Check if user role has specific app configuration
-		var appConfig model.AppConfig
-		var appName, appLogo, appVersion, appVersionNo, appVersionCode, appVersionName string
-
 		yamlCfg := config.ServicePlatform.Get()
-
-		if err := db.Where("role_id = ? AND is_active = ?", user.Role, true).First(&appConfig).Error; err == nil {
-			// Use role-specific app configuration
-			appName = appConfig.AppName
-			appLogo = appConfig.AppLogo
-			appVersion = appConfig.AppVersion
-			appVersionNo = appConfig.VersionNo
-			appVersionCode = appConfig.VersionCode
-			appVersionName = appConfig.VersionName
-			// logrus.Infof("Using role-specific app config for role %d: %s", user.Role, appConfig.AppName)
-		} else {
-			// Fallback to default config
-			appName = yamlCfg.App.Name
-			appLogo = yamlCfg.App.Logo
-			appVersion = yamlCfg.App.Version
-			appVersionNo = strconv.Itoa(yamlCfg.App.VersionNo)
-			appVersionCode = yamlCfg.App.VersionCode
-			appVersionName = yamlCfg.App.VersionName
-			// logrus.Infof("Using default app config for role %d (no specific config found)", user.Role)
-		}
+		appName, appLogo, appVersion, appVersionNo, appVersionCode, appVersionName := resolveAppConfig(db, user.Role, yamlCfg)
 
 		randAccessToken := fun.GetRedis("web:"+user.Session, redisDB)
 
@@ -1238,14 +1104,74 @@ func ComponentPage(db *gorm.DB, redisDB *redis.Client) gin.HandlerFunc {
 			"role_name":        claims["role_name"].(string),
 			"status_name":      template.HTML(userStatusHTML),
 			"last_login":       claims["last_login"].(string),
-			"profile_image":    profile_image,
+			"profile_image":    profileImage,
 			"ip":               user.IP,
 			"GLOBAL_URL":       globalURL,
 			"RANDOM_ACCESS":    randAccessToken,
 
 			/* App Config */
-			"TABLE_APP_CONFIGURATION": webguibuilder.TABLE_APP_CONFIGURATION(user.Session, redisDB),
+			"TableAppConfiguration": webguibuilder.TableAppConfiguration(user.Session, redisDB),
 		}
 		c.HTML(http.StatusOK, componentID+".html", replacements)
 	}
+}
+
+// loadRoleData queries role privileges for the given roleID and returns a map of path -> privilege string.
+func loadRoleData(db *gorm.DB, roleID interface{}) (map[string]interface{}, error) {
+	type roleRow struct {
+		model.RolePrivilege
+		Path string `json:"path" gorm:"column:path"`
+	}
+	var rows []roleRow
+	cfg := config.ServicePlatform.Get()
+	if err := db.
+		Table(fmt.Sprintf("%s rp", cfg.Database.TbRolePrivilege)).
+		Unscoped().
+		Select("rp.*,f.path").
+		Joins(fmt.Sprintf("LEFT JOIN %s f ON f.id = rp.feature_id", cfg.Database.TbFeature)).
+		Where("rp.role_id = ?", roleID).
+		Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	roleData := make(map[string]interface{}, len(rows))
+	for _, r := range rows {
+		privilege := strconv.Itoa(int(r.CanCreate)) + strconv.Itoa(int(r.CanRead)) + strconv.Itoa(int(r.CanUpdate)) + strconv.Itoa(int(r.CanDelete))
+		roleData[r.Path] = privilege
+	}
+	return roleData, nil
+}
+
+// resolveAppConfig returns app display values, preferring a role-specific AppConfig when one exists.
+func resolveAppConfig(db *gorm.DB, roleID interface{}, yamlCfg config.TypeServicePlatform) (appName, appLogo, appVersion, appVersionNo, appVersionCode, appVersionName string) {
+	var appConfig model.AppConfig
+	if err := db.Where("role_id = ? AND is_active = ?", roleID, true).First(&appConfig).Error; err == nil {
+		return appConfig.AppName, appConfig.AppLogo, appConfig.AppVersion, appConfig.VersionNo, appConfig.VersionCode, appConfig.VersionName
+	}
+	return yamlCfg.App.Name, yamlCfg.App.Logo, yamlCfg.App.Version, strconv.Itoa(yamlCfg.App.VersionNo), yamlCfg.App.VersionCode, yamlCfg.App.VersionName
+}
+
+// savePasswordChangelog creates a new password changelog entry and prunes old ones,
+// keeping at most numberOfPrevious entries per email.
+func savePasswordChangelog(db *gorm.DB, user model.Users, numberOfPrevious int) error {
+	userPasswordChangelog := model.UserPasswordChangeLog{
+		Email:    user.Email,
+		Password: user.Password,
+	}
+	if err := db.Create(&userPasswordChangelog).Error; err != nil {
+		return fmt.Errorf("error updating password changelog: %w", err)
+	}
+
+	var userPasswordChangelogs []model.UserPasswordChangeLog
+	if err := db.Where("email = ?", user.Email).
+		Order("created_at asc").
+		Find(&userPasswordChangelogs).Error; err != nil {
+		return fmt.Errorf("email not found: %w", err)
+	}
+
+	if len(userPasswordChangelogs) > numberOfPrevious {
+		for i := 0; i < len(userPasswordChangelogs)-numberOfPrevious; i++ {
+			db.Delete(&userPasswordChangelogs[i])
+		}
+	}
+	return nil
 }

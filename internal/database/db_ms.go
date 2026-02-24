@@ -13,11 +13,13 @@ import (
 )
 
 var (
-	MySQLDBTA           *gorm.DB // MySQLDBTA holds the GORM DB connection for Dashboard Technical Assistance - Manage Service Integration of MySQL database
-	MySQLDBMSMiddleware *gorm.DB // MySQLDBMSMiddleware holds the GORM DB connection for Middleware Microservice of MySQL database
+	// MySQLDBTA holds the GORM DB connection for Dashboard Technical Assistance - Manage Service Integration of MySQL database.
+	MySQLDBTA *gorm.DB
+	// MySQLDBMSMiddleware holds the GORM DB connection for Middleware Microservice of MySQL database.
+	MySQLDBMSMiddleware *gorm.DB
 
-	// TODO: use this connection of WebPanel.service db for Reporting, Dashboard, etc.
-	MySQLDBWebPanel *gorm.DB // MySQLDBWebPanel holds the GORM DB connection for Reporting, Dashboard, Other Function in MySQL Database
+	// MySQLDBWebPanel holds the GORM DB connection for Reporting, Dashboard, Other Function in MySQL Database.
+	MySQLDBWebPanel *gorm.DB
 )
 
 // InitDBMS initializes the Manage Service MySQL database connection

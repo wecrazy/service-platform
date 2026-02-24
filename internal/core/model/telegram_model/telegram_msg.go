@@ -1,3 +1,4 @@
+// Package telegrammodel defines data models for Telegram messages.
 package telegrammodel
 
 import (
@@ -10,6 +11,7 @@ import (
 // TelegramMessageType defines the type of Telegram message
 type TelegramMessageType string
 
+// TelegramTextMessage and related constants define the supported Telegram message types.
 const (
 	TelegramTextMessage     TelegramMessageType = "text"
 	TelegramImageMessage    TelegramMessageType = "image"
@@ -46,6 +48,7 @@ type TelegramMsg struct {
 	ReactedAt     *time.Time          `gorm:"column:telegram_reacted_at" json:"telegram_reacted_at"`
 }
 
+// TableName returns the database table name for TelegramMsg.
 func (TelegramMsg) TableName() string {
 	return config.ServicePlatform.Get().Telegram.Tables.TBTelegramMessage
 }
@@ -75,6 +78,7 @@ type TelegramIncomingMsg struct {
 	ReactedAt     *time.Time `gorm:"column:telegram_reacted_at" json:"telegram_reacted_at"`
 }
 
+// TableName returns the database table name for TelegramIncomingMsg.
 func (TelegramIncomingMsg) TableName() string {
 	return config.ServicePlatform.Get().Telegram.Tables.TBTelegramIncomingMessage
 }

@@ -1,10 +1,11 @@
+// Package telegram provides a client for interacting with the Telegram Bot API.
 package telegram
 
 import (
 	"fmt"
 
 	"service-platform/internal/config"
-	"service-platform/internal/pkg/logger"
+	"service-platform/pkg/logger"
 	pb "service-platform/proto"
 
 	"github.com/sirupsen/logrus"
@@ -13,6 +14,7 @@ import (
 )
 
 var (
+	// Client is the global gRPC client for the Telegram service.
 	Client pb.TelegramServiceClient
 	conn   *grpc.ClientConn
 )

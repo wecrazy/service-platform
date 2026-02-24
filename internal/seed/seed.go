@@ -35,7 +35,7 @@ import (
 	"service-platform/internal/config"
 	"service-platform/internal/core/model"
 	telegrammodel "service-platform/internal/core/model/telegram_model"
-	"service-platform/internal/pkg/fun"
+	"service-platform/pkg/fun"
 	"strings"
 	"time"
 

@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// WhatsAppIncomingMsg represents an incoming WhatsApp message stored in the database.
 type WhatsAppIncomingMsg struct {
 	gorm.Model
 
@@ -20,6 +21,7 @@ type WhatsAppIncomingMsg struct {
 	WhatsappReceivedAt  time.Time `gorm:"column:whatsapp_received_at" json:"whatsapp_received_at"`
 }
 
+// TableName returns the database table name for WhatsAppIncomingMsg.
 func (WhatsAppIncomingMsg) TableName() string {
 	return config.ServicePlatform.Get().Whatsnyan.Tables.TBWhatsnyanIncomingMessage
 }
