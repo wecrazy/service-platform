@@ -42,7 +42,7 @@ import (
 // @description     This is a server API documentation for Service Platform Dashboard.
 // @termsOfService  http://swagger.io/terms/
 
-// @contact.name    RM Developer
+// @contact.name    Wegil
 // @contact.url     https://github.com/wecrazy
 // @contact.email   wegirandol@smartwebindonesia.com
 
@@ -629,7 +629,7 @@ func main() {
 	// WhatsApp Client by Whatsmeow https://pkg.go.dev/go.mau.fi/whatsmeow
 	whatsapp.InitClient()
 
-	// Telegram Client
+	// Telegram Client by github.com/go-telegram-bot-api/telegram-bot-api/v5 registered telegram account via BotFather and get the token, then set it in .yaml config
 	telegram.InitClient()
 
 	// Scheduler gRPC Client - connects to scheduler service

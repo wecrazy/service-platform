@@ -7,7 +7,6 @@ import (
 	"path"
 	"path/filepath"
 	"service-platform/internal/api/v1/controllers"
-	telegramcontrollers "service-platform/internal/api/v1/controllers/telegram_controllers"
 	"service-platform/internal/config"
 	"service-platform/internal/middleware"
 	"service-platform/internal/pkg/fun"
@@ -158,23 +157,7 @@ func HtmlRoutes(
 	// Prometheus metrics endpoint
 	router.GET("/api-metrics", gin.WrapH(promhttp.Handler()))
 
-	// Note: net/http/pprof uses DefaultServeMux, so we mount it using gin's Handle method
-	// if you want in charts view mode try using go tool pprof -http=:2222 http://localhost:2221/debug/pprof/profile
-	pprofGroup := router.Group(globalURL + "debug/pprof")
-	{
-		pprofGroup.GET("/", gin.WrapF(http.HandlerFunc(controllers.PprofIndex)))
-		pprofGroup.GET("/heap", gin.WrapF(http.HandlerFunc(controllers.PprofHeap)))
-		pprofGroup.GET("/profile", gin.WrapF(http.HandlerFunc(controllers.PprofProfile)))
-		pprofGroup.GET("/block", gin.WrapF(http.HandlerFunc(controllers.PprofBlock)))
-		pprofGroup.GET("/goroutine", gin.WrapF(http.HandlerFunc(controllers.PprofGoroutine)))
-		pprofGroup.GET("/threadcreate", gin.WrapF(http.HandlerFunc(controllers.PprofThreadcreate)))
-		pprofGroup.GET("/cmdline", gin.WrapF(http.HandlerFunc(controllers.PprofCmdline)))
-		pprofGroup.GET("/symbol", gin.WrapF(http.HandlerFunc(controllers.PprofSymbol)))
-		pprofGroup.POST("/symbol", gin.WrapF(http.HandlerFunc(controllers.PprofSymbol)))
-		pprofGroup.GET("/trace", gin.WrapF(http.HandlerFunc(controllers.PprofTrace)))
-		pprofGroup.GET("/allocs", gin.WrapF(http.HandlerFunc(controllers.PprofAllocs)))
-		pprofGroup.GET("/mutex", gin.WrapF(http.HandlerFunc(controllers.PprofMutex)))
-	}
+	RegisterPprofRoutes(router, globalURL)
 
 	router.GET(globalURL+"hello", controllers.GetHello)
 
@@ -213,118 +196,12 @@ func HtmlRoutes(
 			tabDashboard.GET("")
 		}
 
-		/* Tab App Config */
-		tabAppConfig := api.Group("/tab-app-config")
-		{
-			tabAppConfig.POST("/table", controllers.TableAppConfig(db))
-		}
-
-		/*
-			Tab Whatsapp - Bot & Messaging
-		*/
-		tabWhatsapp := api.Group("/tab-whatsapp")
-		{
-			// Connection management
-			tabWhatsapp.GET("/status", controllers.GetWhatsAppStatus)
-			tabWhatsapp.POST("/connect", controllers.ConnectWhatsApp(redisDB))
-			tabWhatsapp.POST("/disconnect", controllers.DisconnectWhatsApp)
-			tabWhatsapp.POST("/logout", controllers.LogoutWhatsApp)
-			tabWhatsapp.POST("/refresh_qr", controllers.RefreshWhatsAppQR(redisDB))
-			tabWhatsapp.GET("/qr/:token", controllers.ServeQRImage(redisDB))
-
-			// Messaging
-			tabWhatsapp.POST("/send_message", controllers.SendWhatsAppMessage(db))
-			tabWhatsapp.POST("/create_status", controllers.CreateStatus(db))
-
-			// Data tables
-			tabWhatsapp.GET("/messages", controllers.GetWhatsAppMessages(db))
-			tabWhatsapp.GET("/incoming", controllers.GetWhatsAppIncomingMessages(db))
-			tabWhatsapp.GET("/groups", controllers.GetWhatsAppGroups(db))
-			tabWhatsapp.POST("/groups/datatable", controllers.GetWhatsAppGroupsDataTable(db))
-			tabWhatsapp.GET("/groups/count", controllers.GetWhatsAppGroupsCount(db))
-			tabWhatsapp.GET("/groups/:jid", controllers.GetWhatsAppGroupByJID(db))
-			tabWhatsapp.POST("/groups/sync", controllers.SyncWhatsAppGroups(db))
-			tabWhatsapp.GET("/profile-picture/:jid", controllers.GetWhatsAppProfilePicture)
-			tabWhatsapp.GET("/auto-reply", controllers.GetWhatsAppAutoReplyRules(db))
-			tabWhatsapp.GET("/auto-reply/:id", controllers.GetWhatsAppAutoReplyRule(db))
-			tabWhatsapp.POST("/auto-reply", controllers.CreateWhatsAppAutoReplyRule(db))
-			tabWhatsapp.PUT("/auto-reply/:id", controllers.UpdateWhatsAppAutoReplyRule(db))
-			tabWhatsapp.DELETE("/auto-reply/:id", controllers.DeleteWhatsAppAutoReplyRule(db))
-
-			// Language support
-			tabWhatsapp.GET("/languages/count", controllers.GetWhatsAppLanguagesCount(db))
-			tabWhatsapp.GET("/languages", controllers.GetWhatsAppLanguages(db))
-
-			// Phone & Contacts status
-			tabWhatsapp.GET("/contacts-count", controllers.GetWhatsAppContactsCount)
-			tabWhatsapp.GET("/phone-status", controllers.GetWhatsAppPhoneStatus)
-
-			// Configuration
-			tabWhatsapp.GET("/data-separator", controllers.GetDataSeparator)
-		}
-
-		/*
-			Tab WhatsApp User Management - User CRUD
-		*/
-		tabWhatsappUserManagement := api.Group("/tab-whatsapp-user-management")
-		{
-			// Statistics
-			tabWhatsappUserManagement.GET("/statistics", controllers.GetWhatsAppUserStatistics(db))
-
-			// Export & Import (must be before :id routes to avoid conflicts)
-			tabWhatsappUserManagement.GET("/users/export", controllers.ExportWhatsAppUsers(db))
-			tabWhatsappUserManagement.GET("/users/:id", controllers.GetWhatsAppUser(db))
-			tabWhatsappUserManagement.POST("/users", controllers.CreateWhatsAppUser(db))
-			tabWhatsappUserManagement.PUT("/users/:id", controllers.UpdateWhatsAppUser(db))
-			tabWhatsappUserManagement.PATCH("/users/:id/ban", controllers.ToggleBanWhatsAppUser(db))
-			tabWhatsappUserManagement.DELETE("/users/:id", controllers.DeleteWhatsAppUser(db))
-		}
-
-		/*
-			Tab Scheduler - Manage scheduled jobs via gRPC
-		*/
-		tabScheduler := api.Group("/tab-scheduler")
-		{
-			tabScheduler.GET("/jobs", controllers.ListScheduledJobs())               // List all jobs
-			tabScheduler.GET("/jobs/:name", controllers.GetJobStatus())              // Get specific job status
-			tabScheduler.POST("/jobs", controllers.RegisterScheduledJob())           // Register new job
-			tabScheduler.POST("/jobs/trigger", controllers.TriggerScheduledJob())    // Trigger job manually
-			tabScheduler.DELETE("/jobs/:name", controllers.UnregisterScheduledJob()) // Unregister job
-			tabScheduler.POST("/reload", controllers.ReloadScheduler())              // Reload scheduler config
-		}
-
-		/*
-			Tab Telegram - Bot & Messaging
-		*/
-		tabTelegram := api.Group("/tab-telegram")
-		{
-			// Messaging
-			tabTelegram.POST("/send_message", telegramcontrollers.SendTelegramMessage(db))
-			tabTelegram.POST("/send_message_with_keyboard", telegramcontrollers.SendMessageWithKeyboard(db))
-			tabTelegram.POST("/edit_message", telegramcontrollers.EditTelegramMessage(db))
-			tabTelegram.POST("/answer_callback_query", telegramcontrollers.AnswerCallbackQuery(db))
-			// Media
-			tabTelegram.POST("/send_voice", telegramcontrollers.SendTelegramVoice(db))
-			tabTelegram.POST("/send_document", telegramcontrollers.SendTelegramDocument(db))
-			tabTelegram.POST("/send_photo", telegramcontrollers.SendTelegramPhoto(db))
-			tabTelegram.POST("/send_audio", telegramcontrollers.SendTelegramAudio(db))
-			tabTelegram.POST("/send_video", telegramcontrollers.SendTelegramVideo(db))
-		}
-
-		/*
-			Tab Twilio WhatsApp - Bot & Messaging
-		*/
-		tabTwilioWhatsApp := api.Group("/tab-twilio-whatsapp")
-		{
-			// Messaging
-			tabTwilioWhatsApp.POST("/send_message", controllers.SendTwilioWhatsAppMessage(db))
-			tabTwilioWhatsApp.POST("/send_media_message", controllers.SendTwilioWhatsAppMediaMessage(db))
-
-			// Message history
-			tabTwilioWhatsApp.GET("/messages", controllers.GetTwilioWhatsAppMessages(db))
-			tabTwilioWhatsApp.GET("/incoming", controllers.GetTwilioWhatsAppIncomingMessages(db))
-		}
-
+		RegisterAppConfigRoutes(api, db)
+		RegisterWhatsAppRoutes(api, db, redisDB)
+		RegisterWhatsAppUserManagementRoutes(api, db)
+		RegisterSchedulerRoutes(api)
+		RegisterTelegramRoutes(api, db)
+		RegisterTwilioWhatsAppRoutes(api, db)
 	}
 
 	// Twilio WhatsApp Webhook - Incoming messages (NOT authenticated)
