@@ -1,41 +1,41 @@
 app:
   host: "localhost"
-  gin_mode: "debug"                         # debug | release | test
+  gin_mode: "debug"                                         # debug | release | test
   name: "Service Platform"
   description: "Service Platform (Development) - Contains various services including API, gRPC, Scheduler, and WhatsNyan for WhatsApp integration."
-  logo: "/assets/self/img/logo.png"         # Must be PNG format
+  logo: "/assets/self/img/logo.png"                         # Must be PNG format
   logo_jpg: "/assets/self/img/logo.jpg"
   port: 6221
-  log_level: "DEBUG"                        # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
-  log_format: "CSV"                         # TEXT | JSON | => default CSV
+  log_level: "DEBUG"                                        # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
+  log_format: "CSV"                                         # TEXT | JSON | => default CSV
   web_public_url: "http://localhost:6221"
   version: "Beta"
   version_no: 1
   version_code: "1.0.0.0.2026.01.17"
   version_name: "rm_dev"
   static_dir: "/home/user/server/service-platform/web"
-  published_dir: "assets" #|dist|fonts|js|libs|scss|tasks|uploads #|page|log
+  published_dir: "assets"                                   #|dist|fonts|js|libs|scss|tasks|uploads #|page|log
   log_dir: "./log"
   upload_dir: "./uploads"
-  login_time_m: 360 # minutes
+  login_time_m: 360                                         # minutes
   cookie_login_domain: ""
   cookie_login_secure: false
-  max_disconnection_time: 12 # seconds
+  max_disconnection_time: 12                                # seconds
   aes_key: "w4GwYyADnBa91vph1vCLRghvfkTmaWRF"
   aes_key_iv: "xu1HErEpSpaf87D7"
-  max_retry_login: 5            # attempts
-  login_lock_until: 10          # minutes
+  max_retry_login: 5                                        # attempts
+  login_lock_until: 10                                      # minutes
   app_log_filename: "app.log"
-  app_log_maxsize: 20           # MB
-  app_log_maxage: 7             # days
-  app_log_maxbackups: 10
+  app_log_maxsize: 20                                       # MB
+  app_log_maxage: 7                                         # days
+  app_log_maxbackups: 10                                    # files
   app_log_compress: true
   system_log_filename: "sys.log"
   memory_profile_path: "mem.prof"
   debug: true
 default:
-  log_max_size: 10  # MB
-  log_max_age: 1    # days
+  log_max_size: 10                                          # MB
+  log_max_age: 1                                            # days
   log_max_backups: 5
   log_compress: false
   csv_timestamp_format: "2006-01-02 15:04:05.000 MST"
@@ -45,36 +45,36 @@ default:
   super_user_phone: "6285173207755"
   min_length_phone_number: 9
   dialing_code_default: "62"
-  cpu_capture_interval: 30 # seconds
+  cpu_capture_interval: 30                                  # seconds
   max_bad_word_strikes: 3
   data_separator: "|"
-  purge_old_backup_log_files_older_than: "3Days"    # 1Day | 1Week | 1Month
-  remove_old_needs_dir_older_than: "3Days"          # 1Day | 1Week | 1Month
+  purge_old_backup_log_files_older_than: "3Days"            # e.g. 1Day | 1Week | 1Month
+  remove_old_needs_dir_older_than: "3Days"                  # e.g. 1Day | 1Week | 1Month
 redis:
   host: "127.0.0.1"
   port: 6379
   password: ""
   db: 10
-  max_retry: 5        # attempts
-  retry_delay: 5      # seconds
-  pool_size: 20       # connections
+  max_retry: 5                                              # attempts
+  retry_delay: 5                                            # seconds
+  pool_size: 20                                             # connections
 database:
-  type: "PostgreSQL"  # MySQL || PostgreSQL
+  type: "PostgreSQL"                                        # MySQL || PostgreSQL
   host: "127.0.0.1"
   port: 5432
   username: "swi"
   password: "Takasitau"
   name: "rm_development_db_service_platform"
-  max_retry_connect: 3
-  retry_delay: 5            # seconds
+  max_retry_connect: 3                                      # attempts
+  retry_delay: 5                                            # seconds
   max_idle_connection: 10
   max_open_connection: 10
-  conn_max_lifetime: 30     # minutes
-  conn_max_idle_time: 10    # minutes
-  ssl_mode: "disable"       # disable | require | verify-ca | verify-full
+  conn_max_lifetime: 30                                     # minutes
+  conn_max_idle_time: 10                                    # minutes
+  ssl_mode: "disable"                                       # disable | require | verify-ca | verify-full
   db_config_path: "database/dbconfig.yaml"
   db_backup_destination_dir: "database"
-  purge_older_than: "2Days"
+  purge_older_than: "2Days"                                 # e.g. 1Day | 3Days | 1Week | 1Month
   dumped_indonesia_region_sql: "seed/db_region_indonesia.sql"
   # Tables
   tb_user: "users"
@@ -117,29 +117,29 @@ api:
   analytics_dev_api_key: "6c61f3ff-028f-4bb6-9f4d-7ce685d1d662"
 email:
   host: "smtp.gmail.com"
-  port: 587 # 463
+  port: 587                                                 # 587 | 465
   username: "service4@csna4u.com"
   password: "ejdw ezvf hemy rwhj"
   sender: "Service Report"
   max_retry: 10
   retry_delay: 3
-  max_attachment_size: 24 # MB
+  max_attachment_size: 24                                   # MB
 grpc:
   host: "localhost"
   port: 50041
 whatsnyan:
   db_log: "whatsnyan_db.log"
-  db_log_level: "DEBUG"                 # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
+  db_log_level: "DEBUG"                                     # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
   client_log: "whatsnyan_client.log"
-  client_log_level: "DEBUG"             # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
-  log_max_size: 10 # MB
-  log_max_age: 7 # days
+  client_log_level: "DEBUG"                                 # PANIC | FATAL | ERROR | WARN | WARNING | INFO | DEBUG | => default TRACE
+  log_max_size: 10                                          # MB
+  log_max_age: 7                                            # days
   log_max_backups: 5
   log_compress: true
   grpc_host: "localhost"
   grpc_port: 50042
   wa_technical_support: "6287883507445"
-  max_message_length: 4000 # characters
+  max_message_length: 4000                                  # characters
   tables:
     tb_whatsnyan_message: "whatsnyan_messages"
     tb_whatsnyan_incoming_message: "whatsnyan_incoming_messages"
@@ -162,12 +162,12 @@ whatsnyan:
     tb_version: "whatsmeow_version"
   wa_reply_public_url: "http://localhost:6221/wa_reply"
   need_verify_account: true
-  enable_phone_pairing: false                 # Set to true to use phone pairing instead of QR code
-  pairing_phone_number: "6285117196875"       # Phone number in international format (e.g., "6281234567890") for auto-pairing on startup
-  language_expiry: 604800                     # seconds (7 days)
-  language_prompt_shown_expiry: 604800        # seconds (7 days)
-  not_registered_phone_expiry: 86400          # seconds (1 day)
-  quota_limit_expiry: 86400                   # seconds (1 day)
+  enable_phone_pairing: false                               # Set to true to use phone pairing instead of QR code
+  pairing_phone_number: "6285117196875"                     # Phone number in international format (e.g., "6281234567890") for auto-pairing on startup
+  language_expiry: 604800                                   # seconds
+  language_prompt_shown_expiry: 604800                      # seconds
+  not_registered_phone_expiry: 86400                        # seconds
+  quota_limit_expiry: 86400                                 # seconds
   language_prompt: |
     Silakan pilih bahasa Anda:
       🇮🇩 Bahasa Indonesia (id)
@@ -195,13 +195,13 @@ whatsnyan:
     _(Bahasa bawaan: *Indonesia*)_
   wag_allowed_to_interact:
     # Use Whatsapp group JID
-    - "120363201154381780" # Tes API      => Production
-    - "120363414108461722" # Tes API 2    => Development
+    - "120363201154381780"                                  # Tes API      => Production
+    - "120363414108461722"                                  # Tes API 2    => Development
   files:
     image:
-      max_daily_quota: 50 # files
-      cooldown_seconds: 5 # seconds
-      max_size: 20 # MB
+      max_daily_quota: 50                                   # files
+      cooldown_seconds: 5                                   # seconds
+      max_size: 20                                          # MB
       allowed_mime_types:
         - "image/jpeg"
         - "image/png"
@@ -214,9 +214,9 @@ whatsnyan:
         - ".gif"
         - ".webp"
     video:
-      max_daily_quota: 10 # files
-      cooldown_seconds: 120 # seconds
-      max_size: 50 # MB
+      max_daily_quota: 10                                   # files
+      cooldown_seconds: 120                                 # seconds
+      max_size: 50                                          # MB
       allowed_mime_types:
         - "video/mp4"
         - "video/x-msvideo"
@@ -228,9 +228,9 @@ whatsnyan:
         - ".mov"
         - ".3gp"
     document:
-      max_daily_quota: 50     # files
-      cooldown_seconds: 10    # seconds
-      max_size: 20            # MB
+      max_daily_quota: 50                                   # files
+      cooldown_seconds: 10                                  # seconds
+      max_size: 20                                          # MB
       allowed_mime_types:
         - "application/pdf"
         - "application/msword"
@@ -248,9 +248,9 @@ whatsnyan:
         - ".txt"
         - ".zip"
     audio:
-      max_daily_quota: 100     # files
-      cooldown_seconds: 3      # seconds
-      max_size: 10             # MB
+      max_daily_quota: 100                                  # files
+      cooldown_seconds: 3                                   # seconds
+      max_size: 10                                          # MB
       allowed_mime_types:
         - "audio/mpeg"
         - "audio/wav"
@@ -263,8 +263,8 @@ whatsnyan:
         - ".ogg"
         - ".m4a"
         - ".aac"
-  message_processed_tolerance_hours: 24 # hours
-  purge_message_older_than: "1Week"
+  message_processed_tolerance_hours: 24                     # hours
+  purge_message_older_than: "1Week"                         # e.g. 1Day | 3Days | 1Week | 1Month
 metrics:
   prometheus_port: 9090
   api_port: 9095
@@ -279,16 +279,16 @@ metrics:
   godoc_port: 6060
 rate_limit:
   enabled: true
-  requests: 100         # requests per period
-  period: 60            # period in seconds (1 minute)
-  burst: 20             # burst allowance
-  cleanup_time: 3600    # cleanup time in seconds (1 hour)
+  requests: 100                                             # requests per period
+  period: 60                                                # seconds
+  burst: 20                                                 # burst allowance
+  cleanup_time: 3600                                        # seconds
 twilio_rate_limit:
   enabled: true
-  requests: 10          # requests per period
-  period: 60            # period in seconds (1 minute)
-  burst: 5              # burst allowance
-  cleanup_time: 3600    # cleanup time in seconds (1 hour)
+  requests: 10                                              # requests per period
+  period: 60                                                # seconds
+  burst: 5                                                  # burst allowance
+  cleanup_time: 3600                                        # seconds
 monitoring:
   service_name: "monitoring-of-service-platform"
   description: "Service Platform - Monitoring System Service, that monitors various services including API, gRPC, Scheduler, WhatsNyan for WhatsApp integration and LibreTranslate for translation services."
@@ -303,15 +303,15 @@ libretranslate:
   port: 5004
 k6:
   enabled: true
-  port: 6680                  # k6 API/UI port
-  prometheus_port: 5665       # k6 Prometheus remote write endpoint
+  port: 6680                                                # k6 API/UI port
+  prometheus_port: 5665                                     # k6 Prometheus remote write endpoint
   scripts_dir: "tests/k6"
   thresholds:
-    http_req_duration: "p(95)<500"      # 95% of requests should be below 500ms
-    http_req_failed: "rate<0.01"        # Error rate should be below 1%
-    http_reqs_per_second: 10            # Minimum requests per second
-    iteration_duration: "p(95)<2000"    # 95% of iterations should be below 2s
-    checks_pass_rate: "rate>0.95"       # 95% of checks should pass
+    http_req_duration: "p(95)<500"                          # 95% of requests should be below 500ms
+    http_req_failed: "rate<0.01"                            # Error rate should be below 1%
+    http_reqs_per_second: 10                                # Minimum requests per second
+    iteration_duration: "p(95)<2000"                        # 95% of iterations should be below 2s
+    checks_pass_rate: "rate>0.95"                           # 95% of checks should pass
   scenarios:
     - name: "health-check-load-test"
       description: "Load test for health check endpoint"
@@ -335,8 +335,8 @@ k6:
 observability:
   loki:
     enabled: true
-    url: "http://127.0.0.1:3100"    # Local Loki endpoint
-    batch_size: 20                  # Reduced from 100 for quicker visibility in development
+    url: "http://127.0.0.1:3100"                            # Local Loki endpoint
+    batch_size: 20                                          # Reduced from 100 for quicker visibility in development
     batch_timeout_ms: 5000
     labels:
       service: "service-platform"
@@ -345,11 +345,11 @@ observability:
       hostname: "localhost"
   tempo:
     enabled: true
-    otlp_grpc_endpoint: "http://127.0.0.1:4317"   # Local Tempo OTLP gRPC
-    otlp_http_endpoint: "http://127.0.0.1:3200"   # Tempo HTTP endpoint
-    sample_rate: 1.0                              # 100% sampling in development
-    max_export_batch_size: 512
-    export_timeout_ms: 30000
+    otlp_grpc_endpoint: "http://127.0.0.1:4317"             # Local Tempo OTLP gRPC
+    otlp_http_endpoint: "http://127.0.0.1:3200"             # Tempo HTTP endpoint
+    sample_rate: 1.0                                        # 100% sampling in development
+    max_export_batch_size: 512                              # Reduced batch size for quicker trace export
+    export_timeout_ms: 30000                                # milliseconds
   jaeger:
     enabled: false
     endpoint: "http://127.0.0.1:14250"
@@ -362,7 +362,7 @@ mongodb:
   auth_source: "admin"
   max_pool_size: 10
   min_pool_size: 5
-  max_idle_time: 30 # seconds 
+  max_idle_time: 30                                         # seconds 
 mongoexpress:
   host: "localhost"
   port: 8081
