@@ -1,7 +1,7 @@
 # service-platform
 
 <p align="center">
-  <img src="web/assets/logo.svg" alt="service-platform logo" width="420"/>
+  <img src="web/assets/logo.svg" alt="service-platform logo" width="70%"/>
 </p>
 
 > A modular Go platform delivering APIs, WhatsApp/Twilio messaging, schedulers, monitoring, and automation services in one repo.
