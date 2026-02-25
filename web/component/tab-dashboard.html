@@ -13,9 +13,24 @@
                   <div id="dashboard-datetime" class="text-white-50 small mt-1" aria-hidden="false"></div>
                 </div>
               </div>
-              <p class="text-white mb-0" style="line-height: 1.6;" data-i18n="dashboard.heroParagraph">
-                <!-- ADD: welcoming user if needed ! -->
+              <p class="text-white mb-2" style="line-height: 1.6; opacity: 0.92;" data-i18n="dashboard.heroParagraph">
+                Welcome to your general application dashboard. Use the cards below for quick access to roles, app configuration, WhatsApp tools, and system logs.
               </p>
+              <!-- Welcome user chips -->
+              <div class="d-flex flex-wrap gap-2 mt-3" id="dashboard-welcome-chips">
+                <span class="dashboard-welcome-chip">
+                  <i class="fas fa-user-circle me-1"></i>
+                  <span id="hero-username-chip">…</span>
+                </span>
+                <span class="dashboard-welcome-chip" id="dashboard-ws-chip">
+                  <span class="hero-chip-pulse" id="hero-chip-dot"></span>
+                  <span id="hero-ws-status-text" data-i18n="dashboard.chip.systemConnecting">Connecting…</span>
+                </span>
+                <span class="dashboard-welcome-chip">
+                  <i class="fad fa-calendar-day me-1"></i>
+                  <span id="hero-date-chip"></span>
+                </span>
+              </div>
             </div>
             <div class="col-lg-4 col-md-5 text-center">
               <div class="position-relative">
@@ -173,6 +188,51 @@
 
       /* Hero clock chip styling */
       .card.shadow-lg .dashboard-clock[role="hero"] { color: #fff; }
+
+      /* Welcome chips */
+      .dashboard-welcome-chip {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255,255,255,0.18);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border: 1px solid rgba(255,255,255,0.28);
+        border-radius: 50px;
+        padding: 0.32rem 0.9rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: 0.01em;
+        animation: fadeInUp 0.7s ease-out both;
+        transition: background 0.2s;
+      }
+
+      /* dot colour/bg driven entirely by JS via --chip-dot-color & --chip-bg */
+      #dashboard-ws-chip {
+        background: var(--_chip-bg, rgba(255,255,255,0.18));
+        border-color: var(--_chip-border, rgba(255,255,255,0.28));
+        transition: background 0.4s, border-color 0.4s;
+      }
+
+      .hero-chip-pulse {
+        width: 8px;
+        height: 8px;
+        background: var(--_dot-color, #ff9f43);
+        border-radius: 50%;
+        margin-right: 6px;
+        flex-shrink: 0;
+        transition: background 0.4s;
+        animation: hero-pulse-dot 1.6s ease-in-out infinite;
+      }
+
+      .hero-chip-pulse.chip-dot--offline {
+        animation: none;
+      }
+
+      @keyframes hero-pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%       { opacity: 0.4; transform: scale(0.6); }
+      }
 
       /* Hero datetime formatting */
       #dashboard-datetime {

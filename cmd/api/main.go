@@ -656,11 +656,11 @@ func main() {
 	// Telegram Client by github.com/go-telegram-bot-api/telegram-bot-api/v5 registered telegram account via BotFather and get the token, then set it in .yaml config
 	telegram.InitClient()
 
-	// Scheduler gRPC Client - connects to scheduler service
+	// Scheduler gRPC Client - connects to the Scheduler microservice (cmd/scheduler/main.go) which runs the task scheduler for periodic jobs like sending reminders, notifications, etc.
+	// This decouples scheduling logic from the main API server and allows for better scalability and separation of concerns.
 	scheduler.InitClient()
 
-	// NOTE: Scheduler is now running as a separate gRPC service (cmd/grpc/main.go)
-	// ADD: email client & listener if exists and needed !
+	// ADD: more microservice clients (e.g., email, SMS, payment gateway) can be initialized here as needed in the future.
 
 	startWebServer(&yamlCfg, systemMonitor)
 }

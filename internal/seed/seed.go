@@ -152,8 +152,9 @@ func SeedFeature(db *gorm.DB) {
 			},
 			/*
 				Client Company
+				The features below are reserved for future client company pages.
+				Uncomment and configure as needed when new client company modules are ready.
 			*/
-			// ADD: more client company pages & features
 			// {
 			// 	ParentID: 0,
 			// 	Title:    "Hommy Pay",

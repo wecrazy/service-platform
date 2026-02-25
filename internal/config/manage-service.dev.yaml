@@ -14,9 +14,31 @@ odoo_ms:
   session_timeout: 90                                       # seconds  
   data_timeout: 900                                         # seconds
   skip_ssl_verify: true
-  # ADD: company included or excluded here if needed !
-  # e.g. : company_excluded: [1,2,3]
-  # e.g. : company_included: [4,5,6]
+  company_included:
+    - 3   # OVO
+    - 12  # NDP
+    - 13  # ARTAJASA
+    - 15  # MTI
+    - 19  # DKI
+    - 20  # MANDIRI
+    - 21  # DANA
+    - 23  # DSP
+    - 26  # SINARMAS
+  company_excluded:
+    - 1   # PT. Global Smartweb Asia
+    - 2   # CIMB NIAGA
+    - 4   # MAP
+    - 5   # bRI
+    - 6   # test
+    - 7   # bNi Syariah
+    - 8   # ARRANET
+    - 9   # ovo CM
+    - 14  # MCPAY
+    - 16  # _export_.stock .............
+    - 17  # HAUSJO
+    - 18  # BCA
+    - 24  # bandu
+    - 25  # boleh
   sac:
     "Angga Yuda":
       username: "SAC 5 Angga"
