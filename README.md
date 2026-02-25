@@ -1,4 +1,9 @@
 # service-platform
+
+<p align="center">
+  <img src="web/assets/logo.svg" alt="service-platform logo" width="420"/>
+</p>
+
 > A modular Go platform delivering APIs, WhatsApp/Twilio messaging, schedulers, monitoring, and automation services in one repo.
 
 ![Go](https://img.shields.io/badge/built%20with-Go%201.26-black?logo=go)
@@ -10,7 +15,7 @@
 ## ⚙️ Live at a glance
 
 | Service | Entry point | Type | Status (docs) |
-|---------|-------------|------|---------------|
+|---------|-------------|------|--------------|
 | API + Admin | `cmd/api/main.go` | HTTP + GRPC | [REST API docs](docs/swagger.yaml)
 | WhatsApp worker | `cmd/whatsapp/main.go` | Messaging | 💬 Handles WhatsApp chats
 | Twilio WhatsApp | `cmd/twilio/whatsapp/main.go` | gRPC + Twilio SDK | ✅ Rich media + rate limits (see docs)
