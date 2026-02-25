@@ -65,9 +65,9 @@ web/file/
 bin/
 
 # === Swagger Generated Files ===
-docs/docs.go
-docs/swagger.json
-docs/swagger.yaml
+# docs/docs.go
+# docs/swagger.json
+# docs/swagger.yaml
 
 # === Dev Files ===
 mocks/

@@ -1,0 +1,3958 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a server API documentation for Service Platform Dashboard.",
+        "title": "API Server for Dashboard's Service",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Wegil",
+            "url": "https://github.com/wecrazy",
+            "email": "wegirandol@smartwebindonesia.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:6221",
+    "basePath": "/",
+    "paths": {
+        "/api/v1/{access}/components/{component}": {
+            "get": {
+                "description": "Renders a specific component page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Web"
+                ],
+                "summary": "Get Component Page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Access Token",
+                        "name": "access",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Component Name",
+                        "name": "component",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "HTML Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/scheduler/jobs": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of all registered scheduled jobs with their details",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scheduler"
+                ],
+                "summary": "List all scheduled jobs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ListJobsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SchedulerErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SchedulerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Register a new job to be executed by the scheduler",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scheduler"
+                ],
+                "summary": "Register a new scheduled job",
+                "parameters": [
+                    {
+                        "description": "Job details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterJobRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterJobResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SchedulerErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SchedulerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/scheduler/jobs/trigger": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Trigger a specific job to run immediately",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scheduler"
+                ],
+                "summary": "Manually trigger a scheduled job",
+                "parameters": [
+                    {
+                        "description": "Job name",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TriggerJobRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TriggerJobResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SchedulerErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SchedulerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/scheduler/jobs/{name}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get the status and details of a specific scheduled job",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scheduler"
+                ],
+                "summary": "Get job status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job Name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetJobStatusResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.JobNotFoundResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SchedulerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Remove a job from the scheduler",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scheduler"
+                ],
+                "summary": "Unregister a scheduled job",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job Name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UnregisterJobResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SchedulerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/scheduler/reload": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Reload the scheduler with updated configuration from YAML",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scheduler"
+                ],
+                "summary": "Reload scheduler configuration",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ReloadSchedulerResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SchedulerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-app-config/table": {
+            "post": {
+                "description": "Retrieves the application configuration table data with pagination and sorting",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AppConfig"
+                ],
+                "summary": "Get App Config Table",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Draw counter. This is used by DataTables to ensure that the Ajax returns from server-side processing requests are drawn in sequence by DataTables.",
+                        "name": "draw",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by Full Name",
+                        "name": "full_name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Number of records that the table can display in the current draw.",
+                        "name": "length",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by No",
+                        "name": "no",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Column to which ordering should be applied.",
+                        "name": "order[0][column",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "example": "asc",
+                        "description": "Ordering direction for this column. It will be asc or desc.",
+                        "name": "order[0][dir",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Global search value. To be applied to all columns which have searchable as true.",
+                        "name": "search[value",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Paging first record indicator. This is the start point in the current data set (0 index based - i.e. 0 is the first record).",
+                        "name": "start",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-telegram/answer_callback_query": {
+            "post": {
+                "description": "Answers a callback query from an inline keyboard button",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Telegram"
+                ],
+                "summary": "Answer Callback Query",
+                "parameters": [
+                    {
+                        "description": "Answer Callback Query Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TelegramAnswerCallbackQueryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-telegram/edit_message": {
+            "post": {
+                "description": "Edits an existing Telegram message",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Telegram"
+                ],
+                "summary": "Edit Telegram Message",
+                "parameters": [
+                    {
+                        "description": "Edit Message Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.EditTelegramMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-telegram/send_audio": {
+            "post": {
+                "description": "Sends an audio file via Telegram bot",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Telegram"
+                ],
+                "summary": "Send Telegram Audio",
+                "parameters": [
+                    {
+                        "description": "Audio Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTelegramAudioRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-telegram/send_document": {
+            "post": {
+                "description": "Sends a document via Telegram bot",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Telegram"
+                ],
+                "summary": "Send Telegram Document",
+                "parameters": [
+                    {
+                        "description": "Document Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTelegramDocumentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-telegram/send_message": {
+            "post": {
+                "description": "Sends a text message via Telegram bot",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Telegram"
+                ],
+                "summary": "Send Telegram Message",
+                "parameters": [
+                    {
+                        "description": "Message Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTelegramMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-telegram/send_message_with_keyboard": {
+            "post": {
+                "description": "Sends a message with an inline keyboard via Telegram bot",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Telegram"
+                ],
+                "summary": "Send Telegram Message with Keyboard",
+                "parameters": [
+                    {
+                        "description": "Message with Keyboard Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTelegramMessageWithKeyboardRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-telegram/send_photo": {
+            "post": {
+                "description": "Sends a photo via Telegram bot",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Telegram"
+                ],
+                "summary": "Send Telegram Photo",
+                "parameters": [
+                    {
+                        "description": "Photo Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTelegramPhotoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-telegram/send_video": {
+            "post": {
+                "description": "Sends a video via Telegram bot",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Telegram"
+                ],
+                "summary": "Send Telegram Video",
+                "parameters": [
+                    {
+                        "description": "Video Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTelegramVideoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-telegram/send_voice": {
+            "post": {
+                "description": "Sends a voice message via Telegram bot",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Telegram"
+                ],
+                "summary": "Send Telegram Voice Message",
+                "parameters": [
+                    {
+                        "description": "Voice Message Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTelegramVoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-twilio-whatsapp/incoming": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve history of incoming WhatsApp messages received via Twilio",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Twilio WhatsApp"
+                ],
+                "summary": "Get incoming WhatsApp messages",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TwilioWhatsAppMessageListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-twilio-whatsapp/messages": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve history of sent WhatsApp messages via Twilio",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Twilio WhatsApp"
+                ],
+                "summary": "Get sent WhatsApp messages",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TwilioWhatsAppMessageListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-twilio-whatsapp/send_media_message": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Send media (image, document, etc.) to a WhatsApp number using Twilio API",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Twilio WhatsApp"
+                ],
+                "summary": "Send WhatsApp media message via Twilio",
+                "parameters": [
+                    {
+                        "description": "Media message request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTwilioWhatsAppMediaMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTwilioWhatsAppMediaMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TwilioWhatsAppErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TwilioWhatsAppErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-twilio-whatsapp/send_message": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Send a text message to a WhatsApp number using Twilio API",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Twilio WhatsApp"
+                ],
+                "summary": "Send WhatsApp message via Twilio",
+                "parameters": [
+                    {
+                        "description": "Message request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTwilioWhatsAppMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendTwilioWhatsAppMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TwilioWhatsAppErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TwilioWhatsAppErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp-user-management/statistics": {
+            "get": {
+                "description": "Returns statistics about WhatsApp users with optional filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Get WhatsApp User Statistics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by user type",
+                        "name": "user_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by user of",
+                        "name": "user_of",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status (active/banned)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp-user-management/users": {
+            "get": {
+                "description": "Returns a paginated list of WhatsApp users with filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Get WhatsApp Users",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by name, phone, or email",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by user type",
+                        "name": "user_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by user of",
+                        "name": "user_of",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status (active/banned)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new WhatsApp user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Create WhatsApp User",
+                "parameters": [
+                    {
+                        "description": "WhatsApp User",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.WAUsers"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp-user-management/users/datatable": {
+            "post": {
+                "description": "Returns WhatsApp users in DataTables server-side format",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Get WhatsApp Users (DataTables Server-Side)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp-user-management/users/export": {
+            "get": {
+                "description": "Exports WhatsApp users to CSV",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Export WhatsApp Users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp-user-management/users/import": {
+            "post": {
+                "description": "Imports users from CSV file, creates new users and updates existing ones based on phone numbers",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "ImportWhatsAppUsers from CSV",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "CSV file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp-user-management/users/import-batched": {
+            "post": {
+                "description": "Imports users from CSV file with concurrent batched processing for large files (100k+ rows)",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Import WhatsApp Users from CSV with Batching",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "CSV file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp-user-management/users/import-template": {
+            "get": {
+                "description": "Returns CSV template data with valid values for user_type, user_of, allowed_chats, and allowed_types",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Get CSV Import Template with valid options",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp-user-management/users/{id}": {
+            "get": {
+                "description": "Returns a specific WhatsApp user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Get WhatsApp User",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing WhatsApp user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Update WhatsApp User",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "WhatsApp User",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.WAUsers"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a WhatsApp user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Delete WhatsApp User",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp-user-management/users/{id}/ban": {
+            "patch": {
+                "description": "Bans or unbans a WhatsApp user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp User Management"
+                ],
+                "summary": "Toggle Ban WhatsApp User",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Ban status",
+                        "name": "ban",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/auto-reply": {
+            "get": {
+                "description": "Returns a paginated list of auto reply rules with language support",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get Auto Reply Rules",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new auto reply rule with language support",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Create Auto Reply Rule",
+                "parameters": [
+                    {
+                        "description": "Auto Reply Rule with language_id",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/auto-reply/{id}": {
+            "get": {
+                "description": "Returns a specific auto reply rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get Auto Reply Rule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing auto reply rule with language support",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Update Auto Reply Rule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Auto Reply Rule with language_id",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes an auto reply rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Delete Auto Reply Rule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/connect": {
+            "post": {
+                "description": "Initiates connection to WhatsApp",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp"
+                ],
+                "summary": "Connect WhatsApp",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/contacts-count": {
+            "get": {
+                "description": "Returns the count of synced WhatsApp contacts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get WhatsApp Contacts Count",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/create_status": {
+            "post": {
+                "description": "Creates a new WhatsApp status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp"
+                ],
+                "summary": "Create WhatsApp Status",
+                "parameters": [
+                    {
+                        "description": "Status Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateWhatsAppStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/data-separator": {
+            "get": {
+                "description": "Returns the configured data separator character from config",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get Data Separator Configuration",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/disconnect": {
+            "post": {
+                "description": "Disconnects from WhatsApp",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp"
+                ],
+                "summary": "Disconnect WhatsApp",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/groups": {
+            "post": {
+                "description": "Returns a paginated list of WhatsApp groups (DataTables Server-Side)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get WhatsApp Groups",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/groups/count": {
+            "get": {
+                "description": "Returns the total count of WhatsApp groups",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get WhatsApp Groups Count",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/groups/datatable": {
+            "post": {
+                "description": "Returns WhatsApp groups in DataTables server-side format with pagination and search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get WhatsApp Groups (DataTables Server-Side)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/groups/sync": {
+            "post": {
+                "description": "Syncs WhatsApp groups from the connected account to the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Sync WhatsApp Groups",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/groups/{jid}": {
+            "get": {
+                "description": "Returns detailed information about a specific WhatsApp group from database with live updates",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get WhatsApp Group Details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Group JID",
+                        "name": "jid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/incoming": {
+            "get": {
+                "description": "Returns a paginated list of incoming WhatsApp messages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get Incoming WhatsApp Messages",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/languages": {
+            "get": {
+                "description": "Returns list of all supported languages for auto-reply",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get All Supported Languages",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/languages/count": {
+            "get": {
+                "description": "Returns the count of supported languages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get Supported Languages Count",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/logout": {
+            "post": {
+                "description": "Logs out from WhatsApp session",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp"
+                ],
+                "summary": "Logout WhatsApp",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/messages": {
+            "get": {
+                "description": "Returns a paginated list of sent WhatsApp messages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get Sent WhatsApp Messages",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/phone-status": {
+            "get": {
+                "description": "Returns battery, connection status, and device info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get WhatsApp Phone Status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/profile-picture/{jid}": {
+            "get": {
+                "description": "Downloads and serves a WhatsApp profile picture as a proper image file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "image/jpeg",
+                    "image/png",
+                    "image/webp"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get WhatsApp Profile Picture",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User JID",
+                        "name": "jid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/refresh_qr": {
+            "post": {
+                "description": "Refreshes the WhatsApp QR code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp"
+                ],
+                "summary": "Refresh WhatsApp QR",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/send_message": {
+            "post": {
+                "description": "Sends a text or media message via WhatsApp",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp"
+                ],
+                "summary": "Send WhatsApp Message",
+                "parameters": [
+                    {
+                        "description": "Message Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SendWhatsAppMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/tab-whatsapp/status": {
+            "get": {
+                "description": "Returns the current WhatsApp connection status and account info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp Web"
+                ],
+                "summary": "Get WhatsApp Connection Status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/{access}/uploads/{year}/{month}/{day}/{filename}": {
+            "get": {
+                "description": "Serves uploaded files securely",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Get Uploaded File",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Year",
+                        "name": "year",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Month",
+                        "name": "month",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Day",
+                        "name": "day",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filename",
+                        "name": "filename",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "403": {
+                        "description": "Invalid file path",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/captcha/new": {
+            "get": {
+                "description": "Generates a new captcha ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Get New Captcha",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/captcha/{id}.png": {
+            "get": {
+                "description": "Returns the captcha image for a given ID",
+                "produces": [
+                    "image/png"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Get Captcha Image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Captcha ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/check_wa": {
+            "get": {
+                "description": "Checks if a phone number is registered on WhatsApp",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WhatsApp"
+                ],
+                "summary": "Check WhatsApp Registration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "081234567890",
+                        "description": "Phone number to check",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/": {
+            "get": {
+                "description": "Returns the pprof index page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Index",
+                "responses": {
+                    "200": {
+                        "description": "HTML",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/allocs": {
+            "get": {
+                "description": "Returns the pprof allocs profile",
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Allocs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/block": {
+            "get": {
+                "description": "Returns the pprof block profile",
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Block",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/cmdline": {
+            "get": {
+                "description": "Returns the pprof cmdline arguments",
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Cmdline",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/goroutine": {
+            "get": {
+                "description": "Returns the pprof goroutine profile",
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Goroutine",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/heap": {
+            "get": {
+                "description": "Returns the pprof heap profile",
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Heap",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/mutex": {
+            "get": {
+                "description": "Returns the pprof mutex profile",
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Mutex",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/profile": {
+            "get": {
+                "description": "Returns the pprof cpu profile",
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/symbol": {
+            "get": {
+                "description": "Returns the pprof symbol information",
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Symbol",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/threadcreate": {
+            "get": {
+                "description": "Returns the pprof threadcreate profile",
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Threadcreate",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/debug/pprof/trace": {
+            "get": {
+                "description": "Returns the pprof trace profile",
+                "tags": [
+                    "Pprof"
+                ],
+                "summary": "Pprof Trace",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/forgot-password": {
+            "get": {
+                "description": "Renders the forgot password page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Web"
+                ],
+                "summary": "Get Forgot Password Page",
+                "responses": {
+                    "200": {
+                        "description": "HTML Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Handles forgot password request",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Web"
+                ],
+                "summary": "Process Forgot Password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Captcha value",
+                        "name": "captcha",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "user@example.com",
+                        "description": "Email address",
+                        "name": "email",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "HTML Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Returns the health status of the system, database, and resources",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "System Health Check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/hello": {
+            "get": {
+                "description": "Returns a simple hello world message",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Hello World",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "get": {
+                "description": "Renders the login page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Web"
+                ],
+                "summary": "Get Login Page",
+                "responses": {
+                    "200": {
+                        "description": "HTML Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Processes user login credentials",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Web"
+                ],
+                "summary": "Process Login",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Captcha value entered by user",
+                        "name": "captcha",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Captcha ID",
+                        "name": "captcha_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "example": "admin",
+                        "description": "Email or Username",
+                        "name": "email-username",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "password",
+                        "description": "Password",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Remember Me",
+                        "name": "remember-me",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "get": {
+                "description": "Logs out the user and clears cookies",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Web"
+                ],
+                "summary": "Logout",
+                "responses": {
+                    "302": {
+                        "description": "Redirect to login",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/page": {
+            "get": {
+                "description": "Renders the main dashboard page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Web"
+                ],
+                "summary": "Get Main Page",
+                "responses": {
+                    "200": {
+                        "description": "HTML Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "302": {
+                        "description": "Redirect to Login Page",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/reset-password/{email}/{token_data}": {
+            "get": {
+                "description": "Renders the reset password page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Web"
+                ],
+                "summary": "Get Reset Password Page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Token Data",
+                        "name": "token_data",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "HTML Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Handles password reset",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Web"
+                ],
+                "summary": "Process Reset Password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "newpassword123",
+                        "description": "Confirm Password",
+                        "name": "confirm-password",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "user@example.com",
+                        "description": "Email address",
+                        "name": "email",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "newpassword123",
+                        "description": "New Password",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Token Data",
+                        "name": "token_data",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/twilio_reply": {
+            "post": {
+                "description": "Webhook endpoint that receives incoming WhatsApp messages from Twilio Sandbox",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "text/xml"
+                ],
+                "tags": [
+                    "Twilio WhatsApp"
+                ],
+                "summary": "Handle incoming Twilio WhatsApp messages",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sender phone number (e.g., whatsapp:+1234567890)",
+                        "name": "From",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Recipient phone number (e.g., whatsapp:+14155238886)",
+                        "name": "To",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Message body",
+                        "name": "Body",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Twilio Message SID",
+                        "name": "MessageSid",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "TwiML XML response",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/profile": {
+            "get": {
+                "description": "Retrieves the profile image for a user based on encrypted ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "image/jpeg"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get User Profile Image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Encrypted User ID",
+                        "name": "f",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/verify-captcha": {
+            "post": {
+                "description": "Verifies the CAPTCHA input",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Web"
+                ],
+                "summary": "Verify CAPTCHA",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "captcha",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "captcha_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ws": {
+            "get": {
+                "description": "Upgrades connection to WebSocket for real-time communication",
+                "tags": [
+                    "WebSocket"
+                ],
+                "summary": "WebSocket Connection",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Auth Token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.APIErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Code is an optional, stable, application-specific error identifier.\n\nThis value is intended for programmatic handling by API clients and should\nnot change frequently. Examples include:\n  - \"VALIDATION_ERROR\"\n  - \"AUTHENTICATION_FAILED\"\n  - \"RESOURCE_NOT_FOUND\"\n\nWhen provided, clients may use this field to implement conditional logic\nwithout parsing human-readable error messages.",
+                    "type": "string",
+                    "example": "VALIDATION_ERROR"
+                },
+                "details": {
+                    "description": "Details provides an optional, more descriptive explanation of the error condition.\n\nThis field may include validation errors, missing or invalid parameters,\nor other contextual information intended to help the client understand\nwhy the request failed.\n\nWhen omitted, clients should rely on the Error field alone.",
+                    "type": "string",
+                    "example": "Invalid input data"
+                },
+                "error": {
+                    "description": "Error is a short, human-readable summary of the error.\n\nThis value typically corresponds to the HTTP status text, such as:\n  - \"Bad Request\"\n  - \"Unauthorized\"\n  - \"Forbidden\"\n  - \"Internal Server Error\"\n\nThis field is always expected to be present.",
+                    "type": "string",
+                    "example": "Bad Request"
+                }
+            }
+        },
+        "dto.CreateWhatsAppStatusRequest": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "background_color": {
+                    "description": "Background color for text status (Hex code)",
+                    "type": "string",
+                    "example": "#FF0000"
+                },
+                "caption": {
+                    "description": "Caption for media status",
+                    "type": "string",
+                    "example": "My Status"
+                },
+                "filename": {
+                    "description": "Filename for media status",
+                    "type": "string",
+                    "example": "status.jpg"
+                },
+                "font": {
+                    "description": "Font for text status",
+                    "type": "integer",
+                    "example": 1
+                },
+                "media_data": {
+                    "description": "Media data in Base64 format",
+                    "type": "string"
+                },
+                "mime_type": {
+                    "description": "MimeType for media status",
+                    "type": "string",
+                    "example": "image/jpeg"
+                },
+                "text": {
+                    "description": "Text content for text status",
+                    "type": "string",
+                    "example": "Hello Status"
+                },
+                "type": {
+                    "description": "Status type: text, image, video, audio",
+                    "type": "string",
+                    "example": "text"
+                }
+            }
+        },
+        "dto.EditTelegramMessageRequest": {
+            "type": "object",
+            "required": [
+                "chat_id",
+                "message_id",
+                "text"
+            ],
+            "properties": {
+                "chat_id": {
+                    "description": "Chat ID (recipient identifier, must be numeric chat ID)",
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "keyboard": {
+                    "description": "Inline keyboard markup (optional)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.InlineKeyboardMarkup"
+                        }
+                    ]
+                },
+                "message_id": {
+                    "description": "Message ID to edit",
+                    "type": "integer",
+                    "example": 123
+                },
+                "parse_mode": {
+                    "description": "Parse mode for the message (optional: Markdown, HTML)",
+                    "type": "string",
+                    "example": "Markdown"
+                },
+                "text": {
+                    "description": "New message text",
+                    "type": "string",
+                    "example": "Updated message text"
+                }
+            }
+        },
+        "dto.GetJobStatusResponse": {
+            "type": "object",
+            "properties": {
+                "exists": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "job": {
+                    "$ref": "#/definitions/dto.JobInfoResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.InlineKeyboardButton": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "callback_data": {
+                    "description": "Callback data sent when button is pressed",
+                    "type": "string",
+                    "example": "button1"
+                },
+                "text": {
+                    "description": "Label text on the button",
+                    "type": "string",
+                    "example": "Button 1"
+                },
+                "url": {
+                    "description": "URL to open when button is pressed (optional)",
+                    "type": "string",
+                    "example": "https://example.com"
+                }
+            }
+        },
+        "dto.InlineKeyboardButtonRow": {
+            "type": "object",
+            "properties": {
+                "buttons": {
+                    "description": "Array of buttons in this row",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.InlineKeyboardButton"
+                    }
+                }
+            }
+        },
+        "dto.InlineKeyboardMarkup": {
+            "type": "object",
+            "properties": {
+                "inline_keyboard": {
+                    "description": "Array of button rows",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.InlineKeyboardButtonRow"
+                    }
+                }
+            }
+        },
+        "dto.JobInfoResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Purge old log backup files (.gz) older than configured duration"
+                },
+                "is_running": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "last_run": {
+                    "type": "string",
+                    "example": "2025-12-23T01:00:00+07:00"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "purge-old-log-backup-files"
+                },
+                "next_run": {
+                    "type": "string",
+                    "example": "2025-12-24T01:00:00+07:00"
+                },
+                "schedule": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "01:00"
+                    ]
+                }
+            }
+        },
+        "dto.JobNotFoundResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Job not found"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "non-existent-job"
+                }
+            }
+        },
+        "dto.ListJobsResponse": {
+            "type": "object",
+            "properties": {
+                "jobs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.JobInfoResponse"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 4
+                }
+            }
+        },
+        "dto.RegisterJobRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "schedule"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Backup database daily at 2 AM"
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "backup-database"
+                },
+                "schedule": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "02:00"
+                    ]
+                }
+            }
+        },
+        "dto.RegisterJobResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Job registered successfully"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.ReloadSchedulerResponse": {
+            "type": "object",
+            "properties": {
+                "jobs_loaded": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Scheduler configuration reloaded successfully"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.SchedulerErrorResponse": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "string",
+                    "example": "gRPC connection failed"
+                },
+                "error": {
+                    "type": "string",
+                    "example": "Service Unavailable"
+                }
+            }
+        },
+        "dto.SendTelegramAudioRequest": {
+            "type": "object",
+            "required": [
+                "audio",
+                "chat_id"
+            ],
+            "properties": {
+                "audio": {
+                    "description": "Audio file to send (URL, file_id, or file path)",
+                    "type": "string",
+                    "example": "https://example.com/audio.mp3"
+                },
+                "caption": {
+                    "description": "Caption for the audio (optional)",
+                    "type": "string",
+                    "example": "Audio"
+                },
+                "chat_id": {
+                    "description": "Chat ID (recipient identifier, can be username or chat ID)",
+                    "type": "string",
+                    "example": "@username or 123456789"
+                },
+                "duration": {
+                    "description": "Duration of the audio in seconds (optional)",
+                    "type": "integer",
+                    "example": 180
+                },
+                "parse_mode": {
+                    "description": "Parse mode for the caption (optional: Markdown, HTML)",
+                    "type": "string",
+                    "example": "Markdown"
+                },
+                "performer": {
+                    "description": "Performer of the audio (optional)",
+                    "type": "string",
+                    "example": "Artist Name"
+                },
+                "title": {
+                    "description": "Title of the audio (optional)",
+                    "type": "string",
+                    "example": "Song Title"
+                }
+            }
+        },
+        "dto.SendTelegramDocumentRequest": {
+            "type": "object",
+            "required": [
+                "chat_id",
+                "document"
+            ],
+            "properties": {
+                "caption": {
+                    "description": "Caption for the document (optional)",
+                    "type": "string",
+                    "example": "Document"
+                },
+                "chat_id": {
+                    "description": "Chat ID (recipient identifier, can be username or chat ID)",
+                    "type": "string",
+                    "example": "@username or 123456789"
+                },
+                "document": {
+                    "description": "Document file to send (URL, file_id, or file path)",
+                    "type": "string",
+                    "example": "https://example.com/document.pdf"
+                },
+                "parse_mode": {
+                    "description": "Parse mode for the caption (optional: Markdown, HTML)",
+                    "type": "string",
+                    "example": "Markdown"
+                }
+            }
+        },
+        "dto.SendTelegramMessageRequest": {
+            "type": "object",
+            "required": [
+                "chat_id",
+                "text"
+            ],
+            "properties": {
+                "chat_id": {
+                    "description": "Chat ID (recipient identifier, can be username or chat ID)",
+                    "type": "string",
+                    "example": "@username or 123456789"
+                },
+                "parse_mode": {
+                    "description": "Parse mode for the message (optional: Markdown, HTML)",
+                    "type": "string",
+                    "example": "Markdown"
+                },
+                "text": {
+                    "description": "Message text to send",
+                    "type": "string",
+                    "example": "Hello from Telegram bot!"
+                }
+            }
+        },
+        "dto.SendTelegramMessageWithKeyboardRequest": {
+            "type": "object",
+            "required": [
+                "chat_id",
+                "text"
+            ],
+            "properties": {
+                "chat_id": {
+                    "description": "Chat ID (recipient identifier, can be username or chat ID)",
+                    "type": "string",
+                    "example": "@username or 123456789"
+                },
+                "keyboard": {
+                    "description": "Inline keyboard markup",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.InlineKeyboardMarkup"
+                        }
+                    ]
+                },
+                "parse_mode": {
+                    "description": "Parse mode for the message (optional: Markdown, HTML)",
+                    "type": "string",
+                    "example": "Markdown"
+                },
+                "text": {
+                    "description": "Message text to send",
+                    "type": "string",
+                    "example": "Choose an option:"
+                }
+            }
+        },
+        "dto.SendTelegramPhotoRequest": {
+            "type": "object",
+            "required": [
+                "chat_id",
+                "photo"
+            ],
+            "properties": {
+                "caption": {
+                    "description": "Caption for the photo (optional)",
+                    "type": "string",
+                    "example": "Photo"
+                },
+                "chat_id": {
+                    "description": "Chat ID (recipient identifier, can be username or chat ID)",
+                    "type": "string",
+                    "example": "@username or 123456789"
+                },
+                "parse_mode": {
+                    "description": "Parse mode for the caption (optional: Markdown, HTML)",
+                    "type": "string",
+                    "example": "Markdown"
+                },
+                "photo": {
+                    "description": "Photo file to send (URL, file_id, or file path)",
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
+                }
+            }
+        },
+        "dto.SendTelegramVideoRequest": {
+            "type": "object",
+            "required": [
+                "chat_id",
+                "video"
+            ],
+            "properties": {
+                "caption": {
+                    "description": "Caption for the video (optional)",
+                    "type": "string",
+                    "example": "Video"
+                },
+                "chat_id": {
+                    "description": "Chat ID (recipient identifier, can be username or chat ID)",
+                    "type": "string",
+                    "example": "@username or 123456789"
+                },
+                "duration": {
+                    "description": "Duration of the video in seconds (optional)",
+                    "type": "integer",
+                    "example": 60
+                },
+                "height": {
+                    "description": "Video height (optional)",
+                    "type": "integer",
+                    "example": 480
+                },
+                "parse_mode": {
+                    "description": "Parse mode for the caption (optional: Markdown, HTML)",
+                    "type": "string",
+                    "example": "Markdown"
+                },
+                "video": {
+                    "description": "Video file to send (URL, file_id, or file path)",
+                    "type": "string",
+                    "example": "https://example.com/video.mp4"
+                },
+                "width": {
+                    "description": "Video width (optional)",
+                    "type": "integer",
+                    "example": 640
+                }
+            }
+        },
+        "dto.SendTelegramVoiceRequest": {
+            "type": "object",
+            "required": [
+                "chat_id",
+                "voice"
+            ],
+            "properties": {
+                "caption": {
+                    "description": "Caption for the voice message (optional)",
+                    "type": "string",
+                    "example": "Voice message"
+                },
+                "chat_id": {
+                    "description": "Chat ID (recipient identifier, can be username or chat ID)",
+                    "type": "string",
+                    "example": "@username or 123456789"
+                },
+                "duration": {
+                    "description": "Duration of the voice message in seconds (optional)",
+                    "type": "integer",
+                    "example": 10
+                },
+                "parse_mode": {
+                    "description": "Parse mode for the caption (optional: Markdown, HTML)",
+                    "type": "string",
+                    "example": "Markdown"
+                },
+                "voice": {
+                    "description": "Voice file to send (URL, file_id, or file path)",
+                    "type": "string",
+                    "example": "https://example.com/voice.ogg"
+                }
+            }
+        },
+        "dto.SendTwilioWhatsAppMediaMessageRequest": {
+            "type": "object",
+            "required": [
+                "media_url",
+                "to"
+            ],
+            "properties": {
+                "caption": {
+                    "type": "string",
+                    "example": "Check this out!"
+                },
+                "media_url": {
+                    "type": "string",
+                    "example": "https://example.com/image.jpg"
+                },
+                "to": {
+                    "type": "string",
+                    "example": "+6285173207755"
+                }
+            }
+        },
+        "dto.SendTwilioWhatsAppMediaMessageResponse": {
+            "type": "object",
+            "properties": {
+                "media_url": {
+                    "type": "string"
+                },
+                "message_sid": {
+                    "type": "string",
+                    "example": "SMxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "queued"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string",
+                    "example": "+6285173207755"
+                }
+            }
+        },
+        "dto.SendTwilioWhatsAppMessageRequest": {
+            "type": "object",
+            "required": [
+                "message",
+                "to"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Hello from Twilio WhatsApp!"
+                },
+                "to": {
+                    "type": "string",
+                    "example": "+6285173207755"
+                }
+            }
+        },
+        "dto.SendTwilioWhatsAppMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message_sid": {
+                    "type": "string",
+                    "example": "SMxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "queued"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string",
+                    "example": "+6285173207755"
+                }
+            }
+        },
+        "dto.SendWhatsAppMessageRequest": {
+            "type": "object",
+            "required": [
+                "recipient"
+            ],
+            "properties": {
+                "accuracy": {
+                    "description": "Accuracy for live location",
+                    "type": "integer"
+                },
+                "address": {
+                    "description": "Address for location",
+                    "type": "string",
+                    "example": "Jalan Jendral Sudirman"
+                },
+                "caption": {
+                    "description": "Caption for the media",
+                    "type": "string",
+                    "example": "Check this out!"
+                },
+                "contact_name": {
+                    "description": "Contact Name",
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "degrees": {
+                    "description": "Degrees for live location",
+                    "type": "integer"
+                },
+                "filename": {
+                    "description": "Filename for the media",
+                    "type": "string",
+                    "example": "image.jpg"
+                },
+                "is_group": {
+                    "description": "Set to true if the recipient is a group",
+                    "type": "boolean",
+                    "example": false
+                },
+                "latitude": {
+                    "description": "Latitude for location messages",
+                    "type": "number",
+                    "example": -6.2
+                },
+                "loc_name": {
+                    "description": "Location name",
+                    "type": "string",
+                    "example": "Jakarta"
+                },
+                "longitude": {
+                    "description": "Longitude for location messages",
+                    "type": "number",
+                    "example": 106.816666
+                },
+                "media_data": {
+                    "description": "Media data in Base64 format (required for image, video, audio, document)",
+                    "type": "string"
+                },
+                "message": {
+                    "description": "Text content (required for text type)",
+                    "type": "string",
+                    "example": "Hello World"
+                },
+                "mime_type": {
+                    "description": "MimeType of the media",
+                    "type": "string",
+                    "example": "image/jpeg"
+                },
+                "poll_name": {
+                    "description": "Poll Name",
+                    "type": "string",
+                    "example": "What is your favorite color?"
+                },
+                "poll_options": {
+                    "description": "Poll Options",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "Red",
+                        "Blue",
+                        "Green"
+                    ]
+                },
+                "recipient": {
+                    "description": "Recipient phone number or Group JID",
+                    "type": "string",
+                    "example": "6281234567890"
+                },
+                "selectable_count": {
+                    "description": "Selectable Count for poll",
+                    "type": "integer",
+                    "example": 1
+                },
+                "sequence": {
+                    "description": "Sequence for live location",
+                    "type": "integer"
+                },
+                "speed": {
+                    "description": "Speed for live location",
+                    "type": "number"
+                },
+                "time_offset": {
+                    "description": "TimeOffset for live location",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Message type: text, image, video, audio, document, location, live_location, poll, contact",
+                    "type": "string",
+                    "example": "text"
+                },
+                "vcard": {
+                    "description": "Vcard data",
+                    "type": "string"
+                },
+                "view_once": {
+                    "description": "ViewOnce for media messages",
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "dto.TelegramAnswerCallbackQueryRequest": {
+            "type": "object",
+            "required": [
+                "callback_query_id"
+            ],
+            "properties": {
+                "callback_query_id": {
+                    "description": "Callback query ID",
+                    "type": "string",
+                    "example": "1234567890123456789"
+                },
+                "show_alert": {
+                    "description": "Show alert instead of notification",
+                    "type": "boolean",
+                    "example": false
+                },
+                "text": {
+                    "description": "Text of the notification (optional)",
+                    "type": "string",
+                    "example": "Button pressed!"
+                }
+            }
+        },
+        "dto.TriggerJobRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "purge-old-log-backup-files"
+                }
+            }
+        },
+        "dto.TriggerJobResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Job triggered successfully"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.TwilioWhatsAppErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TwilioWhatsAppMessageHistory": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "direction": {
+                    "type": "string",
+                    "example": "outbound"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "message_sid": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TwilioWhatsAppMessageListResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TwilioWhatsAppMessageHistory"
+                    }
+                }
+            }
+        },
+        "dto.UnregisterJobResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Job unregistered successfully"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "model.WAUsers": {
+            "type": "object"
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
