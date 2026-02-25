@@ -7,21 +7,23 @@ var ManageService = &configs[TypeManageService]{}
 type TypeManageService struct {
 	// ODOOMS holds configuration for ODOO Manage Service integration
 	ODOOMS struct {
-		JSONRPCVersion string                  `yaml:"jsonrpc_version" validate:"required"`
-		Login          string                  `yaml:"login" validate:"required"`
-		Password       string                  `yaml:"password" validate:"required"`
-		DB             string                  `yaml:"db" validate:"required"`
-		URL            string                  `yaml:"url" validate:"required"`
-		PathSession    string                  `yaml:"path_session" validate:"required"`
-		PathGetData    string                  `yaml:"path_getdata" validate:"required"`
-		PathUpdateData string                  `yaml:"path_updatedata" validate:"required"`
-		PathCreateData string                  `yaml:"path_createdata" validate:"required"`
-		MaxRetry       int                     `yaml:"max_retry" validate:"required"`
-		RetryDelay     int                     `yaml:"retry_delay" validate:"required"`
-		SessionTimeout int                     `yaml:"session_timeout" validate:"required"`
-		DataTimeout    int                     `yaml:"data_timeout"`
-		SkipSSLVerify  bool                    `yaml:"skip_ssl_verify"`
-		SACData        map[string]ODOOMSACData `yaml:"sac" validate:"required"`
+		JSONRPCVersion  string                  `yaml:"jsonrpc_version" validate:"required"`
+		Login           string                  `yaml:"login" validate:"required"`
+		Password        string                  `yaml:"password" validate:"required"`
+		DB              string                  `yaml:"db" validate:"required"`
+		URL             string                  `yaml:"url" validate:"required"`
+		PathSession     string                  `yaml:"path_session" validate:"required"`
+		PathGetData     string                  `yaml:"path_getdata" validate:"required"`
+		PathUpdateData  string                  `yaml:"path_updatedata" validate:"required"`
+		PathCreateData  string                  `yaml:"path_createdata" validate:"required"`
+		MaxRetry        int                     `yaml:"max_retry" validate:"required"`
+		RetryDelay      int                     `yaml:"retry_delay" validate:"required"`
+		SessionTimeout  int                     `yaml:"session_timeout" validate:"required"`
+		DataTimeout     int                     `yaml:"data_timeout"`
+		SkipSSLVerify   bool                    `yaml:"skip_ssl_verify"`
+		CompanyIncluded []string                `yaml:"company_included" validate:"required"`
+		CompanyExcluded []string                `yaml:"company_excluded" validate:"required"`
+		SACData         map[string]ODOOMSACData `yaml:"sac" validate:"required"`
 	} `yaml:"odoo_ms" validate:"required"`
 
 	// TechnicalAssistance holds configuration for technical assistance services and configurations

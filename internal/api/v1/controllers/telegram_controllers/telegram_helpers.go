@@ -360,10 +360,9 @@ func (h *TelegramHelper) HandleUpdate(update tgbotapi.Update) {
 }
 
 // HandleReplyMessage processes reply messages from Telegram.
-// TODO: buat function untuk handle reply dari SP yang dikirim
-// baca message.Chat.ID untuk tau chat id nya, dan hapus dari DB jika diperlukan klo SP yg terkirim sudah dibalas
 func (*TelegramHelper) HandleReplyMessage(_ *tgbotapi.Message) {
-
+	// TODO: complete this func for handling its replied.
+	// You need to read the chat ID that stored in the database , and delete the record if mark as replied.
 }
 
 // HandleMessage processes incoming messages from users

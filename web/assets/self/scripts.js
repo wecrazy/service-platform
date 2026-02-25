@@ -477,6 +477,92 @@ window.initDashboardTab = (function () {
     });
   }
 
+  /**
+   * Populate the hero welcome chips with the current user's name and today's date.
+   * Reads the full name from #user-admin-name (already rendered by the server).
+   * The WS-status chip mirrors the live #wsStatus badge class via MutationObserver.
+   * @returns {void}
+   */
+  function setupWelcomeChips() {
+    try {
+      // --- Username chip ---
+      const usernameChip = document.getElementById('hero-username-chip');
+      if (usernameChip) {
+        const fullname = ($('#user-admin-name').text() || '').trim();
+        usernameChip.textContent = fullname || ($('#userInfo').data('user-name') || '').trim() || '—';
+      }
+
+      // --- Date chip (localised friendly date) ---
+      const dateChip = document.getElementById('hero-date-chip');
+      if (dateChip) {
+        const locale = (typeof i18next !== 'undefined' && i18next.language) ? i18next.language : 'en';
+        let dateStr = '';
+        if (typeof DateTime !== 'undefined' && DateTime && DateTime.now) {
+          dateStr = DateTime.now().setZone('Asia/Jakarta').setLocale(locale)
+            .toFormat('dd LLLL yyyy');
+        } else {
+          const now = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
+          dateStr = now.toLocaleDateString(locale, {
+            day: '2-digit', month: 'long', year: 'numeric'
+          });
+        }
+        dateChip.textContent = dateStr;
+      }
+
+      // --- WS-status chip: mirror the live #wsStatus badge ---
+      const wsStatusEl = document.getElementById('wsStatus');
+      const wsChipEl   = document.getElementById('dashboard-ws-chip');
+      const chipDot    = document.getElementById('hero-chip-dot');
+      const chipText   = document.getElementById('hero-ws-status-text');
+
+      function syncWsChip() {
+        if (!wsStatusEl || !wsChipEl || !chipDot) return;
+        const cls = wsStatusEl.className || '';
+        let dotColor, chipBg, chipBorder, label, isOffline = false;
+
+        if (cls.includes('bg-success')) {
+          dotColor   = '#28c76f';
+          chipBg     = 'rgba(40,199,111,0.20)';
+          chipBorder = 'rgba(40,199,111,0.42)';
+          label = (typeof i18next !== 'undefined' && i18next.t)
+            ? i18next.t('dashboard.chip.systemOnline') : 'System Online';
+        } else if (cls.includes('bg-danger')) {
+          dotColor   = '#ea5455';
+          chipBg     = 'rgba(234,84,85,0.18)';
+          chipBorder = 'rgba(234,84,85,0.40)';
+          label = (typeof i18next !== 'undefined' && i18next.t)
+            ? i18next.t('dashboard.chip.systemOffline') : 'Offline';
+          isOffline = true;
+        } else {
+          // bg-warning or unknown = connecting / initial
+          dotColor   = '#ff9f43';
+          chipBg     = 'rgba(255,159,67,0.18)';
+          chipBorder = 'rgba(255,159,67,0.40)';
+          label = (typeof i18next !== 'undefined' && i18next.t)
+            ? i18next.t('dashboard.chip.systemConnecting') : 'Connecting…';
+        }
+
+        wsChipEl.style.setProperty('--_chip-bg',    chipBg);
+        wsChipEl.style.setProperty('--_chip-border', chipBorder);
+        chipDot.style.background = dotColor;
+        chipDot.classList.toggle('chip-dot--offline', isOffline);
+        if (chipText) chipText.textContent = label;
+      }
+
+      syncWsChip(); // apply immediately
+
+      // Watch for future class changes on #wsStatus
+      if (wsStatusEl) {
+        try {
+          const obs = new MutationObserver(syncWsChip);
+          obs.observe(wsStatusEl, { attributes: true, attributeFilter: ['class'] });
+        } catch (e) { /* ignore if MutationObserver unavailable */ }
+      }
+    } catch (e) {
+      // ignore chip update errors
+    }
+  }
+
   return function initDashboardTab() {
     try { /* initDashboardTab called */ } catch (e) { }
     // Localize any data-i18n strings inside the dashboard (ensures quick actions
@@ -498,6 +584,7 @@ window.initDashboardTab = (function () {
     setupClocks();
     setupGreeting();
     setupHeroDatetime();
+    setupWelcomeChips();
     setupWeatherWidget();
     // Ensure localization is applied again after widgets (like weatherwidget) have
     // had a chance to initialize or mutate the DOM. This helps avoid cases where
