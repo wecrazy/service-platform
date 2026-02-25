@@ -1,0 +1,2713 @@
+basePath: /
+definitions:
+  dto.APIErrorResponse:
+    properties:
+      code:
+        description: |-
+          Code is an optional, stable, application-specific error identifier.
+
+          This value is intended for programmatic handling by API clients and should
+          not change frequently. Examples include:
+            - "VALIDATION_ERROR"
+            - "AUTHENTICATION_FAILED"
+            - "RESOURCE_NOT_FOUND"
+
+          When provided, clients may use this field to implement conditional logic
+          without parsing human-readable error messages.
+        example: VALIDATION_ERROR
+        type: string
+      details:
+        description: |-
+          Details provides an optional, more descriptive explanation of the error condition.
+
+          This field may include validation errors, missing or invalid parameters,
+          or other contextual information intended to help the client understand
+          why the request failed.
+
+          When omitted, clients should rely on the Error field alone.
+        example: Invalid input data
+        type: string
+      error:
+        description: |-
+          Error is a short, human-readable summary of the error.
+
+          This value typically corresponds to the HTTP status text, such as:
+            - "Bad Request"
+            - "Unauthorized"
+            - "Forbidden"
+            - "Internal Server Error"
+
+          This field is always expected to be present.
+        example: Bad Request
+        type: string
+    type: object
+  dto.CreateWhatsAppStatusRequest:
+    properties:
+      background_color:
+        description: Background color for text status (Hex code)
+        example: '#FF0000'
+        type: string
+      caption:
+        description: Caption for media status
+        example: My Status
+        type: string
+      filename:
+        description: Filename for media status
+        example: status.jpg
+        type: string
+      font:
+        description: Font for text status
+        example: 1
+        type: integer
+      media_data:
+        description: Media data in Base64 format
+        type: string
+      mime_type:
+        description: MimeType for media status
+        example: image/jpeg
+        type: string
+      text:
+        description: Text content for text status
+        example: Hello Status
+        type: string
+      type:
+        description: 'Status type: text, image, video, audio'
+        example: text
+        type: string
+    required:
+    - type
+    type: object
+  dto.EditTelegramMessageRequest:
+    properties:
+      chat_id:
+        description: Chat ID (recipient identifier, must be numeric chat ID)
+        example: "123456789"
+        type: string
+      keyboard:
+        allOf:
+        - $ref: '#/definitions/dto.InlineKeyboardMarkup'
+        description: Inline keyboard markup (optional)
+      message_id:
+        description: Message ID to edit
+        example: 123
+        type: integer
+      parse_mode:
+        description: 'Parse mode for the message (optional: Markdown, HTML)'
+        example: Markdown
+        type: string
+      text:
+        description: New message text
+        example: Updated message text
+        type: string
+    required:
+    - chat_id
+    - message_id
+    - text
+    type: object
+  dto.GetJobStatusResponse:
+    properties:
+      exists:
+        example: true
+        type: boolean
+      job:
+        $ref: '#/definitions/dto.JobInfoResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.InlineKeyboardButton:
+    properties:
+      callback_data:
+        description: Callback data sent when button is pressed
+        example: button1
+        type: string
+      text:
+        description: Label text on the button
+        example: Button 1
+        type: string
+      url:
+        description: URL to open when button is pressed (optional)
+        example: https://example.com
+        type: string
+    required:
+    - text
+    type: object
+  dto.InlineKeyboardButtonRow:
+    properties:
+      buttons:
+        description: Array of buttons in this row
+        items:
+          $ref: '#/definitions/dto.InlineKeyboardButton'
+        type: array
+    type: object
+  dto.InlineKeyboardMarkup:
+    properties:
+      inline_keyboard:
+        description: Array of button rows
+        items:
+          $ref: '#/definitions/dto.InlineKeyboardButtonRow'
+        type: array
+    type: object
+  dto.JobInfoResponse:
+    properties:
+      description:
+        example: Purge old log backup files (.gz) older than configured duration
+        type: string
+      is_running:
+        example: false
+        type: boolean
+      last_run:
+        example: "2025-12-23T01:00:00+07:00"
+        type: string
+      name:
+        example: purge-old-log-backup-files
+        type: string
+      next_run:
+        example: "2025-12-24T01:00:00+07:00"
+        type: string
+      schedule:
+        example:
+        - "01:00"
+        items:
+          type: string
+        type: array
+    type: object
+  dto.JobNotFoundResponse:
+    properties:
+      error:
+        example: Job not found
+        type: string
+      name:
+        example: non-existent-job
+        type: string
+    type: object
+  dto.ListJobsResponse:
+    properties:
+      jobs:
+        items:
+          $ref: '#/definitions/dto.JobInfoResponse'
+        type: array
+      success:
+        example: true
+        type: boolean
+      total:
+        example: 4
+        type: integer
+    type: object
+  dto.RegisterJobRequest:
+    properties:
+      description:
+        example: Backup database daily at 2 AM
+        type: string
+      enabled:
+        example: true
+        type: boolean
+      name:
+        example: backup-database
+        type: string
+      schedule:
+        example:
+        - "02:00"
+        items:
+          type: string
+        type: array
+    required:
+    - name
+    - schedule
+    type: object
+  dto.RegisterJobResponse:
+    properties:
+      message:
+        example: Job registered successfully
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.ReloadSchedulerResponse:
+    properties:
+      jobs_loaded:
+        example: 4
+        type: integer
+      message:
+        example: Scheduler configuration reloaded successfully
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.SchedulerErrorResponse:
+    properties:
+      details:
+        example: gRPC connection failed
+        type: string
+      error:
+        example: Service Unavailable
+        type: string
+    type: object
+  dto.SendTelegramAudioRequest:
+    properties:
+      audio:
+        description: Audio file to send (URL, file_id, or file path)
+        example: https://example.com/audio.mp3
+        type: string
+      caption:
+        description: Caption for the audio (optional)
+        example: Audio
+        type: string
+      chat_id:
+        description: Chat ID (recipient identifier, can be username or chat ID)
+        example: '@username or 123456789'
+        type: string
+      duration:
+        description: Duration of the audio in seconds (optional)
+        example: 180
+        type: integer
+      parse_mode:
+        description: 'Parse mode for the caption (optional: Markdown, HTML)'
+        example: Markdown
+        type: string
+      performer:
+        description: Performer of the audio (optional)
+        example: Artist Name
+        type: string
+      title:
+        description: Title of the audio (optional)
+        example: Song Title
+        type: string
+    required:
+    - audio
+    - chat_id
+    type: object
+  dto.SendTelegramDocumentRequest:
+    properties:
+      caption:
+        description: Caption for the document (optional)
+        example: Document
+        type: string
+      chat_id:
+        description: Chat ID (recipient identifier, can be username or chat ID)
+        example: '@username or 123456789'
+        type: string
+      document:
+        description: Document file to send (URL, file_id, or file path)
+        example: https://example.com/document.pdf
+        type: string
+      parse_mode:
+        description: 'Parse mode for the caption (optional: Markdown, HTML)'
+        example: Markdown
+        type: string
+    required:
+    - chat_id
+    - document
+    type: object
+  dto.SendTelegramMessageRequest:
+    properties:
+      chat_id:
+        description: Chat ID (recipient identifier, can be username or chat ID)
+        example: '@username or 123456789'
+        type: string
+      parse_mode:
+        description: 'Parse mode for the message (optional: Markdown, HTML)'
+        example: Markdown
+        type: string
+      text:
+        description: Message text to send
+        example: Hello from Telegram bot!
+        type: string
+    required:
+    - chat_id
+    - text
+    type: object
+  dto.SendTelegramMessageWithKeyboardRequest:
+    properties:
+      chat_id:
+        description: Chat ID (recipient identifier, can be username or chat ID)
+        example: '@username or 123456789'
+        type: string
+      keyboard:
+        allOf:
+        - $ref: '#/definitions/dto.InlineKeyboardMarkup'
+        description: Inline keyboard markup
+      parse_mode:
+        description: 'Parse mode for the message (optional: Markdown, HTML)'
+        example: Markdown
+        type: string
+      text:
+        description: Message text to send
+        example: 'Choose an option:'
+        type: string
+    required:
+    - chat_id
+    - text
+    type: object
+  dto.SendTelegramPhotoRequest:
+    properties:
+      caption:
+        description: Caption for the photo (optional)
+        example: Photo
+        type: string
+      chat_id:
+        description: Chat ID (recipient identifier, can be username or chat ID)
+        example: '@username or 123456789'
+        type: string
+      parse_mode:
+        description: 'Parse mode for the caption (optional: Markdown, HTML)'
+        example: Markdown
+        type: string
+      photo:
+        description: Photo file to send (URL, file_id, or file path)
+        example: https://example.com/photo.jpg
+        type: string
+    required:
+    - chat_id
+    - photo
+    type: object
+  dto.SendTelegramVideoRequest:
+    properties:
+      caption:
+        description: Caption for the video (optional)
+        example: Video
+        type: string
+      chat_id:
+        description: Chat ID (recipient identifier, can be username or chat ID)
+        example: '@username or 123456789'
+        type: string
+      duration:
+        description: Duration of the video in seconds (optional)
+        example: 60
+        type: integer
+      height:
+        description: Video height (optional)
+        example: 480
+        type: integer
+      parse_mode:
+        description: 'Parse mode for the caption (optional: Markdown, HTML)'
+        example: Markdown
+        type: string
+      video:
+        description: Video file to send (URL, file_id, or file path)
+        example: https://example.com/video.mp4
+        type: string
+      width:
+        description: Video width (optional)
+        example: 640
+        type: integer
+    required:
+    - chat_id
+    - video
+    type: object
+  dto.SendTelegramVoiceRequest:
+    properties:
+      caption:
+        description: Caption for the voice message (optional)
+        example: Voice message
+        type: string
+      chat_id:
+        description: Chat ID (recipient identifier, can be username or chat ID)
+        example: '@username or 123456789'
+        type: string
+      duration:
+        description: Duration of the voice message in seconds (optional)
+        example: 10
+        type: integer
+      parse_mode:
+        description: 'Parse mode for the caption (optional: Markdown, HTML)'
+        example: Markdown
+        type: string
+      voice:
+        description: Voice file to send (URL, file_id, or file path)
+        example: https://example.com/voice.ogg
+        type: string
+    required:
+    - chat_id
+    - voice
+    type: object
+  dto.SendTwilioWhatsAppMediaMessageRequest:
+    properties:
+      caption:
+        example: Check this out!
+        type: string
+      media_url:
+        example: https://example.com/image.jpg
+        type: string
+      to:
+        example: "+6285173207755"
+        type: string
+    required:
+    - media_url
+    - to
+    type: object
+  dto.SendTwilioWhatsAppMediaMessageResponse:
+    properties:
+      media_url:
+        type: string
+      message_sid:
+        example: SMxxxxxxxxxxxxxxxxxxxxxxxxxx
+        type: string
+      status:
+        example: queued
+        type: string
+      timestamp:
+        type: string
+      to:
+        example: "+6285173207755"
+        type: string
+    type: object
+  dto.SendTwilioWhatsAppMessageRequest:
+    properties:
+      message:
+        example: Hello from Twilio WhatsApp!
+        type: string
+      to:
+        example: "+6285173207755"
+        type: string
+    required:
+    - message
+    - to
+    type: object
+  dto.SendTwilioWhatsAppMessageResponse:
+    properties:
+      message_sid:
+        example: SMxxxxxxxxxxxxxxxxxxxxxxxxxx
+        type: string
+      status:
+        example: queued
+        type: string
+      timestamp:
+        type: string
+      to:
+        example: "+6285173207755"
+        type: string
+    type: object
+  dto.SendWhatsAppMessageRequest:
+    properties:
+      accuracy:
+        description: Accuracy for live location
+        type: integer
+      address:
+        description: Address for location
+        example: Jalan Jendral Sudirman
+        type: string
+      caption:
+        description: Caption for the media
+        example: Check this out!
+        type: string
+      contact_name:
+        description: Contact Name
+        example: John Doe
+        type: string
+      degrees:
+        description: Degrees for live location
+        type: integer
+      filename:
+        description: Filename for the media
+        example: image.jpg
+        type: string
+      is_group:
+        description: Set to true if the recipient is a group
+        example: false
+        type: boolean
+      latitude:
+        description: Latitude for location messages
+        example: -6.2
+        type: number
+      loc_name:
+        description: Location name
+        example: Jakarta
+        type: string
+      longitude:
+        description: Longitude for location messages
+        example: 106.816666
+        type: number
+      media_data:
+        description: Media data in Base64 format (required for image, video, audio,
+          document)
+        type: string
+      message:
+        description: Text content (required for text type)
+        example: Hello World
+        type: string
+      mime_type:
+        description: MimeType of the media
+        example: image/jpeg
+        type: string
+      poll_name:
+        description: Poll Name
+        example: What is your favorite color?
+        type: string
+      poll_options:
+        description: Poll Options
+        example:
+        - Red
+        - Blue
+        - Green
+        items:
+          type: string
+        type: array
+      recipient:
+        description: Recipient phone number or Group JID
+        example: "6281234567890"
+        type: string
+      selectable_count:
+        description: Selectable Count for poll
+        example: 1
+        type: integer
+      sequence:
+        description: Sequence for live location
+        type: integer
+      speed:
+        description: Speed for live location
+        type: number
+      time_offset:
+        description: TimeOffset for live location
+        type: integer
+      type:
+        description: 'Message type: text, image, video, audio, document, location,
+          live_location, poll, contact'
+        example: text
+        type: string
+      vcard:
+        description: Vcard data
+        type: string
+      view_once:
+        description: ViewOnce for media messages
+        example: false
+        type: boolean
+    required:
+    - recipient
+    type: object
+  dto.TelegramAnswerCallbackQueryRequest:
+    properties:
+      callback_query_id:
+        description: Callback query ID
+        example: "1234567890123456789"
+        type: string
+      show_alert:
+        description: Show alert instead of notification
+        example: false
+        type: boolean
+      text:
+        description: Text of the notification (optional)
+        example: Button pressed!
+        type: string
+    required:
+    - callback_query_id
+    type: object
+  dto.TriggerJobRequest:
+    properties:
+      name:
+        example: purge-old-log-backup-files
+        type: string
+    required:
+    - name
+    type: object
+  dto.TriggerJobResponse:
+    properties:
+      message:
+        example: Job triggered successfully
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.TwilioWhatsAppErrorResponse:
+    properties:
+      error:
+        type: string
+      timestamp:
+        type: string
+      to:
+        type: string
+    type: object
+  dto.TwilioWhatsAppMessageHistory:
+    properties:
+      body:
+        type: string
+      created_at:
+        type: string
+      direction:
+        example: outbound
+        type: string
+      from:
+        type: string
+      id:
+        type: string
+      message_sid:
+        type: string
+      status:
+        type: string
+      to:
+        type: string
+    type: object
+  dto.TwilioWhatsAppMessageListResponse:
+    properties:
+      count:
+        example: 10
+        type: integer
+      messages:
+        items:
+          $ref: '#/definitions/dto.TwilioWhatsAppMessageHistory'
+        type: array
+    type: object
+  dto.UnregisterJobResponse:
+    properties:
+      message:
+        example: Job unregistered successfully
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  model.WAUsers:
+    type: object
+host: localhost:6221
+info:
+  contact:
+    email: wegirandol@smartwebindonesia.com
+    name: Wegil
+    url: https://github.com/wecrazy
+  description: This is a server API documentation for Service Platform Dashboard.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: API Server for Dashboard's Service
+  version: "1.0"
+paths:
+  /api/v1/{access}/components/{component}:
+    get:
+      description: Renders a specific component page
+      parameters:
+      - description: Access Token
+        in: path
+        name: access
+        required: true
+        type: string
+      - description: Component Name
+        in: path
+        name: component
+        required: true
+        type: string
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML Content
+          schema:
+            type: string
+      summary: Get Component Page
+      tags:
+      - Web
+  /api/v1/{access}/scheduler/jobs:
+    get:
+      description: Get a list of all registered scheduled jobs with their details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ListJobsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.SchedulerErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.SchedulerErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List all scheduled jobs
+      tags:
+      - Scheduler
+    post:
+      consumes:
+      - application/json
+      description: Register a new job to be executed by the scheduler
+      parameters:
+      - description: Job details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RegisterJobResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.SchedulerErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.SchedulerErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Register a new scheduled job
+      tags:
+      - Scheduler
+  /api/v1/{access}/scheduler/jobs/{name}:
+    delete:
+      description: Remove a job from the scheduler
+      parameters:
+      - description: Job Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UnregisterJobResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.SchedulerErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Unregister a scheduled job
+      tags:
+      - Scheduler
+    get:
+      description: Get the status and details of a specific scheduled job
+      parameters:
+      - description: Job Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GetJobStatusResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.JobNotFoundResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.SchedulerErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get job status
+      tags:
+      - Scheduler
+  /api/v1/{access}/scheduler/jobs/trigger:
+    post:
+      consumes:
+      - application/json
+      description: Trigger a specific job to run immediately
+      parameters:
+      - description: Job name
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TriggerJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TriggerJobResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.SchedulerErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.SchedulerErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Manually trigger a scheduled job
+      tags:
+      - Scheduler
+  /api/v1/{access}/scheduler/reload:
+    post:
+      description: Reload the scheduler with updated configuration from YAML
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReloadSchedulerResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.SchedulerErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Reload scheduler configuration
+      tags:
+      - Scheduler
+  /api/v1/{access}/tab-app-config/table:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Retrieves the application configuration table data with pagination
+        and sorting
+      parameters:
+      - description: Draw counter. This is used by DataTables to ensure that the Ajax
+          returns from server-side processing requests are drawn in sequence by DataTables.
+        example: 1
+        in: formData
+        name: draw
+        type: integer
+      - description: Filter by Full Name
+        in: formData
+        name: full_name
+        type: string
+      - description: Number of records that the table can display in the current draw.
+        example: 10
+        in: formData
+        name: length
+        type: integer
+      - description: Filter by No
+        in: formData
+        name: "no"
+        type: string
+      - description: Column to which ordering should be applied.
+        example: 0
+        in: formData
+        name: order[0][column
+        type: integer
+      - description: Ordering direction for this column. It will be asc or desc.
+        example: asc
+        in: formData
+        name: order[0][dir
+        type: string
+      - description: Global search value. To be applied to all columns which have
+          searchable as true.
+        in: formData
+        name: search[value
+        type: string
+      - description: Paging first record indicator. This is the start point in the
+          current data set (0 index based - i.e. 0 is the first record).
+        example: 0
+        in: formData
+        name: start
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Get App Config Table
+      tags:
+      - AppConfig
+  /api/v1/{access}/tab-telegram/answer_callback_query:
+    post:
+      consumes:
+      - application/json
+      description: Answers a callback query from an inline keyboard button
+      parameters:
+      - description: Answer Callback Query Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TelegramAnswerCallbackQueryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Answer Callback Query
+      tags:
+      - Telegram
+  /api/v1/{access}/tab-telegram/edit_message:
+    post:
+      consumes:
+      - application/json
+      description: Edits an existing Telegram message
+      parameters:
+      - description: Edit Message Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EditTelegramMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Edit Telegram Message
+      tags:
+      - Telegram
+  /api/v1/{access}/tab-telegram/send_audio:
+    post:
+      consumes:
+      - application/json
+      description: Sends an audio file via Telegram bot
+      parameters:
+      - description: Audio Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTelegramAudioRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Send Telegram Audio
+      tags:
+      - Telegram
+  /api/v1/{access}/tab-telegram/send_document:
+    post:
+      consumes:
+      - application/json
+      description: Sends a document via Telegram bot
+      parameters:
+      - description: Document Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTelegramDocumentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Send Telegram Document
+      tags:
+      - Telegram
+  /api/v1/{access}/tab-telegram/send_message:
+    post:
+      consumes:
+      - application/json
+      description: Sends a text message via Telegram bot
+      parameters:
+      - description: Message Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTelegramMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Send Telegram Message
+      tags:
+      - Telegram
+  /api/v1/{access}/tab-telegram/send_message_with_keyboard:
+    post:
+      consumes:
+      - application/json
+      description: Sends a message with an inline keyboard via Telegram bot
+      parameters:
+      - description: Message with Keyboard Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTelegramMessageWithKeyboardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Send Telegram Message with Keyboard
+      tags:
+      - Telegram
+  /api/v1/{access}/tab-telegram/send_photo:
+    post:
+      consumes:
+      - application/json
+      description: Sends a photo via Telegram bot
+      parameters:
+      - description: Photo Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTelegramPhotoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Send Telegram Photo
+      tags:
+      - Telegram
+  /api/v1/{access}/tab-telegram/send_video:
+    post:
+      consumes:
+      - application/json
+      description: Sends a video via Telegram bot
+      parameters:
+      - description: Video Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTelegramVideoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Send Telegram Video
+      tags:
+      - Telegram
+  /api/v1/{access}/tab-telegram/send_voice:
+    post:
+      consumes:
+      - application/json
+      description: Sends a voice message via Telegram bot
+      parameters:
+      - description: Voice Message Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTelegramVoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Send Telegram Voice Message
+      tags:
+      - Telegram
+  /api/v1/{access}/tab-twilio-whatsapp/incoming:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve history of incoming WhatsApp messages received via Twilio
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TwilioWhatsAppMessageListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get incoming WhatsApp messages
+      tags:
+      - Twilio WhatsApp
+  /api/v1/{access}/tab-twilio-whatsapp/messages:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve history of sent WhatsApp messages via Twilio
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TwilioWhatsAppMessageListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get sent WhatsApp messages
+      tags:
+      - Twilio WhatsApp
+  /api/v1/{access}/tab-twilio-whatsapp/send_media_message:
+    post:
+      consumes:
+      - application/json
+      description: Send media (image, document, etc.) to a WhatsApp number using Twilio
+        API
+      parameters:
+      - description: Media message request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTwilioWhatsAppMediaMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SendTwilioWhatsAppMediaMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.TwilioWhatsAppErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.TwilioWhatsAppErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Send WhatsApp media message via Twilio
+      tags:
+      - Twilio WhatsApp
+  /api/v1/{access}/tab-twilio-whatsapp/send_message:
+    post:
+      consumes:
+      - application/json
+      description: Send a text message to a WhatsApp number using Twilio API
+      parameters:
+      - description: Message request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTwilioWhatsAppMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SendTwilioWhatsAppMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.TwilioWhatsAppErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.TwilioWhatsAppErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Send WhatsApp message via Twilio
+      tags:
+      - Twilio WhatsApp
+  /api/v1/{access}/tab-whatsapp-user-management/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Returns statistics about WhatsApp users with optional filters
+      parameters:
+      - description: Filter by user type
+        in: query
+        name: user_type
+        type: string
+      - description: Filter by user of
+        in: query
+        name: user_of
+        type: string
+      - description: Filter by status (active/banned)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get WhatsApp User Statistics
+      tags:
+      - WhatsApp User Management
+  /api/v1/{access}/tab-whatsapp-user-management/users:
+    get:
+      consumes:
+      - application/json
+      description: Returns a paginated list of WhatsApp users with filters
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by name, phone, or email
+        in: query
+        name: search
+        type: string
+      - description: Filter by user type
+        in: query
+        name: user_type
+        type: string
+      - description: Filter by user of
+        in: query
+        name: user_of
+        type: string
+      - description: Filter by status (active/banned)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get WhatsApp Users
+      tags:
+      - WhatsApp User Management
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp user
+      parameters:
+      - description: WhatsApp User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.WAUsers'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create WhatsApp User
+      tags:
+      - WhatsApp User Management
+  /api/v1/{access}/tab-whatsapp-user-management/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a WhatsApp user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete WhatsApp User
+      tags:
+      - WhatsApp User Management
+    get:
+      consumes:
+      - application/json
+      description: Returns a specific WhatsApp user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get WhatsApp User
+      tags:
+      - WhatsApp User Management
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing WhatsApp user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: WhatsApp User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.WAUsers'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update WhatsApp User
+      tags:
+      - WhatsApp User Management
+  /api/v1/{access}/tab-whatsapp-user-management/users/{id}/ban:
+    patch:
+      consumes:
+      - application/json
+      description: Bans or unbans a WhatsApp user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Ban status
+        in: body
+        name: ban
+        required: true
+        schema:
+          additionalProperties:
+            type: boolean
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Toggle Ban WhatsApp User
+      tags:
+      - WhatsApp User Management
+  /api/v1/{access}/tab-whatsapp-user-management/users/datatable:
+    post:
+      consumes:
+      - application/json
+      description: Returns WhatsApp users in DataTables server-side format
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get WhatsApp Users (DataTables Server-Side)
+      tags:
+      - WhatsApp User Management
+  /api/v1/{access}/tab-whatsapp-user-management/users/export:
+    get:
+      consumes:
+      - application/json
+      description: Exports WhatsApp users to CSV
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Export WhatsApp Users
+      tags:
+      - WhatsApp User Management
+  /api/v1/{access}/tab-whatsapp-user-management/users/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Imports users from CSV file, creates new users and updates existing
+        ones based on phone numbers
+      parameters:
+      - description: CSV file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: ImportWhatsAppUsers from CSV
+      tags:
+      - WhatsApp User Management
+  /api/v1/{access}/tab-whatsapp-user-management/users/import-batched:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Imports users from CSV file with concurrent batched processing
+        for large files (100k+ rows)
+      parameters:
+      - description: CSV file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Import WhatsApp Users from CSV with Batching
+      tags:
+      - WhatsApp User Management
+  /api/v1/{access}/tab-whatsapp-user-management/users/import-template:
+    get:
+      consumes:
+      - application/json
+      description: Returns CSV template data with valid values for user_type, user_of,
+        allowed_chats, and allowed_types
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get CSV Import Template with valid options
+      tags:
+      - WhatsApp User Management
+  /api/v1/{access}/tab-whatsapp/auto-reply:
+    get:
+      consumes:
+      - application/json
+      description: Returns a paginated list of auto reply rules with language support
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get Auto Reply Rules
+      tags:
+      - WhatsApp Web
+    post:
+      consumes:
+      - application/json
+      description: Creates a new auto reply rule with language support
+      parameters:
+      - description: Auto Reply Rule with language_id
+        in: body
+        name: rule
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create Auto Reply Rule
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/auto-reply/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an auto reply rule
+      parameters:
+      - description: Rule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete Auto Reply Rule
+      tags:
+      - WhatsApp Web
+    get:
+      consumes:
+      - application/json
+      description: Returns a specific auto reply rule
+      parameters:
+      - description: Rule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get Auto Reply Rule
+      tags:
+      - WhatsApp Web
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing auto reply rule with language support
+      parameters:
+      - description: Rule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Auto Reply Rule with language_id
+        in: body
+        name: rule
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update Auto Reply Rule
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/connect:
+    post:
+      consumes:
+      - application/json
+      description: Initiates connection to WhatsApp
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Connect WhatsApp
+      tags:
+      - WhatsApp
+  /api/v1/{access}/tab-whatsapp/contacts-count:
+    get:
+      consumes:
+      - application/json
+      description: Returns the count of synced WhatsApp contacts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get WhatsApp Contacts Count
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/create_status:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp status
+      parameters:
+      - description: Status Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateWhatsAppStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Create WhatsApp Status
+      tags:
+      - WhatsApp
+  /api/v1/{access}/tab-whatsapp/data-separator:
+    get:
+      consumes:
+      - application/json
+      description: Returns the configured data separator character from config
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get Data Separator Configuration
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/disconnect:
+    post:
+      consumes:
+      - application/json
+      description: Disconnects from WhatsApp
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Disconnect WhatsApp
+      tags:
+      - WhatsApp
+  /api/v1/{access}/tab-whatsapp/groups:
+    post:
+      consumes:
+      - application/json
+      description: Returns a paginated list of WhatsApp groups (DataTables Server-Side)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get WhatsApp Groups
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/groups/{jid}:
+    get:
+      consumes:
+      - application/json
+      description: Returns detailed information about a specific WhatsApp group from
+        database with live updates
+      parameters:
+      - description: Group JID
+        in: path
+        name: jid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get WhatsApp Group Details
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/groups/count:
+    get:
+      consumes:
+      - application/json
+      description: Returns the total count of WhatsApp groups
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+      summary: Get WhatsApp Groups Count
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/groups/datatable:
+    post:
+      consumes:
+      - application/json
+      description: Returns WhatsApp groups in DataTables server-side format with pagination
+        and search
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get WhatsApp Groups (DataTables Server-Side)
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/groups/sync:
+    post:
+      consumes:
+      - application/json
+      description: Syncs WhatsApp groups from the connected account to the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Sync WhatsApp Groups
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/incoming:
+    get:
+      consumes:
+      - application/json
+      description: Returns a paginated list of incoming WhatsApp messages
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get Incoming WhatsApp Messages
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/languages:
+    get:
+      consumes:
+      - application/json
+      description: Returns list of all supported languages for auto-reply
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get All Supported Languages
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/languages/count:
+    get:
+      consumes:
+      - application/json
+      description: Returns the count of supported languages
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get Supported Languages Count
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logs out from WhatsApp session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Logout WhatsApp
+      tags:
+      - WhatsApp
+  /api/v1/{access}/tab-whatsapp/messages:
+    get:
+      consumes:
+      - application/json
+      description: Returns a paginated list of sent WhatsApp messages
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get Sent WhatsApp Messages
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/phone-status:
+    get:
+      consumes:
+      - application/json
+      description: Returns battery, connection status, and device info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get WhatsApp Phone Status
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/profile-picture/{jid}:
+    get:
+      consumes:
+      - application/json
+      description: Downloads and serves a WhatsApp profile picture as a proper image
+        file
+      parameters:
+      - description: User JID
+        in: path
+        name: jid
+        required: true
+        type: string
+      produces:
+      - image/jpeg
+      - image/png
+      - image/webp
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Get WhatsApp Profile Picture
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/tab-whatsapp/refresh_qr:
+    post:
+      consumes:
+      - application/json
+      description: Refreshes the WhatsApp QR code
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Refresh WhatsApp QR
+      tags:
+      - WhatsApp
+  /api/v1/{access}/tab-whatsapp/send_message:
+    post:
+      consumes:
+      - application/json
+      description: Sends a text or media message via WhatsApp
+      parameters:
+      - description: Message Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendWhatsAppMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Send WhatsApp Message
+      tags:
+      - WhatsApp
+  /api/v1/{access}/tab-whatsapp/status:
+    get:
+      consumes:
+      - application/json
+      description: Returns the current WhatsApp connection status and account info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get WhatsApp Connection Status
+      tags:
+      - WhatsApp Web
+  /api/v1/{access}/uploads/{year}/{month}/{day}/{filename}:
+    get:
+      description: Serves uploaded files securely
+      parameters:
+      - description: Year
+        in: path
+        name: year
+        required: true
+        type: string
+      - description: Month
+        in: path
+        name: month
+        required: true
+        type: string
+      - description: Day
+        in: path
+        name: day
+        required: true
+        type: string
+      - description: Filename
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "403":
+          description: Invalid file path
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Get Uploaded File
+      tags:
+      - Files
+  /captcha/{id}.png:
+    get:
+      description: Returns the captcha image for a given ID
+      parameters:
+      - description: Captcha ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Get Captcha Image
+      tags:
+      - System
+  /captcha/new:
+    get:
+      description: Generates a new captcha ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get New Captcha
+      tags:
+      - System
+  /check_wa:
+    get:
+      description: Checks if a phone number is registered on WhatsApp
+      parameters:
+      - description: Phone number to check
+        example: "081234567890"
+        in: query
+        name: phone
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Check WhatsApp Registration
+      tags:
+      - WhatsApp
+  /debug/pprof/:
+    get:
+      description: Returns the pprof index page
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML
+          schema:
+            type: string
+      summary: Pprof Index
+      tags:
+      - Pprof
+  /debug/pprof/allocs:
+    get:
+      description: Returns the pprof allocs profile
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Pprof Allocs
+      tags:
+      - Pprof
+  /debug/pprof/block:
+    get:
+      description: Returns the pprof block profile
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Pprof Block
+      tags:
+      - Pprof
+  /debug/pprof/cmdline:
+    get:
+      description: Returns the pprof cmdline arguments
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Pprof Cmdline
+      tags:
+      - Pprof
+  /debug/pprof/goroutine:
+    get:
+      description: Returns the pprof goroutine profile
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Pprof Goroutine
+      tags:
+      - Pprof
+  /debug/pprof/heap:
+    get:
+      description: Returns the pprof heap profile
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Pprof Heap
+      tags:
+      - Pprof
+  /debug/pprof/mutex:
+    get:
+      description: Returns the pprof mutex profile
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Pprof Mutex
+      tags:
+      - Pprof
+  /debug/pprof/profile:
+    get:
+      description: Returns the pprof cpu profile
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Pprof Profile
+      tags:
+      - Pprof
+  /debug/pprof/symbol:
+    get:
+      description: Returns the pprof symbol information
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Pprof Symbol
+      tags:
+      - Pprof
+  /debug/pprof/threadcreate:
+    get:
+      description: Returns the pprof threadcreate profile
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Pprof Threadcreate
+      tags:
+      - Pprof
+  /debug/pprof/trace:
+    get:
+      description: Returns the pprof trace profile
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Pprof Trace
+      tags:
+      - Pprof
+  /forgot-password:
+    get:
+      description: Renders the forgot password page
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML Content
+          schema:
+            type: string
+      summary: Get Forgot Password Page
+      tags:
+      - Web
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Handles forgot password request
+      parameters:
+      - description: Captcha value
+        in: formData
+        name: captcha
+        required: true
+        type: string
+      - description: Email address
+        example: user@example.com
+        in: formData
+        name: email
+        required: true
+        type: string
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Process Forgot Password
+      tags:
+      - Web
+  /health:
+    get:
+      description: Returns the health status of the system, database, and resources
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties: true
+            type: object
+      summary: System Health Check
+      tags:
+      - System
+  /hello:
+    get:
+      description: Returns a simple hello world message
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Hello World
+      tags:
+      - System
+  /login:
+    get:
+      description: Renders the login page
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML Content
+          schema:
+            type: string
+      summary: Get Login Page
+      tags:
+      - Web
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Processes user login credentials
+      parameters:
+      - description: Captcha value entered by user
+        in: formData
+        name: captcha
+        type: string
+      - description: Captcha ID
+        in: formData
+        name: captcha_id
+        type: string
+      - description: Email or Username
+        example: admin
+        in: formData
+        name: email-username
+        required: true
+        type: string
+      - description: Password
+        example: password
+        in: formData
+        name: password
+        required: true
+        type: string
+      - description: Remember Me
+        in: formData
+        name: remember-me
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Process Login
+      tags:
+      - Web
+  /logout:
+    get:
+      description: Logs out the user and clears cookies
+      produces:
+      - text/html
+      responses:
+        "302":
+          description: Redirect to login
+          schema:
+            type: string
+      summary: Logout
+      tags:
+      - Web
+  /page:
+    get:
+      description: Renders the main dashboard page
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML Content
+          schema:
+            type: string
+        "302":
+          description: Redirect to Login Page
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Get Main Page
+      tags:
+      - Web
+  /reset-password/{email}/{token_data}:
+    get:
+      description: Renders the reset password page
+      parameters:
+      - description: Email
+        in: path
+        name: email
+        required: true
+        type: string
+      - description: Token Data
+        in: path
+        name: token_data
+        required: true
+        type: string
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML Content
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get Reset Password Page
+      tags:
+      - Web
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Handles password reset
+      parameters:
+      - description: Email
+        in: path
+        name: email
+        required: true
+        type: string
+      - description: Confirm Password
+        example: newpassword123
+        in: formData
+        name: confirm-password
+        required: true
+        type: string
+      - description: Email address
+        example: user@example.com
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: New Password
+        example: newpassword123
+        in: formData
+        name: password
+        required: true
+        type: string
+      - description: Token Data
+        in: formData
+        name: token_data
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIErrorResponse'
+      summary: Process Reset Password
+      tags:
+      - Web
+  /twilio_reply:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Webhook endpoint that receives incoming WhatsApp messages from
+        Twilio Sandbox
+      parameters:
+      - description: Sender phone number (e.g., whatsapp:+1234567890)
+        in: formData
+        name: From
+        required: true
+        type: string
+      - description: Recipient phone number (e.g., whatsapp:+14155238886)
+        in: formData
+        name: To
+        required: true
+        type: string
+      - description: Message body
+        in: formData
+        name: Body
+        required: true
+        type: string
+      - description: Twilio Message SID
+        in: formData
+        name: MessageSid
+        required: true
+        type: string
+      produces:
+      - text/xml
+      responses:
+        "200":
+          description: TwiML XML response
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Handle incoming Twilio WhatsApp messages
+      tags:
+      - Twilio WhatsApp
+  /user/profile:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the profile image for a user based on encrypted ID
+      parameters:
+      - description: Encrypted User ID
+        in: query
+        name: f
+        required: true
+        type: string
+      produces:
+      - image/jpeg
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get User Profile Image
+      tags:
+      - User
+  /verify-captcha:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Verifies the CAPTCHA input
+      parameters:
+      - in: formData
+        name: captcha
+        required: true
+        type: string
+      - in: formData
+        name: captcha_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Verify CAPTCHA
+      tags:
+      - Web
+  /ws:
+    get:
+      description: Upgrades connection to WebSocket for real-time communication
+      parameters:
+      - description: Auth Token
+        in: query
+        name: token
+        required: true
+        type: string
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      summary: WebSocket Connection
+      tags:
+      - WebSocket
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
