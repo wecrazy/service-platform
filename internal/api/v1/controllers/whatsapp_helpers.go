@@ -1168,6 +1168,7 @@ func CheckAndNotifyQuotaLimit(userID uint, useBot bool, jid string, maxQuota int
 	return true, nil
 }
 
+// getDocumentRules returns a map of document types to their corresponding rules for validation.
 func getDocumentRules() map[string]DocumentRule {
 	return map[string]DocumentRule{
 		"general_document": {
@@ -1183,6 +1184,7 @@ func getDocumentRules() map[string]DocumentRule {
 	}
 }
 
+// checkUserPermissionForDocument checks if a user has permission to upload a document based on the provided rules.
 func checkUserPermissionForDocument(user *model.WAUsers, rule DocumentRule) DocumentFilterResult {
 	// Check user type
 	allowedType := false
@@ -1255,6 +1257,7 @@ func checkUserPermissionForDocument(user *model.WAUsers, rule DocumentRule) Docu
 	return DocumentFilterResult{Allowed: true}
 }
 
+// validateDocumentPatterns checks if the filename meets the required patterns and year requirement specified in the DocumentRule.
 func validateDocumentPatterns(filename string, rule DocumentRule) struct {
 	Valid   bool
 	Reason  string

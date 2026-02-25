@@ -17,6 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// batchRowResult represents the result of processing a single row in the WhatsApp user import batch. It includes the status of the operation (created, updated, failed), the row number for reference, and an optional message for failure cases to provide more context on what went wrong during processing.
 type batchRowResult struct {
 	status  string
 	rowNum  int
@@ -123,6 +124,7 @@ func ImportWhatsAppUsersBatched(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+// processBatchedWAImportRow processes a single row of the WhatsApp user import CSV. It validates the data, checks if the phone number is registered on WhatsApp, and either creates a new user or updates an existing one in the database. It returns a batchRowResult indicating the outcome of the operation for that row.
 func processBatchedWAImportRow(ctx context.Context, db *gorm.DB, record []string, rowNum int, phoneRegex *regexp.Regexp) batchRowResult {
 	fail := func(msg string) batchRowResult { return batchRowResult{status: "failed", rowNum: rowNum, message: msg} }
 
