@@ -15,7 +15,7 @@
 // Usage:
 //
 //	# Run directly
-//	go run cmd/api/main.go
+//	go run cmd/api/main.go or make run-api
 //
 //	# Build and run
 //	make build-api && ./bin/api
