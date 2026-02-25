@@ -69,6 +69,11 @@
 				"title": "System Log",
 				"subtitle": "Audit & logs"
 			}
+		},
+		"chip": {
+			"systemOnline": "System Online",
+			"systemOffline": "Offline",
+			"systemConnecting": "Connecting…"
 		}
 	},
 	"language": {

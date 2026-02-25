@@ -709,7 +709,10 @@ func HandleLanguageChange(jid string, langCode string, client *whatsmeow.Client,
 	// Resolve JID to actual user phone number if it's a LID
 	resolvedJID, jidType := ResolveJIDToUserPhone(jid, db)
 
-	// ADD: skip jidType == 'group' if you don't want to allow language change in groups
+	if jidType == "group" {
+		// logrus.Warnf("HandleLanguageChange: JID %s is a group, skipping language change", jid)
+		return
+	}
 
 	if jidType == "unknown" {
 		logrus.Warnf("HandleLanguageChange: JID %s is unknown format, skipping language change", jid)
@@ -1180,7 +1183,7 @@ func getDocumentRules() map[string]DocumentRule {
 				string(model.AdministratorUser),
 			},
 		},
-		// ADD: specific document rules here e.g. "invoices", "reports", etc.
+		// Try add more specific document types with their own rules if needed, e.g. "invoices", "reports", etc.
 	}
 }
 
