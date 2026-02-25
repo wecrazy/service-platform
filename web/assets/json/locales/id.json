@@ -69,6 +69,11 @@
         "title": "System Log",
         "subtitle": "Audit & log"
       }
+    },
+    "chip": {
+      "systemOnline": "Sistem Online",
+      "systemOffline": "Tidak Terhubung",
+      "systemConnecting": "Menghubungkan…"
     }
   },
   "language":{

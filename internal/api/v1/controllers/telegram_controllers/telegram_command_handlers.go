@@ -48,7 +48,7 @@ func (*TelegramHelper) isValidCommandForUserType(command string, userType telegr
 		telegrammodel.SACMS: {
 			"start", "help", "input_wo", "input_tid", "info_tid", "view_status_sp",
 		},
-		// TODO: implement different for this UserType = HeadMS soon !
+		// TODO: implement different for the UserType = HeadMS, maybe had more features & access
 		telegrammodel.HeadMS: {
 			"start", "help", "input_wo", "input_tid", "info_tid", "view_status_sp",
 		},
