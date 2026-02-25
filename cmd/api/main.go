@@ -81,8 +81,8 @@ import (
 // @name Authorization
 
 var (
-	GlobalDB    *gorm.DB
-	RedisClient atomic.Value // will store *redis.Client
+	GlobalDB    *gorm.DB     // GlobalDB is a package-level variable that holds the main database connection instance, which is initialized in the main function and used across the application for database operations.
+	RedisClient atomic.Value // RedisClient is a package-level variable that holds the Redis client instance, which is initialized in the main function and used across the application for Redis operations.
 )
 
 // printSystemInfo prints detailed system information including Go version, OS details, CPU cores, memory statistics, and active network interfaces.

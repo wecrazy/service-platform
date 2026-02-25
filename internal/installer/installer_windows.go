@@ -13,6 +13,7 @@ import (
 	"strings"
 )
 
+// EnsureAdminPrivileges checks if the program is running with administrator privileges and exits if not. It does this by trying to execute a command that requires admin rights and checking for errors.
 func EnsureAdminPrivileges() {
 	cmd := exec.Command("net", "session")
 	// Hide output
@@ -23,7 +24,8 @@ func EnsureAdminPrivileges() {
 	}
 }
 
-func Install(yamlCfg *config.YamlConfig) {
+// Install installs the application as a Windows service using NSSM. It checks if the service already exists, and if not, it installs and starts the service.
+func Install(yamlCfg *config.TypeServicePlatform) {
 	fmt.Println("🪟  Windows detected — running Windows install steps...")
 	execPath, err := os.Executable()
 	if err != nil {

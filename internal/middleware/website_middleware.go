@@ -25,8 +25,10 @@ import (
 	"gorm.io/gorm"
 )
 
+// webSession is a global sync.Map used to store active web sessions. It allows concurrent access and modification of session data across different goroutines, ensuring thread safety when managing user sessions in the web application.
 var webSession = &sync.Map{}
 
+// bodyLogWriter is a custom ResponseWriter that captures the response body for logging purposes. It embeds gin.ResponseWriter and adds a bytes.Buffer to store the response body.
 type bodyLogWriter struct {
 	gin.ResponseWriter
 	body *bytes.Buffer
@@ -37,6 +39,7 @@ func GetWebSession() *sync.Map {
 	return webSession
 }
 
+// Write overrides the default Write method of the Gin ResponseWriter to capture the response body for logging purposes. It writes the response to both the original ResponseWriter and a buffer for later retrieval.
 func (w bodyLogWriter) Write(b []byte) (int, error) {
 	w.body.Write(b) // Save copy for log
 	return w.ResponseWriter.Write(b)

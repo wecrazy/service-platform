@@ -13,7 +13,8 @@ import (
 	"strings"
 )
 
-func InstallMonitoring(yamlCfg *config.YamlConfig) {
+// InstallMonitoring performs the installation process for monitoring on Windows using NSSM. It checks if the service already exists, and if not, it installs and starts the service.
+func InstallMonitoring(yamlCfg *config.TypeServicePlatform) {
 	fmt.Println("🪟  Windows detected — installing monitoring service...")
 
 	execPath, err := os.Executable()
@@ -89,7 +90,8 @@ func InstallMonitoring(yamlCfg *config.YamlConfig) {
 	fmt.Printf("✅ %s started successfully.\n", serviceName)
 }
 
-func UninstallMonitoring(yamlCfg *config.YamlConfig) {
+// UninstallMonitoring performs the uninstallation process for monitoring on Windows using NSSM. It checks if the service exists, and if so, it stops and removes the service.
+func UninstallMonitoring(yamlCfg *config.TypeServicePlatform) {
 	serviceName := yamlCfg.Monitoring.ServiceName
 	if len(serviceName) == 0 || strings.TrimSpace(serviceName) == "" {
 		log.Fatalf("Service name cannot be empty or whitespace only")
