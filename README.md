@@ -17,7 +17,7 @@
 | Service | Entry point | Type | Status (docs) |
 |---------|-------------|------|--------------|
 | API + Admin | `cmd/api/main.go` | HTTP + GRPC | [REST API docs](docs/swagger.yaml)
-| WhatsApp worker | `cmd/whatsapp/main.go` | Messaging | 💬 Handles WhatsApp chats
+| WhatsApp worker | `cmd/whatsapp/main.go` | Messaging | 💬 Handles WhatsApp chats (using Whatsmeow)
 | Twilio WhatsApp | `cmd/twilio/whatsapp/main.go` | gRPC + Twilio SDK | ✅ Rich media + rate limits (see docs)
 | Telegram | `cmd/telegram/main.go` | gRPC + Bot API | 📱 Telegram bot service
 | Scheduler | `cmd/scheduler/main.go` | Cron jobs | ⏱️ Cron-based jobs from `internal/scheduler`
@@ -107,6 +107,92 @@
 - `scripts/` contains helper tooling (monitoring stack, monitoring-cleanup, k6 runner, Twilio sandbox tests).
 - For Twilio messaging questions consult `docs/TWILIO_WHATSAPP_GUIDE.md` and `docs/TWILIO_SANDBOX_TROUBLESHOOTING.md`.
 
-## 📜 License
+## � Special Thanks & Tech Stack
+
+This project stands on the shoulders of many great open-source libraries and tools. Huge thanks to every maintainer and contributor behind these projects.
+
+### 💬 Messaging
+| Library | Description |
+|---------|-------------|
+| <img src="https://cdn.simpleicons.org/whatsapp/25D366" width="16" height="16"/> [whatsmeow](https://github.com/tulir/whatsmeow) | Go library for the WhatsApp Web multi-device API |
+| <img src="https://cdn.simpleicons.org/twilio/F22F46" width="16" height="16"/> [twilio-go](https://github.com/twilio/twilio-go) | Official Twilio Go helper library |
+| <img src="https://cdn.simpleicons.org/telegram/26A5E4" width="16" height="16"/> [telegram-bot-api](https://github.com/go-telegram-bot-api/telegram-bot-api) | Golang bindings for the Telegram Bot API |
+
+### 🌐 Web & API
+| Library | Description |
+|---------|-------------|
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [Gin](https://github.com/gin-gonic/gin) | High-performance HTTP web framework |
+| <img src="https://cdn.simpleicons.org/swagger/85EA2D" width="16" height="16"/> [gin-swagger](https://github.com/swaggo/gin-swagger) | Swagger UI middleware for Gin |
+| <img src="https://cdn.simpleicons.org/swagger/85EA2D" width="16" height="16"/> [swag](https://github.com/swaggo/swag) | Swagger docs generator from Go annotations |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [gorilla/websocket](https://github.com/gorilla/websocket) | WebSocket implementation for Go |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [gin-contrib/cors](https://github.com/gin-contrib/cors) | CORS middleware for Gin |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [api-analytics](https://github.com/tom-draper/api-analytics) | Lightweight API analytics middleware |
+
+### 🖥️ TUI (Interactive CLI)
+| Library | Description |
+|---------|-------------|
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [Bubbletea](https://github.com/charmbracelet/bubbletea) | The fun, functional, and stateful way to build terminal apps |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [Bubbles](https://github.com/charmbracelet/bubbles) | TUI components for Bubbletea |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [Lipgloss](https://github.com/charmbracelet/lipgloss) | Style definitions for terminal layouts |
+
+### 🗄️ Database & Storage
+| Library | Description |
+|---------|-------------|
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [GORM](https://github.com/go-gorm/gorm) | ORM library for Go (Postgres, MySQL, SQLite) |
+| <img src="https://cdn.simpleicons.org/mongodb/47A248" width="16" height="16"/> [mongo-driver](https://github.com/mongodb/mongo-go-driver) | Official MongoDB Go driver |
+| <img src="https://cdn.simpleicons.org/redis/DC382D" width="16" height="16"/> [go-redis](https://github.com/redis/go-redis) | Redis client for Go |
+| <img src="https://cdn.simpleicons.org/redis/DC382D" width="16" height="16"/> [redis_rate](https://github.com/go-redis/redis_rate) | Redis-backed rate limiting |
+
+### 📡 gRPC & Protobuf
+| Library | Description |
+|---------|-------------|
+| <img src="https://cdn.simpleicons.org/grpc/244c5a" width="16" height="16"/> [grpc-go](https://github.com/grpc/grpc-go) | Go implementation of gRPC |
+| <img src="https://cdn.simpleicons.org/google/4285F4" width="16" height="16"/> [protobuf](https://github.com/protocolbuffers/protobuf-go) | Go support for Google Protocol Buffers |
+
+### 📊 Observability & Monitoring
+| Library | Description |
+|---------|-------------|
+| <img src="https://cdn.simpleicons.org/opentelemetry/425CC7" width="16" height="16"/> [OpenTelemetry Go](https://github.com/open-telemetry/opentelemetry-go) | Distributed tracing and metrics (OTLP/Tempo) |
+| <img src="https://cdn.simpleicons.org/prometheus/E6522C" width="16" height="16"/> [prometheus/client_golang](https://github.com/prometheus/client_golang) | Prometheus metrics instrumentation |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [Logrus](https://github.com/sirupsen/logrus) | Structured, leveled logging |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [lumberjack](https://github.com/natefinch/lumberjack) | Rolling log file writer |
+
+### ⏱️ Scheduling
+| Library | Description |
+|---------|-------------|
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [gocron](https://github.com/go-co-op/gocron) | Job scheduling framework for Go |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [robfig/cron](https://github.com/robfig/cron) | Cron expression parser (used by gocron) |
+
+### 🔐 Auth & Security
+| Library | Description |
+|---------|-------------|
+| <img src="https://cdn.simpleicons.org/jsonwebtokens/FB015B" width="16" height="16"/> [golang-jwt](https://github.com/golang-jwt/jwt) | JWT implementation for Go |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [bluemonday](https://github.com/microcosm-cc/bluemonday) | HTML sanitizer for XSS protection |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [bcrypt / golang.org/x/crypto](https://github.com/golang/crypto) | Password hashing and cryptographic primitives |
+
+### 🛠️ Utilities
+| Library | Description |
+|---------|-------------|
+| <img src="https://cdn.simpleicons.org/dotenv/ECD53F" width="16" height="16"/> [godotenv](https://github.com/joho/godotenv) | `.env` file loader |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [go-playground/validator](https://github.com/go-playground/validator) | Struct and field validation |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [phonenumbers](https://github.com/nyaruka/phonenumbers) | Phone number parsing and validation (libphonenumber port) |
+| <img src="https://cdn.simpleicons.org/qrcode/000000" width="16" height="16"/> [go-qrcode](https://github.com/yeqown/go-qrcode) | QR code generator |
+| <img src="https://cdn.simpleicons.org/maildotru/0078D4" width="16" height="16"/> [gomail](https://github.com/go-gomail/gomail) | Email sending library |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [dchest/captcha](https://github.com/dchest/captcha) | CAPTCHA image and audio generation |
+| <img src="https://cdn.simpleicons.org/yaml/CB171E" width="16" height="16"/> [go-yaml](https://github.com/goccy/go-yaml) | Fast YAML parser for Go |
+| <img src="https://cdn.simpleicons.org/redis/DC382D" width="16" height="16"/> [miniredis](https://github.com/alicebob/miniredis) | In-process Redis server for testing |
+| <img src="https://cdn.simpleicons.org/go/00ADD8" width="16" height="16"/> [testify](https://github.com/stretchr/testify) | Testing assertions and mocks |
+
+### 🏗️ Infrastructure & Tooling
+| Tool | Description |
+|------|-------------|
+| <img src="https://cdn.simpleicons.org/prometheus/E6522C" width="16" height="16"/> [Prometheus](https://github.com/prometheus/prometheus) | Metrics collection and alerting |
+| <img src="https://cdn.simpleicons.org/grafana/F46800" width="16" height="16"/> [Grafana](https://github.com/grafana/grafana) | Metrics visualization and dashboards |
+| <img src="https://cdn.simpleicons.org/grafana/F46800" width="16" height="16"/> [Grafana Loki](https://github.com/grafana/loki) | Log aggregation system |
+| <img src="https://cdn.simpleicons.org/grafana/F46800" width="16" height="16"/> [Grafana Tempo](https://github.com/grafana/tempo) | Distributed tracing backend |
+| <img src="https://cdn.simpleicons.org/n8n/EA4B71" width="16" height="16"/> [n8n](https://github.com/n8n-io/n8n) | Workflow automation platform |
+| <img src="https://cdn.simpleicons.org/k6/7D64FF" width="16" height="16"/> [k6](https://github.com/grafana/k6) | Load and performance testing tool |
+
+## �📜 License
 
 Licensed under the Apache License 2.0. See [LICENSE](LICENSE).

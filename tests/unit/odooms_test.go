@@ -25,37 +25,41 @@ type MockConfig struct {
 func createTestConfig() *config.TypeManageService {
 	return &config.TypeManageService{
 		ODOOMS: struct {
-			JSONRPCVersion string                         `yaml:"jsonrpc_version" validate:"required"`
-			Login          string                         `yaml:"login" validate:"required"`
-			Password       string                         `yaml:"password" validate:"required"`
-			DB             string                         `yaml:"db" validate:"required"`
-			URL            string                         `yaml:"url" validate:"required"`
-			PathSession    string                         `yaml:"path_session" validate:"required"`
-			PathGetData    string                         `yaml:"path_getdata" validate:"required"`
-			PathUpdateData string                         `yaml:"path_updatedata" validate:"required"`
-			PathCreateData string                         `yaml:"path_createdata" validate:"required"`
-			MaxRetry       int                            `yaml:"max_retry" validate:"required"`
-			RetryDelay     int                            `yaml:"retry_delay" validate:"required"`
-			SessionTimeout int                            `yaml:"session_timeout" validate:"required"`
-			DataTimeout    int                            `yaml:"data_timeout"`
-			SkipSSLVerify  bool                           `yaml:"skip_ssl_verify"`
-			SACData        map[string]config.ODOOMSACData `yaml:"sac" validate:"required"`
+			JSONRPCVersion  string                         `yaml:"jsonrpc_version" validate:"required"`
+			Login           string                         `yaml:"login" validate:"required"`
+			Password        string                         `yaml:"password" validate:"required"`
+			DB              string                         `yaml:"db" validate:"required"`
+			URL             string                         `yaml:"url" validate:"required"`
+			PathSession     string                         `yaml:"path_session" validate:"required"`
+			PathGetData     string                         `yaml:"path_getdata" validate:"required"`
+			PathUpdateData  string                         `yaml:"path_updatedata" validate:"required"`
+			PathCreateData  string                         `yaml:"path_createdata" validate:"required"`
+			MaxRetry        int                            `yaml:"max_retry" validate:"required"`
+			RetryDelay      int                            `yaml:"retry_delay" validate:"required"`
+			SessionTimeout  int                            `yaml:"session_timeout" validate:"required"`
+			DataTimeout     int                            `yaml:"data_timeout"`
+			SkipSSLVerify   bool                           `yaml:"skip_ssl_verify"`
+			CompanyIncluded []int                          `yaml:"company_included" validate:"required"`
+			CompanyExcluded []int                          `yaml:"company_excluded" validate:"required"`
+			SACData         map[string]config.ODOOMSACData `yaml:"sac" validate:"required"`
 		}{
-			JSONRPCVersion: "2.0",
-			Login:          "test@example.com",
-			Password:       "testpass",
-			DB:             "test_db",
-			URL:            "https://test-odoo.example.com",
-			PathSession:    "/web/session/authenticate",
-			PathGetData:    "/api/getdata",
-			PathUpdateData: "/api/updatedata",
-			PathCreateData: "/api/createdata",
-			MaxRetry:       3,
-			RetryDelay:     1,
-			SessionTimeout: 30,
-			DataTimeout:    300,
-			SkipSSLVerify:  true,
-			SACData:        map[string]config.ODOOMSACData{},
+			JSONRPCVersion:  "2.0",
+			Login:           "test@example.com",
+			Password:        "testpass",
+			DB:              "test_db",
+			URL:             "https://test-odoo.example.com",
+			PathSession:     "/web/session/authenticate",
+			PathGetData:     "/api/getdata",
+			PathUpdateData:  "/api/updatedata",
+			PathCreateData:  "/api/createdata",
+			MaxRetry:        3,
+			RetryDelay:      1,
+			SessionTimeout:  30,
+			DataTimeout:     300,
+			SkipSSLVerify:   true,
+			CompanyIncluded: []int{1, 2, 3},
+			CompanyExcluded: []int{4, 5},
+			SACData:         map[string]config.ODOOMSACData{},
 		},
 	}
 }

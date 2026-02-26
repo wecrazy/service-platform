@@ -21,8 +21,8 @@ type TypeManageService struct {
 		SessionTimeout  int                     `yaml:"session_timeout" validate:"required"`
 		DataTimeout     int                     `yaml:"data_timeout"`
 		SkipSSLVerify   bool                    `yaml:"skip_ssl_verify"`
-		CompanyIncluded []string                `yaml:"company_included" validate:"required"`
-		CompanyExcluded []string                `yaml:"company_excluded" validate:"required"`
+		CompanyIncluded []int                   `yaml:"company_included" validate:"required"`
+		CompanyExcluded []int                   `yaml:"company_excluded" validate:"required"`
 		SACData         map[string]ODOOMSACData `yaml:"sac" validate:"required"`
 	} `yaml:"odoo_ms" validate:"required"`
 
