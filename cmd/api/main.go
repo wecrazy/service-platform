@@ -438,11 +438,34 @@ func startWebServer(
 		Handler: r,
 	}
 
+	keyFile, err := fun.FindValidDirectory([]string{
+		"cert/demo.wecrazy.my.id.key",
+		"../cert/demo.wecrazy.my.id.key",
+		"../../cert/demo.wecrazy.my.id.key",
+		"../../../cert/demo.wecrazy.my.id.key",
+	})
+	if err != nil {
+		logrus.Fatalf("❌ Failed to find SSL key file: %v", err)
+	}
+
+	certFile, err := fun.FindValidDirectory([]string{
+		"cert/demo.wecrazy.my.id.crt",
+		"../cert/demo.wecrazy.my.id.crt",
+		"../../cert/demo.wecrazy.my.id.crt",
+		"../../../cert/demo.wecrazy.my.id.crt",
+	})
+	if err != nil {
+		logrus.Fatalf("❌ Failed to find SSL cert file: %v", err)
+	}
+
 	serverErr := make(chan error, 1)
 	go func() {
 		logrus.Printf("🌐 Starting server on %s ...", listenAddr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+		// if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		// 	log.Fatal(err)
+		// 	serverErr <- fmt.Errorf("server listen error: %w", err)
+		// }
+		if err := srv.ListenAndServeTLS(certFile, keyFile); err != nil && err != http.ErrServerClosed {
 			serverErr <- fmt.Errorf("server listen error: %w", err)
 		}
 	}()
