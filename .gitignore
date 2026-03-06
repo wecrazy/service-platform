@@ -4,7 +4,9 @@
 database/dbconfig.yaml
 .hintrc
 .prettierrc
+internal/config/manage-service.dev.yaml
 internal/config/manage-service.prod.yaml
+internal/config/service-platform.dev.yaml
 internal/config/service-platform.prod.yaml
 
 # === IDE & Editor Files ===

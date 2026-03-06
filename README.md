@@ -5,6 +5,8 @@
 </p>
 
 > A modular Go platform delivering APIs, WhatsApp/Twilio messaging, schedulers, monitoring, and automation services in one repo.
+> 
+> 📸 **[Check out the Project Previews](./preview/README.MD)** for a visual guide to the CLI, API, Grafana, and MongoDB interfaces.
 
 ![Go](https://img.shields.io/badge/built%20with-Go%201.26-black?logo=go)
 ![Podman](https://img.shields.io/badge/containerized%20with-Podman-blue?logo=podman)
