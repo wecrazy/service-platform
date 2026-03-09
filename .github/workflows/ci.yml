@@ -151,7 +151,7 @@ jobs:
           go build -v -o bin/${{ matrix.service }} ${{ matrix.path }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.service }}-binary
           path: bin/${{ matrix.service }}
