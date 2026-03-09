@@ -1,5 +1,5 @@
 # Multi-stage build for CLI tool
-FROM golang:1.26.0-alpine AS builder
+FROM golang:1.26.1-alpine AS builder
 
 RUN apk add --no-cache git ca-certificates tzdata make
 
@@ -16,7 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -o cli cmd/cli/main.go
 
 # CLI needs a real OS since it shells out to make
-FROM alpine:3.21
+FROM alpine:3.23
 
 RUN apk add --no-cache ca-certificates tzdata make
 
